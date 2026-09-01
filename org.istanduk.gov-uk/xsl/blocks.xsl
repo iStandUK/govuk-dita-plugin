@@ -156,6 +156,24 @@ sections) follow at the end.
     </caption>
   </xsl:template>
 
+  <!-- ===== SVG diagrams: give the generated img an accessible name ===== -->
+
+  <!-- Mirrors the base svg-d rendering, adding @alt derived from the enclosing
+       figure's title (empty when there is none, so the caption-less case reads
+       as decorative rather than announcing a filename) — issue #10, NFR-A1 -->
+  <xsl:template match="*[contains(@class, ' svg-d/svgref ')]" name="topic.svg-d.svgref">
+    <xsl:apply-templates select="*[contains(@class, ' ditaot-d/ditaval-startprop ')]" mode="out-of-line"/>
+    <img>
+      <xsl:call-template name="commonattributes"/>
+      <xsl:call-template name="setid"/>
+      <xsl:apply-templates select="@href"/>
+      <xsl:attribute name="alt"
+                     select="normalize-space(string(ancestor::*[contains(@class, ' topic/fig ')][1]/*[contains(@class, ' topic/title ')][1]))"/>
+    </img>
+    <xsl:apply-templates select="*[contains(@class, ' ditaot-d/ditaval-endprop ')]" mode="out-of-line"/>
+    <xsl:if test="$ARTLBL = 'yes'"> [<xsl:value-of select="@href"/>] </xsl:if>
+  </xsl:template>
+
   <!-- ===== Notes: inset text or warning text (FR-R2) ===== -->
 
   <xsl:variable name="govuk-warning-note-types"

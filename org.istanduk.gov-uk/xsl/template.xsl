@@ -41,28 +41,9 @@ element-level typography.
     </xsl:choose>
   </xsl:variable>
 
-  <!-- Masthead link target: the first topic in the map -->
-  <xsl:variable name="govuk-home-href" as="xs:string">
-    <xsl:variable name="first" as="element()?"
-                  select="($input.map//*[contains(@class, ' map/topicref ')]
-                            [@href][not(@toc = 'no')]
-                            [not(@processing-role = 'resource-only')]
-                            [not(@scope = 'external')])[1]"/>
-    <xsl:choose>
-      <xsl:when test="exists($first)">
-        <xsl:variable name="target" as="xs:string">
-          <xsl:call-template name="replace-extension">
-            <xsl:with-param name="filename" select="string($first/@href)"/>
-            <xsl:with-param name="extension" select="$OUTEXT"/>
-          </xsl:call-template>
-        </xsl:variable>
-        <xsl:sequence select="concat($pathToMapDir, $target)"/>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:sequence select="'#'"/>
-      </xsl:otherwise>
-    </xsl:choose>
-  </xsl:variable>
+  <!-- Masthead link target: the generated cover (home) page at the site root -->
+  <xsl:variable name="govuk-home-href" as="xs:string"
+                select="concat($PATH2PROJ, 'index', $OUTEXT)"/>
 
   <!-- Root element carries the GOV.UK template class -->
   <xsl:template name="chapter-setup">
@@ -144,6 +125,7 @@ element-level typography.
           </div>
         </div>
       </footer>
+      <script src="{concat($PATH2PROJ, 'govuk/plugin.js')}"></script>
       <script type="module">
         <xsl:text>import { initAll } from './</xsl:text>
         <xsl:value-of select="$PATH2PROJ"/>

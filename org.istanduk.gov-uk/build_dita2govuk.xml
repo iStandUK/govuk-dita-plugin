@@ -14,6 +14,9 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
          A user-supplied nav-toc property still wins because properties are
          immutable once set. -->
     <property name="nav-toc" value="full"/>
+    <!-- GOV.UK cover (home) page for the map (FR-N8 / C-10) -->
+    <property name="args.html5.toc.xsl"
+              location="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/map2govuk-cover.xsl"/>
     <!-- Neutral branding unless the publisher explicitly opts in (FR-T1). -->
     <property name="govuk.branding" value="neutral"/>
     <fail message="govuk.branding must be 'neutral' or 'official', was: ${govuk.branding}">
@@ -48,7 +51,14 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <fileset dir="${dita.plugin.org.istanduk.gov-uk.dir}/resource/css">
         <include name="*.css"/>
       </fileset>
+      <fileset dir="${dita.plugin.org.istanduk.gov-uk.dir}/resource/js">
+        <include name="*.js"/>
+      </fileset>
     </copy>
+    <!-- The inherited html5.css step copies the default stylesheets, but no
+         govuk page links them; drop the dead files -->
+    <delete file="${dita.output.dir}/commonltr.css" quiet="true"/>
+    <delete file="${dita.output.dir}/commonrtl.css" quiet="true"/>
   </target>
 
 </project>

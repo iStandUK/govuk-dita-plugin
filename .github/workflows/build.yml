@@ -105,6 +105,19 @@ jobs:
           grep -q 'colspan="3"' out/oruk-mini/item.html
           grep -q 'href="child3.html"' out/oruk-mini/chapter.html
           grep -Eq '<h2[^>]*>child one</h2>' out/oruk-mini/item.html
+          # Home pages are GOV.UK-styled (#8 / FR-N8 / C-10)
+          grep -q 'class="govuk-template"' out/poc/index.html
+          grep -q 'govuk-heading-xl' out/poc/index.html
+          grep -q 'app-contents' out/poc/index.html
+          grep -q 'govuk-body-l' out/oruk-mini/index.html
+          grep -q 'app-attribution' out/oruk-mini/index.html
+          ! grep -q 'commonltr' out/poc/index.html
+          test ! -f out/poc/commonltr.css
+          # Navigation enhancement shipped (#9 / FR-N2, FR-N4)
+          test -f out/poc/govuk/plugin.js
+          grep -q 'govuk/plugin.js' out/poc/topics/introduction.html
+          # svgref accessible name (#10 / NFR-A1)
+          grep -q 'alt="Sample diagram"' out/oruk-mini/item.html
           # FR-T1: neutral builds ship no restricted assets and reference no CDN
           test -z "$(find out/poc out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           ! grep -Eroh '(src|href)="https?://' out/poc out/oruk-mini --include='*.html'
