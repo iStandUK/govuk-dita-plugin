@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossentry PUBLIC "-//OASIS//DTD DITA Glossary Entry//EN" "glossentry.dtd">
+<glossentry id="gloss-transtype" xml:lang="en-GB">
+  <glossterm>transformation type</glossterm>
+  <glossdef>A named output format registered with the DITA Open Toolkit and selected with the dita command's format option; this plugin registers the govuk transformation type.</glossdef>
+  
+</glossentry>

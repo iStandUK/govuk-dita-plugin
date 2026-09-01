@@ -71,8 +71,7 @@ org.istanduk.gov-uk/
 │   │                          #   tables incl. spans; svgref alt; captions
 │   └── map2govuk-cover.xsl    # GOV.UK home page: title, bookmap abstract,
 │   │                          #   attribution, contents tree (args.html5.toc.xsl)
-│   ├── glossary.xsl           # (planned, FR-G) standalone pass: glossary.html
-│   └── index.xsl              # (planned, FR-X) standalone pass: A–Z index page
+│   └── utility-pages.xsl      # glossary + index harvest and A–Z pages (FR-G, FR-X)
 ├── resource/
 │   ├── govuk-frontend/        # vendored v6.5.0 compiled CSS/JS + maps, VERSION,
 │   │                          #   LICENSE, NOTICE — no fonts or crown imagery
@@ -228,18 +227,25 @@ for either (NFR-M2 snapshot + a simple grep-style check).
 
 ## Glossary and index generation
 
-Both run as **additional XSLT passes in the Ant target**, reading the *preprocessed* temp
-files (keys and conrefs already resolved) rather than raw source:
+As built, both are **harvested during the cover transformation** (`utility-pages.xsl`) rather
+than as separate Ant passes: the normalised map supplies the reading structure and output
+paths, and `document()` loads each referenced *preprocessed* topic once (keys and conrefs
+already resolved) to collect content. Both pages are emitted with `xsl:result-document` and
+appear only when their source markup exists.
 
-- **Glossary** — collect `glossentry` topics referenced by the map, sort per collation
-  (en-GB), group by initial letter, emit `glossary.html` with letter navigation. Topic-body
-  occurrences of `abbreviated-form`/`term` link into it (handled in `inline.xsl`).
-- **Index** — collect `indexterm` elements with their nearest page + anchor, merge duplicates,
-  nest sub-terms, emit an A–Z `index-page.html` (name avoids colliding with a site `index.html`).
-  `index-see`/`see-also` render as cross-references.
+- **Glossary** — every `glossentry` topic referenced by the map (resource-only keydefs
+  included) is collected, sorted with en-GB collation, grouped by initial letter, and emitted
+  as `glossary.html` with letter navigation, showing term, acronym, and definition linked to
+  the entry's own page. `abbreviated-form`/`term` references link to those entry pages with
+  first-use expansion semantics inherited from the toolkit.
+- **Index** — `indexterm` elements are collected per rendered page with the containing
+  topic's anchor, merged case-insensitively, nested one level, and emitted as
+  `index-page.html` (name avoids colliding with the site `index.html`);
+  `index-see`/`index-see-also` render as "see …" / "see also …" lines.
 
-Neither exists in the html5 base, so these are the plugin's largest pieces of genuinely new
-processing logic — sized accordingly in the component inventory.
+Sidebar links to both pages are switched by a build-time source scan (the pages themselves
+are generated from the resolved map, which is definitive). Neither generator exists in the
+html5 base — they are the plugin's largest pieces of genuinely new processing logic.
 
 ## Risks and mitigations
 

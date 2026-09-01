@@ -25,8 +25,8 @@ per-requirement status is in [02-requirements.md](02-requirements.md). Toward a 
 
 1. ~~**Search** (FR-S, C-11)~~ — done on the v1 epic branch: Pagefind step with
    `auto`/`yes`/`no`, generated search page, `data-pagefind-body` scoping, both paths in CI.
-2. **Glossary and index** (FR-G/C-08, FR-X/C-09) — the two genuinely new generators; needed
-   for the ContSys-style publications, exercised by extending the manual or a fixture.
+2. ~~**Glossary and index** (FR-G/C-08, FR-X/C-09)~~ — done on the v1 epic: harvested in the
+   cover pass, exercised and demonstrated by the manual's own glossary and index.
 3. ~~**Localisable UI strings** (NFR-I1, C-14)~~ — done on the v1 epic branch via
    `dita.xsl.strings`; answers OQ-9 structurally (translations are additive files).
 4. **Official branding mode** (FR-T2, C-13) — sourcing restricted assets from the publisher's

@@ -20,8 +20,8 @@ live in `blocks.xsl`, and the home page is `map2govuk-cover.xsl` (see
 | C-05 | **Table module** | CALS `table` and `simpletable` → `govuk-table` (in `blocks.xsl`), captions, header scoping, column spans, overflow wrapper | M | ✅ |
 | C-06 | **Inline module** | links (`xref` → `govuk-link`), `term`/`abbreviated-form` → `<abbr>` + glossary link, `ph`, `uicontrol`/`menucascade`, `cite`, `fn` markers | M | 🔶 xref done; glossary-linked inline and UI-domain styling pending |
 | C-07 | **Task module** | steps as numbered lists, cmd/info/stepresult styling, prereq/context/result sections | S | ⬜ inherited rendering only |
-| C-08 | **Glossary generator** | `glossary.xsl` standalone pass — collect referenced `glossentry` topics, en-GB collation sort, A–Z page with letter nav | M | ⬜ v1 backlog |
-| C-09 | **Index generator** | `index.xsl` standalone pass — collect `indexterm` with page+anchor locators, merge, nest, see/see-also, A–Z page | L | ⬜ v1 backlog |
+| C-08 | **Glossary generator** | `utility-pages.xsl` (harvested in the cover pass) — collect referenced `glossentry` topics, en-GB collation sort, A–Z page with letter nav | M | ✅ |
+| C-09 | **Index generator** | `utility-pages.xsl` (harvested in the cover pass) — collect `indexterm` with page+anchor locators, merge, nest, see/see-also, A–Z page | L | ✅ |
 | C-10 | **Home page generator** | `map2govuk-cover.xsl` — site landing page from map/bookmap title, abstract, attribution, and contents; D-13 layouts (start/annotated/grouped auto-selected; list/grid/accordion overrides) | S | ✅ |
 | C-11 | **Search integration** | Ant Pagefind step with auto/yes/no logic, search page shell, `data-pagefind-body` scoping, self-hosted Pagefind UI restyled with Design System form classes | M | ✅ |
 | C-12 | **Asset bundle** | Vendored pinned `govuk-frontend` dist (v6.5.0, CSS/JS only — no restricted assets), `overlay-neutral.css`, `plugin.css`, `plugin.js` | M | ✅ |

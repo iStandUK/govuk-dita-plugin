@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossentry PUBLIC "-//OASIS//DTD DITA Glossary Entry//EN" "glossentry.dtd">
+<glossentry id="gloss-dita" xml:lang="en-GB">
+  <glossterm>Darwin Information Typing Architecture</glossterm>
+  <glossdef>An open XML architecture for authoring, managing, and publishing topic-based content, standardised by OASIS.</glossdef>
+  <glossBody><glossAlt><glossAcronym>DITA</glossAcronym></glossAlt></glossBody>
+</glossentry>

@@ -12,4 +12,6 @@ unaffected.
   <param name="GOVUK-BRANDING" expression="${govuk.branding}" if:set="govuk.branding"/>
   <param name="GOVUK-SERVICE-NAME" expression="${govuk.service.name}" if:set="govuk.service.name"/>
   <param name="GOVUK-SEARCH" expression="${govuk.search.enabled}" if:set="govuk.search.enabled"/>
+  <param name="GOVUK-GLOSSARY" expression="${govuk.glossary.present}" if:set="govuk.glossary.present"/>
+  <param name="GOVUK-INDEX" expression="${govuk.index.present}" if:set="govuk.index.present"/>
 </params>

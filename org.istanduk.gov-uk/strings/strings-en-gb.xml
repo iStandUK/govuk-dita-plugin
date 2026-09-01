@@ -15,4 +15,9 @@ collisions with toolkit variables.
   <variable id="govuk-dita.search">Search</variable>
   <variable id="govuk-dita.search-this-site">Search this site</variable>
   <variable id="govuk-dita.search-unavailable">Search is not available in this build.</variable>
+  <variable id="govuk-dita.glossary">Glossary</variable>
+  <variable id="govuk-dita.index">Index</variable>
+  <variable id="govuk-dita.see">see</variable>
+  <variable id="govuk-dita.see-also">see also</variable>
+  <variable id="govuk-dita.support-links">Support links</variable>
 </variables>

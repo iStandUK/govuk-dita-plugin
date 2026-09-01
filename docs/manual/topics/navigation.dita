@@ -7,7 +7,7 @@
   <conbody>
     <section>
       <title>The sidebar</title>
-      <p>The sidebar lists the whole publication, follows your map's hierarchy, and marks
+      <p><indexterm>navigation<indexterm>sidebar</indexterm><indexterm>mobile menu</indexterm></indexterm>The sidebar lists the whole publication, follows your map's hierarchy, and marks
         the page being read. With JavaScript available it gains a menu toggle on small
         screens and expand/collapse controls on branches, with the current page's ancestors
         open; without JavaScript the full tree simply stays visible, so nothing is ever

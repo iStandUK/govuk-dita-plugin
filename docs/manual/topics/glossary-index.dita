@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="glossary-index" xml:lang="en-GB">
+  <title>Glossary and index</title>
+  <shortdesc>Publications that use DITA glossary entries or index markup get an A–Z glossary
+    page and a back-of-book index page generated automatically, linked from every page's
+    footer as GOV.UK support links.</shortdesc>
+  <conbody>
+    <p><indexterm>glossary</indexterm><indexterm>index</indexterm>Both pages are built from
+      your source with no configuration:</p>
+    <section>
+      <title>Glossary</title>
+      <p>Every <codeph>glossentry</codeph> topic referenced from the map — including
+        resource-only key definitions — appears on the glossary page, sorted A to Z with
+        letter navigation, showing its term, acronym, and definition, linked to the full
+        entry. In running text, a reference like
+        <abbreviated-form keyref="gloss-gds"/> expands on first use and shows the acronym
+        thereafter (<abbreviated-form keyref="gloss-gds"/>), while a
+        <codeph>term</codeph> reference such as <term keyref="gloss-transtype">transtype</term>
+        links to its definition with a tooltip.</p>
+    </section>
+    <section>
+      <title>Index</title>
+      <p><indexterm>index<indexterm>entries and sub-entries</indexterm></indexterm>Add
+        <codeph>indexterm</codeph> markup anywhere in your topics and the index page collects
+        every term with links to the pages where it appears. Nested terms become indented
+        sub-entries, and <codeph>index-see</codeph> cross-references render as
+        <q>see</q> lines. This manual indexes its own pages — follow the Index link in the
+        footer to see the result.</p>
+    </section>
+  </conbody>
+</concept>

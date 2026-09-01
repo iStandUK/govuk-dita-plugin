@@ -15,6 +15,8 @@ map transformation with the plugin's values.
                 exclude-result-prefixes="xs">
 
   <xsl:import href="plugin:org.dita.html5:xsl/map2html5-cover.xsl"/>
+  <xsl:import href="furniture.xsl"/>
+  <xsl:import href="utility-pages.xsl"/>
 
   <xsl:output method="html"
               include-content-type="no"
@@ -47,6 +49,8 @@ map transformation with the plugin's values.
       <xsl:call-template name="chapterBody"/>
     </html>
     <xsl:call-template name="govuk-search-page"/>
+    <xsl:call-template name="govuk-glossary-page"/>
+    <xsl:call-template name="govuk-index-page"/>
   </xsl:template>
 
   <xsl:template name="gen-user-head">
@@ -139,9 +143,7 @@ map transformation with the plugin's values.
   <!-- ===== Page body ===== -->
 
   <xsl:template match="*[contains(@class, ' map/map ')]" mode="chapterBody" priority="10">
-    <xsl:variable name="map" as="element()*">
-      <xsl:apply-templates select="." mode="normalize-map"/>
-    </xsl:variable>
+    <xsl:variable name="map" select="$govuk-norm-map" as="element()*"/>
     <xsl:variable name="entries" as="element()*"
                   select="$map/*[contains(@class, ' map/topicref ')]
                           [not(@processing-role = 'resource-only')]
@@ -170,13 +172,11 @@ map transformation with the plugin's values.
           <xsl:with-param name="id" select="'govuk-dita.skip-link'"/>
         </xsl:call-template>
       </a>
-      <header class="app-masthead">
-        <div class="govuk-width-container">
-          <a class="app-masthead__title" href="#main-content">
-            <xsl:value-of select="$govuk-masthead-name"/>
-          </a>
-        </div>
-      </header>
+      <xsl:call-template name="govuk-masthead">
+        <xsl:with-param name="name" select="$govuk-masthead-name"/>
+        <xsl:with-param name="home-href" select="concat('index', $OUTEXT)"/>
+        <xsl:with-param name="search-enabled" select="$GOVUK-SEARCH"/>
+      </xsl:call-template>
       <div class="govuk-width-container">
         <main class="govuk-main-wrapper" id="main-content">
           <div class="govuk-grid-row">
@@ -194,15 +194,6 @@ map transformation with the plugin's values.
               <xsl:if test="exists(($authors, $orgs)[. ne ''])">
                 <p class="govuk-body app-attribution">
                   <xsl:value-of select="string-join(distinct-values(($authors, $orgs)[. ne '']), ' · ')"/>
-                </p>
-              </xsl:if>
-              <xsl:if test="$GOVUK-SEARCH = 'yes'">
-                <p class="app-search-link">
-                  <a class="govuk-link" href="search.html">
-                    <xsl:call-template name="getVariable">
-                      <xsl:with-param name="id" select="'govuk-dita.search-this-site'"/>
-                    </xsl:call-template>
-                  </a>
                 </p>
               </xsl:if>
               <xsl:choose>
@@ -289,17 +280,11 @@ map transformation with the plugin's values.
           </div>
         </main>
       </div>
-      <footer class="govuk-footer">
-        <div class="govuk-width-container">
-          <div class="govuk-footer__meta">
-            <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
-              <span class="govuk-footer__licence-description">
-                <xsl:value-of select="$govuk-masthead-name"/>
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <xsl:call-template name="govuk-site-footer">
+        <xsl:with-param name="name" select="$govuk-masthead-name"/>
+        <xsl:with-param name="glossary" select="if (exists($govuk-gloss)) then 'yes' else 'no'"/>
+        <xsl:with-param name="index" select="if (exists($govuk-ix)) then 'yes' else 'no'"/>
+      </xsl:call-template>
       <script type="module">
         <xsl:text>import { initAll } from './govuk/govuk-frontend-</xsl:text>
         <xsl:value-of select="$govuk-frontend-version"/>
@@ -371,13 +356,11 @@ map transformation with the plugin's values.
               <xsl:with-param name="id" select="'govuk-dita.skip-link'"/>
             </xsl:call-template>
           </a>
-          <header class="app-masthead">
-            <div class="govuk-width-container">
-              <a class="app-masthead__title" href="index{$OUTEXT}">
-                <xsl:value-of select="$govuk-masthead-name"/>
-              </a>
-            </div>
-          </header>
+          <xsl:call-template name="govuk-masthead">
+            <xsl:with-param name="name" select="$govuk-masthead-name"/>
+            <xsl:with-param name="home-href" select="concat('index', $OUTEXT)"/>
+            <xsl:with-param name="search-enabled" select="'no'"/>
+          </xsl:call-template>
           <div class="govuk-width-container">
             <main class="govuk-main-wrapper" id="main-content">
               <div class="govuk-grid-row">
@@ -388,22 +371,26 @@ map transformation with the plugin's values.
               </div>
             </main>
           </div>
-          <footer class="govuk-footer">
-            <div class="govuk-width-container">
-              <div class="govuk-footer__meta">
-                <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
-                  <span class="govuk-footer__licence-description">
-                    <xsl:value-of select="$govuk-masthead-name"/>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </footer>
+          <xsl:call-template name="govuk-site-footer">
+            <xsl:with-param name="name" select="$govuk-masthead-name"/>
+            <xsl:with-param name="glossary" select="if (exists($govuk-gloss)) then 'yes' else 'no'"/>
+            <xsl:with-param name="index" select="if (exists($govuk-ix)) then 'yes' else 'no'"/>
+          </xsl:call-template>
           <script src="pagefind/pagefind-ui.js"></script>
           <script>
             <xsl:text>window.addEventListener('DOMContentLoaded', function () {
   if (window.PagefindUI) {
     new PagefindUI({ element: '#app-search', showSubResults: true });
+    var q = new URLSearchParams(window.location.search).get('q');
+    if (q) {
+      window.requestAnimationFrame(function () {
+        var input = document.querySelector('#app-search input');
+        if (input) {
+          input.value = q;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+    }
   } else {
     document.getElementById('app-search').textContent = '</xsl:text>
             <xsl:call-template name="getVariable">

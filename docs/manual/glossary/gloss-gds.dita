@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossentry PUBLIC "-//OASIS//DTD DITA Glossary Entry//EN" "glossentry.dtd">
+<glossentry id="gloss-gds" xml:lang="en-GB">
+  <glossterm>Government Digital Service</glossterm>
+  <glossdef>The UK government unit responsible for GOV.UK, the Design System, and the service standard.</glossdef>
+  <glossBody><glossAlt><glossAcronym>GDS</glossAcronym></glossAlt></glossBody>
+</glossentry>

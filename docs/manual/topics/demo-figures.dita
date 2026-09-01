@@ -5,7 +5,7 @@
   <shortdesc>Figures carry GOV.UK-styled captions, and the DITA SVG domain embeds scalable
     diagrams that stay crisp at any size.</shortdesc>
   <conbody>
-    <p>A figure whose diagram is referenced through a key — the same mechanism the Open
+    <p><indexterm>diagrams</indexterm><indexterm>SVG</indexterm>A figure whose diagram is referenced through a key — the same mechanism the Open
       Referral UK publications use for hundreds of model diagrams:</p>
     <fig>
       <title>Publishing pipeline, referenced by key</title>
