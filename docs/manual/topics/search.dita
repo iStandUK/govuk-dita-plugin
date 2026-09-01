@@ -12,8 +12,12 @@
       directory, so the site remains fully self-contained.</p>
     <section>
       <title>Enabling search</title>
-      <p>Install <xref href="https://pagefind.app/" format="html" scope="external">Pagefind</xref>
-        (a single self-contained binary) and build as normal: the default
+      <p>Search needs the Pagefind indexer on the machine that runs the build — and nowhere
+        else. The plugin does not bundle it, and the published site carries the index and
+        the search interface, so readers install nothing. Install
+        <xref href="https://pagefind.app/" format="html" scope="external">Pagefind</xref>
+        (a single self-contained binary; see its own documentation for your platform's
+        installation methods), then build as normal: the default
         <codeph>govuk.search=auto</codeph> switches search on whenever the binary is found
         on the <codeph>PATH</codeph>, or at the location given by
         <codeph>govuk.pagefind.cmd</codeph>.</p>

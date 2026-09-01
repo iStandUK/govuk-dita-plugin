@@ -17,7 +17,10 @@ dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.
 dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 
-Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. That second
+Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. Optionally,
+[Pagefind](https://pagefind.app/) on the build machine enables site search — the plugin does
+not bundle the indexer, but published sites carry the search index and interface, so readers
+never install anything. Without Pagefind, builds simply omit search. That second
 command builds the **[user manual](docs/manual/)** — itself a DITA bookmap, so the result at
 `out/manual/index.html` is both the documentation and a live demonstration of every
 capability the plugin supports.
