@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="search" xml:lang="en-GB">
+  <title>Site search</title>
+  <shortdesc>Search is powered by Pagefind, which indexes the generated pages after the
+    build; readers get a fast client-side search with no server and no external
+    services.</shortdesc>
+  <conbody>
+    <p>When search is enabled, every page carries a <q>Search this site</q> link to a search
+      page, and only topic content is indexed — navigation, headers, and footers never
+      appear in results. The index and the search interface are part of the output
+      directory, so the site remains fully self-contained.</p>
+    <section>
+      <title>Enabling search</title>
+      <p>Install <xref href="https://pagefind.app/" format="html" scope="external">Pagefind</xref>
+        (a single self-contained binary) and build as normal: the default
+        <codeph>govuk.search=auto</codeph> switches search on whenever the binary is found
+        on the <codeph>PATH</codeph>, or at the location given by
+        <codeph>govuk.pagefind.cmd</codeph>.</p>
+      <ul>
+        <li><codeph>auto</codeph> — search on when Pagefind is found; otherwise the build
+          completes without search and says so in the log</li>
+        <li><codeph>yes</codeph> — search required; the build fails if Pagefind is
+          missing</li>
+        <li><codeph>no</codeph> — search off even when Pagefind is installed</li>
+      </ul>
+      <note type="tip">Without JavaScript the search page explains that search is
+        unavailable; everything else on the site works as normal.</note>
+    </section>
+  </conbody>
+</concept>

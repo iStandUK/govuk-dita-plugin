@@ -40,6 +40,19 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" uninstall org.istanduk.gov-uk || true
           "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
 
+      # Built BEFORE Pagefind is installed: exercises the graceful-absence path
+      # (govuk.search=auto with no binary -> site without search, FR-S4)
+      - name: Build ORUK fixture (no Pagefind)
+        run: |
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" \
+            --input fixtures/oruk-mini/oruk.ditamap \
+            --format govuk \
+            --output out/oruk-mini
+
+      - name: Install Pagefind
+        run: npm install -g pagefind@1
+
+      # Built with Pagefind on the PATH: search auto-enables (FR-S1)
       - name: Build manual
         run: |
           "dita-ot-${DITA_OT_VERSION}/bin/dita" \
@@ -47,12 +60,12 @@ jobs:
             --format govuk \
             --output out/manual
 
-      - name: Build ORUK fixture
+      - name: Build layout overrides
         run: |
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" \
-            --input fixtures/oruk-mini/oruk.ditamap \
-            --format govuk \
-            --output out/oruk-mini
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-grid -Dgovuk.homepage.layout=grid
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-accordion -Dgovuk.homepage.layout=accordion
 
       - name: Cache Nu validator
         id: cache-vnu
@@ -126,6 +139,21 @@ jobs:
           grep -q 'govuk/plugin.js' out/manual/topics/introduction.html
           # svgref accessible name (#10 / NFR-A1)
           grep -q 'alt="Sample diagram"' out/oruk-mini/item.html
+          # Search (#16 / FR-S): enabled on the manual, gracefully absent on oruk-mini
+          test -f out/manual/pagefind/pagefind-ui.js
+          grep -q 'search.html' out/manual/topics/introduction.html
+          grep -q 'data-pagefind-body' out/manual/topics/introduction.html
+          grep -q 'PagefindUI' out/manual/search.html
+          ! grep -q 'search.html' out/oruk-mini/item.html
+          test ! -d out/oruk-mini/pagefind
+          # Landing-page layouts (#14 / D-13)
+          grep -q 'app-entry__heading' out/manual/index.html
+          grep -q 'app-group-list' out/manual/index.html
+          grep -q 'govuk-button--start' out/oruk-mini/index.html
+          grep -q 'govuk-grid-column-one-third' out/manual-grid/index.html
+          grep -q 'govuk-accordion__section' out/manual-accordion/index.html
+          # Localisable UI text (#18 / NFR-I1)
+          grep -q 'data-label-menu="Menu"' out/manual/topics/introduction.html
           # FR-T1: neutral builds ship no restricted assets and load no external
           # resources (external hyperlinks in content are fine; external assets are not)
           test -z "$(find out/manual out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"

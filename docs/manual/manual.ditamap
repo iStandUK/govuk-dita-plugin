@@ -31,6 +31,7 @@
     <topicref keyref="parameters"/>
     <topicref keyref="branding"/>
     <topicref keyref="navigation"/>
+    <topicref keyref="search"/>
   </chapter>
   <chapter navtitle="Capability demonstrations">
     <topicref keyref="demo-typography"/>

@@ -34,9 +34,29 @@
                 bookmap's main book title.</entry>
             </row>
             <row>
-              <entry namest="c1" nameend="c3">Further parameters — search, phase banner,
-                footer links, home-page layout — arrive with their features; each is listed
-                here when it lands.</entry>
+              <entry><codeph>govuk.homepage.layout</codeph></entry>
+              <entry><codeph>auto</codeph> (default), <codeph>start</codeph>,
+                <codeph>annotated</codeph>, <codeph>list</codeph>, <codeph>grid</codeph>,
+                <codeph>grouped</codeph>, <codeph>accordion</codeph></entry>
+              <entry>Landing-page layout. <codeph>auto</codeph> chooses from the map's
+                shape; see <xref keyref="navigation"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.search</codeph></entry>
+              <entry><codeph>auto</codeph> (default), <codeph>yes</codeph>,
+                <codeph>no</codeph></entry>
+              <entry>Site search; see <xref keyref="search"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.pagefind.cmd</codeph></entry>
+              <entry>path</entry>
+              <entry>Location of the Pagefind executable when it is not on the
+                <codeph>PATH</codeph>.</entry>
+            </row>
+            <row>
+              <entry namest="c1" nameend="c3">Further parameters — phase banner, footer
+                links, favicon — arrive with their features; each is listed here when it
+                lands.</entry>
             </row>
           </tbody>
         </tgroup>

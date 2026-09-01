@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+Generated-text registry (NFR-I1, C-14). The empty xml:lang entry is the
+fallback for languages without their own file; translations are added as
+further lang entries pointing at new files.
+-->
+<langlist>
+  <lang xml:lang="" filename="strings-en-gb.xml"/>
+  <lang xml:lang="en" filename="strings-en-gb.xml"/>
+  <lang xml:lang="en-gb" filename="strings-en-gb.xml"/>
+  <lang xml:lang="en-us" filename="strings-en-gb.xml"/>
+</langlist>
