@@ -45,6 +45,32 @@ jobs:
             --format govuk \
             --output out/poc
 
+      - name: Cache Nu validator
+        id: cache-vnu
+        uses: actions/cache@v4
+        with:
+          path: vnu
+          key: vnu-20.6.30
+
+      - name: Download Nu validator
+        if: steps.cache-vnu.outputs.cache-hit != 'true'
+        run: |
+          curl -sSL -o vnu.zip "https://github.com/validator/validator/releases/download/20.6.30/vnu.jar_20.6.30.zip"
+          unzip -q vnu.zip -d vnu-tmp
+          mkdir -p vnu && mv vnu-tmp/dist/vnu.jar vnu/
+          rm -rf vnu-tmp vnu.zip
+
+      - name: Validate HTML
+        run: |
+          set -e
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/poc
+          # NFR-A2: exactly one h1 and one main landmark per topic page
+          for f in out/poc/topics/*.html; do
+            test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
+            test "$(grep -c '<main ' "$f")" = "1" || { echo "expected one main in $f"; exit 1; }
+          done
+          echo "HTML validation passed"
+
       - name: Check output
         run: |
           set -e

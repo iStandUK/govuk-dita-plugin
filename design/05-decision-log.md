@@ -188,3 +188,21 @@ life with the longest possible runway before its minimum feels old.
 **Consequences:** Closes OQ-2. Documentation states "DITA-OT 4.4.1 or later"; the CI matrix
 starts at 4.4.1 and adds newer releases as they appear; extension-point IDs
 (03-architecture) are verified against 4.4.1 at implementation start.
+
+---
+
+## D-12 · Vendored front-end release: govuk-frontend v6.5.0
+
+**Options:** stay on the v5.x line the design documents assumed; move to the current v6.x
+line.
+
+**Decision:** **govuk-frontend v6.5.0** is the pinned vendored release.
+
+**Rationale:** v6.x is the current line (the v5.x assumption predated checking the releases);
+pinning the latest stable matches the D-11 philosophy. v6 also bakes in the 2025 GOV.UK
+rebrand, so no rebrand flag is needed. Verified against the fixture publication visually and
+by the CI checks.
+
+**Consequences:** Constraint C5 updated; the pin is recorded in
+`resource/govuk-frontend/VERSION.txt`/`NOTICE.md` and the `$govuk-frontend-version` XSLT
+variable. Upgrades follow the NFR-M2 process (deliberate change, fixture rebuild, checks).

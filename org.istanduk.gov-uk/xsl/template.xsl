@@ -110,7 +110,7 @@ element-level typography.
         <xsl:text>document.body.className += ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</xsl:text>
       </script>
       <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
-      <header class="app-masthead" role="banner">
+      <header class="app-masthead">
         <div class="govuk-width-container">
           <a class="app-masthead__title" href="{$govuk-home-href}">
             <xsl:value-of select="$govuk-service-name"/>
