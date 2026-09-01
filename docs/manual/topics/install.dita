@@ -25,9 +25,11 @@
       </step>
     </steps>
     <result>
-      <p>The toolkit can now build any DITA map with <codeph>--format=govuk</codeph>. To
-        upgrade later, run the same install command with the newer release URL — the
-        toolkit replaces the installed version.</p>
+      <p>The toolkit can now build any DITA map with <codeph>--format=govuk</codeph>.</p>
+      <note type="important">To upgrade to a newer release, uninstall first — the toolkit
+        refuses to replace an installed plugin and leaves the old version in place:</note>
+      <codeblock>dita uninstall org.istanduk.gov-uk
+dita install &lt;newer release URL&gt;</codeblock>
     </result>
   </taskbody>
 </task>
