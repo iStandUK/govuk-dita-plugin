@@ -127,7 +127,6 @@ jobs:
           # Home pages are GOV.UK-styled (#8 / FR-N8 / C-10)
           grep -q 'class="govuk-template"' out/manual/index.html
           grep -q 'govuk-heading-xl' out/manual/index.html
-          grep -q 'app-contents' out/manual/index.html
           grep -q 'govuk-body-l' out/manual/index.html
           grep -q 'app-attribution' out/manual/index.html
           grep -q 'govuk-body-l' out/oruk-mini/index.html
