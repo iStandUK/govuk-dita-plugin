@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map xml:lang="en-GB">
+  <title>DITA 1.3 kitchen sink</title>
+  <topicmeta><shortdesc>Spec-coverage fixture for the gap analysis.</shortdesc></topicmeta>
+  <keydef keys="reusables" href="topics/conref-lib.dita" processing-role="resource-only"/>
+  <topichead navtitle="Blocks and inline">
+    <topicref href="topics/blocks.dita"/>
+    <topicref href="topics/inline-domains.dita"/>
+    <topicref href="topics/programming.dita"/>
+    <topicref href="topics/hazard.dita"/>
+    <topicref href="topics/media.dita"/>
+    <topicref href="topics/math.dita"/>
+  </topichead>
+  <topichead navtitle="Topic types">
+    <topicref href="topics/task-full.dita" collection-type="sequence">
+      <topicref href="topics/task-informal.dita"/>
+    </topicref>
+    <topicref href="topics/troubleshooting.dita"/>
+    <topicref href="topics/reference-full.dita"/>
+  </topichead>
+  <topichead navtitle="Reuse and processing">
+    <topicref href="topics/conref-use.dita"/>
+    <topicref href="topics/composite.dita" chunk="by-topic"/>
+    <topicref href="topics/shared.dita" copy-to="topics/shared-alpha.dita" keyscope="alpha">
+      <keydef keys="prodname"><topicmeta><keywords><keyword>Alpha Edition</keyword></keywords></topicmeta></keydef>
+    </topicref>
+    <topicref href="topics/shared.dita" copy-to="topics/shared-beta.dita" keyscope="beta">
+      <keydef keys="prodname"><topicmeta><keywords><keyword>Beta Edition</keyword></keywords></topicmeta></keydef>
+    </topicref>
+  </topichead>
+  <reltable>
+    <relheader><relcolspec type="task"/><relcolspec type="troubleshooting"/></relheader>
+    <relrow>
+      <relcell><topicref href="topics/task-full.dita"/></relcell>
+      <relcell><topicref href="topics/troubleshooting.dita"/></relcell>
+    </relrow>
+  </reltable>
+</map>

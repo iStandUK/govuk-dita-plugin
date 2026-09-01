@@ -4,7 +4,7 @@ A design for an open-source **DITA Open Toolkit (DITA-OT) plugin** that publishe
 directly as a static website using the **GOV.UK Design System** (GDS), with no dependency on
 commercial help-output tooling.
 
-**Status:** Implemented through **v0.1.0** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
+**Status:** Implemented through **v0.2.1** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
 
 ## How to read this folder
 
@@ -17,6 +17,7 @@ commercial help-output tooling.
 | [05-decision-log.md](05-decision-log.md) | Decisions taken so far, with options considered and rationale |
 | [06-open-questions.md](06-open-questions.md) | Questions still needing a decision before or during implementation |
 | [07-gap-analysis-oruk.md](07-gap-analysis-oruk.md) | Gap analysis of the Open Referral UK corpus: full-sweep feature inventory, verified dispositions, findings |
+| [08-gap-analysis-dita13.md](08-gap-analysis-dita13.md) | Gap analysis of the full DITA 1.3 specification against the plugin, with the verified 1.0 gap list |
 
 ## Summary of agreed direction
 
@@ -41,11 +42,13 @@ See [05-decision-log.md](05-decision-log.md) for the reasoning behind each of th
 | ORUK gap analysis ([07](07-gap-analysis-oruk.md)) | Full-sweep inventory of the Open Referral UK corpus; two fixes; `oruk-mini` fixture; upstream bug confirmed on [dita-ot#4465](https://github.com/dita-ot/dita-ot/issues/4465) |
 | Gap closure ([epic #12](https://github.com/iStandUK/govuk-dita-plugin/issues/12)) | GOV.UK home pages (bookmap abstract + attribution), mobile menu + caret navigation, figure/caption styling with `svgref` alt text |
 | [**v0.1.0**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.1.0) | First installable release, verified end-to-end from the public URL |
+| [**v0.2.0**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.2.0) / [v0.2.1](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.2.1) | Landing-page layouts (D-13) + depth control, Pagefind search, localisable strings, glossary and index generation, header search + footer support links, iStandUK theme (D-14) |
+| DITA 1.3 gap analysis ([08](08-gap-analysis-dita13.md)) | Full-spec coverage assessment with the `dita13-kitchen` fixture; the verified 1.0 gap list |
 
 Per-requirement status lives in the **Status column of
-[02-requirements.md](02-requirements.md)**. The headline v1 backlog: search (FR-S), glossary
-(FR-G), index (FR-X), official branding (FR-T2), localisable UI strings (NFR-I1), and the
-registry listing (FR-B2).
+[02-requirements.md](02-requirements.md)**. The 1.0 backlog = the remaining v1 epic items
+(official branding FR-T2/#20, registry + verification NFRs #21) plus the P1–P3 gap list in
+[08-gap-analysis-dita13.md](08-gap-analysis-dita13.md).
 
 ## Glossary of terms used throughout
 

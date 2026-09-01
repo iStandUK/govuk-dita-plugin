@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="hazard" xml:lang="en-GB">
+  <title>Hazard statements</title>
+  <shortdesc>The hazard statement domain for safety-critical content.</shortdesc>
+  <body>
+    <hazardstatement type="warning">
+      <messagepanel>
+        <typeofhazard>Rotating parts</typeofhazard>
+        <consequence>Serious injury to hands.</consequence>
+        <howtoavoid>Switch off the machine before opening the guard.</howtoavoid>
+      </messagepanel>
+    </hazardstatement>
+  </body>
+</topic>

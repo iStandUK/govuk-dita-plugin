@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="reference-full" xml:lang="en-GB">
+  <title>A full reference</title>
+  <shortdesc>Syntax section, properties table, and reference body division.</shortdesc>
+  <refbody>
+    <refsyn>
+      <synph><kwd>dita</kwd> <var>options</var></synph>
+    </refsyn>
+    <refbodydiv>
+      <section><title>Grouped section</title><p>refbodydiv groups body content.</p></section>
+    </refbodydiv>
+    <properties>
+      <prophead><proptypehd>Type</proptypehd><propvaluehd>Value</propvaluehd><propdeschd>Meaning</propdeschd></prophead>
+      <property><proptype>string</proptype><propvalue>auto</propvalue><propdesc>Detect.</propdesc></property>
+      <property><proptype>string</proptype><propvalue>no</propvalue><propdesc>Disable.</propdesc></property>
+    </properties>
+  </refbody>
+</reference>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE troubleshooting PUBLIC "-//OASIS//DTD DITA Troubleshooting//EN" "troubleshooting.dtd">
+<troubleshooting id="troubleshooting" xml:lang="en-GB">
+  <title>Build produces no search</title>
+  <shortdesc>The DITA 1.3 troubleshooting topic type.</shortdesc>
+  <troublebody>
+    <condition><p>The site builds but has no search field.</p></condition>
+    <troubleSolution>
+      <cause><p>Pagefind is not on the PATH.</p></cause>
+      <remedy>
+        <responsibleParty>The publisher</responsibleParty>
+        <steps>
+          <step><cmd>Install Pagefind.</cmd></step>
+          <step><cmd>Rebuild.</cmd></step>
+        </steps>
+      </remedy>
+    </troubleSolution>
+    <troubleSolution>
+      <cause><p>Search was disabled with govuk.search=no.</p></cause>
+      <remedy>
+        <steps-informal><p>Remove the parameter and rebuild.</p></steps-informal>
+      </remedy>
+    </troubleSolution>
+  </troublebody>
+</troubleshooting>

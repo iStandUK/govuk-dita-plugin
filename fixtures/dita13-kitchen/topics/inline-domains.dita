@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="inline-domains" xml:lang="en-GB">
+  <title>Inline domains</title>
+  <shortdesc>Highlighting, software, and user-interface domains.</shortdesc>
+  <body>
+    <p>Highlighting: <b>bold</b>, <i>italic</i>, <u>underline</u>, <sup>super</sup>,
+      <sub>sub</sub>, <line-through>struck</line-through>, <overline>overlined</overline>,
+      <tt>teletype</tt>.</p>
+    <p>Software domain: message <msgph>disk full</msgph> number <msgnum>E1234</msgnum>,
+      command <cmdname>build</cmdname>, path <filepath>/var/www</filepath>, input
+      <userinput>yes</userinput>, output <systemoutput>done</systemoutput>, variable
+      <varname>OUTPUT_DIR</varname>.</p>
+    <msgblock>ERROR E1234: disk full
+Retry after freeing space.</msgblock>
+    <p>User interface: press <uicontrol>Save</uicontrol> in
+      <menucascade><uicontrol>File</uicontrol><uicontrol>Export</uicontrol></menucascade>,
+      window <wintitle>Preferences</wintitle>, or use
+      <uicontrol>Save<shortcut>Ctrl+S</shortcut></uicontrol>.</p>
+    <screen>┌ Preferences ────────┐
+│ [x] Enable search   │
+└─────────────────────┘</screen>
+    <p>Markup and XML domains: element <xmlelement>topicref</xmlelement>, attribute
+      <xmlatt>keyref</xmlatt>, entity <textentity>nbsp</textentity>, name
+      <markupname>class</markupname>, namespace <xmlnsname>http://www.w3.org/2000/svg</xmlnsname>,
+      PI <xmlpi>xml-model</xmlpi>, character reference <numcharref>x2014</numcharref>,
+      parameter entity <parameterentity>topic.content</parameterentity>.</p>
+  </body>
+</topic>

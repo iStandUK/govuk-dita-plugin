@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<task id="task-full" xml:lang="en-GB">
+  <title>A full task</title>
+  <shortdesc>Every major task element in one procedure.</shortdesc>
+  <taskbody>
+    <prereq><p>The plugin is installed.</p></prereq>
+    <context><p>You want a site from a map.</p></context>
+    <steps>
+      <stepsection>Getting ready</stepsection>
+      <step><cmd>Open a terminal.</cmd>
+        <info><p>Any shell works.</p></info>
+        <stepxmp><codeblock>cd ~/project</codeblock></stepxmp>
+      </step>
+      <step><cmd>Choose how to proceed.</cmd>
+        <choices>
+          <choice>Build everything.</choice>
+          <choice>Build one map.</choice>
+        </choices>
+      </step>
+      <step><cmd>Pick an option from the table.</cmd>
+        <choicetable>
+          <chhead><choptionhd>Option</choptionhd><chdeschd>Result</chdeschd></chhead>
+          <chrow><choption>auto</choption><chdesc>Search on when Pagefind found.</chdesc></chrow>
+          <chrow><choption>no</choption><chdesc>Search off.</chdesc></chrow>
+        </choicetable>
+      </step>
+      <step><cmd>Run the build with substeps.</cmd>
+        <substeps>
+          <substep><cmd>Type the command.</cmd></substep>
+          <substep><cmd>Press Enter.</cmd></substep>
+        </substeps>
+        <stepresult>The site appears in the output directory.</stepresult>
+        <steptroubleshooting>If it fails, check the log.</steptroubleshooting>
+      </step>
+    </steps>
+    <result><p>A complete site.</p></result>
+    <tasktroubleshooting><p>Delete the output directory and rebuild.</p></tasktroubleshooting>
+    <postreq><p>Publish the output.</p></postreq>
+  </taskbody>
+</task>

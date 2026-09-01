@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="conref-lib" xml:lang="en-GB">
+  <title>Reusable library</title>
+  <body>
+    <note id="safety" type="warning">Reused safety note: switch off first.</note>
+    <ul id="steps-list">
+      <li id="li1">First reusable item</li>
+      <li id="li2">Second reusable item</li>
+      <li id="li3">Third reusable item</li>
+    </ul>
+  </body>
+</topic>

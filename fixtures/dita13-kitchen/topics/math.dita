@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="math" xml:lang="en-GB">
+  <title>Equations and MathML</title>
+  <shortdesc>The DITA 1.3 equation and MathML domains.</shortdesc>
+  <body>
+    <p>Inline equation <equation-inline><mathml>
+      <m:math xmlns:m="http://www.w3.org/1998/Math/MathML">
+        <m:mi>E</m:mi><m:mo>=</m:mo><m:mi>m</m:mi><m:msup><m:mi>c</m:mi><m:mn>2</m:mn></m:msup>
+      </m:math></mathml></equation-inline> in text.</p>
+    <equation-block>
+      <mathml>
+        <m:math xmlns:m="http://www.w3.org/1998/Math/MathML">
+          <m:mfrac><m:mn>1</m:mn><m:mi>n</m:mi></m:mfrac>
+        </m:math>
+      </mathml>
+    </equation-block>
+  </body>
+</topic>

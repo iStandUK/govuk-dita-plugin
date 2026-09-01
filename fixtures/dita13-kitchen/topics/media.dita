@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="media" xml:lang="en-GB">
+  <title>Images and image maps</title>
+  <shortdesc>Image placement, figures with descriptions, and the utilities domain.</shortdesc>
+  <body>
+    <p>Inline image <image href="../images/dot.svg"><alt>a dot</alt></image> in text.</p>
+    <fig>
+      <title>Block image with description</title>
+      <desc>The description element supplements the caption.</desc>
+      <image href="../images/dot.svg" placement="break"><alt>a dot, larger</alt></image>
+    </fig>
+    <imagemap>
+      <image href="../images/dot.svg"><alt>clickable dot</alt></image>
+      <area><shape>rect</shape><coords>0,0,40,40</coords>
+        <xref href="blocks.dita">Blocks</xref></area>
+    </imagemap>
+  </body>
+</topic>

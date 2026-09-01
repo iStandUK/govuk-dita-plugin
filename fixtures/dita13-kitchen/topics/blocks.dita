@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="blocks" xml:lang="en-GB">
+  <title>Base block elements</title>
+  <shortdesc>Definition lists, quotations, examples, footnotes, and editorial markup.</shortdesc>
+  <body>
+    <p>A definition list<fn id="fn1">Footnotes render as endnotes with backlinks.</fn>:</p>
+    <dl>
+      <dlhead><dthd>Term</dthd><ddhd>Meaning</ddhd></dlhead>
+      <dlentry><dt>transtype</dt><dd>An output format.</dd></dlentry>
+      <dlentry><dt>overlay</dt><dd>A stylesheet loaded after the base.</dd></dlentry>
+    </dl>
+    <lq reftitle="A famous style guide">Omit needless words.</lq>
+    <div outputclass="wrapper">
+      <p>A div grouping (DITA 1.3) with a paragraph and a preformatted block:</p>
+      <pre>plain   preformatted
+   text</pre>
+      <lines>Line one kept
+Line two kept</lines>
+    </div>
+    <example>
+      <title>An example block</title>
+      <p>Examples carry their own title.</p>
+    </example>
+    <p>Remaining note types: </p>
+    <note type="fastpath">Fastpath note.</note>
+    <note type="restriction">Restriction note.</note>
+    <note type="trouble">Trouble note.</note>
+    <p>Inline oddments: a <term>term without keyref</term>, a <keyword>keyword</keyword>,
+      a <ph>phrase</ph>, <text>text element</text>, state <state name="power" value="on"/>,
+      a <cite>citation</cite>, and a <q>quoted phrase</q>. Second footnote use
+      <fn callout="*">Callout footnote.</fn> here.</p>
+    <p audience="admin">Conditional paragraph flagged for administrators.</p>
+    <p audience="secret">Conditional paragraph excluded by the filter.</p>
+    <p rev="r2">Paragraph marked as revision r2.</p>
+    <draft-comment author="no">Draft comment (only with args.draft=yes).</draft-comment>
+  </body>
+</topic>

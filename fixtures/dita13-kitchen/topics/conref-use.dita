@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="conref-use" xml:lang="en-GB">
+  <title>Content reuse</title>
+  <shortdesc>Direct conref, key-based conkeyref, and a conref range.</shortdesc>
+  <body>
+    <p>By direct reference:</p>
+    <note conref="conref-lib.dita#conref-lib/safety"/>
+    <p>By key:</p>
+    <note conkeyref="reusables/safety"/>
+    <p>A range of list items:</p>
+    <ul>
+      <li conref="conref-lib.dita#conref-lib/li1"
+          conrefend="conref-lib.dita#conref-lib/li2"/>
+    </ul>
+  </body>
+</topic>

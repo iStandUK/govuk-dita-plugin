@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA General Task//EN" "generalTask.dtd">
+<task id="task-informal" xml:lang="en-GB">
+  <title>An informal task</title>
+  <shortdesc>steps-informal mixes prose with steps.</shortdesc>
+  <taskbody>
+    <steps-informal>
+      <p>Just run the build, then open the home page. Nothing else to it.</p>
+    </steps-informal>
+  </taskbody>
+</task>

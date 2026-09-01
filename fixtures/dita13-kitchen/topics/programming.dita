@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="programming" xml:lang="en-GB">
+  <title>Programming domain</title>
+  <shortdesc>Parameter lists, syntax phrases, and syntax diagrams.</shortdesc>
+  <body>
+    <p>Inline: option <option>--force</option>, parameter <parmname>govuk.search</parmname>,
+      API <apiname>initAll</apiname>, syntax phrase
+      <synph><kwd>dita</kwd> <var>input</var> <delim>--</delim><kwd>format</kwd></synph>.</p>
+    <parml>
+      <plentry><pt>input</pt><pd>The map to build.</pd></plentry>
+      <plentry><pt>format</pt><pd>The transformation type.</pd></plentry>
+    </parml>
+    <syntaxdiagram>
+      <title>Build command</title>
+      <groupseq><kwd>dita</kwd><var>options</var>
+        <groupchoice><kwd>--format=govuk</kwd><kwd>--format=html5</kwd></groupchoice>
+      </groupseq>
+    </syntaxdiagram>
+    <codeblock>let x = compute();</codeblock>
+  </body>
+</topic>

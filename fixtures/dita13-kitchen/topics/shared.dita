@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="shared" xml:lang="en-GB">
+  <title>Scoped product page</title>
+  <shortdesc>One source topic, published per key scope.</shortdesc>
+  <body>
+    <p>This page documents <ph keyref="prodname"/>.</p>
+  </body>
+</topic>

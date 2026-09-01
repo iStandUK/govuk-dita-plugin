@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<val>
+  <prop att="audience" val="admin" action="flag" style="double-underline" backcolor="#fff7bf"/>
+  <prop att="audience" val="secret" action="exclude"/>
+  <revprop val="r2" action="flag" changebar="solid" style="italics"/>
+</val>

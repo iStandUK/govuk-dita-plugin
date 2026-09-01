@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dita PUBLIC "-//OASIS//DTD DITA Composite//EN" "ditabase.dtd">
+<dita xml:lang="en-GB">
+  <topic id="comp-parent">
+    <title>Composite parent</title>
+    <body><p>chunk="by-topic" splits this file into separate pages.</p></body>
+    <topic id="comp-child-one">
+      <title>Composite child one</title>
+      <body><p>First child body.</p></body>
+    </topic>
+    <topic id="comp-child-two">
+      <title>Composite child two</title>
+      <body><p>Second child body.</p></body>
+    </topic>
+  </topic>
+</dita>
