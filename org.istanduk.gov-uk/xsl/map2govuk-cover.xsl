@@ -221,6 +221,11 @@ map transformation with the plugin's values.
                     <xsl:for-each select="$entries">
                       <div class="govuk-grid-column-one-third">
                         <xsl:apply-templates select="." mode="govuk-entry"/>
+                        <xsl:call-template name="govuk-child-list">
+                          <xsl:with-param name="children"
+                                          select="*[contains(@class, ' map/topicref ')]
+                                                  [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
+                        </xsl:call-template>
                       </div>
                     </xsl:for-each>
                   </div>

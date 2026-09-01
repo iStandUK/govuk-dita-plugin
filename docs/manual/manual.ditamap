@@ -21,26 +21,43 @@
       <toc/>
     </booklists>
   </frontmatter>
-  <chapter navtitle="Getting started">
+  <chapter>
+    <topicmeta>
+      <navtitle>Getting started</navtitle>
+      <shortdesc>What the plugin is, how to install it, and how to build your first site.</shortdesc>
+    </topicmeta>
     <mapref href="keys.ditamap" processing-role="resource-only"/>
     <topicref keyref="introduction"/>
     <topicref keyref="install"/>
     <topicref keyref="build"/>
   </chapter>
-  <chapter navtitle="Reference">
+  <chapter>
+    <topicmeta>
+      <navtitle>Reference</navtitle>
+      <shortdesc>Build parameters, branding and the legal position, navigation, and search.</shortdesc>
+    </topicmeta>
     <topicref keyref="parameters"/>
     <topicref keyref="branding"/>
     <topicref keyref="navigation"/>
+    <topicref keyref="layouts"/>
     <topicref keyref="search"/>
   </chapter>
-  <chapter navtitle="Capability demonstrations">
+  <chapter>
+    <topicmeta>
+      <navtitle>Capability demonstrations</navtitle>
+      <shortdesc>Each page renders the DITA elements it describes, live.</shortdesc>
+    </topicmeta>
     <topicref keyref="demo-typography"/>
     <topicref keyref="demo-notes"/>
     <topicref keyref="demo-tables"/>
     <topicref keyref="demo-code"/>
     <topicref keyref="demo-figures"/>
   </chapter>
-  <chapter navtitle="Development">
+  <chapter>
+    <topicmeta>
+      <navtitle>Development</navtitle>
+      <shortdesc>Where the source and design records live, and how to contribute.</shortdesc>
+    </topicmeta>
     <topicref keyref="development"/>
   </chapter>
 </bookmap>

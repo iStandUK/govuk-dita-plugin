@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="layouts" xml:lang="en-GB">
+  <title>Home-page layouts</title>
+  <shortdesc>The home page has five layouts; the default chooses one from the map's shape,
+    and <codeph>govuk.homepage.layout</codeph> overrides it. Every screenshot below is this
+    manual, rebuilt with a different layout.</shortdesc>
+  <conbody>
+    <p>With <codeph>auto</codeph> (the default): a single top-level entry gives the
+      <codeph>start</codeph> layout, two to eight entries give <codeph>annotated</codeph>,
+      and more entries — or a bookmap with several chapters, like this manual — give
+      <codeph>grouped</codeph>. The <codeph>grid</codeph> and <codeph>accordion</codeph>
+      layouts are explicit choices, and <codeph>list</codeph> keeps a plain contents
+      tree.</p>
+    <section>
+      <title>Start</title>
+      <p>For a publication that is one linear guide: a green start button leads straight
+        into the first page, with the guide's sections listed beneath.</p>
+      <fig outputclass="app-screenshot">
+        <title>The start layout</title>
+        <image href="../images/homepage-start.png">
+          <alt>Home page with the title, abstract, a green Start now button, and a contents
+            list of the first sections.</alt>
+        </image>
+      </fig>
+    </section>
+    <section>
+      <title>Annotated contents</title>
+      <p>Each top-level entry appears with its short description — write good
+        <codeph>shortdesc</codeph> elements and this layout writes itself.</p>
+      <fig outputclass="app-screenshot">
+        <title>The annotated layout</title>
+        <image href="../images/homepage-annotated.png">
+          <alt>Home page listing each entry as a linked heading with a one-line description
+            underneath.</alt>
+        </image>
+      </fig>
+    </section>
+    <section>
+      <title>Grouped sections</title>
+      <p>The default for this manual: a heading per chapter with its pages listed beneath,
+        each with a hint-styled description.</p>
+      <fig outputclass="app-screenshot">
+        <title>The grouped layout</title>
+        <image href="../images/homepage-grouped.png">
+          <alt>Home page with chapter headings, each followed by a list of page links with
+            grey description lines.</alt>
+        </image>
+      </fig>
+    </section>
+    <section>
+      <title>Grid</title>
+      <p>Chapters side by side in columns — the GOV.UK answer to a tile grid, using
+        typography rather than boxes.</p>
+      <fig outputclass="app-screenshot">
+        <title>The grid layout</title>
+        <image href="../images/homepage-grid.png">
+          <alt>Home page with three columns, each a chapter heading, description, and its
+            page links.</alt>
+        </image>
+      </fig>
+    </section>
+    <section>
+      <title>Accordion</title>
+      <p>For very large publications: each group collapses behind a toggle, with
+        <q>Show all sections</q> provided by the Design System component. Without
+        JavaScript every section simply shows open.</p>
+      <fig outputclass="app-screenshot">
+        <title>The accordion layout</title>
+        <image href="../images/homepage-accordion.png">
+          <alt>Home page with collapsed accordion sections named after the chapters, each
+            with a Show toggle.</alt>
+        </image>
+      </fig>
+    </section>
+  </conbody>
+</concept>

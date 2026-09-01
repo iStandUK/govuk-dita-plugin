@@ -26,7 +26,8 @@
         column <codeph>grid</codeph> and an <codeph>accordion</codeph> for very large
         publications. Bookmaps contribute more: the alternative book title becomes the
         abstract paragraph, and the book's author and owning organisation appear beneath
-        it — exactly as on this manual's own home page.</p>
+        it — exactly as on this manual's own home page. <xref keyref="layouts"/> shows
+        every layout as a screenshot of this manual.</p>
       <note type="tip">Give each top-level topic a good <codeph>shortdesc</codeph>: the
         richer layouts reuse it as the entry's description, as this manual's home page
         shows.</note>

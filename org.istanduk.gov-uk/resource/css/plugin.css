@@ -301,6 +301,11 @@ li.olchildlink {
   background: #ffffff;
 }
 
+/* Screenshots keep a visible edge against the page background */
+figure.app-screenshot img {
+  border: 1px solid #b1b4b6;
+}
+
 /* ===== Content furniture without a govuk-frontend component ===== */
 
 pre.codeblock,

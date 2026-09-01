@@ -151,6 +151,9 @@ jobs:
           grep -q 'govuk-button--start' out/oruk-mini/index.html
           grep -q 'govuk-grid-column-one-third' out/manual-grid/index.html
           grep -q 'govuk-accordion__section' out/manual-accordion/index.html
+          # Manual documents the layouts with screenshots of itself
+          grep -q 'homepage-grid.png' out/manual/topics/layouts.html
+          test -f out/manual/images/homepage-grid.png
           # Localisable UI text (#19 / NFR-I1)
           grep -q 'data-label-menu="Menu"' out/manual/topics/introduction.html
           # FR-T1: neutral builds ship no restricted assets and load no external
