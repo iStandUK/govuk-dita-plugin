@@ -1,8 +1,11 @@
-# DRAFT — upstream issue for dita-ot/dita-ot (not yet filed)
+# Upstream report — dita-ot chunk cross-reference bug
 
-Verified against DITA-OT 4.4.1 on 2026-09-01 with the exact files below. File at
-<https://github.com/dita-ot/dita-ot/issues/new> when approved; everything between the rules
-is the proposed issue body.
+**Outcome (2026-09-01):** an existing upstream issue already covered this —
+[dita-ot/dita-ot#4465](https://github.com/dita-ot/dita-ot/issues/4465) (open since April
+2024; regression 4.1.2 → 4.2.1). Rather than filing a duplicate, this material was posted as
+a [confirming comment](https://github.com/dita-ot/dita-ot/issues/4465#issuecomment-5496533798)
+adding the 4.4.1 confirmation, the inline minimal reproduction, the keyref route, real-world
+impact, and the workaround. The draft below is retained for the record.
 
 **Proposed title:** `Cross-references to a topic merged by chunk="to-content" become broken links to temp-file hash names`
 

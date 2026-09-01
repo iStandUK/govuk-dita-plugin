@@ -94,11 +94,13 @@ by building the real corpus:
 - **International bookmap** (same content, no chunking): **0 errors, 0 warnings, 486 pages**
   — completely clean under the plugin.
 
-The minimal reproduction is an xref by key to a chunked child (see
-`fixtures/oruk-mini/chapter.dita`, which deliberately avoids it for CI). Issue #11 holds the
-findings and the upstream-report decision; the practical authoring workaround for the
+The minimal reproduction is any cross-reference (href or keyref — both break identically) to
+a chunked child; `fixtures/oruk-mini/chapter.dita` deliberately avoids the pattern for CI.
+**Reported upstream:** confirmed as [dita-ot/dita-ot#4465](https://github.com/dita-ot/dita-ot/issues/4465)
+(a 4.1.2 → 4.2.1 regression, open since 2024), where our 4.4.1 confirmation, minimal
+reproduction, and impact numbers are now posted. The practical authoring workaround for the
 combined publication is to key chunked children as `parent.dita#child-id` fragments (or to
-generate a per-publication key map) so keys survive chunking.
+generate a per-publication key map) so references survive chunking.
 
 **F5 — Home page (resolved via #8).** The bookmap cover (`index.html`) was the known unstyled
 page. A GOV.UK cover stylesheet now renders the title, the `booktitlealt` abstract as the
