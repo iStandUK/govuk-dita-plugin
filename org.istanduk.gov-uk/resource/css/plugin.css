@@ -375,6 +375,15 @@ li.olchildlink {
   font-size: 1rem;
 }
 
+/* Deeper levels (govuk.homepage.depth 3+) nest with a modest indent */
+.app-group-list .app-group-list {
+  margin: 5px 0 5px 20px;
+}
+
+.app-group-list .app-group-list > li {
+  margin-bottom: 5px;
+}
+
 .app-attribution {
   color: #505a5f;
 }

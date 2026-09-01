@@ -44,6 +44,14 @@
                 shape; see <xref keyref="navigation"/>.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.homepage.depth</codeph></entry>
+              <entry>1–9; default <codeph>2</codeph></entry>
+              <entry>How many levels of the map the landing page shows (grid, grouped,
+                accordion, and start layouts): <codeph>1</codeph> lists top-level entries
+                only, <codeph>2</codeph> adds their children, higher values nest
+                deeper.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.search</codeph></entry>
               <entry><codeph>auto</codeph> (default), <codeph>yes</codeph>,
                 <codeph>no</codeph></entry>
