@@ -3,6 +3,11 @@
 Decisions taken with Nicholas on 2026-09-01, lightweight-ADR style. Status **Accepted** unless
 noted. Revisit a decision by adding a superseding entry, not by editing history.
 
+*Implementation note (v0.1.0):* D-01, D-02, D-03 (neutral half), D-05, D-07, D-08, D-09,
+D-10, D-11, and D-12 are implemented and validated in the released plugin. D-04 (Pagefind
+search) and D-06's glossary/index features are decided but not yet built — they head the v1
+backlog. D-03's official-branding mode remains declared-but-unimplemented (FR-T2).
+
 ---
 
 ## D-01 · Extend the `html5` transtype

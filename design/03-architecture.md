@@ -51,62 +51,69 @@ fork. If a future DITA-OT release changes preprocessing, we inherit the fix.
 ## Plugin anatomy
 
 Plugin ID **`org.istanduk.gov-uk`** (decided — see
-[05-decision-log.md](05-decision-log.md), D-10). Proposed layout:
+[05-decision-log.md](05-decision-log.md), D-10). **As built at v0.1.0** — the implementation
+consolidated the proposed rendering modules into fewer files (`blocks.xsl` carries typography,
+tables, notes, and SVG handling; the cover stylesheet replaced the proposed `home.xsl`), and
+the glossary/index/search/strings pieces remain planned:
 
 ```
 org.istanduk.gov-uk/
-├── plugin.xml                 # transtype declaration, extension-point features, parameters
-├── integrator.xml             # hooks the plugin's Ant file into the toolkit at install time
-├── build_dita2govuk.xml       # Ant: dita2govuk target — delegates to dita2html5, then
-│                              #   glossary/index generation, asset copy, Pagefind step
+├── plugin.xml                 # transtype govuk extends html5; params; ant.import +
+│                              #   dita.conductor.html5.param features
+├── build_dita2govuk.xml       # Ant: dita2govuk = init (args.xsl, cover xsl, nav-toc,
+│                              #   branding guard) → dita2html5 → asset copy
+├── insertParameters.xml       # passes govuk.* Ant properties into the topic XSLT
 ├── xsl/
-│   ├── dita2govuk.xsl         # shell: imports html5 XSLT then the modules below
-│   ├── template.xsl           # page skeleton: <html> … govuk-template, header, footer,
-│   │                          #   width container, grid (sidebar + main), skip link
-│   ├── nav.xsl                # sidebar tree markup + "on this page" contents
-│   ├── blocks.xsl             # p, ul/ol, note, codeblock, fig, pre, lq …
-│   ├── tables.xsl             # table/simpletable → govuk-table
-│   ├── inline.xsl             # xref/link → govuk-link, term/abbreviated-form → abbr, ph, uicontrol …
-│   ├── task.xsl               # steps, cmd, stepresult styling
-│   ├── glossary.xsl           # standalone pass: glossary.html
-│   ├── index.xsl              # standalone pass: index page from indexterm collection
-│   └── home.xsl               # site home page from map metadata
+│   ├── dita2govuk.xsl         # shell: imports html5 chain, then template + blocks
+│   ├── template.xsl           # page skeleton: govuk-template, masthead, grid
+│   │                          #   (sidebar + main), footer, CSS links, scripts
+│   ├── blocks.xsl             # typography via set-output-class; notes → inset/warning;
+│   │                          #   tables incl. spans; svgref alt; captions
+│   └── map2govuk-cover.xsl    # GOV.UK home page: title, bookmap abstract,
+│   │                          #   attribution, contents tree (args.html5.toc.xsl)
+│   ├── glossary.xsl           # (planned, FR-G) standalone pass: glossary.html
+│   └── index.xsl              # (planned, FR-X) standalone pass: A–Z index page
 ├── resource/
-│   ├── govuk-frontend/        # vendored pinned release (dist): *.min.css, *.min.js,
-│   │   └── assets/            #   images, fonts (fonts copied only when branding=official)
-│   ├── overlay-neutral.css    # neutral branding: system font stack, plain header colours
-│   ├── plugin.css             # styles for plugin-specific furniture (sidebar tree, index page)
-│   └── plugin.js              # nav expand/collapse init, govuk-frontend initAll(), search box wiring
-├── search/
-│   └── search.xsl / page      # search page shell + Pagefind UI integration
-├── strings/
-│   ├── strings.xml            # language registry
-│   └── strings-en-gb.xml      # generated-text: "Contents", "Warning", "Search", "Menu", …
-├── LICENSE                    # Apache-2.0 (+ MIT notice for vendored govuk-frontend)
-└── docs/                      # user guide — authored in DITA, published with the plugin itself
+│   ├── govuk-frontend/        # vendored v6.5.0 compiled CSS/JS + maps, VERSION,
+│   │                          #   LICENSE, NOTICE — no fonts or crown imagery
+│   ├── css/
+│   │   ├── overlay-neutral.css  # neutral branding: local font aliasing, crest suppression
+│   │   └── plugin.css           # masthead, sidebar, contents, figures, code, links
+│   └── js/
+│       └── plugin.js          # menu toggle, caret collapse, chunked-page highlight
+├── search/                    # (planned, FR-S) Pagefind step + search page
+└── strings/                   # (planned, NFR-I1/C-14) generated-text files
 ```
+
+The repository root carries `LICENSE` (Apache-2.0) and the design docs; the vendored MIT
+licence and NOTICE live beside the govuk-frontend assets.
 
 ## Extension-point wiring
 
-The plugin touches the toolkit **only** through documented extension points
-(exact IDs to be re-verified against the pinned DITA-OT release at implementation start —
-they occasionally gain/lose entries between minors):
+The plugin touches the toolkit **only** through documented extension points and properties.
+Verified against DITA-OT 4.4.1, the as-built wiring differs from the original sketch in one
+useful way: instead of the global `dita.xsl.html5` extension point (which would inject our
+XSLT into *every* html5-family transtype), the `dita2govuk.init` target sets the **`args.xsl`
+property**, scoping all overrides to the `govuk` transtype — plain `html5` builds on the same
+toolkit are untouched. The cover page is routed the same way via **`args.html5.toc.xsl`**.
 
 ```mermaid
 flowchart LR
-    subgraph plugin["plugin.xml declares"]
+    subgraph plugin["plugin.xml + build_dita2govuk.xml declare"]
         T["transtype govuk<br/>extends html5<br/>(+ param declarations)"]
-        F1["feature: dita.conductor.target.relative<br/>→ build_dita2govuk.xml"]
-        F2["feature: dita.xsl.html5<br/>→ xsl/dita2govuk.xsl"]
-        F3["feature: dita.conductor.html5.param<br/>→ pass govuk.* params into XSLT"]
-        F4["feature: dita.xsl.strings<br/>→ strings/strings.xml"]
+        F1["feature: ant.import<br/>→ build_dita2govuk.xml"]
+        F2["property: args.xsl<br/>→ xsl/dita2govuk.xsl<br/>(set in dita2govuk.init)"]
+        F3["feature: dita.conductor.html5.param<br/>→ insertParameters.xml<br/>(govuk.* params, if:set-guarded)"]
+        F4["property: args.html5.toc.xsl<br/>→ xsl/map2govuk-cover.xsl"]
+        F5["feature: dita.xsl.strings<br/>(planned, C-14)"]
     end
 
     subgraph ot["DITA-OT core + org.dita.html5"]
         E1["Ant conductor<br/>(target registry)"]
-        E2["dita2html5.xsl<br/>import chain"]
+        E2["html5.topic xslt task"]
         E3["XSLT parameter set"]
-        E4["Generated-text<br/>string tables"]
+        E4["html5.map cover xslt task"]
+        E5["Generated-text<br/>string tables"]
     end
 
     T --> E1
@@ -114,11 +121,15 @@ flowchart LR
     F2 --> E2
     F3 --> E3
     F4 --> E4
+    F5 -.-> E5
 ```
 
-Because `dita.xsl.html5` *imports* our stylesheet into the standard chain with higher import
-precedence, any element we don't override keeps its default html5 rendering — a safety net for
-uncommon DITA elements.
+Because `dita2govuk.xsl` *imports* the standard html5 chain first and the plugin's modules
+after it (higher import precedence), any element we don't override keeps its default html5
+rendering — a safety net for uncommon DITA elements, proven in practice by the ORUK corpus
+(design/07). The one subtlety found during implementation: element classes are appended
+through the `set-output-class` mode (the hook `commonattributes` actually uses), so an
+author's `@outputclass` still replaces the plugin's default classes per element.
 
 ## Page template
 
@@ -160,20 +171,22 @@ Implementation notes:
 
 ## Build parameters (initial set)
 
-| Parameter | Values / default | Purpose |
-|---|---|---|
-| `govuk.branding` | `neutral` (default) \| `official` | FR-T1/T2 — crown, fonts, OGL footer |
-| `govuk.service.name` | text; default map title | Header service/publication name |
-| `govuk.service.url` | URL; default site home | Header name link target |
-| `govuk.phase` | `none` (default) \| `alpha` \| `beta` | Phase banner |
-| `govuk.phase.feedback.url` | URL | Phase banner feedback link |
-| `govuk.search` | `auto` (default) \| `yes` \| `no` | Search UI + Pagefind step; `auto` = on if Pagefind found |
-| `govuk.pagefind.cmd` | path; default `pagefind` on PATH | Locate the Pagefind binary |
-| `govuk.breadcrumbs` | `no` (default) \| `yes` | FR-N6 |
-| `govuk.footer.links` | file/ref | Footer link list (title+URL pairs) |
-| `govuk.footer.licence` | text/HTML ref | Neutral-mode licence statement |
-| `govuk.favicon` | path | Custom favicon set |
-| `args.css`, `args.cssroot`, `args.copycss` | inherited | Publisher CSS appended last (FR-T4) |
+Status as of v0.1.0: ✅ implemented · ⬜ planned (each arrives with its feature).
+
+| Parameter | Values / default | Purpose | Status |
+|---|---|---|---|
+| `govuk.branding` | `neutral` (default) \| `official` | FR-T1/T2 — crown, fonts, OGL footer | ✅ declared; `official` warns and is not yet implemented |
+| `govuk.service.name` | text; default map/book title | Masthead service/publication name | ✅ |
+| `govuk.service.url` | URL; default site home | Masthead link target | ⬜ (masthead links to `index.html`) |
+| `govuk.phase` | `none` (default) \| `alpha` \| `beta` | Phase banner | ⬜ |
+| `govuk.phase.feedback.url` | URL | Phase banner feedback link | ⬜ |
+| `govuk.search` | `auto` (default) \| `yes` \| `no` | Search UI + Pagefind step; `auto` = on if Pagefind found | ⬜ FR-S |
+| `govuk.pagefind.cmd` | path; default `pagefind` on PATH | Locate the Pagefind binary | ⬜ FR-S |
+| `govuk.breadcrumbs` | `no` (default) \| `yes` | FR-N6 | ⬜ |
+| `govuk.footer.links` | file/ref | Footer link list (title+URL pairs) | ⬜ |
+| `govuk.footer.licence` | text/HTML ref | Neutral-mode licence statement | ⬜ |
+| `govuk.favicon` | path | Custom favicon set | ⬜ |
+| `args.css`, `args.cssroot`, `args.copycss` | inherited | Publisher CSS appended last (FR-T4) | ✅ |
 
 ## Search architecture
 

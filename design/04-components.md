@@ -6,24 +6,29 @@ requirement from [02-requirements.md](02-requirements.md)).
 
 ## Component inventory
 
-| ID | Component | Description | Size* |
-|---|---|---|---|
-| C-01 | **Transtype & Ant glue** | `plugin.xml` (transtype `govuk` extends `html5`, parameter declarations), `integrator.xml`, `build_dita2govuk.xml` orchestrating: delegate to `dita2html5` → glossary pass → index pass → asset copy → branding branch → Pagefind step | S |
-| C-02 | **Page template module** | `template.xsl` — GOV.UK page skeleton (skip link, header, service row, phase banner, grid, footer), `js-enabled` snippet, module script block, metadata head | M |
-| C-03 | **Navigation module** | `nav.xsl` + the nav part of `plugin.js` — sidebar tree from inherited nav output, current-page highlighting, expand/collapse enhancement, mobile menu toggle, "On this page" contents, prev/next pagination, optional breadcrumbs | L |
-| C-04 | **Block rendering module** | `blocks.xsl` — paragraphs, lists, notes→inset/warning, codeblocks, figures, quotes, section titles/heading levels | M |
-| C-05 | **Table module** | `tables.xsl` — CALS `table` and `simpletable` → `govuk-table`, captions, header scoping, overflow wrapper | M |
-| C-06 | **Inline module** | `inline.xsl` — links (`xref`, `link` → `govuk-link`), `term`/`abbreviated-form` → `<abbr>` + glossary link, `ph`, `uicontrol`/`menucascade`, `cite`, `fn` markers | M |
-| C-07 | **Task module** | `task.xsl` — steps as numbered lists, cmd/info/stepresult styling, prereq/context/result sections | S |
-| C-08 | **Glossary generator** | `glossary.xsl` standalone pass — collect referenced `glossentry` topics, en-GB collation sort, A–Z page with letter nav | M |
-| C-09 | **Index generator** | `index.xsl` standalone pass — collect `indexterm` with page+anchor locators, merge, nest, see/see-also, A–Z page | L |
-| C-10 | **Home page generator** | `home.xsl` — site landing page from map title/metadata and top-level topicrefs | S |
-| C-11 | **Search integration** | Ant Pagefind step with auto/yes/no logic, search page shell, `data-pagefind-body` scoping, self-hosted Pagefind UI restyled with Design System form classes | M |
-| C-12 | **Asset bundle** | Vendored pinned `govuk-frontend` dist, `overlay-neutral.css`, `plugin.css` (sidebar/index/glossary/search furniture), `plugin.js` (initAll + enhancements) | M |
-| C-13 | **Branding module** | `govuk.branding` parameter handling: template branches (header/footer variants), conditional asset copy (fonts, crown, OGL), build-log warning in official mode | M |
-| C-14 | **Localisation strings** | `strings.xml` + `strings-en-gb.xml` for all generated text; wired to the toolkit's generated-text mechanism | S |
-| C-15 | **Fixture publication & test harness** | A sample DITA publication exercising every mapped element (the review fixture and CI subject); HTML validation (Nu), axe-core accessibility checks, visual-regression snapshots, DITA-OT version matrix, neutral-mode asset assertions | L |
-| C-16 | **Documentation** | User guide (install, parameters, branding rules and the legal position, search setup, theming) — authored in DITA and published with the plugin itself as its live demo | M |
+Status as of **v0.1.0**: ✅ implemented · 🔶 partly implemented · ⬜ not started. Note the
+as-built file layout consolidated several proposed modules — tables, inline, and SVG handling
+live in `blocks.xsl`, and the home page is `map2govuk-cover.xsl` (see
+[03-architecture.md](03-architecture.md), plugin anatomy).
+
+| ID | Component | Description | Size* | Status |
+|---|---|---|---|---|
+| C-01 | **Transtype & Ant glue** | `plugin.xml` (transtype `govuk` extends `html5`, parameter declarations), `insertParameters.xml`, `build_dita2govuk.xml` orchestrating: delegate to `dita2html5` → glossary pass → index pass → asset copy → branding branch → Pagefind step | S | ✅ core (glossary/index/Pagefind steps arrive with C-08/C-09/C-11) |
+| C-02 | **Page template module** | `template.xsl` — GOV.UK page skeleton (skip link, header, service row, phase banner, grid, footer), `js-enabled` snippet, module script block, metadata head | M | ✅ (phase banner pending FR-T3) |
+| C-03 | **Navigation module** | sidebar tree from inherited nav output (restyled in `template.xsl`/`plugin.css`) + `plugin.js` — current-page highlighting (chunked pages included), expand/collapse enhancement, mobile menu toggle, "On this page" contents, prev/next pagination, optional breadcrumbs | L | 🔶 sidebar, highlighting, menu, carets done; "On this page" (FR-N3), prev/next (FR-N5), breadcrumbs (FR-N6) pending |
+| C-04 | **Block rendering module** | `blocks.xsl` — paragraphs, lists, notes→inset/warning, codeblocks, figures, quotes, section titles/heading levels | M | ✅ |
+| C-05 | **Table module** | CALS `table` and `simpletable` → `govuk-table` (in `blocks.xsl`), captions, header scoping, column spans, overflow wrapper | M | ✅ |
+| C-06 | **Inline module** | links (`xref` → `govuk-link`), `term`/`abbreviated-form` → `<abbr>` + glossary link, `ph`, `uicontrol`/`menucascade`, `cite`, `fn` markers | M | 🔶 xref done; glossary-linked inline and UI-domain styling pending |
+| C-07 | **Task module** | steps as numbered lists, cmd/info/stepresult styling, prereq/context/result sections | S | ⬜ inherited rendering only |
+| C-08 | **Glossary generator** | `glossary.xsl` standalone pass — collect referenced `glossentry` topics, en-GB collation sort, A–Z page with letter nav | M | ⬜ v1 backlog |
+| C-09 | **Index generator** | `index.xsl` standalone pass — collect `indexterm` with page+anchor locators, merge, nest, see/see-also, A–Z page | L | ⬜ v1 backlog |
+| C-10 | **Home page generator** | `map2govuk-cover.xsl` — site landing page from map/bookmap title, abstract, attribution, and contents tree | S | ✅ |
+| C-11 | **Search integration** | Ant Pagefind step with auto/yes/no logic, search page shell, `data-pagefind-body` scoping, self-hosted Pagefind UI restyled with Design System form classes | M | ⬜ v1 backlog |
+| C-12 | **Asset bundle** | Vendored pinned `govuk-frontend` dist (v6.5.0, CSS/JS only — no restricted assets), `overlay-neutral.css`, `plugin.css`, `plugin.js` | M | ✅ |
+| C-13 | **Branding module** | `govuk.branding` parameter handling: template branches (header/footer variants), conditional asset copy (fonts, crown, OGL), build-log warning in official mode | M | 🔶 neutral mode + warning done; official mode pending (FR-T2) |
+| C-14 | **Localisation strings** | `strings.xml` + `strings-en-gb.xml` for all generated text; wired to the toolkit's generated-text mechanism | S | ⬜ (note labels already use toolkit strings; plugin furniture text hardcoded) |
+| C-15 | **Fixture publication & test harness** | Sample DITA publications exercising the mapped elements (CI subjects); HTML validation (Nu), axe-core accessibility checks, visual-regression snapshots, DITA-OT version matrix, neutral-mode asset assertions | L | 🔶 two fixtures, Nu validation, structural and asset assertions in CI; axe, visual regression, and version matrix pending |
+| C-16 | **Documentation** | User guide (install, parameters, branding rules and the legal position, search setup, theming) — authored in DITA and published with the plugin itself as its live demo | M | ⬜ (repo README covers install/run basics) |
 
 \* Relative effort: S = small, M = medium, L = large.
 

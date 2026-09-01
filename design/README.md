@@ -4,7 +4,7 @@ A design for an open-source **DITA Open Toolkit (DITA-OT) plugin** that publishe
 directly as a static website using the **GOV.UK Design System** (GDS), with no dependency on
 commercial help-output tooling.
 
-**Status:** Draft for review · **Date:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
+**Status:** Implemented through **v0.1.0** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
 
 ## How to read this folder
 
@@ -31,6 +31,21 @@ pattern (persistent left-hand navigation). Version 1 includes **glossary/abbrevi
 listed in the DITA-OT plugin registry, targeting **DITA-OT 4.4.1 or later**.
 
 See [05-decision-log.md](05-decision-log.md) for the reasoning behind each of these.
+
+## Progress
+
+| Milestone | Delivered |
+|---|---|
+| [`design` release](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/design) | Agreed design: documents 01–06, decisions D-01…D-11 |
+| Proof of Concept ([epic #1](https://github.com/iStandUK/govuk-dita-plugin/issues/1)) | Walking skeleton: `govuk` transtype, GOV.UK page template and typography, sidebar navigation, vendored govuk-frontend v6.5.0 (D-12), fixture + CI with Nu HTML validation |
+| ORUK gap analysis ([07](07-gap-analysis-oruk.md)) | Full-sweep inventory of the Open Referral UK corpus; two fixes; `oruk-mini` fixture; upstream bug confirmed on [dita-ot#4465](https://github.com/dita-ot/dita-ot/issues/4465) |
+| Gap closure ([epic #12](https://github.com/iStandUK/govuk-dita-plugin/issues/12)) | GOV.UK home pages (bookmap abstract + attribution), mobile menu + caret navigation, figure/caption styling with `svgref` alt text |
+| [**v0.1.0**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.1.0) | First installable release, verified end-to-end from the public URL |
+
+Per-requirement status lives in the **Status column of
+[02-requirements.md](02-requirements.md)**. The headline v1 backlog: search (FR-S), glossary
+(FR-G), index (FR-X), official branding (FR-T2), localisable UI strings (NFR-I1), and the
+registry listing (FR-B2).
 
 ## Glossary of terms used throughout
 

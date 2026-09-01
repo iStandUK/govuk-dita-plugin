@@ -64,18 +64,18 @@ transformations, or its assets.
 What the current commercial help output provides today, and where each feature lands in this
 design:
 
-| Current-output feature | Disposition | Where |
-|---|---|---|
-| TOC sidebar with expand/collapse | **Kept** — tech-docs-style sidebar built from the map | FR-N1–N4 |
-| Full-text search | **Kept** — Pagefind, post-build | FR-S1–S4 |
-| Index terms page | **Kept** — v1 requirement | FR-X1–X3 |
-| Breadcrumbs | **Kept, optional** — off by default in the sidebar layout | FR-N6 |
-| Previous/next topic links | **Kept** — GOV.UK pagination component | FR-N5 |
-| Responsive/mobile layout | **Kept** — govuk grid + mobile navigation | FR-N4, NFR-A* |
-| Print-friendly CSS | **Deferred** — roadmap | Roadmap R3 |
-| Search-term highlighting in results | **Deferred** — depends on Pagefind capabilities | Roadmap R4 |
-| Rating / feedback widget | **Dropped** — replaced (optionally) by GOV.UK "is this page useful" pattern later | Roadmap R6 |
-| PDF link integration | **Dropped** — out of scope | Non-goal |
+| Current-output feature | Disposition | Where | v0.1.0 |
+|---|---|---|---|
+| TOC sidebar with expand/collapse | **Kept** — tech-docs-style sidebar built from the map | FR-N1–N4 | ✅ |
+| Full-text search | **Kept** — Pagefind, post-build | FR-S1–S4 | ⬜ v1 backlog |
+| Index terms page | **Kept** — v1 requirement | FR-X1–X3 | ⬜ v1 backlog |
+| Breadcrumbs | **Kept, optional** — off by default in the sidebar layout | FR-N6 | ⬜ |
+| Previous/next topic links | **Kept** — GOV.UK pagination component | FR-N5 | ⬜ |
+| Responsive/mobile layout | **Kept** — govuk grid + mobile navigation | FR-N4, NFR-A* | ✅ |
+| Print-friendly CSS | **Deferred** — roadmap | Roadmap R3 | — |
+| Search-term highlighting in results | **Deferred** — depends on Pagefind capabilities | Roadmap R4 | — |
+| Rating / feedback widget | **Dropped** — replaced (optionally) by GOV.UK "is this page useful" pattern later | Roadmap R6 | — |
+| PDF link integration | **Dropped** — out of scope | Non-goal | — |
 
 ## System context
 
