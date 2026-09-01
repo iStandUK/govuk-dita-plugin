@@ -81,9 +81,12 @@ org.istanduk.gov-uk/
 │   │   └── plugin.css           # masthead, sidebar, contents, figures, code, links
 │   └── js/
 │       └── plugin.js          # menu toggle, caret collapse, chunked-page highlight
-├── search/                    # (planned, FR-S) Pagefind step + search page
-└── strings/                   # (planned, NFR-I1/C-14) generated-text files
+└── strings/                   # generated-text registry + strings-en-gb.xml (NFR-I1)
 ```
+
+Search (FR-S) needed no directory of its own: the Ant init probes for Pagefind and the
+`govuk.search-index` target runs it post-build; the search page is emitted by the cover
+stylesheet via `xsl:result-document`.
 
 The repository root carries `LICENSE` (Apache-2.0) and the design docs; the vendored MIT
 licence and NOTICE live beside the govuk-frontend assets.
@@ -180,9 +183,9 @@ Status as of v0.1.0: ✅ implemented · ⬜ planned (each arrives with its featu
 | `govuk.service.url` | URL; default site home | Masthead link target | ⬜ (masthead links to `index.html`) |
 | `govuk.phase` | `none` (default) \| `alpha` \| `beta` | Phase banner | ⬜ |
 | `govuk.phase.feedback.url` | URL | Phase banner feedback link | ⬜ |
-| `govuk.search` | `auto` (default) \| `yes` \| `no` | Search UI + Pagefind step; `auto` = on if Pagefind found | ⬜ FR-S |
-| `govuk.pagefind.cmd` | path; default `pagefind` on PATH | Locate the Pagefind binary | ⬜ FR-S |
-| `govuk.homepage.layout` | `auto` (default) \| `start` \| `list` \| `grid` \| `grouped` \| `accordion` | D-13 — landing-page layout; `auto` selects from map shape | ⬜ decided (D-13), implementation pending |
+| `govuk.search` | `auto` (default) \| `yes` \| `no` | Search UI + Pagefind step; `auto` = on if Pagefind found | ✅ |
+| `govuk.pagefind.cmd` | path; default `pagefind` on PATH | Locate the Pagefind binary | ✅ |
+| `govuk.homepage.layout` | `auto` (default) \| `start` \| `annotated` \| `list` \| `grid` \| `grouped` \| `accordion` | D-13 — landing-page layout; `auto` selects from map shape | ✅ |
 | `govuk.breadcrumbs` | `no` (default) \| `yes` | FR-N6 | ⬜ |
 | `govuk.footer.links` | file/ref | Footer link list (title+URL pairs) | ⬜ |
 | `govuk.footer.licence` | text/HTML ref | Neutral-mode licence statement | ⬜ |

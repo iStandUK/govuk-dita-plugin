@@ -15,12 +15,16 @@
 
   document.body.className += ' app-js-nav';
 
+  // UI text arrives from the page (localised via the toolkit's string files)
+  var labelMenu = sidebar.getAttribute('data-label-menu') || 'Menu';
+  var labelToggle = sidebar.getAttribute('data-label-toggle') || 'Toggle section';
+
   // Mobile: Menu toggle
   var toggle = document.createElement('button');
   toggle.type = 'button';
   toggle.className = 'app-sidebar__toggle';
   toggle.setAttribute('aria-expanded', 'false');
-  toggle.textContent = 'Menu';
+  toggle.textContent = labelMenu;
   sidebar.insertBefore(toggle, sidebar.firstChild);
   toggle.addEventListener('click', function () {
     var open = sidebar.classList.toggle('app-sidebar--open');
@@ -52,7 +56,7 @@
     caret.type = 'button';
     caret.className = 'app-nav__caret';
     caret.setAttribute('aria-expanded', String(open));
-    caret.setAttribute('aria-label', 'Toggle section');
+    caret.setAttribute('aria-label', labelToggle);
     li.insertBefore(caret, li.firstChild);
     li.classList.add('app-nav__branch');
     if (!open) li.classList.add('app-nav__branch--closed');

@@ -23,16 +23,17 @@ The walking skeleton, fixtures, rendering modules, home pages, and navigation en
 are delivered and released ([v0.1.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.1.0));
 per-requirement status is in [02-requirements.md](02-requirements.md). Toward a v1 release:
 
-1. **Search** (FR-S, C-11) — Pagefind step with `auto`/`yes`/`no` handling, search page, and
-   `data-pagefind-body` scoping.
+1. ~~**Search** (FR-S, C-11)~~ — done on the v1 epic branch: Pagefind step with
+   `auto`/`yes`/`no`, generated search page, `data-pagefind-body` scoping, both paths in CI.
 2. **Glossary and index** (FR-G/C-08, FR-X/C-09) — the two genuinely new generators; needed
-   for the ContSys-style publications, exercised by extending the poc fixture.
-3. **Localisable UI strings** (NFR-I1, C-14) — move the hardcoded "Contents"/"Menu"/skip-link
-   text into DITA-OT string files; answers OQ-9 structurally.
+   for the ContSys-style publications, exercised by extending the manual or a fixture.
+3. ~~**Localisable UI strings** (NFR-I1, C-14)~~ — done on the v1 epic branch via
+   `dita.xsl.strings`; answers OQ-9 structurally (translations are additive files).
 4. **Official branding mode** (FR-T2, C-13) — sourcing restricted assets from the publisher's
    own govuk-frontend copy; plus the remaining `govuk.*` parameters (phase banner, footer).
 5. **Registry listing** (FR-B2) and the remaining verification NFRs (axe checks for NFR-A1,
    determinism for FR-B6, page-weight measurement for NFR-P2).
+6. ~~**Landing-page layouts** (#14, D-13)~~ — done on the v1 epic branch.
 
 Meanwhile, watch [dita-ot#4465](https://github.com/dita-ot/dita-ot/issues/4465) (chunk
 cross-reference bug) and apply the `parent.dita#child-id` keying workaround in the ORUK

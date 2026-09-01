@@ -8,6 +8,8 @@
   <keydef keys="parameters" href="topics/parameters.dita" format="dita" scope="local"/>
   <keydef keys="branding" href="topics/branding.dita" format="dita" scope="local"/>
   <keydef keys="navigation" href="topics/navigation.dita" format="dita" scope="local"/>
+  <keydef keys="search" href="topics/search.dita" format="dita" scope="local"/>
+  <keydef keys="layouts" href="topics/layouts.dita" format="dita" scope="local"/>
   <keydef keys="demo-typography" href="topics/demo-typography.dita" format="dita" scope="local"/>
   <keydef keys="demo-notes" href="topics/demo-notes.dita" format="dita" scope="local"/>
   <keydef keys="demo-tables" href="topics/demo-tables.dita" format="dita" scope="local"/>

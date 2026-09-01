@@ -223,7 +223,43 @@ li.olchildlink {
   text-decoration: none;
 }
 
+/* ===== Search ===== */
+
+.app-search-link {
+  margin: 0 0 15px;
+}
+
+.app-search .pagefind-ui {
+  --pagefind-ui-font: "GDS Transport", arial, sans-serif;
+  --pagefind-ui-primary: #0b0c0c;
+  --pagefind-ui-text: #0b0c0c;
+  --pagefind-ui-border: #0b0c0c;
+  --pagefind-ui-border-radius: 0;
+  --pagefind-ui-border-width: 2px;
+}
+
 /* ===== Cover (home) page ===== */
+
+.app-entry__heading {
+  margin-bottom: 5px;
+}
+
+.app-entry__desc {
+  margin-top: 0;
+}
+
+.app-topic-grid .app-entry__heading {
+  margin-top: 10px;
+}
+
+.app-group-list > li {
+  margin-bottom: 15px;
+}
+
+.app-group-list__hint {
+  margin-bottom: 0;
+  font-size: 1rem;
+}
 
 .app-attribution {
   color: #505a5f;
@@ -263,6 +299,11 @@ li.olchildlink {
 #main-content figure img {
   display: block;
   background: #ffffff;
+}
+
+/* Screenshots keep a visible edge against the page background */
+figure.app-screenshot img {
+  border: 1px solid #b1b4b6;
 }
 
 /* ===== Content furniture without a govuk-frontend component ===== */

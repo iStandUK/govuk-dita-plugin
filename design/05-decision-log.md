@@ -238,3 +238,7 @@ outputs' bare lists. The override preserves publisher control where `auto` guess
 **Consequences:** Extends FR-N8/C-10 and the 03-architecture parameter table; implementation
 tracked as its own issue with fixture coverage per layout; `list` keeps today's behaviour
 available for continuity.
+
+*Implementation note:* delivered on the v1 epic branch with one addition — `annotated` is
+also accepted as an explicit override value (the spike named the layout but omitted it from
+the parameter's enumeration).

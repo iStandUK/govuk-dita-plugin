@@ -16,6 +16,7 @@ element-level typography.
   <!-- Passed from insertParameters.xml -->
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>
+  <xsl:param name="GOVUK-SEARCH" select="'no'"/>
 
   <!-- Pinned vendored govuk-frontend release (see resource/govuk-frontend/VERSION.txt) -->
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
@@ -75,16 +76,23 @@ element-level typography.
     </xsl:if>
   </xsl:template>
 
-  <!-- Main content region gains the GOV.UK wrapper and the skip-link target -->
+  <!-- Main content region gains the GOV.UK wrapper, the skip-link target, and
+       the Pagefind indexing scope (FR-S3: only topic content is searchable;
+       pages without the attribute, like the cover, stay out of the index) -->
   <xsl:attribute-set name="main">
     <xsl:attribute name="id">main-content</xsl:attribute>
     <xsl:attribute name="class">govuk-main-wrapper</xsl:attribute>
+    <xsl:attribute name="data-pagefind-body"/>
   </xsl:attribute-set>
 
   <!-- Sidebar navigation keeps the inherited tree markup, restyled -->
   <xsl:attribute-set name="toc">
     <xsl:attribute name="class">toc app-sidebar__nav</xsl:attribute>
-    <xsl:attribute name="aria-label">Contents</xsl:attribute>
+    <xsl:attribute name="aria-label">
+      <xsl:call-template name="getVariable">
+        <xsl:with-param name="id" select="'govuk-dita.contents'"/>
+      </xsl:call-template>
+    </xsl:attribute>
   </xsl:attribute-set>
 
   <!-- Page body: GOV.UK template structure around the inherited content and
@@ -96,7 +104,11 @@ element-level typography.
       <script>
         <xsl:text>document.body.className += ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</xsl:text>
       </script>
-      <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
+      <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">
+        <xsl:call-template name="getVariable">
+          <xsl:with-param name="id" select="'govuk-dita.skip-link'"/>
+        </xsl:call-template>
+      </a>
       <header class="app-masthead">
         <div class="govuk-width-container">
           <a class="app-masthead__title" href="{$govuk-home-href}">
@@ -107,6 +119,25 @@ element-level typography.
       <div class="govuk-width-container">
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-one-third app-sidebar">
+            <xsl:attribute name="data-label-menu">
+              <xsl:call-template name="getVariable">
+                <xsl:with-param name="id" select="'govuk-dita.menu'"/>
+              </xsl:call-template>
+            </xsl:attribute>
+            <xsl:attribute name="data-label-toggle">
+              <xsl:call-template name="getVariable">
+                <xsl:with-param name="id" select="'govuk-dita.toggle-section'"/>
+              </xsl:call-template>
+            </xsl:attribute>
+            <xsl:if test="$GOVUK-SEARCH = 'yes'">
+              <p class="app-search-link">
+                <a class="govuk-link" href="{concat($PATH2PROJ, 'search.html')}">
+                  <xsl:call-template name="getVariable">
+                    <xsl:with-param name="id" select="'govuk-dita.search-this-site'"/>
+                  </xsl:call-template>
+                </a>
+              </p>
+            </xsl:if>
             <xsl:call-template name="gen-user-sidetoc"/>
           </div>
           <div class="govuk-grid-column-two-thirds">

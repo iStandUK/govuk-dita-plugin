@@ -18,7 +18,7 @@ Remaining ⬜/🔶 items are the v1-release backlog (see
 |---|---|---|---|
 | FR-B1 | The plugin registers a transtype **`govuk`** that extends `html5`, so `dita --input=<map> --format=govuk` performs a complete build | M | ✅ |
 | FR-B2 | The plugin installs with `dita install <zip-or-url>` and, once published, by name from the DITA-OT plugin registry | M | 🔶 zip/URL install verified from the v0.1.0 release; registry listing pending |
-| FR-B3 | All behaviour described below is controlled by documented build parameters (`govuk.*`), settable on the command line, in `.ditaotproject`/project files, or via Ant properties | M | 🔶 `govuk.branding`, `govuk.service.name` exist; remaining params follow their features |
+| FR-B3 | All behaviour described below is controlled by documented build parameters (`govuk.*`), settable on the command line, in `.ditaotproject`/project files, or via Ant properties | M | 🔶 `govuk.branding`, `govuk.service.name`, `govuk.homepage.layout`, `govuk.search`, `govuk.pagefind.cmd` exist; phase-banner/footer/favicon params follow their features |
 | FR-B4 | The core build requires only DITA-OT (4.4.1 or later) and its bundled Java — no Node.js, no network access | M | ✅ verified |
 | FR-B5 | The build works with standard DITA 1.3 maps and bookmaps, including keys/keyscopes, conref, chunking, and DITAVAL filtering (all inherited from `html5` preprocessing and must not be broken by overrides) | M | ✅ verified against the ORUK corpus (design/07) |
 | FR-B6 | A build from unchanged source produces byte-identical output (deterministic), so hosting diffs are meaningful | S | ⬜ not yet verified |
@@ -34,7 +34,7 @@ Remaining ⬜/🔶 items are the v1-release backlog (see
 | FR-N5 | Previous/next links (GOV.UK pagination component, block variant) appear at the foot of each page in map reading order | S | ⬜ |
 | FR-N6 | Breadcrumbs (GOV.UK breadcrumbs component) can be enabled by parameter; default off in the sidebar layout | C | ⬜ |
 | FR-N7 | Every page has a skip link, correct landmark structure (`header`, `nav`, `main`, `footer`), and a visible focus order matching the Design System | M | ✅ landmark/h1 structure asserted in CI |
-| FR-N8 | A site home page is generated from the map (title, shortdesc/abstract, top-level entry links) | S | ✅ maps and bookmaps (abstract + attribution) |
+| FR-N8 | A site home page is generated from the map (title, shortdesc/abstract, top-level entry links) | S | ✅ with the D-13 layouts: auto-selected start/annotated/grouped plus list/grid/accordion overrides |
 
 ### Content rendering (FR-R)
 
@@ -74,10 +74,10 @@ requirements govern its behaviour.
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-S1 | An optional post-build step runs Pagefind over the generated site to build a client-side search index | M | ⬜ v1 backlog |
-| FR-S2 | A search field appears in the header/sidebar area, with results shown on a dedicated search page; markup degrades gracefully (field hidden) when no index is present | M | ⬜ v1 backlog |
-| FR-S3 | Navigation, headers, and footers are excluded from indexing (`data-pagefind-body` scoping) so results match page content only | M | ⬜ v1 backlog |
-| FR-S4 | If Pagefind is not installed, the build **succeeds with a clear notice**, producing a site without search — Pagefind is never a hard dependency | M | ⬜ v1 backlog |
+| FR-S1 | An optional post-build step runs Pagefind over the generated site to build a client-side search index | M | ✅ `govuk.search` auto/yes/no; verified end-to-end |
+| FR-S2 | A search field appears in the header/sidebar area, with results shown on a dedicated search page; markup degrades gracefully (field hidden) when no index is present | M | ✅ sidebar/home "Search this site" link + generated search page; link omitted entirely when search is off |
+| FR-S3 | Navigation, headers, and footers are excluded from indexing (`data-pagefind-body` scoping) so results match page content only | M | ✅ asserted in CI |
+| FR-S4 | If Pagefind is not installed, the build **succeeds with a clear notice**, producing a site without search — Pagefind is never a hard dependency | M | ✅ CI exercises both paths; `yes` without the binary fails the build by design |
 
 ### Branding and theming (FR-T)
 
@@ -100,7 +100,7 @@ requirements govern its behaviour.
 | NFR-P2 | Page weight budget: HTML+CSS+JS for a typical topic page under ~300 KB uncompressed excluding content images; no render-blocking JS | S | ⬜ not yet measured (assets ≈190 KB, so likely met) |
 | NFR-V1 | Output URLs derive deterministically from source file paths, so republishing does not break inbound links | M | ✅ inherited behaviour, resolves OQ-3 |
 | NFR-V2 | No cookies are set and no personal data is processed by default, so no cookie banner is required; any future analytics integration must be opt-in and bring its own consent handling | M | ✅ |
-| NFR-I1 | All generated UI text (labels like "Contents", "Warning", "Search", "Menu") comes from DITA-OT string files, overridable and translatable; `@xml:lang` flows through to `lang` attributes | S | 🔶 note labels use toolkit strings and `lang` flows through; plugin furniture text ("Contents", "Menu", skip link) is hardcoded en-GB pending C-14 |
+| NFR-I1 | All generated UI text (labels like "Contents", "Warning", "Search", "Menu") comes from DITA-OT string files, overridable and translatable; `@xml:lang` flows through to `lang` attributes | S | ✅ plugin strings via `dita.xsl.strings` (en-GB shipped, empty-lang fallback); JavaScript reads labels from page data attributes |
 | NFR-M1 | The plugin uses **only documented DITA-OT extension points** — no copied/patched toolkit internals — and CI builds a fixture publication against each supported DITA-OT minor release | M | ✅ CI on 4.4.1 (the only supported minor so far) |
 | NFR-M2 | The vendored govuk-frontend release is pinned and recorded; upgrades are deliberate changes validated by visual regression snapshots | M | 🔶 pin, NOTICE, and upgrade process in place; no visual-regression snapshots yet |
 | NFR-L1 | Licence Apache-2.0; vendored govuk-frontend (MIT) retained with its licence and attribution; release versioning is semver | M | ✅ v0.1.0 released |

@@ -3,20 +3,22 @@
 This file is part of the govuk-dita-plugin project.
 Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
 -->
-<project name="org.istanduk.gov-uk">
+<project name="org.istanduk.gov-uk" xmlns:if="ant:if">
 
   <target name="dita2govuk.init">
     <!-- Route topic rendering through this plugin's stylesheet (scoped to the
          govuk transtype; plain html5 builds are unaffected). -->
     <property name="args.xsl"
               location="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/dita2govuk.xsl"/>
+    <!-- The base cover step is skipped; govuk.cover re-runs the same macro with
+         the plugin's parameters (layout, service name, search state). -->
+    <property name="html5.toc.generate" value="false"/>
+    <property name="args.html5.toc.xsl"
+              location="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/map2govuk-cover.xsl"/>
     <!-- The sidebar needs the full map tree on every page (FR-N1/FR-N2).
          A user-supplied nav-toc property still wins because properties are
          immutable once set. -->
     <property name="nav-toc" value="full"/>
-    <!-- GOV.UK cover (home) page for the map (FR-N8 / C-10) -->
-    <property name="args.html5.toc.xsl"
-              location="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/map2govuk-cover.xsl"/>
     <!-- Neutral branding unless the publisher explicitly opts in (FR-T1). -->
     <property name="govuk.branding" value="neutral"/>
     <fail message="govuk.branding must be 'neutral' or 'official', was: ${govuk.branding}">
@@ -30,12 +32,69 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <condition property="govuk.branding.official">
       <equals arg1="${govuk.branding}" arg2="official"/>
     </condition>
-    <echo if:set="govuk.branding.official" xmlns:if="ant:if" level="warning"
+    <echo if:set="govuk.branding.official" level="warning"
           message="govuk.branding=official: the GOV.UK crown and GDS Transport font are legally restricted to official GOV.UK services. Official mode is not yet implemented; the build will use neutral assets."/>
+    <!-- Landing-page layout (D-13) -->
+    <property name="govuk.homepage.layout" value="auto"/>
+    <fail message="govuk.homepage.layout must be one of auto|start|annotated|list|grid|grouped|accordion, was: ${govuk.homepage.layout}">
+      <condition>
+        <not><or>
+          <equals arg1="${govuk.homepage.layout}" arg2="auto"/>
+          <equals arg1="${govuk.homepage.layout}" arg2="start"/>
+          <equals arg1="${govuk.homepage.layout}" arg2="annotated"/>
+          <equals arg1="${govuk.homepage.layout}" arg2="list"/>
+          <equals arg1="${govuk.homepage.layout}" arg2="grid"/>
+          <equals arg1="${govuk.homepage.layout}" arg2="grouped"/>
+          <equals arg1="${govuk.homepage.layout}" arg2="accordion"/>
+        </or></not>
+      </condition>
+    </fail>
+    <!-- Search (FR-S): probe for Pagefind; auto enables when found, yes
+         requires it, no disables. -->
+    <property name="govuk.search" value="auto"/>
+    <property name="govuk.pagefind.cmd" value="pagefind"/>
+    <property environment="govuk.env"/>
+    <condition property="govuk.pagefind.available">
+      <or>
+        <available file="${govuk.pagefind.cmd}" type="file"/>
+        <available file="${govuk.pagefind.cmd}" filepath="${govuk.env.PATH}"/>
+        <available file="${govuk.pagefind.cmd}.exe" filepath="${govuk.env.PATH}"/>
+      </or>
+    </condition>
+    <fail message="govuk.search=yes but the Pagefind binary was not found (govuk.pagefind.cmd=${govuk.pagefind.cmd}). Install Pagefind or set govuk.pagefind.cmd to its path; see https://pagefind.app/">
+      <condition>
+        <and>
+          <equals arg1="${govuk.search}" arg2="yes"/>
+          <not><isset property="govuk.pagefind.available"/></not>
+        </and>
+      </condition>
+    </fail>
+    <condition property="govuk.search.enabled" value="yes" else="no">
+      <and>
+        <not><equals arg1="${govuk.search}" arg2="no"/></not>
+        <isset property="govuk.pagefind.available"/>
+      </and>
+    </condition>
+    <condition property="govuk.search.notice"
+               value="site search enabled (Pagefind found: ${govuk.pagefind.cmd})"
+               else="site search disabled (govuk.search=${govuk.search}; Pagefind not found on PATH)">
+      <equals arg1="${govuk.search.enabled}" arg2="yes"/>
+    </condition>
+    <echo level="info" message="govuk: ${govuk.search.notice}"/>
   </target>
 
   <target name="dita2govuk"
-          depends="dita2govuk.init, dita2html5, govuk.copy-assets"/>
+          depends="dita2govuk.init, dita2html5, govuk.cover, govuk.copy-assets, govuk.search-index"/>
+
+  <target name="govuk.cover"
+          description="Generate the GOV.UK home page and search page from the map">
+    <html5.map>
+      <param name="GOVUK-HOMEPAGE-LAYOUT" expression="${govuk.homepage.layout}"/>
+      <param name="GOVUK-SERVICE-NAME" expression="${govuk.service.name}" if:set="govuk.service.name"/>
+      <param name="GOVUK-SEARCH" expression="${govuk.search.enabled}"/>
+      <param name="GOVUK-BRANDING" expression="${govuk.branding}"/>
+    </html5.map>
+  </target>
 
   <target name="govuk.copy-assets"
           description="Copy GOV.UK frontend assets and plugin CSS into the output">
@@ -59,6 +118,18 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
          govuk page links them; drop the dead files -->
     <delete file="${dita.output.dir}/commonltr.css" quiet="true"/>
     <delete file="${dita.output.dir}/commonrtl.css" quiet="true"/>
+  </target>
+
+  <target name="govuk.search-index"
+          description="Index the generated site with Pagefind (FR-S1)">
+    <local name="govuk.search.on"/>
+    <condition property="govuk.search.on">
+      <equals arg1="${govuk.search.enabled}" arg2="yes"/>
+    </condition>
+    <exec if:set="govuk.search.on" executable="${govuk.pagefind.cmd}" failonerror="true">
+      <arg value="--site"/>
+      <arg value="${dita.output.dir}"/>
+    </exec>
   </target>
 
 </project>
