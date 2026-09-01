@@ -13,7 +13,7 @@
       <step>
         <cmd>Install the plugin from the latest release.</cmd>
         <info>
-          <codeblock>dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.1.0/org.istanduk.gov-uk-0.1.0.zip</codeblock>
+          <codeblock>dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.2.0/org.istanduk.gov-uk-0.2.0.zip</codeblock>
         </info>
       </step>
       <step>

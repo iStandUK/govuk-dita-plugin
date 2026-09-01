@@ -137,6 +137,7 @@ indexterm markup. Imported by map2govuk-cover.xsl.
             <xsl:with-param name="name" select="$govuk-masthead-name"/>
             <xsl:with-param name="home-href" select="concat('index', $OUTEXT)"/>
             <xsl:with-param name="search-enabled" select="$GOVUK-SEARCH"/>
+            <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
           </xsl:call-template>
           <div class="govuk-width-container">
             <main class="govuk-main-wrapper" id="main-content">

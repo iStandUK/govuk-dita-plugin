@@ -61,10 +61,13 @@ map transformation with the plugin's values.
   <xsl:template name="generateCssLinks">
     <link rel="stylesheet"
           href="{concat('govuk/govuk-frontend-', $govuk-frontend-version, '.min.css')}"/>
+    <link rel="stylesheet" href="govuk/plugin.css"/>
     <xsl:if test="$GOVUK-BRANDING ne 'official'">
       <link rel="stylesheet" href="govuk/overlay-neutral.css"/>
     </xsl:if>
-    <link rel="stylesheet" href="govuk/plugin.css"/>
+    <xsl:if test="$GOVUK-BRANDING = 'istanduk'">
+      <link rel="stylesheet" href="govuk/overlay-istanduk.css"/>
+    </xsl:if>
     <xsl:if test="string-length($CSS) gt 0">
       <link rel="stylesheet" href="{concat($CSSPATH, $CSS)}"/>
     </xsl:if>
@@ -176,6 +179,7 @@ map transformation with the plugin's values.
         <xsl:with-param name="name" select="$govuk-masthead-name"/>
         <xsl:with-param name="home-href" select="concat('index', $OUTEXT)"/>
         <xsl:with-param name="search-enabled" select="$GOVUK-SEARCH"/>
+            <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
       </xsl:call-template>
       <div class="govuk-width-container">
         <main class="govuk-main-wrapper" id="main-content">
@@ -360,6 +364,7 @@ map transformation with the plugin's values.
             <xsl:with-param name="name" select="$govuk-masthead-name"/>
             <xsl:with-param name="home-href" select="concat('index', $OUTEXT)"/>
             <xsl:with-param name="search-enabled" select="'no'"/>
+            <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
           </xsl:call-template>
           <div class="govuk-width-container">
             <main class="govuk-main-wrapper" id="main-content">

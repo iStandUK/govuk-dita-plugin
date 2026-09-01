@@ -1,0 +1,59 @@
+/*
+ * This file is part of the govuk-dita-plugin project.
+ * Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+ *
+ * iStandUK theme (govuk.branding=istanduk), loaded after overlay-neutral.css
+ * so the neutral guarantees (no GDS Transport, no crown) still hold. Colours
+ * and header treatment follow the iStandUK brand reference in the
+ * adoption-tracker repository (design/brand): Pantone 072 -> #003888, Arial
+ * for text (Rockwell appears only inside the outlined logo artwork), and a
+ * white header bar with the logo above a brand-blue rule.
+ */
+
+:root {
+  /* Drives govuk-frontend v6 brand surfaces, e.g. the footer band */
+  --govuk-brand-colour: #003888;
+}
+
+/* ===== Masthead: white bar, logo, brand-blue rule ===== */
+
+.app-masthead {
+  background: #ffffff;
+  border-bottom: 6px solid #003888;
+  padding: 12px 0;
+}
+
+.app-masthead__logo {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+.app-masthead__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #0b0c0c;
+}
+
+.app-masthead__title:hover {
+  color: #0b0c0c;
+}
+
+/* The search field sits on white now, so it needs its own edges */
+.app-masthead__search-input {
+  border: 2px solid #0b0c0c;
+}
+
+.app-masthead__search-button {
+  border: 2px solid #003888;
+  border-left: 0;
+  background: #003888;
+  color: #ffffff;
+}
+
+.app-masthead__search-button:focus {
+  border-color: #ffdd00;
+  background: #ffdd00;
+  color: #0b0c0c;
+}

@@ -242,3 +242,30 @@ available for continuity.
 *Implementation note:* delivered on the v1 epic branch with one addition — `annotated` is
 also accepted as an explicit override value (the spike named the layout but omitted it from
 the parameter's enumeration).
+
+---
+
+## D-14 · Publisher theme: `govuk.branding=istanduk`
+
+**Date:** 2026-09-03.
+
+**Options:** publisher CSS only via `args.css` (FR-T4); a generic theme mechanism; or a
+built-in iStandUK theme value.
+
+**Decision:** A third `govuk.branding` value, **`istanduk`**, layered on top of neutral mode:
+white masthead with the iStandUK logo above a brand-blue rule (the treatment established in
+iStandUK's adoption-tracker), `--govuk-brand-colour: #003888` (Pantone 072) driving the
+govuk-frontend v6 brand surfaces such as the footer band, and an Arial text stack per the
+brand guideline (Rockwell is proprietary and appears only inside the outlined logo artwork).
+
+**Rationale:** iStandUK is the plugin's home organisation and its publications are the
+first users; the brand assets were already curated in adoption-tracker (`design/brand`),
+including a redistributable outlined-path logo and a documented palette. Layering on neutral
+keeps every legal guarantee intact; publisher-specific theming for other organisations
+remains available via `args.css`.
+
+**Consequences:** `overlay-istanduk.css` and the logo ship in the plugin
+(`resource/brand/istanduk/` with provenance README); CSS load order is
+plugin.css → overlays so themes win the cascade; masthead furniture accepts a branding
+parameter. A generic multi-theme mechanism can grow from this pattern if other organisations
+need built-in themes.

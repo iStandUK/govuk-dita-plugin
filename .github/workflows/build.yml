@@ -67,6 +67,11 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-accordion -Dgovuk.homepage.layout=accordion
 
+      - name: Build iStandUK theme
+        run: |
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-istanduk -Dgovuk.branding=istanduk
+
       - name: Cache Nu validator
         id: cache-vnu
         uses: actions/cache@v4
@@ -173,6 +178,12 @@ jobs:
           test ! -f out/oruk-mini/index-page.html
           # Localisable UI text (#19 / NFR-I1)
           grep -q 'data-label-menu="Menu"' out/manual/topics/introduction.html
+          # iStandUK theme (govuk.branding=istanduk)
+          grep -q 'overlay-istanduk.css' out/manual-istanduk/topics/introduction.html
+          grep -q 'istanduk-logo.svg' out/manual-istanduk/topics/introduction.html
+          test -f out/manual-istanduk/govuk/istanduk-logo.svg
+          ! grep -q 'overlay-istanduk.css' out/manual/topics/introduction.html
+          test -z "$(find out/manual-istanduk -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # FR-T1: neutral builds ship no restricted assets and load no external
           # resources (external hyperlinks in content are fine; external assets are not)
           test -z "$(find out/manual out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
