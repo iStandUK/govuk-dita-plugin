@@ -50,11 +50,11 @@ fork. If a future DITA-OT release changes preprocessing, we inherit the fix.
 
 ## Plugin anatomy
 
-Working plugin ID `io.github.<org>.govuk` (final ID pending — see
-[06-open-questions.md](06-open-questions.md), OQ-1). Proposed layout:
+Plugin ID **`org.istanduk.gov-uk`** (decided — see
+[05-decision-log.md](05-decision-log.md), D-10). Proposed layout:
 
 ```
-io.github.<org>.govuk/
+org.istanduk.gov-uk/
 ├── plugin.xml                 # transtype declaration, extension-point features, parameters
 ├── integrator.xml             # hooks the plugin's Ant file into the toolkit at install time
 ├── build_dita2govuk.xml       # Ant: dita2govuk target — delegates to dita2html5, then

@@ -6,7 +6,7 @@ defaults, and fixtures.
 
 | ID | Question | Options / notes | Blocks |
 |---|---|---|---|
-| OQ-1 | **Plugin ID.** ~~Repo home~~ decided (D-09): `iStandUK/govuk-dita-plugin`, public. Remaining: the reverse-DNS plugin ID — `uk.istand.govuk`? `io.github.istanduk.govuk`? (convention per `org.dita.html5`, `net.infotexture.dita-bootstrap`) | Depends on whether iStandUK controls a domain to name under | `plugin.xml`, registry entry |
+| ~~OQ-1~~ | **Resolved.** Repo home (D-09): `iStandUK/govuk-dita-plugin`, public. Plugin ID (D-10): `org.istanduk.gov-uk` | — | — |
 | OQ-2 | **Exact minimum DITA-OT version.** D-08 says "4.x" — pin which minor? Pragmatic choice: whatever DITA-OT your current editing toolchain bundles, verified at implementation start | Check the DITA editor's bundled DITA-OT version | CI matrix, extension-point verification |
 | OQ-3 | **URL scheme.** Keep source topic filenames (`concepts/c-scope.html`, maximum link stability with today's output) or slugify from titles (nicer URLs, breaks when titles change)? Pretty extensionless URLs are a hosting concern, not a build concern | Recommend: keep source-derived names (NFR-V1 leans this way) | C-01 naming, NFR-V1 tests |
 | OQ-4 | **Primary hosting target.** GitHub Pages implies a sub-path base URL (`/<repo>/`) — relative links handle it, but CI deploy workflow and Pagefind config should be tested against the real target | GitHub Pages / S3 / other? | C-15 deploy check, docs |
@@ -19,7 +19,7 @@ defaults, and fixtures.
 
 ## Suggested next steps
 
-1. Resolve OQ-1 and OQ-2 (names and version pin) — everything else can proceed in parallel.
+1. Resolve OQ-2 (DITA-OT version pin) — everything else can proceed in parallel (OQ-1 is resolved: D-09/D-10).
 2. Scaffold the plugin skeleton (C-01, C-02, C-12) and prove the walking skeleton: one small
    map → styled pages with sidebar nav, neutral branding, building with `dita -f govuk`.
 3. Build the fixture publication (C-15) early — it is both the test subject and the review

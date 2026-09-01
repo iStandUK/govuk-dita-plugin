@@ -153,6 +153,21 @@ until first release.
 the design openly matches D-07 (open plugin) and invites early review; the repo contains only
 design documents, which stand on their own.
 
-**Consequences:** Narrows OQ-1 to the plugin ID alone (e.g. `uk.istand.govuk` or
-`io.github.istanduk.govuk`). Public-repo hygiene (licence, vendor-neutral language) applies
-from the first commit.
+**Consequences:** Narrows OQ-1 to the plugin ID alone (resolved by D-10). Public-repo hygiene
+(licence, vendor-neutral language) applies from the first commit.
+
+---
+
+## D-10 · Plugin ID: `org.istanduk.gov-uk`
+
+**Options:** `uk.istand.govuk`, `io.github.istanduk.govuk`, `org.istanduk.gov-uk`.
+
+**Decision:** **`org.istanduk.gov-uk`**.
+
+**Rationale:** Reverse-DNS on the iStandUK identity, following DITA-OT convention
+(`org.dita.html5`, `net.infotexture.dita-bootstrap`); the `gov-uk` segment names the target
+design system without claiming to *be* GOV.UK.
+
+**Consequences:** Closes OQ-1. The plugin directory, `plugin.xml` `@id`, and registry entry
+all use `org.istanduk.gov-uk`; the transtype users type remains the short `govuk`
+(`dita -f govuk`).
