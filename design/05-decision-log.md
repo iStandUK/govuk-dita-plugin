@@ -211,3 +211,30 @@ by the CI checks.
 **Consequences:** Constraint C5 updated; the pin is recorded in
 `resource/govuk-frontend/VERSION.txt`/`NOTICE.md` and the `$govuk-frontend-version` XSLT
 variable. Upgrades follow the NFR-M2 process (deliberate change, fixture rebuild, checks).
+
+---
+
+## D-13 · Landing-page layouts: auto-selected by map shape, publisher-overridable
+
+**Date:** 2026-09-02 (accepted from the
+[landing-page layouts spike](spikes/landing-page-layouts.md), PR #13).
+
+**Options:** keep the single plain contents tree; adopt boxed tiles via an extension library
+(MoJ/x-govuk cards); a fixed richer layout; or a set of GDS-core layouts selected
+automatically with an override.
+
+**Decision:** The cover page selects its layout **automatically from the map's shape** —
+1 top-level entry → guide start (Start button); 2–8 → annotated contents (link +
+`shortdesc`); 9+ or multi-chapter bookmaps → grouped sections — with a
+**`govuk.homepage.layout`** parameter (`auto | start | list | grid | grouped | accordion`)
+keeping control in the publisher's hands. "Tiles" are delivered as the GDS typography-grid
+idiom, never boxed cards; the accordion is explicit opt-in only.
+
+**Rationale:** Pragmatic: every layout uses only core govuk-frontend (no new dependencies),
+builds from data the cover generation already has, and reuses `shortdesc` as entry
+descriptions — the biggest visual upgrade over both the current page and the commercial
+outputs' bare lists. The override preserves publisher control where `auto` guesses wrong.
+
+**Consequences:** Extends FR-N8/C-10 and the 03-architecture parameter table; implementation
+tracked as its own issue with fixture coverage per layout; `list` keeps today's behaviour
+available for continuity.

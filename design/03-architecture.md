@@ -182,6 +182,7 @@ Status as of v0.1.0: ✅ implemented · ⬜ planned (each arrives with its featu
 | `govuk.phase.feedback.url` | URL | Phase banner feedback link | ⬜ |
 | `govuk.search` | `auto` (default) \| `yes` \| `no` | Search UI + Pagefind step; `auto` = on if Pagefind found | ⬜ FR-S |
 | `govuk.pagefind.cmd` | path; default `pagefind` on PATH | Locate the Pagefind binary | ⬜ FR-S |
+| `govuk.homepage.layout` | `auto` (default) \| `start` \| `list` \| `grid` \| `grouped` \| `accordion` | D-13 — landing-page layout; `auto` selects from map shape | ⬜ decided (D-13), implementation pending |
 | `govuk.breadcrumbs` | `no` (default) \| `yes` | FR-N6 | ⬜ |
 | `govuk.footer.links` | file/ref | Footer link list (title+URL pairs) | ⬜ |
 | `govuk.footer.licence` | text/HTML ref | Neutral-mode licence statement | ⬜ |
