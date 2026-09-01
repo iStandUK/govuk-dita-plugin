@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="branding" xml:lang="en-GB">
+  <title>Branding and the legal position</title>
+  <shortdesc>By default the output uses GOV.UK Design System components and layout without
+    any government branding, because the crown and the GDS Transport typeface are legally
+    restricted.</shortdesc>
+  <conbody>
+    <note type="warning">The GOV.UK crown, crest, and the GDS Transport typeface may only be
+      used by official GOV.UK services. Publishing with them from any other organisation
+      misrepresents your site as government-run.</note>
+    <section>
+      <title>Neutral mode (the default)</title>
+      <p>Neutral builds ship no restricted assets at all, and the stylesheet is overlaid so
+        that none is ever requested by a browser:</p>
+      <ul>
+        <li>system fonts stand in for GDS Transport</li>
+        <li>a plain masthead carries your service name instead of the crown</li>
+        <li>the footer carries no crest and no crown-copyright statement</li>
+      </ul>
+      <p>This makes neutral mode safe for standards bodies, local government partnerships,
+        and any publisher who wants the Design System's clarity without its insignia.</p>
+    </section>
+    <section>
+      <title>Official mode (not yet implemented)</title>
+      <p>Setting <codeph>govuk.branding=official</codeph> is reserved for genuine GOV.UK
+        services. The build currently prints a warning and continues with neutral assets;
+        when implemented, official mode will source fonts and crown imagery from the
+        publisher's own copy of govuk-frontend rather than from this plugin, which never
+        redistributes them.</p>
+    </section>
+  </conbody>
+</concept>

@@ -40,12 +40,12 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" uninstall org.istanduk.gov-uk || true
           "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
 
-      - name: Build fixture
+      - name: Build manual
         run: |
           "dita-ot-${DITA_OT_VERSION}/bin/dita" \
-            --input fixtures/poc/poc.ditamap \
+            --input docs/manual/manual.ditamap \
             --format govuk \
-            --output out/poc
+            --output out/manual
 
       - name: Build ORUK fixture
         run: |
@@ -72,9 +72,9 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/poc out/oruk-mini
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini
           # NFR-A2: exactly one h1 and one main landmark per topic page
-          for f in out/poc/topics/*.html; do
+          for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
             test "$(grep -c '<main ' "$f")" = "1" || { echo "expected one main in $f"; exit 1; }
           done
@@ -83,7 +83,7 @@ jobs:
       - name: Check output
         run: |
           set -e
-          page=out/poc/topics/introduction.html
+          page=out/manual/topics/introduction.html
           # GOV.UK template structure present
           grep -q 'class="govuk-template"' "$page"
           grep -q 'govuk-skip-link' "$page"
@@ -93,8 +93,14 @@ jobs:
           # Typography classes applied
           grep -q 'govuk-heading-l' "$page"
           grep -q 'govuk-body' "$page"
-          grep -q 'govuk-warning-text' out/poc/topics/notes.html
-          grep -q 'govuk-table__caption' out/poc/topics/tables.html
+          grep -q 'govuk-warning-text' out/manual/topics/demo-notes.html
+          grep -q 'govuk-inset-text' out/manual/topics/demo-notes.html
+          grep -q 'govuk-table__caption' out/manual/topics/demo-tables.html
+          grep -q 'colspan="3"' out/manual/topics/demo-tables.html
+          # Manual demonstrations render (C-16)
+          grep -q 'alt="Publishing pipeline, referenced by key"' out/manual/topics/demo-figures.html
+          test -f out/manual/images/architecture.svg
+          grep -q 'govuk-list--number' out/manual/topics/install.html
           # ORUK idioms (design/07-gap-analysis-oruk.md): bookmap masthead uses
           # mainbooktitle only (F1); svgref renders as img without link class (F2);
           # keyref xrefs resolve; column spans and chunked headings survive
@@ -106,25 +112,29 @@ jobs:
           grep -q 'href="child3.html"' out/oruk-mini/chapter.html
           grep -Eq '<h2[^>]*>child one</h2>' out/oruk-mini/item.html
           # Home pages are GOV.UK-styled (#8 / FR-N8 / C-10)
-          grep -q 'class="govuk-template"' out/poc/index.html
-          grep -q 'govuk-heading-xl' out/poc/index.html
-          grep -q 'app-contents' out/poc/index.html
+          grep -q 'class="govuk-template"' out/manual/index.html
+          grep -q 'govuk-heading-xl' out/manual/index.html
+          grep -q 'app-contents' out/manual/index.html
+          grep -q 'govuk-body-l' out/manual/index.html
+          grep -q 'app-attribution' out/manual/index.html
           grep -q 'govuk-body-l' out/oruk-mini/index.html
           grep -q 'app-attribution' out/oruk-mini/index.html
-          ! grep -q 'commonltr' out/poc/index.html
-          test ! -f out/poc/commonltr.css
+          ! grep -q 'commonltr' out/manual/index.html
+          test ! -f out/manual/commonltr.css
           # Navigation enhancement shipped (#9 / FR-N2, FR-N4)
-          test -f out/poc/govuk/plugin.js
-          grep -q 'govuk/plugin.js' out/poc/topics/introduction.html
+          test -f out/manual/govuk/plugin.js
+          grep -q 'govuk/plugin.js' out/manual/topics/introduction.html
           # svgref accessible name (#10 / NFR-A1)
           grep -q 'alt="Sample diagram"' out/oruk-mini/item.html
-          # FR-T1: neutral builds ship no restricted assets and reference no CDN
-          test -z "$(find out/poc out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
-          ! grep -Eroh '(src|href)="https?://' out/poc out/oruk-mini --include='*.html'
+          # FR-T1: neutral builds ship no restricted assets and load no external
+          # resources (external hyperlinks in content are fine; external assets are not)
+          test -z "$(find out/manual out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
+          ! grep -Eroh 'src="https?://' out/manual out/oruk-mini --include='*.html'
+          ! grep -Eroh '<link[^>]*href="https?://' out/manual out/oruk-mini --include='*.html'
           echo "All output checks passed"
 
       - name: Upload site artifact
         uses: actions/upload-artifact@v4
         with:
-          name: poc-site
-          path: out/poc
+          name: manual-site
+          path: out/manual

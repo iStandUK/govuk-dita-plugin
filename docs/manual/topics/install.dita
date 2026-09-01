@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<task id="install" xml:lang="en-GB">
+  <title>Installing the plugin</title>
+  <shortdesc>Install the plugin into a DITA Open Toolkit with a single command; there are no
+    other dependencies.</shortdesc>
+  <taskbody>
+    <prereq>
+      <p>You need the <xref keyref="dita-ot-site"/> version 4.4.1 or later, running on Java
+        17 or later. No Node.js, no package managers, and no network access at build time.</p>
+    </prereq>
+    <steps>
+      <step>
+        <cmd>Install the plugin from the latest release.</cmd>
+        <info>
+          <codeblock>dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.1.0/org.istanduk.gov-uk-0.1.0.zip</codeblock>
+        </info>
+      </step>
+      <step>
+        <cmd>Confirm the <codeph>govuk</codeph> format is available.</cmd>
+        <info>
+          <codeblock>dita transtypes</codeblock>
+          <p>The list should include <codeph>govuk</codeph>.</p>
+        </info>
+      </step>
+    </steps>
+    <result>
+      <p>The toolkit can now build any DITA map with <codeph>--format=govuk</codeph>. To
+        upgrade later, run the same install command with the newer release URL — the
+        toolkit replaces the installed version.</p>
+    </result>
+  </taskbody>
+</task>

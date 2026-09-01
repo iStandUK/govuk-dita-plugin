@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="demo-code" xml:lang="en-GB">
+  <title>Code and file paths</title>
+  <shortdesc>Code blocks keep monospace styling with horizontal scrolling; inline code and
+    file paths stay legible in running text.</shortdesc>
+  <conbody>
+    <p>A code block:</p>
+    <codeblock>dita --input=docs/manual/manual.ditamap \
+     --format=govuk \
+     --output=out/manual</codeblock>
+    <p>Long lines scroll inside the block rather than overflowing the page:</p>
+    <codeblock>&lt;topicref keyref="a-very-long-key-name-to-demonstrate-horizontal-scrolling" toc="no" processing-role="normal"/&gt;</codeblock>
+    <p>Inline forms: a command such as <codeph>dita transtypes</codeph>, a path such as
+      <filepath>out/site/index.html</filepath>, and an attribute value such as
+      <codeph>chunk="to-content"</codeph>. Syntax highlighting is on the roadmap; blocks
+      stay plain and dependable until then.</p>
+  </conbody>
+</concept>

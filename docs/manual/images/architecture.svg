@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 140" width="640" height="140" role="img" aria-label="Pipeline: DITA source into DITA-OT with the govuk plugin, producing a GOV.UK styled website">
+  <style>
+    .box { fill: #ffffff; stroke: #0b0c0c; stroke-width: 2; }
+    .accent { fill: #1d70b8; stroke: none; }
+    .label { font: 700 16px Arial, sans-serif; fill: #0b0c0c; }
+    .sub { font: 400 13px Arial, sans-serif; fill: #505a5f; }
+    .labelw { font: 700 16px Arial, sans-serif; fill: #ffffff; }
+    .arrow { stroke: #0b0c0c; stroke-width: 2; marker-end: url(#head); }
+  </style>
+  <defs>
+    <marker id="head" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#0b0c0c"/>
+    </marker>
+  </defs>
+  <rect class="box" x="10" y="35" width="150" height="70" rx="4"/>
+  <text class="label" x="85" y="65" text-anchor="middle">DITA source</text>
+  <text class="sub" x="85" y="86" text-anchor="middle">maps, topics, keys</text>
+  <line class="arrow" x1="160" y1="70" x2="230" y2="70"/>
+  <rect class="box" x="235" y="35" width="170" height="70" rx="4"/>
+  <text class="label" x="320" y="60" text-anchor="middle">DITA-OT 4.4.1+</text>
+  <text class="sub" x="320" y="82" text-anchor="middle">+ org.istanduk.gov-uk</text>
+  <line class="arrow" x1="405" y1="70" x2="475" y2="70"/>
+  <rect class="accent" x="480" y="35" width="150" height="70" rx="4"/>
+  <text class="labelw" x="555" y="60" text-anchor="middle">Static site</text>
+  <text class="labelw" x="555" y="82" text-anchor="middle" style="font-weight:400;font-size:13px">GOV.UK styled</text>
+</svg>

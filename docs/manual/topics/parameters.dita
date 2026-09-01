@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="parameters" xml:lang="en-GB">
+  <title>Build parameters</title>
+  <shortdesc>Parameters are passed on the command line as
+    <codeph>-Dname=value</codeph>, or in a DITA-OT project file.</shortdesc>
+  <refbody>
+    <section>
+      <title>Plugin parameters</title>
+      <table frame="all">
+        <title>govuk.* parameters</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colwidth="1.2*"/>
+          <colspec colname="c2" colwidth="1*"/>
+          <colspec colname="c3" colwidth="2*"/>
+          <thead>
+            <row>
+              <entry>Parameter</entry>
+              <entry>Values</entry>
+              <entry>Purpose</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry><codeph>govuk.branding</codeph></entry>
+              <entry><codeph>neutral</codeph> (default), <codeph>official</codeph></entry>
+              <entry>Branding mode. Official mode is reserved for genuine GOV.UK services
+                and is not yet implemented; see <xref keyref="branding"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.service.name</codeph></entry>
+              <entry>text</entry>
+              <entry>The name in the masthead and footer. Defaults to the map title, or a
+                bookmap's main book title.</entry>
+            </row>
+            <row>
+              <entry namest="c1" nameend="c3">Further parameters — search, phase banner,
+                footer links, home-page layout — arrive with their features; each is listed
+                here when it lands.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section>
+      <title>Inherited toolkit parameters</title>
+      <p>Because <codeph>govuk</codeph> extends the toolkit's <codeph>html5</codeph>
+        transformation, its standard parameters continue to work. The most useful:</p>
+      <simpletable>
+        <sthead>
+          <stentry>Parameter</stentry>
+          <stentry>Effect</stentry>
+        </sthead>
+        <strow>
+          <stentry><codeph>args.css</codeph>, <codeph>args.cssroot</codeph>,
+            <codeph>args.copycss</codeph></stentry>
+          <stentry>Append your own stylesheet after the plugin's, for per-site tweaks.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>nav-toc</codeph></stentry>
+          <stentry>Sidebar tree depth; the plugin defaults it to <codeph>full</codeph>.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>args.filter</codeph></stentry>
+          <stentry>DITAVAL file for conditional builds.</stentry>
+        </strow>
+      </simpletable>
+    </section>
+  </refbody>
+</reference>

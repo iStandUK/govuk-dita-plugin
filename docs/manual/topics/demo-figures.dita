@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="demo-figures" xml:lang="en-GB">
+  <title>Figures and diagrams</title>
+  <shortdesc>Figures carry GOV.UK-styled captions, and the DITA SVG domain embeds scalable
+    diagrams that stay crisp at any size.</shortdesc>
+  <conbody>
+    <p>A figure whose diagram is referenced through a key — the same mechanism the Open
+      Referral UK publications use for hundreds of model diagrams:</p>
+    <fig>
+      <title>Publishing pipeline, referenced by key</title>
+      <svg-container><svgref keyref="architecture-diagram"/></svg-container>
+    </fig>
+    <p>The same diagram referenced directly by path:</p>
+    <fig>
+      <title>Publishing pipeline, referenced by path</title>
+      <svg-container><svgref href="../images/architecture.svg"/></svg-container>
+    </fig>
+    <p>In both cases the image receives an accessible name derived from the figure title,
+      the caption is numbered automatically, and the diagram never overflows the content
+      column.</p>
+  </conbody>
+</concept>

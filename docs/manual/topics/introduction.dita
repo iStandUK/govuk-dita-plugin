@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="introduction" xml:lang="en-GB">
+  <title>About the plugin</title>
+  <shortdesc>The org.istanduk.gov-uk plugin adds a <codeph>govuk</codeph> output format to
+    the DITA Open Toolkit that publishes your DITA content as a complete, self-contained
+    static website styled with the GOV.UK Design System.</shortdesc>
+  <conbody>
+    <p>One command turns a DITA map or bookmap into a website: every page carries the
+      Design System's typography, components, and accessibility behaviour, together with a
+      sidebar navigation tree, a styled home page, and a footer. There is no server-side
+      runtime — the output is plain files you can host anywhere.</p>
+    <fig>
+      <title>The publishing pipeline</title>
+      <svg-container><svgref keyref="architecture-diagram"/></svg-container>
+    </fig>
+    <p>The plugin builds on the toolkit's standard <codeph>html5</codeph> processing, so
+      everything DITA offers for content management works unchanged:</p>
+    <ul>
+      <li>maps and bookmaps, including chapter structure, book titles, and metadata</li>
+      <li>key-based addressing (<codeph>keydef</codeph>, <codeph>keyref</codeph>) at any scale</li>
+      <li>content reuse with <codeph>conref</codeph>, and conditional builds with DITAVAL</li>
+      <li>page merging with <codeph>chunk="to-content"</codeph> and navigation control with
+        <codeph>toc="no"</codeph></li>
+      <li>the SVG domain for scalable diagrams, as shown in the figure above</li>
+    </ul>
+    <note type="warning">The GOV.UK crown and the GDS Transport typeface are legally
+      restricted to official GOV.UK services. This plugin's default output is deliberately
+      neutral — Design System layout and components with system fonts and no crown. See
+      <xref keyref="branding"/> before changing that.</note>
+    <p>To get going, read <xref keyref="install"/> and then <xref keyref="build"/>. The
+      publication you are reading now is itself built with the plugin from DITA source — the
+      <xref href="#introduction/demos" format="dita">capability demonstrations</xref> chapter
+      shows each supported element rendered live. The plugin is open source under Apache-2.0:
+      see <xref keyref="plugin-repo"/>.</p>
+    <section id="demos">
+      <title>How to read the demonstrations</title>
+      <p>Each topic in the demonstrations chapter pairs the DITA markup you write with the
+        rendered result you are looking at, so authors can see exactly what the
+        <xref keyref="design-system"/> styling does to their content.</p>
+    </section>
+  </conbody>
+</concept>

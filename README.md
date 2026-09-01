@@ -3,22 +3,24 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: proof of concept.** The [design](design/) is agreed (tagged
-[`design`](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/design)) and the walking
-skeleton is building: the plugin in [org.istanduk.gov-uk/](org.istanduk.gov-uk/) renders the
-[fixture publication](fixtures/poc/) as GOV.UK-styled pages with sidebar navigation on
-DITA-OT 4.4.1. Progress is tracked in
-[the PoC epic](https://github.com/iStandUK/govuk-dita-plugin/issues/1).
+**Status: working, pre-v1** — [v0.1.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.1.0)
+is released and installable; the remaining v1 features (search, glossary, index, official
+branding, landing-page layouts) are tracked in the
+[v1 epic](https://github.com/iStandUK/govuk-dita-plugin/issues/15). Coverage of bookmaps,
+keys, chunking, and the SVG domain is verified against a real corpus
+([gap analysis](design/07-gap-analysis-oruk.md)).
 
 ## Try it
 
 ```bash
-cd org.istanduk.gov-uk && zip -qr ../org.istanduk.gov-uk.zip . && cd ..
-dita install ./org.istanduk.gov-uk.zip
-dita --input=fixtures/poc/poc.ditamap --format=govuk --output=out/poc
+dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.1.0/org.istanduk.gov-uk-0.1.0.zip
+dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 
-Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else.
+Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. That second
+command builds the **[user manual](docs/manual/)** — itself a DITA bookmap, so the result at
+`out/manual/index.html` is both the documentation and a live demonstration of every
+capability the plugin supports.
 
 ## What it will do
 

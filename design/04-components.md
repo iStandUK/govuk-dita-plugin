@@ -28,7 +28,7 @@ live in `blocks.xsl`, and the home page is `map2govuk-cover.xsl` (see
 | C-13 | **Branding module** | `govuk.branding` parameter handling: template branches (header/footer variants), conditional asset copy (fonts, crown, OGL), build-log warning in official mode | M | 🔶 neutral mode + warning done; official mode pending (FR-T2) |
 | C-14 | **Localisation strings** | `strings.xml` + `strings-en-gb.xml` for all generated text; wired to the toolkit's generated-text mechanism | S | ⬜ (note labels already use toolkit strings; plugin furniture text hardcoded) |
 | C-15 | **Fixture publication & test harness** | Sample DITA publications exercising the mapped elements (CI subjects); HTML validation (Nu), axe-core accessibility checks, visual-regression snapshots, DITA-OT version matrix, neutral-mode asset assertions | L | 🔶 two fixtures, Nu validation, structural and asset assertions in CI; axe, visual regression, and version matrix pending |
-| C-16 | **Documentation** | User guide (install, parameters, branding rules and the legal position, search setup, theming) — authored in DITA and published with the plugin itself as its live demo | M | ⬜ (repo README covers install/run basics) |
+| C-16 | **Documentation** | User guide (install, parameters, branding rules and the legal position, search setup, theming) — authored in DITA and published with the plugin itself as its live demo | M | 🔶 manual authored as a DITA bookmap in `docs/manual/` (getting started, reference, capability demonstrations, development), built and asserted in CI as the primary fixture; search/theming sections arrive with their features |
 
 \* Relative effort: S = small, M = medium, L = large.
 

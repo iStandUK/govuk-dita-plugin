@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<task id="build" xml:lang="en-GB">
+  <title>Building a website</title>
+  <shortdesc>Build a site from any DITA map or bookmap with one command, then open the
+    generated home page.</shortdesc>
+  <taskbody>
+    <prereq>
+      <p>The plugin is installed (see <xref keyref="install"/>) and you have a DITA map to
+        publish.</p>
+    </prereq>
+    <steps>
+      <step>
+        <cmd>Run the build.</cmd>
+        <info>
+          <codeblock>dita --input=path/to/publication.ditamap \
+     --format=govuk \
+     --output=out/site</codeblock>
+        </info>
+        <stepxmp>
+          <p>For example, this manual is built with:</p>
+          <codeblock>dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual</codeblock>
+        </stepxmp>
+      </step>
+      <step>
+        <cmd>Open <filepath>out/site/index.html</filepath> in a browser.</cmd>
+        <stepresult>
+          <p>The home page shows the publication title, the abstract and attribution when
+            the map is a bookmap, and a contents tree. Every topic page carries the sidebar
+            navigation.</p>
+        </stepresult>
+      </step>
+      <step importance="optional">
+        <cmd>Publish the output directory to any static host.</cmd>
+        <info>
+          <p>The site is self-contained: no content-delivery networks, no fonts fetched from
+            elsewhere, no cookies, and no server-side code. Links are relative, so the site
+            works from a sub-path as well as a domain root.</p>
+        </info>
+      </step>
+    </steps>
+    <result>
+      <note type="tip">The output directory is created if missing and overwritten in place —
+        point it somewhere disposable, not at your source.</note>
+    </result>
+  </taskbody>
+</task>

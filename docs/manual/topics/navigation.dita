@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="navigation" xml:lang="en-GB">
+  <title>Navigation and the home page</title>
+  <shortdesc>Every page carries a sidebar tree built from your map; the home page is
+    generated from the map's own metadata.</shortdesc>
+  <conbody>
+    <section>
+      <title>The sidebar</title>
+      <p>The sidebar lists the whole publication, follows your map's hierarchy, and marks
+        the page being read. With JavaScript available it gains a menu toggle on small
+        screens and expand/collapse controls on branches, with the current page's ancestors
+        open; without JavaScript the full tree simply stays visible, so nothing is ever
+        unreachable.</p>
+      <p>Topics with <codeph>toc="no"</codeph> stay out of the tree but are still built and
+        linkable — useful for large reference sets addressed by cross-reference rather than
+        browsing, as in the Open Referral UK publications.</p>
+    </section>
+    <section>
+      <title>The home page</title>
+      <p>The site's <filepath>index.html</filepath> shows the publication title and a
+        contents tree. Bookmaps contribute more: the alternative book title becomes the
+        abstract paragraph, and the book's author and owning organisation appear beneath
+        it — exactly as on this manual's own home page.</p>
+      <note type="tip">Give each top-level topic a good <codeph>shortdesc</codeph>: the
+        accepted landing-page design (decision D-13) will reuse it as the entry's
+        description on richer home-page layouts.</note>
+    </section>
+  </conbody>
+</concept>

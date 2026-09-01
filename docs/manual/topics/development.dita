@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="development" xml:lang="en-GB">
+  <title>Development and contributing</title>
+  <shortdesc>The plugin is open source under Apache-2.0; design decisions, requirements, and
+    the gap analysis live alongside the code.</shortdesc>
+  <conbody>
+    <p>Everything is at <xref keyref="plugin-repo"/>:</p>
+    <ul>
+      <li><filepath>org.istanduk.gov-uk/</filepath> — the plugin itself: transtype
+        declaration, Ant glue, XSLT overrides, and vendored govuk-frontend assets</li>
+      <li><filepath>design/</filepath> — the full design record: context, requirements with
+        per-item status, architecture, component inventory, decision log, and the Open
+        Referral UK gap analysis</li>
+      <li><filepath>docs/manual/</filepath> — this manual's DITA source</li>
+      <li><filepath>fixtures/</filepath> — the regression fixture exercising bookmaps, keys,
+        chunking, and the SVG domain</li>
+    </ul>
+    <p>Continuous integration builds this manual and the fixture on every push, validates
+      the HTML with the Nu validator, and asserts the neutral-branding guarantees — no
+      fonts, no crown imagery, no external asset requests in the output.</p>
+    <p>The architecture in one sentence: a standard DITA-OT plugin whose
+      <codeph>govuk</codeph> transformation extends <codeph>html5</codeph>, overriding only
+      the rendering while inheriting all of the toolkit's DITA processing.</p>
+    <note>Issues and pull requests are welcome. Check the design folder's open questions
+      and the issue tracker before proposing large changes — many decisions are already
+      recorded with their rationale.</note>
+  </conbody>
+</concept>

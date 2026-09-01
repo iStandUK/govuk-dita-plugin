@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="demo-tables" xml:lang="en-GB">
+  <title>Tables</title>
+  <shortdesc>CALS tables and simple tables both render as the GOV.UK table component,
+    including captions, header scoping, and column spans.</shortdesc>
+  <refbody>
+    <section>
+      <title>A CALS table with a spanned row</title>
+      <table frame="all">
+        <title>Note type mapping</title>
+        <tgroup cols="3">
+          <colspec colname="c1"/>
+          <colspec colname="c2"/>
+          <colspec colname="c3"/>
+          <thead>
+            <row>
+              <entry>DITA type</entry>
+              <entry>GOV.UK component</entry>
+              <entry>Label</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>note, tip, remember</entry>
+              <entry>Inset text</entry>
+              <entry>none</entry>
+            </row>
+            <row>
+              <entry>warning, caution, important, attention, danger</entry>
+              <entry>Warning text</entry>
+              <entry>visually hidden, per type</entry>
+            </row>
+            <row>
+              <entry namest="c1" nameend="c3">This row spans all three columns using
+                <codeph>namest</codeph>/<codeph>nameend</codeph>.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section>
+      <title>A simple table</title>
+      <simpletable>
+        <sthead>
+          <stentry>Element</stentry>
+          <stentry>Renders as</stentry>
+        </sthead>
+        <strow>
+          <stentry><codeph>table</codeph></stentry>
+          <stentry>govuk-table with caption</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>simpletable</codeph></stentry>
+          <stentry>govuk-table, no caption element</stentry>
+        </strow>
+      </simpletable>
+      <p>Wide tables scroll horizontally on small screens rather than breaking the page
+        layout.</p>
+    </section>
+  </refbody>
+</reference>

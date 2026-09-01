@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "poc-site",
+      "name": "manual-site",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8931", "--directory", "out/poc"],
-      "port": 8931
+      "runtimeArgs": ["-m", "http.server", "8932", "--directory", "out/manual"],
+      "port": 8932
     }
   ]
 }

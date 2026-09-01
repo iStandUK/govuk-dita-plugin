@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "bookmap.dtd">
+<bookmap id="govuk-dita-plugin-manual" xml:lang="en-GB">
+  <booktitle>
+    <mainbooktitle>GOV.UK DITA plugin manual</mainbooktitle>
+    <booktitlealt>How to install and use org.istanduk.gov-uk, the DITA Open Toolkit plugin
+      that publishes DITA content as a self-contained static website styled with the GOV.UK
+      Design System. This manual is itself a DITA publication built with the plugin, so every
+      page doubles as a demonstration of the output.</booktitlealt>
+  </booktitle>
+  <bookmeta>
+    <author>iStandUK</author>
+    <bookrights>
+      <bookowner>
+        <organization>iStandUK</organization>
+      </bookowner>
+    </bookrights>
+  </bookmeta>
+  <frontmatter>
+    <booklists>
+      <toc/>
+    </booklists>
+  </frontmatter>
+  <chapter navtitle="Getting started">
+    <mapref href="keys.ditamap" processing-role="resource-only"/>
+    <topicref keyref="introduction"/>
+    <topicref keyref="install"/>
+    <topicref keyref="build"/>
+  </chapter>
+  <chapter navtitle="Reference">
+    <topicref keyref="parameters"/>
+    <topicref keyref="branding"/>
+    <topicref keyref="navigation"/>
+  </chapter>
+  <chapter navtitle="Capability demonstrations">
+    <topicref keyref="demo-typography"/>
+    <topicref keyref="demo-notes"/>
+    <topicref keyref="demo-tables"/>
+    <topicref keyref="demo-code"/>
+    <topicref keyref="demo-figures"/>
+  </chapter>
+  <chapter navtitle="Development">
+    <topicref keyref="development"/>
+  </chapter>
+</bookmap>

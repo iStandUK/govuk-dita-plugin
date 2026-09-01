@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="demo-typography" xml:lang="en-GB">
+  <title>Typography, lists, and links</title>
+  <shortdesc>This short description renders as the page's lead paragraph; ordinary
+    paragraphs like the ones below take the GOV.UK body style.</shortdesc>
+  <conbody>
+    <p>Body text uses the Design System's type scale and spacing. Inline semantics carry
+      through: <b>bold text</b> for strong emphasis, <i>italics</i> where DITA authors use
+      them, inline code such as <codeph>--format=govuk</codeph>, and user-interface labels
+      like <uicontrol>Save</uicontrol> or the cascade
+      <menucascade><uicontrol>File</uicontrol><uicontrol>Export</uicontrol></menucascade>.</p>
+    <p>Cross-references pick up the link style, including focus and hover states. This one
+      resolves through a key: <xref keyref="demo-notes"/>. This one goes outside the site:
+      <xref keyref="design-system"/>.</p>
+    <section>
+      <title>Lists</title>
+      <p>An unordered list:</p>
+      <ul>
+        <li>bulleted items with comfortable spacing</li>
+        <li>nested content stays readable
+          <ul>
+            <li>including a second level</li>
+          </ul>
+        </li>
+      </ul>
+      <p>An ordered list:</p>
+      <ol>
+        <li>write DITA</li>
+        <li>run the build</li>
+        <li>publish the output</li>
+      </ol>
+      <p>A simple list:</p>
+      <sl>
+        <sli>plugin.xml</sli>
+        <sli>build_dita2govuk.xml</sli>
+        <sli>xsl/dita2govuk.xsl</sli>
+      </sl>
+    </section>
+    <section>
+      <title>Headings</title>
+      <p>The topic title above renders as the page heading; section titles like this one
+        take the medium size, and nested topics step down the scale automatically, so a
+        single page assembled by chunking keeps a correct heading hierarchy.</p>
+    </section>
+  </conbody>
+</concept>

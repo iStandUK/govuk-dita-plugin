@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map xml:lang="en-GB">
+  <title>Manual key definitions</title>
+  <keydef keys="introduction" href="topics/introduction.dita" format="dita" scope="local"/>
+  <keydef keys="install" href="topics/install.dita" format="dita" scope="local"/>
+  <keydef keys="build" href="topics/build.dita" format="dita" scope="local"/>
+  <keydef keys="parameters" href="topics/parameters.dita" format="dita" scope="local"/>
+  <keydef keys="branding" href="topics/branding.dita" format="dita" scope="local"/>
+  <keydef keys="navigation" href="topics/navigation.dita" format="dita" scope="local"/>
+  <keydef keys="demo-typography" href="topics/demo-typography.dita" format="dita" scope="local"/>
+  <keydef keys="demo-notes" href="topics/demo-notes.dita" format="dita" scope="local"/>
+  <keydef keys="demo-tables" href="topics/demo-tables.dita" format="dita" scope="local"/>
+  <keydef keys="demo-code" href="topics/demo-code.dita" format="dita" scope="local"/>
+  <keydef keys="demo-figures" href="topics/demo-figures.dita" format="dita" scope="local"/>
+  <keydef keys="development" href="topics/development.dita" format="dita" scope="local"/>
+  <keydef keys="architecture-diagram" href="images/architecture.svg" format="svg" scope="local"/>
+  <keydef keys="plugin-repo" href="https://github.com/iStandUK/govuk-dita-plugin" format="html" scope="external">
+    <topicmeta><linktext>govuk-dita-plugin on GitHub</linktext></topicmeta>
+  </keydef>
+  <keydef keys="dita-ot-site" href="https://www.dita-ot.org/" format="html" scope="external">
+    <topicmeta><linktext>DITA Open Toolkit</linktext></topicmeta>
+  </keydef>
+  <keydef keys="design-system" href="https://design-system.service.gov.uk/" format="html" scope="external">
+    <topicmeta><linktext>GOV.UK Design System</linktext></topicmeta>
+  </keydef>
+</map>

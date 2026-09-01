@@ -101,6 +101,16 @@ body {
   text-decoration: none;
 }
 
+/* Unlinked group labels (e.g. bookmap chapters without landing topics) */
+.app-sidebar__nav li > span {
+  color: #0b0c0c;
+  font-weight: 700;
+}
+
+.app-sidebar__nav > ul > li {
+  margin-top: 20px;
+}
+
 @media (min-width: 48.0625em) {
   .app-sidebar {
     border-right: 1px solid #b1b4b6;
