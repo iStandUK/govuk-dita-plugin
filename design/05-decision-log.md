@@ -131,7 +131,7 @@ assets, semver releases, registry `plugin.json` metadata).
 
 **Options:** (a) 4.x line; (b) also support 3.6+; (c) latest release only.
 
-**Decision:** (a) — the 4.x line, exact minimum minor to be pinned (OQ-2).
+**Decision:** (a) — the 4.x line, exact minimum minor to be pinned (done: D-11, 4.4.1).
 
 **Rationale:** 4.x is what current commercial DITA editors bundle and gives a clean XSLT 3.0/Saxon
 baseline. Supporting 3.x adds a compatibility test burden for installs that can upgrade;
@@ -171,3 +171,20 @@ design system without claiming to *be* GOV.UK.
 **Consequences:** Closes OQ-1. The plugin directory, `plugin.xml` `@id`, and registry entry
 all use `org.istanduk.gov-uk`; the transtype users type remains the short `govuk`
 (`dita -f govuk`).
+
+---
+
+## D-11 · Minimum DITA-OT version: 4.4.1
+
+**Options:** any 4.x minor from 4.0 upward; 4.4.1 (the latest release at decision time).
+
+**Decision:** **DITA-OT 4.4.1** is the pinned minimum and the primary CI target.
+
+**Rationale:** 4.4.1 is the current latest release (verified against the dita-ot GitHub
+releases on 2026-09-01), so extension-point verification (NFR-M1) happens once against a
+fresh baseline rather than against older minors no one installs new, and the plugin starts
+life with the longest possible runway before its minimum feels old.
+
+**Consequences:** Closes OQ-2. Documentation states "DITA-OT 4.4.1 or later"; the CI matrix
+starts at 4.4.1 and adds newer releases as they appear; extension-point IDs
+(03-architecture) are verified against 4.4.1 at implementation start.

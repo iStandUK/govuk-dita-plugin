@@ -45,7 +45,7 @@ transformations, or its assets.
 |---|---|---|
 | C1 | GDS Transport font and the crown are licensed only for official GOV.UK services | Branding must default off; assets copied into output only when explicitly enabled |
 | C2 | UK public-sector accessibility regulations; GOV.UK Frontend targets WCAG 2.2 AA | The plugin must not undermine the accessibility govuk-frontend provides; custom markup must meet the same bar |
-| C3 | Target DITA-OT 4.x (4.3 current at the time of writing) | XSLT 3.0/Saxon available; must use only documented extension points to survive minor upgrades |
+| C3 | Target DITA-OT 4.4.1 or later (the latest release when pinned — D-11) | XSLT 3.0/Saxon available; must use only documented extension points to survive minor upgrades |
 | C4 | Static hosting (GitHub Pages, S3, plain web server) | No server-side includes; search must be client-side; relative links throughout |
 | C5 | govuk-frontend evolves (v5.x line) | Pin an exact vendored release; upgrading is a deliberate, tested change |
 
@@ -86,7 +86,7 @@ flowchart LR
     end
 
     subgraph Build["Build - any machine / CI"]
-        S --> OT["DITA-OT 4.x<br/>+ govuk plugin"]
+        S --> OT["DITA-OT 4.4.1+<br/>+ govuk plugin"]
         OT --> OUT[("Static site<br/>HTML + CSS + JS<br/>+ assets")]
         OUT --> PF["Pagefind indexer<br/>optional post-build"]
         PF --> OUT

@@ -14,7 +14,7 @@ prioritised MoSCoW-style: **M**ust, **S**hould, **C**ould. Anything below the li
 | FR-B1 | The plugin registers a transtype **`govuk`** that extends `html5`, so `dita --input=<map> --format=govuk` performs a complete build | M |
 | FR-B2 | The plugin installs with `dita install <zip-or-url>` and, once published, by name from the DITA-OT plugin registry | M |
 | FR-B3 | All behaviour described below is controlled by documented build parameters (`govuk.*`), settable on the command line, in `.ditaotproject`/project files, or via Ant properties | M |
-| FR-B4 | The core build requires only DITA-OT 4.x and its bundled Java — no Node.js, no network access | M |
+| FR-B4 | The core build requires only DITA-OT (4.4.1 or later) and its bundled Java — no Node.js, no network access | M |
 | FR-B5 | The build works with standard DITA 1.3 maps and bookmaps, including keys/keyscopes, conref, chunking, and DITAVAL filtering (all inherited from `html5` preprocessing and must not be broken by overrides) | M |
 | FR-B6 | A build from unchanged source produces byte-identical output (deterministic), so hosting diffs are meaningful | S |
 

@@ -27,7 +27,7 @@ assets are legally restricted to official GOV.UK services. Site search uses **Pa
 optional post-build step. The layout follows the **GDS Technical Documentation Template**
 pattern (persistent left-hand navigation). Version 1 includes **glossary/abbreviation** and
 **back-of-book index** generation. The plugin is released under **Apache-2.0** on GitHub and
-listed in the DITA-OT plugin registry, targeting **DITA-OT 4.x**.
+listed in the DITA-OT plugin registry, targeting **DITA-OT 4.4.1 or later**.
 
 See [05-decision-log.md](05-decision-log.md) for the reasoning behind each of these.
 
