@@ -11,6 +11,7 @@ we do not override keeps its default html5 rendering.
                 version="3.0">
 
   <xsl:import href="plugin:org.dita.html5:xsl/dita2html5.xsl"/>
+  <xsl:import href="furniture.xsl"/>
   <xsl:import href="template.xsl"/>
   <xsl:import href="blocks.xsl"/>
 

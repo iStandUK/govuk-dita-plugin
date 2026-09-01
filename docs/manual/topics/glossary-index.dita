@@ -3,8 +3,8 @@
 <concept id="glossary-index" xml:lang="en-GB">
   <title>Glossary and index</title>
   <shortdesc>Publications that use DITA glossary entries or index markup get an A–Z glossary
-    page and a back-of-book index page generated automatically, linked from every
-    sidebar.</shortdesc>
+    page and a back-of-book index page generated automatically, linked from every page's
+    footer as GOV.UK support links.</shortdesc>
   <conbody>
     <p><indexterm>glossary</indexterm><indexterm>index</indexterm>Both pages are built from
       your source with no configuration:</p>
@@ -26,7 +26,7 @@
         every term with links to the pages where it appears. Nested terms become indented
         sub-entries, and <codeph>index-see</codeph> cross-references render as
         <q>see</q> lines. This manual indexes its own pages — follow the Index link in the
-        sidebar to see the result.</p>
+        footer to see the result.</p>
     </section>
   </conbody>
 </concept>

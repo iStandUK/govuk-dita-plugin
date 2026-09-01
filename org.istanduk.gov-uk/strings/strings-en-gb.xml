@@ -19,4 +19,5 @@ collisions with toolkit variables.
   <variable id="govuk-dita.index">Index</variable>
   <variable id="govuk-dita.see">see</variable>
   <variable id="govuk-dita.see-also">see also</variable>
+  <variable id="govuk-dita.support-links">Support links</variable>
 </variables>

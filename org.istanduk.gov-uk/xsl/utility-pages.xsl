@@ -133,13 +133,11 @@ indexterm markup. Imported by map2govuk-cover.xsl.
               <xsl:with-param name="id" select="'govuk-dita.skip-link'"/>
             </xsl:call-template>
           </a>
-          <header class="app-masthead">
-            <div class="govuk-width-container">
-              <a class="app-masthead__title" href="index{$OUTEXT}">
-                <xsl:value-of select="$govuk-masthead-name"/>
-              </a>
-            </div>
-          </header>
+          <xsl:call-template name="govuk-masthead">
+            <xsl:with-param name="name" select="$govuk-masthead-name"/>
+            <xsl:with-param name="home-href" select="concat('index', $OUTEXT)"/>
+            <xsl:with-param name="search-enabled" select="$GOVUK-SEARCH"/>
+          </xsl:call-template>
           <div class="govuk-width-container">
             <main class="govuk-main-wrapper" id="main-content">
               <div class="govuk-grid-row">
@@ -150,17 +148,11 @@ indexterm markup. Imported by map2govuk-cover.xsl.
               </div>
             </main>
           </div>
-          <footer class="govuk-footer">
-            <div class="govuk-width-container">
-              <div class="govuk-footer__meta">
-                <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
-                  <span class="govuk-footer__licence-description">
-                    <xsl:value-of select="$govuk-masthead-name"/>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </footer>
+          <xsl:call-template name="govuk-site-footer">
+            <xsl:with-param name="name" select="$govuk-masthead-name"/>
+            <xsl:with-param name="glossary" select="if (exists($govuk-gloss)) then 'yes' else 'no'"/>
+            <xsl:with-param name="index" select="if (exists($govuk-ix)) then 'yes' else 'no'"/>
+          </xsl:call-template>
         </body>
       </html>
     </xsl:result-document>

@@ -111,13 +111,12 @@ element-level typography.
           <xsl:with-param name="id" select="'govuk-dita.skip-link'"/>
         </xsl:call-template>
       </a>
-      <header class="app-masthead">
-        <div class="govuk-width-container">
-          <a class="app-masthead__title" href="{$govuk-home-href}">
-            <xsl:value-of select="$govuk-service-name"/>
-          </a>
-        </div>
-      </header>
+      <xsl:call-template name="govuk-masthead">
+        <xsl:with-param name="prefix" select="string($PATH2PROJ)"/>
+        <xsl:with-param name="name" select="$govuk-service-name"/>
+        <xsl:with-param name="home-href" select="$govuk-home-href"/>
+        <xsl:with-param name="search-enabled" select="$GOVUK-SEARCH"/>
+      </xsl:call-template>
       <div class="govuk-width-container">
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-one-third app-sidebar">
@@ -131,37 +130,6 @@ element-level typography.
                 <xsl:with-param name="id" select="'govuk-dita.toggle-section'"/>
               </xsl:call-template>
             </xsl:attribute>
-            <xsl:if test="$GOVUK-SEARCH = 'yes' or $GOVUK-GLOSSARY = 'yes' or $GOVUK-INDEX = 'yes'">
-              <ul class="govuk-list app-utility-nav">
-                <xsl:if test="$GOVUK-SEARCH = 'yes'">
-                  <li>
-                    <a class="govuk-link" href="{concat($PATH2PROJ, 'search.html')}">
-                      <xsl:call-template name="getVariable">
-                        <xsl:with-param name="id" select="'govuk-dita.search-this-site'"/>
-                      </xsl:call-template>
-                    </a>
-                  </li>
-                </xsl:if>
-                <xsl:if test="$GOVUK-GLOSSARY = 'yes'">
-                  <li>
-                    <a class="govuk-link" href="{concat($PATH2PROJ, 'glossary.html')}">
-                      <xsl:call-template name="getVariable">
-                        <xsl:with-param name="id" select="'govuk-dita.glossary'"/>
-                      </xsl:call-template>
-                    </a>
-                  </li>
-                </xsl:if>
-                <xsl:if test="$GOVUK-INDEX = 'yes'">
-                  <li>
-                    <a class="govuk-link" href="{concat($PATH2PROJ, 'index-page.html')}">
-                      <xsl:call-template name="getVariable">
-                        <xsl:with-param name="id" select="'govuk-dita.index'"/>
-                      </xsl:call-template>
-                    </a>
-                  </li>
-                </xsl:if>
-              </ul>
-            </xsl:if>
             <xsl:call-template name="gen-user-sidetoc"/>
           </div>
           <div class="govuk-grid-column-two-thirds">
@@ -169,17 +137,12 @@ element-level typography.
           </div>
         </div>
       </div>
-      <footer class="govuk-footer">
-        <div class="govuk-width-container">
-          <div class="govuk-footer__meta">
-            <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
-              <span class="govuk-footer__licence-description">
-                <xsl:value-of select="$govuk-service-name"/>
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <xsl:call-template name="govuk-site-footer">
+        <xsl:with-param name="prefix" select="string($PATH2PROJ)"/>
+        <xsl:with-param name="name" select="$govuk-service-name"/>
+        <xsl:with-param name="glossary" select="$GOVUK-GLOSSARY"/>
+        <xsl:with-param name="index" select="$GOVUK-INDEX"/>
+      </xsl:call-template>
       <script src="{concat($PATH2PROJ, 'govuk/plugin.js')}"></script>
       <script type="module">
         <xsl:text>import { initAll } from './</xsl:text>
