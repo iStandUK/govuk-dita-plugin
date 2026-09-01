@@ -27,7 +27,13 @@ element-level typography.
         <xsl:sequence select="normalize-space($GOVUK-SERVICE-NAME)"/>
       </xsl:when>
       <xsl:when test="exists($input.map)">
-        <xsl:sequence select="normalize-space(string($input.map/*[contains(@class, ' map/map ')]/*[contains(@class, ' topic/title ')]))"/>
+        <!-- Bookmap titles normalise to a title containing mainbooktitle plus
+             booktitlealt (often a long abstract); use the main title alone -->
+        <xsl:variable name="map-title" as="element()?"
+                      select="$input.map/*[contains(@class, ' map/map ')]/*[contains(@class, ' topic/title ')]"/>
+        <xsl:variable name="main-title" as="element()?"
+                      select="$map-title//*[contains(@class, ' bookmap/mainbooktitle ')][1]"/>
+        <xsl:sequence select="normalize-space(string(($main-title, $map-title)[1]))"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:sequence select="''"/>

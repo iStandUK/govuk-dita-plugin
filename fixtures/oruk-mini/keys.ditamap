@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map>
+  <title>Key definitions</title>
+  <keydef keys='Mchapter' href='chapter.dita' format='dita' scope='local'/>
+  <keydef keys='Titem' href='item.dita' format='dita' scope='local'/>
+  <keydef keys='Tclass' href='class-page.dita' format='dita' scope='local'/>
+  <keydef keys='Echild1' href='child1.dita' format='dita' scope='local'/>
+  <keydef keys='Echild2' href='child2.dita' format='dita' scope='local'/>
+  <keydef keys='Echild3' href='child3.dita' format='dita' scope='local'/>
+  <keydef keys='SVGdiagram' href='images/sample.svg' format='svg' scope='local'/>
+</map>

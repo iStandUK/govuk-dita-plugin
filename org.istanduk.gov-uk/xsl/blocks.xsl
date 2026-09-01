@@ -76,8 +76,9 @@ sections) follow at the end.
   <!-- ===== Links ===== -->
 
   <!-- topic/link is excluded: the base renders it as a list item, not an
-       anchor; child/related links are styled in plugin.css instead -->
-  <xsl:template match="*[contains(@class, ' topic/xref ')]" mode="set-output-class">
+       anchor; child/related links are styled in plugin.css instead.
+       svgref is excluded: it specialises xref but renders as an img -->
+  <xsl:template match="*[contains(@class, ' topic/xref ')][not(contains(@class, ' svg-d/svgref '))]" mode="set-output-class">
     <xsl:param name="default"/>
     <xsl:next-match>
       <xsl:with-param name="default" select="normalize-space(concat($default, ' govuk-link'))"/>

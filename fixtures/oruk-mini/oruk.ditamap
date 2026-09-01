@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "bookmap.dtd">
+<bookmap id='mini-bookmap'>
+  <booktitle>
+    <mainbooktitle>ORUK Mini Test</mainbooktitle>
+    <booktitlealt>A long abstract paragraph describing the specification in detail.</booktitlealt>
+  </booktitle>
+  <bookmeta>
+    <author>Open Referral</author>
+    <bookrights><bookowner><organization>The Open Referral Initiative</organization></bookowner></bookrights>
+  </bookmeta>
+  <frontmatter><booklists><toc/></booklists></frontmatter>
+  <chapter keyref='Mchapter'>
+    <mapref href='keys.ditamap' processing-role='resource-only'/>
+    <topicref navtitle='accessibility Item' keyref='Titem' toc='yes' chunk="to-content">
+      <topicref keyref='Echild1' toc='no'/>
+      <topicref keyref='Echild2' toc='no'/>
+    </topicref>
+    <topicref navtitle='class page' keyref='Tclass' toc='yes'>
+      <topicref keyref='Echild3' toc='no'/>
+    </topicref>
+  </chapter>
+</bookmap>

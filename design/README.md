@@ -16,6 +16,7 @@ commercial help-output tooling.
 | [04-components.md](04-components.md) | Component inventory, DITA-element → GOV.UK-component mapping, requirements traceability matrix |
 | [05-decision-log.md](05-decision-log.md) | Decisions taken so far, with options considered and rationale |
 | [06-open-questions.md](06-open-questions.md) | Questions still needing a decision before or during implementation |
+| [07-gap-analysis-oruk.md](07-gap-analysis-oruk.md) | Gap analysis of the Open Referral UK corpus: full-sweep feature inventory, verified dispositions, findings |
 
 ## Summary of agreed direction
 

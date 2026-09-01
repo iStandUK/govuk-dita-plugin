@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id='class-page'>
+  <title>class page</title>
+  <shortdesc>Short description of class page.</shortdesc>
+  <body><section audience='external' xml:lang='en-GB'><title>Diagram by keyref</title><fig><title>Keyed diagram</title><svg-container><svgref keyref='SVGdiagram'/></svg-container></fig></section><p>Bold via <b>hi-d domain</b> and a keyed link: <xref keyref='Titem'/>.</p></body>
+</topic>

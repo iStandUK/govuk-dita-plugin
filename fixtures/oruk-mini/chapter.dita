@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id='chapter'>
+  <title>Chapter landing</title>
+  <shortdesc>Short description of Chapter landing.</shortdesc>
+  <body><p>Chapter body with an <xref keyref='Echild3'/> link by key.</p></body>
+</topic>

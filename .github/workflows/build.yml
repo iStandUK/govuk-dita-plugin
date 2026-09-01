@@ -47,6 +47,13 @@ jobs:
             --format govuk \
             --output out/poc
 
+      - name: Build ORUK fixture
+        run: |
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" \
+            --input fixtures/oruk-mini/oruk.ditamap \
+            --format govuk \
+            --output out/oruk-mini
+
       - name: Cache Nu validator
         id: cache-vnu
         uses: actions/cache@v4
@@ -65,7 +72,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/poc
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/poc out/oruk-mini
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/poc/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -88,9 +95,19 @@ jobs:
           grep -q 'govuk-body' "$page"
           grep -q 'govuk-warning-text' out/poc/topics/notes.html
           grep -q 'govuk-table__caption' out/poc/topics/tables.html
+          # ORUK idioms (design/07-gap-analysis-oruk.md): bookmap masthead uses
+          # mainbooktitle only (F1); svgref renders as img without link class (F2);
+          # keyref xrefs resolve; column spans and chunked headings survive
+          grep -q '>ORUK Mini Test</a>' out/oruk-mini/item.html
+          ! grep -q 'booktitlealt\|long abstract' out/oruk-mini/item.html
+          grep -q '<img class="xref svgref" src="images/sample.svg"' out/oruk-mini/class-page.html
+          test -f out/oruk-mini/images/sample.svg
+          grep -q 'colspan="3"' out/oruk-mini/item.html
+          grep -q 'href="child3.html"' out/oruk-mini/chapter.html
+          grep -Eq '<h2[^>]*>child one</h2>' out/oruk-mini/item.html
           # FR-T1: neutral builds ship no restricted assets and reference no CDN
-          test -z "$(find out/poc -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
-          ! grep -Eroh '(src|href)="https?://' out/poc --include='*.html'
+          test -z "$(find out/poc out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
+          ! grep -Eroh '(src|href)="https?://' out/poc out/oruk-mini --include='*.html'
           echo "All output checks passed"
 
       - name: Upload site artifact

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id='child2'>
+  <title>child two</title>
+  <shortdesc>Short description of child two.</shortdesc>
+  <body><p>Child topic two body.</p></body>
+</topic>
