@@ -40,6 +40,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
           message="govuk.branding=official: the GOV.UK crown and GDS Transport font are legally restricted to official GOV.UK services. Official mode is not yet implemented; the build will use neutral assets."/>
     <!-- Landing-page layout (D-13) -->
     <property name="govuk.homepage.layout" value="auto"/>
+    <property name="govuk.homepage.depth" value="2"/>
+    <fail message="govuk.homepage.depth must be a single digit 1-9, was: ${govuk.homepage.depth}">
+      <condition>
+        <not><matches pattern="^[1-9]$" string="${govuk.homepage.depth}"/></not>
+      </condition>
+    </fail>
     <fail message="govuk.homepage.layout must be one of auto|start|annotated|list|grid|grouped|accordion, was: ${govuk.homepage.layout}">
       <condition>
         <not><or>
@@ -114,6 +120,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
           description="Generate the GOV.UK home page and search page from the map">
     <html5.map>
       <param name="GOVUK-HOMEPAGE-LAYOUT" expression="${govuk.homepage.layout}"/>
+      <param name="GOVUK-HOMEPAGE-DEPTH" expression="${govuk.homepage.depth}"/>
       <param name="GOVUK-SERVICE-NAME" expression="${govuk.service.name}" if:set="govuk.service.name"/>
       <param name="GOVUK-SEARCH" expression="${govuk.search.enabled}"/>
       <param name="GOVUK-BRANDING" expression="${govuk.branding}"/>

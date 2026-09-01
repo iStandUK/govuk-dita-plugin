@@ -67,6 +67,12 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-accordion -Dgovuk.homepage.layout=accordion
 
+      - name: Build depth override
+        run: |
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-depth1 \
+            -Dgovuk.homepage.layout=grid -Dgovuk.homepage.depth=1
+
       - name: Build iStandUK theme
         run: |
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
@@ -156,6 +162,10 @@ jobs:
           grep -q 'govuk-button--start' out/oruk-mini/index.html
           grep -q 'govuk-grid-column-one-third' out/manual-grid/index.html
           grep -q 'govuk-accordion__section' out/manual-accordion/index.html
+          # govuk.homepage.depth=1: entry headings only, no child lists
+          grep -q 'app-entry__heading' out/manual-depth1/index.html
+          ! grep -q 'app-group-list' out/manual-depth1/index.html
+          grep -q 'app-group-list' out/manual-grid/index.html
           # Manual documents the layouts with screenshots of itself
           grep -q 'homepage-grid.png' out/manual/topics/layouts.html
           test -f out/manual/images/homepage-grid.png

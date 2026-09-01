@@ -24,6 +24,14 @@ map transformation with the plugin's values.
               omit-xml-declaration="yes"/>
 
   <xsl:param name="GOVUK-HOMEPAGE-LAYOUT" select="'auto'"/>
+  <xsl:param name="GOVUK-HOMEPAGE-DEPTH" select="'2'"/>
+
+  <!-- Levels of the map shown on the landing page (D-13); children render
+       when this is 2 or more, nesting one list per further level -->
+  <xsl:variable name="govuk-homepage-depth" as="xs:integer"
+                select="if ($GOVUK-HOMEPAGE-DEPTH castable as xs:integer)
+                        then max((1, xs:integer($GOVUK-HOMEPAGE-DEPTH)))
+                        else 2"/>
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>
   <xsl:param name="GOVUK-SEARCH" select="'no'"/>
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
@@ -117,10 +125,13 @@ map transformation with the plugin's values.
     </xsl:if>
   </xsl:template>
 
-  <!-- A plain child-link list for a group, with hint-styled descriptions -->
+  <!-- A plain child-link list for a group, with hint-styled descriptions.
+       $levels is how many list levels may still render (govuk.homepage.depth
+       minus the entry-heading level); nesting recurses while it exceeds 1. -->
   <xsl:template name="govuk-child-list">
     <xsl:param name="children" as="element()*"/>
-    <xsl:if test="exists($children)">
+    <xsl:param name="levels" as="xs:integer" select="1"/>
+    <xsl:if test="exists($children) and $levels ge 1">
       <ul class="govuk-list app-group-list">
         <xsl:for-each select="$children">
           <xsl:variable name="title"><xsl:apply-templates select="." mode="get-navtitle"/></xsl:variable>
@@ -136,6 +147,14 @@ map transformation with the plugin's values.
             </xsl:choose>
             <xsl:if test="string-length($desc) gt 0">
               <div class="govuk-hint app-group-list__hint"><xsl:value-of select="$desc"/></div>
+            </xsl:if>
+            <xsl:if test="$levels gt 1">
+              <xsl:call-template name="govuk-child-list">
+                <xsl:with-param name="children"
+                                select="*[contains(@class, ' map/topicref ')]
+                                        [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
+                <xsl:with-param name="levels" select="$levels - 1"/>
+              </xsl:call-template>
             </xsl:if>
           </li>
         </xsl:for-each>
@@ -220,6 +239,7 @@ map transformation with the plugin's values.
                           <xsl:with-param name="children"
                                           select="*[contains(@class, ' map/topicref ')]
                                                   [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
+                          <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
                         </xsl:call-template>
                       </div>
                     </xsl:for-each>
@@ -235,6 +255,7 @@ map transformation with the plugin's values.
                       <xsl:with-param name="children"
                                       select="*[contains(@class, ' map/topicref ')]
                                               [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
+                      <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
                     </xsl:call-template>
                   </xsl:for-each>
                 </xsl:when>
@@ -259,6 +280,7 @@ map transformation with the plugin's values.
                             <xsl:when test="exists($children)">
                               <xsl:call-template name="govuk-child-list">
                                 <xsl:with-param name="children" select="$children"/>
+                                <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
                               </xsl:call-template>
                             </xsl:when>
                             <xsl:otherwise>
@@ -333,6 +355,7 @@ map transformation with the plugin's values.
       <xsl:call-template name="govuk-contents-heading"/>
       <xsl:call-template name="govuk-child-list">
         <xsl:with-param name="children" select="$children"/>
+        <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
       </xsl:call-template>
     </xsl:if>
   </xsl:template>

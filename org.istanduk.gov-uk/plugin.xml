@@ -27,6 +27,9 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val>grouped</val>
       <val>accordion</val>
     </param>
+    <param name="govuk.homepage.depth"
+           desc="How many levels of the map the landing page shows (grid, grouped, accordion, and start layouts). 1 = top-level entries only; 2 (default) = entries plus their children; higher values nest deeper."
+           type="string"/>
     <param name="govuk.search"
            desc="Site search via Pagefind. 'auto' (default) enables search when the Pagefind binary is found; 'yes' requires it (build fails without it); 'no' disables search."
            type="enum">

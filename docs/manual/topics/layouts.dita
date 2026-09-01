@@ -11,7 +11,10 @@
       and more entries — or a bookmap with several chapters, like this manual — give
       <codeph>grouped</codeph>. The <codeph>grid</codeph> and <codeph>accordion</codeph>
       layouts are explicit choices, and <codeph>list</codeph> keeps a plain contents
-      tree.</p>
+      tree. <codeph>govuk.homepage.depth</codeph> controls how many levels the grid,
+      grouped, accordion, and start layouts show — <codeph>1</codeph> for entry headings
+      only, <codeph>2</codeph> (the default, used in the screenshots below) to include each
+      entry's children, higher values to nest deeper.</p>
     <section>
       <title>Start</title>
       <p>For a publication that is one linear guide: a green start button leads straight
