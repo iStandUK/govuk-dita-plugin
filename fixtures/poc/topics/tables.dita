@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="tables" xml:lang="en-GB">
+  <title>Tables</title>
+  <shortdesc>CALS tables and simple tables both map to the GOV.UK table
+    component.</shortdesc>
+  <refbody>
+    <section>
+      <title>A CALS table</title>
+      <table>
+        <title>Build parameters</title>
+        <tgroup cols="3">
+          <thead>
+            <row>
+              <entry>Parameter</entry>
+              <entry>Default</entry>
+              <entry>Purpose</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>govuk.branding</entry>
+              <entry>neutral</entry>
+              <entry>Branding mode</entry>
+            </row>
+            <row>
+              <entry>govuk.service.name</entry>
+              <entry>map title</entry>
+              <entry>Masthead text</entry>
+            </row>
+            <row>
+              <entry>nav-toc</entry>
+              <entry>full</entry>
+              <entry>Sidebar tree depth</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section>
+      <title>A simple table</title>
+      <simpletable>
+        <sthead>
+          <stentry>File</stentry>
+          <stentry>Role</stentry>
+        </sthead>
+        <strow>
+          <stentry>template.xsl</stentry>
+          <stentry>Page skeleton</stentry>
+        </strow>
+        <strow>
+          <stentry>blocks.xsl</stentry>
+          <stentry>Typography mapping</stentry>
+        </strow>
+      </simpletable>
+    </section>
+  </refbody>
+</reference>

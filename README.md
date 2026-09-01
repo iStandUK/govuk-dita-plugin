@@ -3,9 +3,22 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: design phase.** No plugin code exists yet — this repository currently holds the
-agreed design, requirements, and architecture. Contributions and review comments on the design
-are welcome.
+**Status: proof of concept.** The [design](design/) is agreed (tagged
+[`design`](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/design)) and the walking
+skeleton is building: the plugin in [org.istanduk.gov-uk/](org.istanduk.gov-uk/) renders the
+[fixture publication](fixtures/poc/) as GOV.UK-styled pages with sidebar navigation on
+DITA-OT 4.4.1. Progress is tracked in
+[the PoC epic](https://github.com/iStandUK/govuk-dita-plugin/issues/1).
+
+## Try it
+
+```bash
+cd org.istanduk.gov-uk && zip -qr ../org.istanduk.gov-uk.zip . && cd ..
+dita install ./org.istanduk.gov-uk.zip
+dita --input=fixtures/poc/poc.ditamap --format=govuk --output=out/poc
+```
+
+Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else.
 
 ## What it will do
 

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="lists-and-code" xml:lang="en-GB">
+  <title>Lists and code</title>
+  <shortdesc>Ordered lists, simple lists, and code blocks round out the core
+    block elements.</shortdesc>
+  <conbody>
+    <p>Ordered lists use the numbered GOV.UK list style:</p>
+    <ol>
+      <li>Install the plugin.</li>
+      <li>Run the build.</li>
+      <li>Publish the output directory.</li>
+    </ol>
+    <p>Simple lists render as plain GOV.UK lists:</p>
+    <sl>
+      <sli>plugin.xml</sli>
+      <sli>build_dita2govuk.xml</sli>
+      <sli>xsl/dita2govuk.xsl</sli>
+    </sl>
+    <p>Code blocks keep monospace styling with horizontal scrolling, and inline
+      code such as <codeph>dita --format govuk</codeph> stays legible in
+      running text:</p>
+    <codeblock>dita --input=fixtures/poc/poc.ditamap \
+     --format=govuk \
+     --output=out/poc</codeblock>
+  </conbody>
+</concept>

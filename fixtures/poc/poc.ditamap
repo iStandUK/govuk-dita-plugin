@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map xml:lang="en-GB">
+  <title>Fixture Publication</title>
+  <topicref href="topics/introduction.dita">
+    <topicref href="topics/going-deeper.dita"/>
+  </topicref>
+  <topicref href="topics/notes.dita"/>
+  <topicref href="topics/lists-and-code.dita"/>
+  <topicref href="topics/tables.dita"/>
+</map>

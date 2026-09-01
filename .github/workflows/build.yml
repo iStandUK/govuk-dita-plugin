@@ -1,0 +1,72 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DITA_OT_VERSION: 4.4.1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache DITA-OT
+        id: cache-dita-ot
+        uses: actions/cache@v4
+        with:
+          path: dita-ot-${{ env.DITA_OT_VERSION }}
+          key: dita-ot-${{ env.DITA_OT_VERSION }}
+
+      - name: Download DITA-OT
+        if: steps.cache-dita-ot.outputs.cache-hit != 'true'
+        run: |
+          curl -sSL -o dita-ot.zip "https://github.com/dita-ot/dita-ot/releases/download/${DITA_OT_VERSION}/dita-ot-${DITA_OT_VERSION}.zip"
+          unzip -q dita-ot.zip
+          rm dita-ot.zip
+
+      - name: Install plugin
+        run: |
+          (cd org.istanduk.gov-uk && zip -qr ../org.istanduk.gov-uk.zip .)
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
+
+      - name: Build fixture
+        run: |
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" \
+            --input fixtures/poc/poc.ditamap \
+            --format govuk \
+            --output out/poc
+
+      - name: Check output
+        run: |
+          set -e
+          page=out/poc/topics/introduction.html
+          # GOV.UK template structure present
+          grep -q 'class="govuk-template"' "$page"
+          grep -q 'govuk-skip-link' "$page"
+          grep -q 'app-sidebar__nav' "$page"
+          grep -q 'id="main-content"' "$page"
+          grep -q 'govuk-footer' "$page"
+          # Typography classes applied
+          grep -q 'govuk-heading-l' "$page"
+          grep -q 'govuk-body' "$page"
+          grep -q 'govuk-warning-text' out/poc/topics/notes.html
+          grep -q 'govuk-table__caption' out/poc/topics/tables.html
+          # FR-T1: neutral builds ship no restricted assets and reference no CDN
+          test -z "$(find out/poc -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
+          ! grep -Eroh '(src|href)="https?://' out/poc --include='*.html'
+          echo "All output checks passed"
+
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: poc-site
+          path: out/poc

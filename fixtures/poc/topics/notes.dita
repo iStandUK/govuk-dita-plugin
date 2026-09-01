@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="notes" xml:lang="en-GB">
+  <title>Notes and admonitions</title>
+  <shortdesc>Every DITA note type maps to a GOV.UK component: inset text for
+    neutral notes, warning text for the rest.</shortdesc>
+  <conbody>
+    <p>Neutral note types render as inset text:</p>
+    <note>A plain note renders as inset text with no label.</note>
+    <note type="tip">A tip also renders as inset text.</note>
+    <p>Warning-family note types render as warning text with the icon and a
+      visually hidden label for screen readers:</p>
+    <note type="warning">A warning uses the warning text component.</note>
+    <note type="caution">A caution renders the same way, with its own hidden
+      label.</note>
+    <note type="important">Important notes join the warning family.</note>
+    <note type="attention">Attention notes do too.</note>
+  </conbody>
+</concept>

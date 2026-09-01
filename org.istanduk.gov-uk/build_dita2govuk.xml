@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+-->
+<project name="org.istanduk.gov-uk">
+
+  <target name="dita2govuk.init">
+    <!-- Route topic rendering through this plugin's stylesheet (scoped to the
+         govuk transtype; plain html5 builds are unaffected). -->
+    <property name="args.xsl"
+              location="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/dita2govuk.xsl"/>
+    <!-- The sidebar needs the full map tree on every page (FR-N1/FR-N2).
+         A user-supplied nav-toc property still wins because properties are
+         immutable once set. -->
+    <property name="nav-toc" value="full"/>
+    <!-- Neutral branding unless the publisher explicitly opts in (FR-T1). -->
+    <property name="govuk.branding" value="neutral"/>
+    <fail message="govuk.branding must be 'neutral' or 'official', was: ${govuk.branding}">
+      <condition>
+        <not><or>
+          <equals arg1="${govuk.branding}" arg2="neutral"/>
+          <equals arg1="${govuk.branding}" arg2="official"/>
+        </or></not>
+      </condition>
+    </fail>
+    <condition property="govuk.branding.official">
+      <equals arg1="${govuk.branding}" arg2="official"/>
+    </condition>
+    <echo if:set="govuk.branding.official" xmlns:if="ant:if" level="warning"
+          message="govuk.branding=official: the GOV.UK crown and GDS Transport font are legally restricted to official GOV.UK services. Official mode is not yet implemented; the build will use neutral assets."/>
+  </target>
+
+  <target name="dita2govuk"
+          depends="dita2govuk.init, dita2html5, govuk.copy-assets"/>
+
+  <target name="govuk.copy-assets"
+          description="Copy GOV.UK frontend assets and plugin CSS into the output">
+    <!-- Neutral builds deliberately ship no GDS Transport fonts and no crown
+         imagery (FR-T1); official-mode asset handling is tracked separately. -->
+    <copy todir="${dita.output.dir}/govuk">
+      <fileset dir="${dita.plugin.org.istanduk.gov-uk.dir}/resource/govuk-frontend">
+        <include name="*.min.css"/>
+        <include name="*.min.js"/>
+        <include name="*.map"/>
+        <include name="VERSION.txt"/>
+      </fileset>
+      <fileset dir="${dita.plugin.org.istanduk.gov-uk.dir}/resource/css">
+        <include name="*.css"/>
+      </fileset>
+    </copy>
+  </target>
+
+</project>

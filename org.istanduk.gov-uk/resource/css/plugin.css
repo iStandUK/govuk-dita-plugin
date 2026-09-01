@@ -1,0 +1,185 @@
+/*
+ * This file is part of the govuk-dita-plugin project.
+ * Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+ *
+ * Plugin page furniture: masthead, sidebar navigation tree, and styling for
+ * generated markup that has no govuk-frontend component (code blocks, figures).
+ * App-specific classes use the app- prefix, per Design System convention.
+ */
+
+/* ===== Base ===== */
+
+/* govuk-frontend scopes its font to govuk-* classes; give the plugin's own
+ * furniture (masthead, sidebar, generated links) the same stack. In neutral
+ * mode the overlay aliases GDS Transport to a system font. */
+body {
+  font-family: "GDS Transport", arial, sans-serif;
+}
+
+/* ===== Masthead (neutral) ===== */
+
+.app-masthead {
+  background: #0b0c0c;
+  padding: 15px 0;
+}
+
+.app-masthead__title {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.app-masthead__title:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.1em;
+}
+
+.app-masthead__title:focus {
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+  outline: 3px solid transparent;
+  text-decoration: none;
+}
+
+/* ===== Sidebar navigation ===== */
+
+.app-sidebar {
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+
+.app-sidebar__nav {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.app-sidebar__nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.app-sidebar__nav ul ul {
+  padding-left: 20px;
+}
+
+.app-sidebar__nav li {
+  margin: 10px 0;
+}
+
+.app-sidebar__nav a {
+  color: #1d70b8;
+  text-decoration: underline;
+  text-decoration-thickness: max(1px, 0.0625rem);
+  text-underline-offset: 0.1578em;
+}
+
+.app-sidebar__nav a:hover {
+  color: #003078;
+  text-decoration-thickness: max(3px, 0.1875rem);
+}
+
+.app-sidebar__nav a:focus {
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+  outline: 3px solid transparent;
+  text-decoration: none;
+}
+
+.app-sidebar__nav li.active > a {
+  color: #0b0c0c;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (min-width: 48.0625em) {
+  .app-sidebar {
+    border-right: 1px solid #b1b4b6;
+  }
+}
+
+/* ===== Generated child/related links ===== */
+
+ul.ullinks,
+ul.linklist {
+  list-style: none;
+  margin: 40px 0 20px;
+  padding: 20px 0 0;
+  border-top: 1px solid #b1b4b6;
+}
+
+li.ulchildlink,
+li.olchildlink {
+  margin: 0 0 15px;
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+.ullinks a,
+.linklist a,
+.related-links a {
+  color: #1d70b8;
+  text-decoration: underline;
+  text-decoration-thickness: max(1px, 0.0625rem);
+  text-underline-offset: 0.1578em;
+}
+
+.ullinks a:hover,
+.linklist a:hover,
+.related-links a:hover {
+  color: #003078;
+  text-decoration-thickness: max(3px, 0.1875rem);
+}
+
+.ullinks a:focus,
+.linklist a:focus,
+.related-links a:focus {
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+  outline: 3px solid transparent;
+  text-decoration: none;
+}
+
+/* ===== Content furniture without a govuk-frontend component ===== */
+
+pre.codeblock,
+pre.pre {
+  background: #f3f2f1;
+  border: 1px solid #b1b4b6;
+  padding: 15px;
+  margin: 0 0 20px;
+  overflow-x: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+code,
+samp,
+kbd {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9375em;
+}
+
+#main-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Keep long tables usable on small screens */
+#main-content table {
+  display: block;
+  overflow-x: auto;
+}
+
+@media (min-width: 48.0625em) {
+  #main-content table {
+    display: table;
+  }
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+Contributed to the dita.conductor.html5.param extension point: passes the
+govuk.* Ant properties into the HTML5 topic transformation. The if:set guards
+mean plain html5 builds (where these properties are never defined) are
+unaffected.
+-->
+<params xmlns:if="ant:if">
+  <param name="GOVUK-BRANDING" expression="${govuk.branding}" if:set="govuk.branding"/>
+  <param name="GOVUK-SERVICE-NAME" expression="${govuk.service.name}" if:set="govuk.service.name"/>
+</params>

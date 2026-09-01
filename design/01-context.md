@@ -47,7 +47,7 @@ transformations, or its assets.
 | C2 | UK public-sector accessibility regulations; GOV.UK Frontend targets WCAG 2.2 AA | The plugin must not undermine the accessibility govuk-frontend provides; custom markup must meet the same bar |
 | C3 | Target DITA-OT 4.4.1 or later (the latest release when pinned — D-11) | XSLT 3.0/Saxon available; must use only documented extension points to survive minor upgrades |
 | C4 | Static hosting (GitHub Pages, S3, plain web server) | No server-side includes; search must be client-side; relative links throughout |
-| C5 | govuk-frontend evolves (v5.x line) | Pin an exact vendored release; upgrading is a deliberate, tested change |
+| C5 | govuk-frontend evolves (v6.x line; v6.5.0 vendored at PoC start) | Pin an exact vendored release; upgrading is a deliberate, tested change |
 
 ## Prior art
 
