@@ -36,6 +36,8 @@ jobs:
       - name: Install plugin
         run: |
           (cd org.istanduk.gov-uk && zip -qr ../org.istanduk.gov-uk.zip .)
+          # The cached DITA-OT may hold the plugin from an earlier run
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" uninstall org.istanduk.gov-uk || true
           "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
 
       - name: Build fixture
