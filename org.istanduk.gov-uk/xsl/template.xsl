@@ -17,6 +17,8 @@ element-level typography.
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>
   <xsl:param name="GOVUK-SEARCH" select="'no'"/>
+  <xsl:param name="GOVUK-GLOSSARY" select="'no'"/>
+  <xsl:param name="GOVUK-INDEX" select="'no'"/>
 
   <!-- Pinned vendored govuk-frontend release (see resource/govuk-frontend/VERSION.txt) -->
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
@@ -129,14 +131,36 @@ element-level typography.
                 <xsl:with-param name="id" select="'govuk-dita.toggle-section'"/>
               </xsl:call-template>
             </xsl:attribute>
-            <xsl:if test="$GOVUK-SEARCH = 'yes'">
-              <p class="app-search-link">
-                <a class="govuk-link" href="{concat($PATH2PROJ, 'search.html')}">
-                  <xsl:call-template name="getVariable">
-                    <xsl:with-param name="id" select="'govuk-dita.search-this-site'"/>
-                  </xsl:call-template>
-                </a>
-              </p>
+            <xsl:if test="$GOVUK-SEARCH = 'yes' or $GOVUK-GLOSSARY = 'yes' or $GOVUK-INDEX = 'yes'">
+              <ul class="govuk-list app-utility-nav">
+                <xsl:if test="$GOVUK-SEARCH = 'yes'">
+                  <li>
+                    <a class="govuk-link" href="{concat($PATH2PROJ, 'search.html')}">
+                      <xsl:call-template name="getVariable">
+                        <xsl:with-param name="id" select="'govuk-dita.search-this-site'"/>
+                      </xsl:call-template>
+                    </a>
+                  </li>
+                </xsl:if>
+                <xsl:if test="$GOVUK-GLOSSARY = 'yes'">
+                  <li>
+                    <a class="govuk-link" href="{concat($PATH2PROJ, 'glossary.html')}">
+                      <xsl:call-template name="getVariable">
+                        <xsl:with-param name="id" select="'govuk-dita.glossary'"/>
+                      </xsl:call-template>
+                    </a>
+                  </li>
+                </xsl:if>
+                <xsl:if test="$GOVUK-INDEX = 'yes'">
+                  <li>
+                    <a class="govuk-link" href="{concat($PATH2PROJ, 'index-page.html')}">
+                      <xsl:call-template name="getVariable">
+                        <xsl:with-param name="id" select="'govuk-dita.index'"/>
+                      </xsl:call-template>
+                    </a>
+                  </li>
+                </xsl:if>
+              </ul>
             </xsl:if>
             <xsl:call-template name="gen-user-sidetoc"/>
           </div>

@@ -154,6 +154,18 @@ jobs:
           # Manual documents the layouts with screenshots of itself
           grep -q 'homepage-grid.png' out/manual/topics/layouts.html
           test -f out/manual/images/homepage-grid.png
+          # Glossary and index (#17, #18 / FR-G, FR-X)
+          grep -q 'app-az-letter' out/manual/glossary.html
+          grep -q '(DITA)' out/manual/glossary.html
+          grep -q 'href="glossary/gloss-gds.html"' out/manual/glossary.html
+          grep -q 'app-index-sublist' out/manual/index-page.html
+          grep -q 'see notes' out/manual/index-page.html
+          grep -q 'glossary.html' out/manual/topics/introduction.html
+          grep -q 'index-page.html' out/manual/topics/introduction.html
+          grep -q 'abbreviated-form' out/manual/topics/glossary-index.html
+          ! grep -q 'glossary.html' out/oruk-mini/item.html
+          test ! -f out/oruk-mini/glossary.html
+          test ! -f out/oruk-mini/index-page.html
           # Localisable UI text (#19 / NFR-I1)
           grep -q 'data-label-menu="Menu"' out/manual/topics/introduction.html
           # FR-T1: neutral builds ship no restricted assets and load no external

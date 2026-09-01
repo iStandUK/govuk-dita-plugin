@@ -6,7 +6,7 @@
     and <codeph>govuk.homepage.layout</codeph> overrides it. Every screenshot below is this
     manual, rebuilt with a different layout.</shortdesc>
   <conbody>
-    <p>With <codeph>auto</codeph> (the default): a single top-level entry gives the
+    <p><indexterm>home page<indexterm>layouts</indexterm></indexterm>With <codeph>auto</codeph> (the default): a single top-level entry gives the
       <codeph>start</codeph> layout, two to eight entries give <codeph>annotated</codeph>,
       and more entries — or a bookmap with several chapters, like this manual — give
       <codeph>grouped</codeph>. The <codeph>grid</codeph> and <codeph>accordion</codeph>

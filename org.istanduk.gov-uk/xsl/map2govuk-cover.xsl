@@ -15,6 +15,7 @@ map transformation with the plugin's values.
                 exclude-result-prefixes="xs">
 
   <xsl:import href="plugin:org.dita.html5:xsl/map2html5-cover.xsl"/>
+  <xsl:import href="utility-pages.xsl"/>
 
   <xsl:output method="html"
               include-content-type="no"
@@ -47,6 +48,8 @@ map transformation with the plugin's values.
       <xsl:call-template name="chapterBody"/>
     </html>
     <xsl:call-template name="govuk-search-page"/>
+    <xsl:call-template name="govuk-glossary-page"/>
+    <xsl:call-template name="govuk-index-page"/>
   </xsl:template>
 
   <xsl:template name="gen-user-head">
@@ -139,9 +142,7 @@ map transformation with the plugin's values.
   <!-- ===== Page body ===== -->
 
   <xsl:template match="*[contains(@class, ' map/map ')]" mode="chapterBody" priority="10">
-    <xsl:variable name="map" as="element()*">
-      <xsl:apply-templates select="." mode="normalize-map"/>
-    </xsl:variable>
+    <xsl:variable name="map" select="$govuk-norm-map" as="element()*"/>
     <xsl:variable name="entries" as="element()*"
                   select="$map/*[contains(@class, ' map/topicref ')]
                           [not(@processing-role = 'resource-only')]
@@ -196,14 +197,36 @@ map transformation with the plugin's values.
                   <xsl:value-of select="string-join(distinct-values(($authors, $orgs)[. ne '']), ' · ')"/>
                 </p>
               </xsl:if>
-              <xsl:if test="$GOVUK-SEARCH = 'yes'">
-                <p class="app-search-link">
-                  <a class="govuk-link" href="search.html">
-                    <xsl:call-template name="getVariable">
-                      <xsl:with-param name="id" select="'govuk-dita.search-this-site'"/>
-                    </xsl:call-template>
-                  </a>
-                </p>
+              <xsl:if test="$GOVUK-SEARCH = 'yes' or exists($govuk-gloss) or exists($govuk-ix)">
+                <ul class="govuk-list app-utility-nav">
+                  <xsl:if test="$GOVUK-SEARCH = 'yes'">
+                    <li>
+                      <a class="govuk-link" href="search.html">
+                        <xsl:call-template name="getVariable">
+                          <xsl:with-param name="id" select="'govuk-dita.search-this-site'"/>
+                        </xsl:call-template>
+                      </a>
+                    </li>
+                  </xsl:if>
+                  <xsl:if test="exists($govuk-gloss)">
+                    <li>
+                      <a class="govuk-link" href="glossary.html">
+                        <xsl:call-template name="getVariable">
+                          <xsl:with-param name="id" select="'govuk-dita.glossary'"/>
+                        </xsl:call-template>
+                      </a>
+                    </li>
+                  </xsl:if>
+                  <xsl:if test="exists($govuk-ix)">
+                    <li>
+                      <a class="govuk-link" href="index-page.html">
+                        <xsl:call-template name="getVariable">
+                          <xsl:with-param name="id" select="'govuk-dita.index'"/>
+                        </xsl:call-template>
+                      </a>
+                    </li>
+                  </xsl:if>
+                </ul>
               </xsl:if>
               <xsl:choose>
                 <xsl:when test="$layout = 'start'">

@@ -57,18 +57,18 @@ requirements govern its behaviour.
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-G1 | `glossentry` topics referenced from the map are collected into a single A–Z glossary page (grouped by initial letter, with letter navigation) | M | ⬜ v1 backlog |
-| FR-G2 | `abbreviated-form` keyrefs render as `<abbr title="...">` with the expansion, linked to the glossary entry | M | ⬜ v1 backlog |
-| FR-G3 | `term` elements with keyrefs to glossary entries link to the glossary | S | ⬜ v1 backlog |
-| FR-G4 | Glossary sort order respects the build language's collation (en-GB in v1) | S | ⬜ v1 backlog |
+| FR-G1 | `glossentry` topics referenced from the map are collected into a single A–Z glossary page (grouped by initial letter, with letter navigation) | M | ✅ resource-only references included; generated only when entries exist |
+| FR-G2 | `abbreviated-form` keyrefs render as `<abbr title="...">` with the expansion, linked to the glossary entry | M | ✅ via inherited first-use semantics: expansion then acronym, linked to the entry with the definition as tooltip (`dfn` markup rather than `abbr`) |
+| FR-G3 | `term` elements with keyrefs to glossary entries link to the glossary | S | ✅ |
+| FR-G4 | Glossary sort order respects the build language's collation (en-GB in v1) | S | ✅ |
 
 ### Back-of-book index (FR-X)
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-X1 | `indexterm` markup across the publication is collected into an A–Z index page with links to the pages (and nearest anchors) where each term occurs | M | ⬜ v1 backlog |
-| FR-X2 | Nested index terms render as indented sub-entries | S | ⬜ v1 backlog |
-| FR-X3 | `index-see` and `index-see-also` render as "see …" / "see also …" cross-references | C | ⬜ v1 backlog |
+| FR-X1 | `indexterm` markup across the publication is collected into an A–Z index page with links to the pages (and nearest anchors) where each term occurs | M | ✅ links carry the containing topic's anchor; page labels are the topic titles |
+| FR-X2 | Nested index terms render as indented sub-entries | S | ✅ one level of sub-entries |
+| FR-X3 | `index-see` and `index-see-also` render as "see …" / "see also …" cross-references | C | ✅ |
 
 ### Search (FR-S)
 

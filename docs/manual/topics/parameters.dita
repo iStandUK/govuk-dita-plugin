@@ -64,7 +64,7 @@
     </section>
     <section>
       <title>Inherited toolkit parameters</title>
-      <p>Because <codeph>govuk</codeph> extends the toolkit's <codeph>html5</codeph>
+      <p><indexterm>parameters<indexterm>branding</indexterm><indexterm>search</indexterm></indexterm>Because <codeph>govuk</codeph> extends the toolkit's <codeph>html5</codeph>
         transformation, its standard parameters continue to work. The most useful:</p>
       <simpletable>
         <sthead>

@@ -55,7 +55,7 @@
           <stentry>govuk-table, no caption element</stentry>
         </strow>
       </simpletable>
-      <p>Wide tables scroll horizontally on small screens rather than breaking the page
+      <p><indexterm>tables</indexterm>Wide tables scroll horizontally on small screens rather than breaking the page
         layout.</p>
     </section>
   </refbody>

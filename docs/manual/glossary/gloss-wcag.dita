@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossentry PUBLIC "-//OASIS//DTD DITA Glossary Entry//EN" "glossentry.dtd">
+<glossentry id="gloss-wcag" xml:lang="en-GB">
+  <glossterm>Web Content Accessibility Guidelines</glossterm>
+  <glossdef>The W3C guidelines that public-sector websites in the UK are required to meet at level AA.</glossdef>
+  <glossBody><glossAlt><glossAcronym>WCAG</glossAcronym></glossAlt></glossBody>
+</glossentry>

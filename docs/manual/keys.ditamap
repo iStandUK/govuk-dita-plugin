@@ -10,6 +10,11 @@
   <keydef keys="navigation" href="topics/navigation.dita" format="dita" scope="local"/>
   <keydef keys="search" href="topics/search.dita" format="dita" scope="local"/>
   <keydef keys="layouts" href="topics/layouts.dita" format="dita" scope="local"/>
+  <keydef keys="glossary-index" href="topics/glossary-index.dita" format="dita" scope="local"/>
+  <keydef keys="gloss-dita" href="glossary/gloss-dita.dita" format="dita" scope="local" processing-role="resource-only"/>
+  <keydef keys="gloss-gds" href="glossary/gloss-gds.dita" format="dita" scope="local" processing-role="resource-only"/>
+  <keydef keys="gloss-wcag" href="glossary/gloss-wcag.dita" format="dita" scope="local" processing-role="resource-only"/>
+  <keydef keys="gloss-transtype" href="glossary/gloss-transtype.dita" format="dita" scope="local" processing-role="resource-only"/>
   <keydef keys="demo-typography" href="topics/demo-typography.dita" format="dita" scope="local"/>
   <keydef keys="demo-notes" href="topics/demo-notes.dita" format="dita" scope="local"/>
   <keydef keys="demo-tables" href="topics/demo-tables.dita" format="dita" scope="local"/>

@@ -5,7 +5,7 @@
   <shortdesc>DITA note types map onto two GOV.UK components: inset text for neutral notes
     and warning text for anything that demands attention.</shortdesc>
   <conbody>
-    <p>Neutral types render as inset text:</p>
+    <p><indexterm>notes</indexterm><indexterm>admonitions<index-see>notes</index-see></indexterm>Neutral types render as inset text:</p>
     <note>A plain note renders as inset text with no label.</note>
     <note type="tip">A tip renders the same way — the styling keeps advice unobtrusive.</note>
     <note type="remember">So does a remember note.</note>

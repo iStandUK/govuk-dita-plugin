@@ -6,7 +6,7 @@
     build; readers get a fast client-side search with no server and no external
     services.</shortdesc>
   <conbody>
-    <p>When search is enabled, every page carries a <q>Search this site</q> link to a search
+    <p><indexterm>search<indexterm>Pagefind</indexterm></indexterm>When search is enabled, every page carries a <q>Search this site</q> link to a search
       page, and only topic content is indexed — navigation, headers, and footers never
       appear in results. The index and the search interface are part of the output
       directory, so the site remains fully self-contained.</p>

@@ -11,7 +11,7 @@
       misrepresents your site as government-run.</note>
     <section>
       <title>Neutral mode (the default)</title>
-      <p>Neutral builds ship no restricted assets at all, and the stylesheet is overlaid so
+      <p><indexterm>branding<indexterm>neutral mode</indexterm><indexterm>official mode</indexterm></indexterm><indexterm>fonts</indexterm>Neutral builds ship no restricted assets at all, and the stylesheet is overlaid so
         that none is ever requested by a browser:</p>
       <ul>
         <li>system fonts stand in for GDS Transport</li>

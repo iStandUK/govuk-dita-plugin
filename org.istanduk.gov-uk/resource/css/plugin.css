@@ -223,10 +223,71 @@ li.olchildlink {
   text-decoration: none;
 }
 
-/* ===== Search ===== */
+/* ===== Utility navigation (search, glossary, index links) ===== */
 
-.app-search-link {
+.app-search-link,
+.app-utility-nav {
   margin: 0 0 15px;
+}
+
+.app-utility-nav > li {
+  display: inline-block;
+  margin: 0 15px 5px 0;
+}
+
+/* ===== A-Z pages (glossary, index) ===== */
+
+.app-letter-nav {
+  margin: 0 0 20px;
+  font-size: 1.1875rem;
+}
+
+.app-letter-nav a {
+  margin-right: 10px;
+}
+
+.app-az-letter {
+  margin-top: 30px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #b1b4b6;
+}
+
+.app-index-list > li {
+  margin-bottom: 10px;
+}
+
+.app-index-term {
+  font-weight: 700;
+}
+
+.app-index-sublist {
+  margin: 5px 0 5px 20px;
+}
+
+.app-index-see {
+  color: #505a5f;
+}
+
+/* Toolkit-generated links (term and abbreviated-form references) carry no
+   class; give them the standard link treatment */
+#main-content a:not([class]) {
+  color: #1d70b8;
+  text-decoration: underline;
+  text-decoration-thickness: max(1px, 0.0625rem);
+  text-underline-offset: 0.1578em;
+}
+
+#main-content a:not([class]):hover {
+  color: #003078;
+  text-decoration-thickness: max(3px, 0.1875rem);
+}
+
+#main-content a:not([class]):focus {
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+  outline: 3px solid transparent;
+  text-decoration: none;
 }
 
 .app-search .pagefind-ui {
