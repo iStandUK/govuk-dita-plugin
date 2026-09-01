@@ -13,7 +13,7 @@ keys, chunking, and the SVG domain is verified against a real corpus
 ## Try it
 
 ```bash
-dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.2.0/org.istanduk.gov-uk-0.2.0.zip
+dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.2.1/org.istanduk.gov-uk-0.2.1.zip
 dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 
