@@ -152,7 +152,7 @@ jobs:
           grep -q 'govuk-button--start' out/oruk-mini/index.html
           grep -q 'govuk-grid-column-one-third' out/manual-grid/index.html
           grep -q 'govuk-accordion__section' out/manual-accordion/index.html
-          # Localisable UI text (#18 / NFR-I1)
+          # Localisable UI text (#19 / NFR-I1)
           grep -q 'data-label-menu="Menu"' out/manual/topics/introduction.html
           # FR-T1: neutral builds ship no restricted assets and load no external
           # resources (external hyperlinks in content are fine; external assets are not)
