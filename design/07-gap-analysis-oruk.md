@@ -81,11 +81,24 @@ mapping put `govuk-link` on generated `<img>` elements. The mapping now excludes
 Captions now use GOV.UK-consistent typography and each `svgref` image derives its `alt` from
 the enclosing figure title (empty when caption-less).
 
-**F4 — Keys targeting chunked-away topics.** When a `keydef` targets a topic that
-`chunk="to-content"` merges into another page, DITA-OT 4.4.1 reports `DOTX031E`/missing-file
-errors and drops the link (build still completes, exit 0). This is upstream behaviour, not
-plugin behaviour; ORUK's combined-schemas bookmap chunks exactly such targets. Issue #11
-verifies against the real corpus and decides whether to report upstream.
+**F4 — Keys targeting chunked-away topics (characterised against the real corpus).** When a
+`keydef` targets a topic that `chunk="to-content"` merges into another page, DITA-OT 4.4.1
+fails to resolve references through that key and emits anchors pointing at **temp-file hash
+names that don't exist in the output** — broken links, not dropped ones. Verified 2026-09-01
+by building the real corpus:
+
+- **Combined-schemas bookmap** (the chunked one): 287 `DOTX031E` errors ↦ **287 broken links
+  on 11 of 73 pages**; 828 related `DOTX023W`/`DOTX027W` warnings; build exits 0.
+- **Control with plain `-f html5`: byte-identical error set** — the behaviour is upstream
+  DITA-OT preprocessing, entirely plugin-independent.
+- **International bookmap** (same content, no chunking): **0 errors, 0 warnings, 486 pages**
+  — completely clean under the plugin.
+
+The minimal reproduction is an xref by key to a chunked child (see
+`fixtures/oruk-mini/chapter.dita`, which deliberately avoids it for CI). Issue #11 holds the
+findings and the upstream-report decision; the practical authoring workaround for the
+combined publication is to key chunked children as `parent.dita#child-id` fragments (or to
+generate a per-publication key map) so keys survive chunking.
 
 **F5 — Home page (resolved via #8).** The bookmap cover (`index.html`) was the known unstyled
 page. A GOV.UK cover stylesheet now renders the title, the `booktitlealt` abstract as the
