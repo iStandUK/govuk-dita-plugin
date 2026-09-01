@@ -269,3 +269,24 @@ remains available via `args.css`.
 plugin.css → overlays so themes win the cascade; masthead furniture accepts a branding
 parameter. A generic multi-theme mechanism can grow from this pattern if other organisations
 need built-in themes.
+
+---
+
+## D-15 · Release staging: 0.9 before registry, registry at 1.0
+
+**Date:** 2026-09-03.
+
+**Options:** go straight for a 1.0 with registry listing once the gap list closes; or stage
+a 0.9 first and defer the registry.
+
+**Decision:** Target **v0.9** for the full gap-list, official branding, and verification
+work (epic #26); run **live trials** on real publications; only then submit to the DITA-OT
+plugin registry and release **v1.0** (#21).
+
+**Rationale:** The registry makes the plugin discoverable to the whole DITA community —
+first impressions there are lasting. A 0.9 proven robust in live use is the evidence that
+the listing is deserved; the verification NFRs (axe, determinism, page weight, visual
+regression) belong to the robustness work, not the listing step.
+
+**Consequences:** #21 narrowed to registry-only; verification NFRs moved to #35 inside the
+0.9 epic; epic #15 restaged as 0.9 → live trials → 1.0.

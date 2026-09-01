@@ -171,5 +171,6 @@ and the reuse/addressing machinery (keys, scopes, conref in all forms, chunking,
 works as specified with two investigable exceptions. What separates v0.2 from a
 community-credible 1.0 is a bounded list: **five correctness items, five styling-parity
 items, and three completeness workstreams**, each verified here with a reproducible fixture.
-Combined with the existing v1 epic items (official branding #20, registry + verification
-NFRs #21), this list is the 1.0 backlog.
+Per decision D-15 this list targets **v0.9** (epic #26), together with official branding
+(#20) and the verification NFRs (#35); the registry listing (#21) follows at 1.0 only after
+0.9 has proven robust in live use.
