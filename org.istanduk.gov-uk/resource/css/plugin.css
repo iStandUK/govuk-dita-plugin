@@ -10,10 +10,12 @@
 /* ===== Base ===== */
 
 /* govuk-frontend scopes its font to govuk-* classes; give the plugin's own
- * furniture (masthead, sidebar, generated links) the same stack. In neutral
- * mode the overlay aliases GDS Transport to a system font. */
+ * furniture (masthead, sidebar, generated links) a matching stack. The plugin
+ * never names the restricted GDS Transport face itself: neutral builds use the
+ * system stack below, and a future official mode adds the face via its own
+ * overlay. */
 body {
-  font-family: "GDS Transport", arial, sans-serif;
+  font-family: arial, sans-serif;
 }
 
 /* ===== Masthead (neutral) ===== */
@@ -344,7 +346,7 @@ li.olchildlink {
 }
 
 .app-search .pagefind-ui {
-  --pagefind-ui-font: "GDS Transport", arial, sans-serif;
+  --pagefind-ui-font: arial, sans-serif;
   --pagefind-ui-primary: #0b0c0c;
   --pagefind-ui-text: #0b0c0c;
   --pagefind-ui-border: #0b0c0c;
@@ -427,6 +429,43 @@ li.olchildlink {
 /* Screenshots keep a visible edge against the page background */
 figure.app-screenshot img {
   border: 1px solid #b1b4b6;
+}
+
+/* ===== Hazard statements (safety panels) ===== */
+
+.app-hazard {
+  margin: 30px 0;
+  border: 4px solid #0b0c0c;
+}
+
+.app-hazard__banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 15px;
+  background: #0b0c0c;
+  color: #ffffff;
+  font-size: 1.1875rem;
+}
+
+.app-hazard__icon {
+  position: static;
+  flex-shrink: 0;
+  border-color: #ffffff;
+}
+
+.app-hazard__panel {
+  padding: 15px;
+}
+
+.app-hazard__hazard {
+  margin: 0 0 10px;
+  font-size: 1.1875rem;
+}
+
+.app-hazard__panel .govuk-body:last-child {
+  margin-bottom: 0;
 }
 
 /* ===== Content furniture without a govuk-frontend component ===== */

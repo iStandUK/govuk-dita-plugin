@@ -10,8 +10,11 @@
  * nothing is ever requested either.
  */
 
-/* Re-declare the restricted typeface as an alias for a locally installed font
- * so the compiled stylesheet's font stack resolves without any network fetch. */
+/* The vendored govuk-frontend stylesheet's own rules still name GDS Transport
+ * in their font stacks (we do not edit the vendored file). These declarations
+ * make that name resolve to a locally installed system font, so the restricted
+ * face is never fetched and never rendered - the name survives only inside the
+ * vendored file, defused here. */
 @font-face {
   font-family: "GDS Transport";
   font-style: normal;

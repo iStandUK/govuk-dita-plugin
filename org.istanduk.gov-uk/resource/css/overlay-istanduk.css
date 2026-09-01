@@ -57,3 +57,19 @@
   background: #ffdd00;
   color: #0b0c0c;
 }
+
+/* ===== Grid tiles ===== */
+
+/* A background tint on grid cells to give the illusion of tiles. Deliberate
+ * theme deviation from Design System practice, kept safe: tint and padding
+ * only (no borders/shadows), the tile itself is not clickable (links stay
+ * links, so no false affordance), and text keeps AA contrast on the tint. */
+.app-topic-grid .app-tile {
+  height: 100%;
+  padding: 20px;
+  background: #f0f4f8;
+}
+
+.app-topic-grid .govuk-grid-column-one-third {
+  margin-bottom: 15px;
+}

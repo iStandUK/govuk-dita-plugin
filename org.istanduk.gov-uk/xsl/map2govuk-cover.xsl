@@ -234,13 +234,16 @@ map transformation with the plugin's values.
                   <div class="govuk-grid-row app-topic-grid">
                     <xsl:for-each select="$entries">
                       <div class="govuk-grid-column-one-third">
-                        <xsl:apply-templates select="." mode="govuk-entry"/>
-                        <xsl:call-template name="govuk-child-list">
-                          <xsl:with-param name="children"
-                                          select="*[contains(@class, ' map/topicref ')]
-                                                  [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
-                          <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
-                        </xsl:call-template>
+                        <!-- Unstyled by default; themes may tint it (D-14) -->
+                        <div class="app-tile">
+                          <xsl:apply-templates select="." mode="govuk-entry"/>
+                          <xsl:call-template name="govuk-child-list">
+                            <xsl:with-param name="children"
+                                            select="*[contains(@class, ' map/topicref ')]
+                                                    [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
+                            <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
+                          </xsl:call-template>
+                        </div>
                       </div>
                     </xsl:for-each>
                   </div>

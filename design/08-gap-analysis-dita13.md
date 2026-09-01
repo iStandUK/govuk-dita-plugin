@@ -45,11 +45,11 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | Feature | Status |
 |---|---|
 | `topic`, `concept` | ✅ |
-| `reference` — `properties` table | ✅ *(verified: renders as `govuk-table` with header scoping via the simpletable mapping)* |
+| `reference` — `properties` table | ✅ `govuk-table`, valid HTML (legacy attributes dropped, #27) |
 | `reference` — `refsyn`, `refbodydiv` | ◐ *(verified render)* |
 | `task` — `steps`/`substeps`/`choices`/`stepxmp`/`stepresult` | ◐ steps get GOV.UK numbered lists; inner structure unstyled *(verified)* |
 | `task` — section labels (Prerequisites, Procedure, Results…) | ⚠️ none rendered *(verified)*; the toolkit generates them behind `args.gen.task.lbl=YES` — adopt as default and route through our string files (FR-R6) |
-| `task` — `choicetable` | ⚠️ **invalid HTML5** *(verified: 9 obsolete attributes — border/cellpadding/summary/frame/rules)* and unstyled; needs modern `govuk-table` rendering |
+| `task` — `choicetable` | ✅ modern `govuk-table` markup, valid HTML *(#27)* |
 | `task` — `steptroubleshooting`, `tasktroubleshooting` | ◐ content renders *(verified)*, unlabeled — cover with task labels work |
 | `troubleshooting` topic (1.3) | ⚠️ builds and renders *(verified)* but `condition`/`cause`/`remedy` appear as unlabeled prose; deserves a deliberate GOV.UK treatment (a natural fit: bold labels or inset structure) |
 | `glossentry`, glossary page, `abbreviated-form`, `term` | ✅ (v0.2) |
@@ -61,7 +61,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 |---|---|
 | `p`, `ul`, `ol`, `sl`, `section`, `title` hierarchy | ✅ |
 | `note` (all types incl. fastpath/restriction/trouble) | ✅ *(verified)* |
-| **`hazardstatement`** | ⚠️ **plugin bug** *(verified)*: it specialises `note`, so the warning-text override wraps its block content in `<strong>` — invalid HTML (div-in-strong). Needs dedicated rendering; as safety-critical content it warrants a proper panel treatment (type label, consequence, avoidance) |
+| **`hazardstatement`** | ✅ dedicated safety panel (banner label + framed hazard/consequence/avoidance); valid HTML *(#27)* |
 | `dl` (+ `dlhead`) | ⚠️ unstyled browser defaults *(verified)*; map to GOV.UK-styled definition list |
 | `parml` | ⚠️ renders as `dl` *(verified)* — covered by the `dl` work |
 | `lq` | ⚠️ unstyled blockquote *(verified)*; style (inset-text-like treatment) |
@@ -142,8 +142,8 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 ## The 1.0 gap list
 
 **P1 — correctness** (wrong or invalid output today):
-1. `hazardstatement` dedicated rendering (plugin-caused invalid HTML; safety content deserves a proper GOV.UK panel)
-2. `choicetable` modern markup (obsolete HTML4 attributes → invalid HTML5) as `govuk-table`
+1. ~~`hazardstatement` dedicated rendering~~ — **done (#27)**: safety panel, valid HTML
+2. ~~`choicetable` modern markup~~ + `properties` table — **done (#27)**: `govuk-table`, valid HTML
 3. MathML/equation passthrough (currently silently dropped)
 4. DITAVAL revision flagging investigation (no changebars/styles applied)
 5. Keyscope + `copy-to` resolution failure investigation (report upstream if confirmed)
@@ -160,8 +160,9 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 12. Bookmap booklists: `indexlist` → existing index page; `figurelist`/`tablelist` generators; appendix grouping in `auto` layout
 13. Verification fixtures for the ⬜ set: conref push, `ditavalref` branch filtering, flag images, `object`, frontmatter/backmatter topics, RTL, `coderef`, `glossgroup`
 
-The kitchen-sink fixture builds in CI (build-and-filter validity only until P1 lands, at
-which point it joins full Nu validation and the ⚠️ items gain assertions).
+The kitchen-sink fixture now passes **full Nu validation** in CI (the #27 correctness fixes
+removed the last invalid-HTML blockers), with assertions for the hazard panel and
+choicetable/properties markup.
 
 ## Conclusion
 
