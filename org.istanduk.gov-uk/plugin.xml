@@ -3,13 +3,14 @@
 This file is part of the govuk-dita-plugin project.
 Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
 -->
-<plugin id="org.istanduk.gov-uk" version="0.1.0">
+<plugin id="org.istanduk.gov-uk" version="0.2.0">
   <require plugin="org.dita.html5"/>
   <transtype name="govuk" extends="html5" desc="GOV.UK Design System HTML5">
     <param name="govuk.branding"
-           desc="Branding mode. 'neutral' (default) uses system fonts and no crown; 'official' is reserved for genuine GOV.UK services and is not yet implemented."
+           desc="Branding mode. 'neutral' (default) uses system fonts and no crown; 'istanduk' adds the iStandUK theme (logo, brand colours) on top of neutral; 'official' is reserved for genuine GOV.UK services and is not yet implemented."
            type="enum">
       <val default="true">neutral</val>
+      <val>istanduk</val>
       <val>official</val>
     </param>
     <param name="govuk.service.name"

@@ -69,10 +69,13 @@ element-level typography.
   <xsl:template name="generateCssLinks">
     <link rel="stylesheet"
           href="{concat($PATH2PROJ, 'govuk/govuk-frontend-', $govuk-frontend-version, '.min.css')}"/>
+    <link rel="stylesheet" href="{concat($PATH2PROJ, 'govuk/plugin.css')}"/>
     <xsl:if test="$GOVUK-BRANDING ne 'official'">
       <link rel="stylesheet" href="{concat($PATH2PROJ, 'govuk/overlay-neutral.css')}"/>
     </xsl:if>
-    <link rel="stylesheet" href="{concat($PATH2PROJ, 'govuk/plugin.css')}"/>
+    <xsl:if test="$GOVUK-BRANDING = 'istanduk'">
+      <link rel="stylesheet" href="{concat($PATH2PROJ, 'govuk/overlay-istanduk.css')}"/>
+    </xsl:if>
     <xsl:if test="string-length($CSS) gt 0">
       <link rel="stylesheet" href="{concat($PATH2PROJ, $CSSPATH, $CSS)}"/>
     </xsl:if>
@@ -116,6 +119,7 @@ element-level typography.
         <xsl:with-param name="name" select="$govuk-service-name"/>
         <xsl:with-param name="home-href" select="$govuk-home-href"/>
         <xsl:with-param name="search-enabled" select="$GOVUK-SEARCH"/>
+            <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
       </xsl:call-template>
       <div class="govuk-width-container">
         <div class="govuk-grid-row">

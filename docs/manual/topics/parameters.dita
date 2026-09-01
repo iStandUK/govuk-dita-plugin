@@ -23,9 +23,11 @@
           <tbody>
             <row>
               <entry><codeph>govuk.branding</codeph></entry>
-              <entry><codeph>neutral</codeph> (default), <codeph>official</codeph></entry>
-              <entry>Branding mode. Official mode is reserved for genuine GOV.UK services
-                and is not yet implemented; see <xref keyref="branding"/>.</entry>
+              <entry><codeph>neutral</codeph> (default), <codeph>istanduk</codeph>,
+                <codeph>official</codeph></entry>
+              <entry>Branding mode. The iStandUK theme layers brand colours and the logo on
+                top of neutral; official mode is reserved for genuine GOV.UK services and is
+                not yet implemented. See <xref keyref="branding"/>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.service.name</codeph></entry>

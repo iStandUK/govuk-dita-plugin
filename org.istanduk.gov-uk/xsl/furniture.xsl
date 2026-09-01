@@ -18,9 +18,14 @@ template, the cover, and the generated utility pages.
     <xsl:param name="name" as="xs:string"/>
     <xsl:param name="home-href" as="xs:string"/>
     <xsl:param name="search-enabled" as="xs:string" select="'no'"/>
+    <xsl:param name="branding" as="xs:string" select="'neutral'"/>
     <header class="app-masthead">
       <div class="govuk-width-container app-masthead__row">
         <a class="app-masthead__title" href="{$home-href}">
+          <xsl:if test="$branding = 'istanduk'">
+            <img class="app-masthead__logo"
+                 src="{concat($prefix, 'govuk/istanduk-logo.svg')}" alt="iStandUK"/>
+          </xsl:if>
           <xsl:value-of select="$name"/>
         </a>
         <xsl:if test="$search-enabled = 'yes'">

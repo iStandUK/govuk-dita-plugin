@@ -21,14 +21,18 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <property name="nav-toc" value="full"/>
     <!-- Neutral branding unless the publisher explicitly opts in (FR-T1). -->
     <property name="govuk.branding" value="neutral"/>
-    <fail message="govuk.branding must be 'neutral' or 'official', was: ${govuk.branding}">
+    <fail message="govuk.branding must be 'neutral', 'istanduk', or 'official', was: ${govuk.branding}">
       <condition>
         <not><or>
           <equals arg1="${govuk.branding}" arg2="neutral"/>
+          <equals arg1="${govuk.branding}" arg2="istanduk"/>
           <equals arg1="${govuk.branding}" arg2="official"/>
         </or></not>
       </condition>
     </fail>
+    <condition property="govuk.branding.istanduk">
+      <equals arg1="${govuk.branding}" arg2="istanduk"/>
+    </condition>
     <condition property="govuk.branding.official">
       <equals arg1="${govuk.branding}" arg2="official"/>
     </condition>
@@ -132,6 +136,13 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       </fileset>
       <fileset dir="${dita.plugin.org.istanduk.gov-uk.dir}/resource/js">
         <include name="*.js"/>
+      </fileset>
+    </copy>
+    <!-- Theme assets (safe to redistribute: outlined-path artwork, see
+         resource/brand/istanduk/README.md) -->
+    <copy if:set="govuk.branding.istanduk" todir="${dita.output.dir}/govuk">
+      <fileset dir="${dita.plugin.org.istanduk.gov-uk.dir}/resource/brand/istanduk">
+        <include name="*.svg"/>
       </fileset>
     </copy>
     <!-- The inherited html5.css step copies the default stylesheets, but no

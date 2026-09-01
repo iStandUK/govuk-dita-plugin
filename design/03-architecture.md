@@ -177,7 +177,7 @@ Status as of v0.1.0: ✅ implemented · ⬜ planned (each arrives with its featu
 
 | Parameter | Values / default | Purpose | Status |
 |---|---|---|---|
-| `govuk.branding` | `neutral` (default) \| `official` | FR-T1/T2 — crown, fonts, OGL footer | ✅ declared; `official` warns and is not yet implemented |
+| `govuk.branding` | `neutral` (default) \| `istanduk` \| `official` | FR-T1/T2 — crown, fonts, OGL footer; `istanduk` layers the iStandUK theme (D-14) on neutral | ✅ neutral + istanduk; `official` warns and is not yet implemented |
 | `govuk.service.name` | text; default map/book title | Masthead service/publication name | ✅ |
 | `govuk.service.url` | URL; default site home | Masthead link target | ⬜ (masthead links to `index.html`) |
 | `govuk.phase` | `none` (default) \| `alpha` \| `beta` | Phase banner | ⬜ |

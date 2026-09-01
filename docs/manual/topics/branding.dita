@@ -22,6 +22,21 @@
         and any publisher who wants the Design System's clarity without its insignia.</p>
     </section>
     <section>
+      <title>The iStandUK theme</title>
+      <p>Setting <codeph>govuk.branding=istanduk</codeph> layers the iStandUK brand on top
+        of neutral mode: the header becomes a white bar carrying the iStandUK logo above a
+        brand-blue rule, and the footer band takes the brand blue (Pantone 072). The logo
+        artwork ships as outlined vector paths, so no fonts are required or distributed, and
+        every neutral-mode guarantee still holds.</p>
+      <fig outputclass="app-screenshot">
+        <title>The iStandUK theme</title>
+        <image href="../images/branding-istanduk.png">
+          <alt>Home page with a white header carrying the iStandUK logo and publication
+            title, a search field, and a dark blue rule beneath the header.</alt>
+        </image>
+      </fig>
+    </section>
+    <section>
       <title>Official mode (not yet implemented)</title>
       <p>Setting <codeph>govuk.branding=official</codeph> is reserved for genuine GOV.UK
         services. The build currently prints a warning and continues with neutral assets;
