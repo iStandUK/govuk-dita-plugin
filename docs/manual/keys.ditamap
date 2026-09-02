@@ -21,6 +21,7 @@
   <keydef keys="demo-code" href="topics/demo-code.dita" format="dita" scope="local"/>
   <keydef keys="demo-figures" href="topics/demo-figures.dita" format="dita" scope="local"/>
   <keydef keys="development" href="topics/development.dita" format="dita" scope="local"/>
+  <keydef keys="legal" href="topics/legal.dita" format="dita" scope="local"/>
   <keydef keys="architecture-diagram" href="images/architecture.svg" format="svg" scope="local"/>
   <keydef keys="plugin-repo" href="https://github.com/iStandUK/govuk-dita-plugin" format="html" scope="external">
     <topicmeta><linktext>govuk-dita-plugin on GitHub</linktext></topicmeta>

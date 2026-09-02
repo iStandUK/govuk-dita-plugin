@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="legal" xml:lang="en-GB">
+  <title>Licensing and the GOV.UK brand</title>
+  <shortdesc>What you may reuse freely, and the assets reserved for official GOV.UK
+    services.</shortdesc>
+  <refbody>
+    <section>
+      <title>The plugin</title>
+      <p>The plugin is published under the Apache License, Version 2.0. The vendored
+        govuk-frontend assets keep their own MIT licence. Neither licence grants any right to
+        the GOV.UK brand.</p>
+    </section>
+    <section>
+      <title>Reserved assets</title>
+      <p>Two things are reserved for official GOV.UK services and are deliberately
+        <b>not</b> shipped by this plugin:</p>
+      <dl>
+        <dlentry>
+          <dt>The crown and GOV.UK logotype</dt>
+          <dd>Permitted only on services on the <codeph>gov.uk</codeph> domain, delivered by or
+            for a government department. The neutral and iStandUK themes carry no crown.</dd>
+        </dlentry>
+        <dlentry>
+          <dt>The GDS Transport typeface</dt>
+          <dd>Licensed for official use only. The plugin aliases it to a system font stack, so
+            no restricted font file is ever downloaded.</dd>
+        </dlentry>
+      </dl>
+      <note type="important">Enabling <codeph>govuk.branding=official</codeph> asserts that your
+        service is entitled to the GOV.UK brand. Only turn it on for a genuine GOV.UK service.</note>
+    </section>
+  </refbody>
+</reference>

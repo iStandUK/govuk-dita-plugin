@@ -61,11 +61,13 @@ template, the cover, and the generated utility pages.
     <xsl:param name="name" as="xs:string"/>
     <xsl:param name="glossary" as="xs:string" select="'no'"/>
     <xsl:param name="index" as="xs:string" select="'no'"/>
+    <xsl:param name="figurelist" as="xs:string" select="'no'"/>
+    <xsl:param name="tablelist" as="xs:string" select="'no'"/>
     <footer class="govuk-footer">
       <div class="govuk-width-container">
         <div class="govuk-footer__meta">
           <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
-            <xsl:if test="$glossary = 'yes' or $index = 'yes'">
+            <xsl:if test="$glossary = 'yes' or $index = 'yes' or $figurelist = 'yes' or $tablelist = 'yes'">
               <h2 class="govuk-visually-hidden">
                 <xsl:call-template name="getVariable">
                   <xsl:with-param name="id" select="'govuk-dita.support-links'"/>
@@ -77,6 +79,24 @@ template, the cover, and the generated utility pages.
                     <a class="govuk-footer__link" href="{concat($prefix, 'glossary.html')}">
                       <xsl:call-template name="getVariable">
                         <xsl:with-param name="id" select="'govuk-dita.glossary'"/>
+                      </xsl:call-template>
+                    </a>
+                  </li>
+                </xsl:if>
+                <xsl:if test="$figurelist = 'yes'">
+                  <li class="govuk-footer__inline-list-item">
+                    <a class="govuk-footer__link" href="{concat($prefix, 'figurelist.html')}">
+                      <xsl:call-template name="getVariable">
+                        <xsl:with-param name="id" select="'govuk-dita.figures'"/>
+                      </xsl:call-template>
+                    </a>
+                  </li>
+                </xsl:if>
+                <xsl:if test="$tablelist = 'yes'">
+                  <li class="govuk-footer__inline-list-item">
+                    <a class="govuk-footer__link" href="{concat($prefix, 'tablelist.html')}">
+                      <xsl:call-template name="getVariable">
+                        <xsl:with-param name="id" select="'govuk-dita.tables'"/>
                       </xsl:call-template>
                     </a>
                   </li>

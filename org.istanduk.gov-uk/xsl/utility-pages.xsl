@@ -47,6 +47,50 @@ indexterm markup. Imported by map2govuk-cover.xsl.
     </xsl:for-each-group>
   </xsl:variable>
 
+  <!-- Whether the bookmap explicitly requests each list of items -->
+  <xsl:variable name="govuk-wants-figurelist"
+                select="exists($govuk-norm-map//*[contains(@class, ' bookmap/figurelist ')])" as="xs:boolean"/>
+  <xsl:variable name="govuk-wants-tablelist"
+                select="exists($govuk-norm-map//*[contains(@class, ' bookmap/tablelist ')])" as="xs:boolean"/>
+
+  <!-- Titled figures / tables in reading order, with page + anchor + caption -->
+  <xsl:function name="govuk:list-of" as="element()*"
+                xmlns:govuk="https://github.com/iStandUK/govuk-dita-plugin">
+    <xsl:param name="class" as="xs:string"/>
+    <xsl:for-each-group select="$govuk-norm-map//*[contains(@class, ' map/topicref ')]
+                                [@href][not(@scope = 'external')]
+                                [not(@processing-role = 'resource-only')]
+                                [not(@format) or @format = 'dita']"
+                        group-by="replace(@href, '#.*$', '')">
+      <xsl:variable name="uri" select="resolve-uri(current-grouping-key(), $govuk-map-base)"/>
+      <xsl:if test="doc-available($uri)">
+        <xsl:variable name="page"><xsl:apply-templates select="." mode="govuk-href"/></xsl:variable>
+        <xsl:for-each select="doc($uri)//*[contains(@class, $class)][*[contains(@class, ' topic/title ')]]">
+          <!-- The html5 output mangles an element id to "{topic-id}__{element-id}";
+               without an id of its own the item can only anchor to its topic. -->
+          <xsl:variable name="topic-id"
+                        select="string((ancestor-or-self::*[contains(@class, ' topic/topic ')])[1]/@id)"/>
+          <xsl:element name="item">
+            <xsl:attribute name="caption"
+                           select="normalize-space(string(*[contains(@class, ' topic/title ')][1]))"/>
+            <xsl:attribute name="page" select="string($page)"/>
+            <xsl:attribute name="anchor"
+                           select="if (@id) then concat($topic-id, '__', @id) else $topic-id"/>
+          </xsl:element>
+        </xsl:for-each>
+      </xsl:if>
+    </xsl:for-each-group>
+  </xsl:function>
+
+  <xsl:variable name="govuk-figs" as="element()*"
+                select="if ($govuk-wants-figurelist)
+                        then govuk:list-of(' topic/fig ') else ()"
+                xmlns:govuk="https://github.com/iStandUK/govuk-dita-plugin"/>
+  <xsl:variable name="govuk-tables" as="element()*"
+                select="if ($govuk-wants-tablelist)
+                        then govuk:list-of(' topic/table ') else ()"
+                xmlns:govuk="https://github.com/iStandUK/govuk-dita-plugin"/>
+
   <!-- Flattened index occurrences: one element per primary or secondary term -->
   <xsl:variable name="govuk-ix" as="element()*">
     <xsl:for-each-group select="$govuk-norm-map//*[contains(@class, ' map/topicref ')]
@@ -153,6 +197,8 @@ indexterm markup. Imported by map2govuk-cover.xsl.
             <xsl:with-param name="name" select="$govuk-masthead-name"/>
             <xsl:with-param name="glossary" select="if (exists($govuk-gloss)) then 'yes' else 'no'"/>
             <xsl:with-param name="index" select="if (exists($govuk-ix)) then 'yes' else 'no'"/>
+            <xsl:with-param name="figurelist" select="if ($govuk-wants-figurelist) then 'yes' else 'no'"/>
+            <xsl:with-param name="tablelist" select="if ($govuk-wants-tablelist) then 'yes' else 'no'"/>
           </xsl:call-template>
         </body>
       </html>
@@ -214,6 +260,64 @@ indexterm markup. Imported by map2govuk-cover.xsl.
         <xsl:with-param name="content" select="$content"/>
       </xsl:call-template>
     </xsl:if>
+  </xsl:template>
+
+  <!-- ===== Figure list / table list (booklists, #33) ===== -->
+
+  <xsl:template name="govuk-item-list-page">
+    <xsl:param name="items" as="element()*"/>
+    <xsl:param name="file" as="xs:string"/>
+    <xsl:param name="label-id" as="xs:string"/>
+    <xsl:param name="item-label-id" as="xs:string"/>
+    <xsl:if test="exists($items)">
+      <xsl:variable name="label">
+        <xsl:call-template name="getVariable">
+          <xsl:with-param name="id" select="$label-id"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="item-label">
+        <xsl:call-template name="getVariable">
+          <xsl:with-param name="id" select="$item-label-id"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="content" as="item()*">
+        <ol class="govuk-list app-itemlist">
+          <xsl:for-each select="$items">
+            <li>
+              <a class="govuk-link"
+                 href="{@page}{if (@anchor ne '') then concat('#', @anchor) else ''}">
+                <span class="app-itemlist__num"><xsl:value-of select="$item-label"/><xsl:text> </xsl:text><xsl:value-of select="position()"/></span>
+                <xsl:text> — </xsl:text>
+                <xsl:value-of select="@caption"/>
+              </a>
+            </li>
+          </xsl:for-each>
+        </ol>
+      </xsl:variable>
+      <xsl:call-template name="govuk-utility-shell">
+        <xsl:with-param name="file" select="$file"/>
+        <xsl:with-param name="page-title" select="string($label)"/>
+        <xsl:with-param name="content" select="$content"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="govuk-figurelist-page">
+    <xsl:call-template name="govuk-item-list-page">
+      <xsl:with-param name="items" select="$govuk-figs"/>
+      <xsl:with-param name="file" select="'figurelist.html'"/>
+      <xsl:with-param name="label-id" select="'govuk-dita.figures'"/>
+      <xsl:with-param name="item-label-id" select="'Figure'"/>
+    </xsl:call-template>
+  </xsl:template>
+
+  <xsl:template name="govuk-tablelist-page">
+    <xsl:call-template name="govuk-item-list-page">
+      <xsl:with-param name="items" select="$govuk-tables"/>
+      <xsl:with-param name="file" select="'tablelist.html'"/>
+      <xsl:with-param name="label-id" select="'govuk-dita.tables'"/>
+      <xsl:with-param name="item-label-id" select="'Table'"/>
+    </xsl:call-template>
   </xsl:template>
 
   <!-- ===== Index page (FR-X1..X3) ===== -->

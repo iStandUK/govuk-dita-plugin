@@ -59,6 +59,8 @@ map transformation with the plugin's values.
     <xsl:call-template name="govuk-search-page"/>
     <xsl:call-template name="govuk-glossary-page"/>
     <xsl:call-template name="govuk-index-page"/>
+    <xsl:call-template name="govuk-figurelist-page"/>
+    <xsl:call-template name="govuk-tablelist-page"/>
   </xsl:template>
 
   <xsl:template name="gen-user-head">
@@ -173,7 +175,7 @@ map transformation with the plugin's values.
                           [not(contains(@class, ' bookmap/frontmatter '))]
                           [not(contains(@class, ' bookmap/backmatter '))]"/>
     <xsl:variable name="chapter-count"
-                  select="count($entries[contains(@class, ' bookmap/chapter ') or contains(@class, ' bookmap/part ')])"/>
+                  select="count($entries[contains(@class, ' bookmap/chapter ') or contains(@class, ' bookmap/part ') or contains(@class, ' bookmap/appendix ') or contains(@class, ' bookmap/appendices ')])"/>
     <!-- Container entries have no link of their own but hold child topicrefs
          (topichead/topicgroup, or a chapter/part). In annotated/grid layouts
          they would be dead-end headings, so their presence forces grouped. -->
@@ -320,6 +322,8 @@ map transformation with the plugin's values.
         <xsl:with-param name="name" select="$govuk-masthead-name"/>
         <xsl:with-param name="glossary" select="if (exists($govuk-gloss)) then 'yes' else 'no'"/>
         <xsl:with-param name="index" select="if (exists($govuk-ix)) then 'yes' else 'no'"/>
+        <xsl:with-param name="figurelist" select="if ($govuk-wants-figurelist) then 'yes' else 'no'"/>
+        <xsl:with-param name="tablelist" select="if ($govuk-wants-tablelist) then 'yes' else 'no'"/>
       </xsl:call-template>
       <script type="module">
         <xsl:text>import { initAll } from './govuk/govuk-frontend-</xsl:text>
@@ -413,6 +417,8 @@ map transformation with the plugin's values.
             <xsl:with-param name="name" select="$govuk-masthead-name"/>
             <xsl:with-param name="glossary" select="if (exists($govuk-gloss)) then 'yes' else 'no'"/>
             <xsl:with-param name="index" select="if (exists($govuk-ix)) then 'yes' else 'no'"/>
+            <xsl:with-param name="figurelist" select="if ($govuk-wants-figurelist) then 'yes' else 'no'"/>
+            <xsl:with-param name="tablelist" select="if ($govuk-wants-tablelist) then 'yes' else 'no'"/>
           </xsl:call-template>
           <script src="pagefind/pagefind-ui.js"></script>
           <script>

@@ -21,6 +21,8 @@ element-level typography.
   <xsl:param name="GOVUK-GLOSSARY" select="'no'"/>
   <xsl:param name="GOVUK-INDEX" select="'no'"/>
   <xsl:param name="GOVUK-PAGINATION" select="'yes'"/>
+  <xsl:param name="GOVUK-FIGURELIST" select="'no'"/>
+  <xsl:param name="GOVUK-TABLELIST" select="'no'"/>
 
   <!-- Pinned vendored govuk-frontend release (see resource/govuk-frontend/VERSION.txt) -->
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
@@ -223,6 +225,8 @@ element-level typography.
         <xsl:with-param name="name" select="$govuk-service-name"/>
         <xsl:with-param name="glossary" select="$GOVUK-GLOSSARY"/>
         <xsl:with-param name="index" select="$GOVUK-INDEX"/>
+        <xsl:with-param name="figurelist" select="$GOVUK-FIGURELIST"/>
+        <xsl:with-param name="tablelist" select="$GOVUK-TABLELIST"/>
       </xsl:call-template>
       <script src="{concat($govuk-root, 'govuk/plugin.js')}"></script>
       <script type="module">

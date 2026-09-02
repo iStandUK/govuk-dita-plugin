@@ -124,11 +124,12 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | Feature | Status |
 |---|---|
 | `chapter`, `part` | ✅ (nav groups + layout grouping) |
-| `appendix`/`appendices` | ◐ builds; ⚠️ not counted as a group by the `auto` layout heuristic — trivial fix alongside layouts |
+| `appendix`/`appendices` | ✅ (#33) — now counted as a group by the `auto` layout heuristic |
 | `frontmatter`/`backmatter` content (preface, notices, bookabstract, colophon…) | ⬜ untested |
 | `booklists`: `toc` | ✅ |
-| `booklists`: `indexlist` | ⚠️ should wire to the existing index page rather than being ignored |
-| `booklists`: `figurelist`, `tablelist`, `abbrevlist` | ⚠️ not generated; candidates for the utility-page machinery |
+| `booklists`: `indexlist` | ✅ — the existing index page is served and footer-linked |
+| `booklists`: `figurelist`, `tablelist` | ✅ (#33) — generated as A-Z-style utility pages, deep-linked, footer-linked |
+| `booklists`: `abbrevlist` | ◐ the glossary page already lists acronyms; a dedicated abbreviation list is not generated |
 | `bookmeta` (title, author, organization) | ✅ (home page) — deeper metadata ◐ |
 
 ### Internationalisation and accessibility
@@ -157,7 +158,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 
 **P3 — completeness** (spec features not yet surfaced):
 11. ~~Sequence/reading-order previous-next links~~ — **done (#32)**: GOV.UK block pagination in map reading order
-12. Bookmap booklists: `indexlist` → existing index page; `figurelist`/`tablelist` generators; appendix grouping in `auto` layout
+12. ~~Bookmap booklists~~ — **done (#33)**: `indexlist` serves the existing index page; `figurelist`/`tablelist` generate deep-linked utility pages (footer-linked); `appendix`/`appendices` now group in the `auto` layout
 13. Verification fixtures for the ⬜ set: conref push, `ditavalref` branch filtering, flag images, `object`, frontmatter/backmatter topics, RTL, `coderef`, `glossgroup`
 
 The kitchen-sink fixture now passes **full Nu validation** in CI (the #27 correctness fixes
