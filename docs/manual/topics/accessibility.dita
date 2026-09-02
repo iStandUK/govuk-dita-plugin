@@ -23,8 +23,9 @@
         <li>the page's language from <codeph>@xml:lang</codeph>, and right-to-left direction
           from <codeph>@dir</codeph>, carried through to the output.</li>
       </ul>
-      <p>Neutral branding changes none of this: it substitutes system fonts for GDS Transport
-        but keeps every accessibility behaviour.</p>
+      <p>Branding changes none of this. Every mode — neutral, iStandUK, NHS and official — is
+        checked to the same WCAG 2.2 AA bar in CI, so the NHS and GOV.UK palettes, headers and
+        footers all meet the contrast and target-size requirements.</p>
     </section>
     <section>
       <title>What stays your responsibility</title>
