@@ -212,6 +212,7 @@ jobs:
           grep -q '<math xmlns="http://www.w3.org/1998/Math/MathML"' out/kitchen/topics/math.html
           grep -q '<svg ' out/kitchen/topics/media.html
           grep -Eq 'xlink:href="blocks.html"|href="blocks.html"' out/kitchen/topics/media.html
+          grep -Eq 'xlink:href="reference-full.html"|href="reference-full.html"' out/kitchen/topics/media.html
           ! grep -q '<img class="xref svgref"' out/kitchen/topics/media.html
           ! grep -Eq 'cellpadding|cellspacing|choicetableborder' out/kitchen/topics/task-full.html out/kitchen/topics/reference-full.html
           # Plugin CSS never names the restricted typeface; the tile wrapper ships
