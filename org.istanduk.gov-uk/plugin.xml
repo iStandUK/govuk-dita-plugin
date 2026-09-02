@@ -7,7 +7,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
   <require plugin="org.dita.html5"/>
   <transtype name="govuk" extends="html5" desc="GOV.UK Design System HTML5">
     <param name="govuk.branding"
-           desc="Branding mode. 'neutral' (default) uses system fonts and no crown; 'istanduk' adds the iStandUK theme (logo, brand colours) on top of neutral; 'nhs' applies the NHS Design System palette and typography (for NHS organisations only — see the manual); 'official' is reserved for genuine GOV.UK services and is not yet fully implemented."
+           desc="Branding mode. 'neutral' (default) uses system fonts and no crown; 'istanduk' adds the iStandUK theme (logo, brand colours) on top of neutral; 'nhs' applies the NHS Design System palette and typography (for NHS organisations only); 'official' applies full GOV.UK branding — the crown logo and GDS Transport font — for genuine GOV.UK services only (see the manual). NHS and official identity assets are restricted; the build warns."
            type="enum">
       <val default="true">neutral</val>
       <val>istanduk</val>

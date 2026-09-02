@@ -164,6 +164,9 @@ element-level typography.
     <xsl:if test="$GOVUK-BRANDING = 'nhs'">
       <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-nhs.css')}"/>
     </xsl:if>
+    <xsl:if test="$GOVUK-BRANDING = 'official'">
+      <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-official.css')}"/>
+    </xsl:if>
     <xsl:if test="string-length($CSS) gt 0">
       <link rel="stylesheet" href="{concat($govuk-root, $CSSPATH, $CSS)}"/>
     </xsl:if>
@@ -239,6 +242,7 @@ element-level typography.
         <xsl:with-param name="index" select="$GOVUK-INDEX"/>
         <xsl:with-param name="figurelist" select="$GOVUK-FIGURELIST"/>
         <xsl:with-param name="tablelist" select="$GOVUK-TABLELIST"/>
+        <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
       </xsl:call-template>
       <script src="{concat($govuk-root, 'govuk/plugin.js')}"></script>
       <script type="module">

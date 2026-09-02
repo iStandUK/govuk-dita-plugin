@@ -1,0 +1,31 @@
+/*
+ * This file is part of the govuk-dita-plugin project.
+ * Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+ *
+ * Official GOV.UK overlay (#47, #20). Loaded when govuk.branding=official, on top
+ * of the stock govuk-frontend (whose palette already is the GOV.UK one). The black
+ * masthead already matches the GOV.UK header; this sizes the crown+wordmark logo
+ * and keeps the footer asset-clean.
+ *
+ * The crown and GDS Transport font are legally restricted to genuine GOV.UK
+ * services (build-log warning). GDS Transport is NOT bundled: the stock font stack
+ * falls back to Arial unless the publisher installs the licensed font themselves.
+ */
+
+.app-masthead__title {
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-masthead__govuk-logo {
+  margin-right: 12px;
+  flex: none;
+}
+
+/* The copyright crest is, upstream, a CSS mask to /assets/images/govuk-crest.svg —
+ * an absolute-path asset this plugin does not ship. Suppress the crest image; the
+ * "© Crown copyright" text and the Open Government Licence statement carry the
+ * licence information. */
+.govuk-footer__copyright-logo::before {
+  display: none;
+}

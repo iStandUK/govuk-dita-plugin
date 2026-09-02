@@ -111,6 +111,11 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-nhs -Dgovuk.branding=nhs
 
+      - name: Build official (GOV.UK crown) branding
+        run: |
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-official -Dgovuk.branding=official
+
       # The brand-recoloured CSS is a vendored artifact (#47): guard against it
       # drifting from its Sass source. Rebuild it and fail on any diff.
       - name: Branding CSS is current
@@ -141,7 +146,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -348,6 +353,20 @@ jobs:
           ! grep -q 'overlay-nhs.css' out/manual-istanduk/topics/introduction.html
           # NHS mode bundles no restricted font/crown assets either
           test -z "$(find out/manual-nhs -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
+          # Official GOV.UK branding (govuk.branding=official, #47/#20): stock CSS
+          # (the GOV.UK palette), the crown+wordmark header, OGL/crown-copyright footer
+          grep -q 'govuk-frontend-6.5.0.min.css' out/manual-official/index.html
+          ! grep -q 'overlay-neutral.css' out/manual-official/index.html
+          grep -q 'overlay-official.css' out/manual-official/topics/introduction.html
+          grep -q 'app-masthead__govuk-logo' out/manual-official/index.html
+          grep -q 'aria-label="GOV.UK"' out/manual-official/index.html
+          grep -q 'Open Government Licence' out/manual-official/topics/introduction.html
+          grep -q 'Crown copyright' out/manual-official/topics/introduction.html
+          # official ships no restricted font/crest asset (GDS Transport self-supplied;
+          # the footer crest image is suppressed, not bundled)
+          test -z "$(find out/manual-official -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
+          ! grep -q 'overlay-official.css' out/manual/topics/introduction.html
+          ! grep -q 'overlay-official.css' out/manual-nhs/topics/introduction.html
           # FR-T1: neutral builds ship no restricted assets and load no external
           # resources (external hyperlinks in content are fine; external assets are not)
           test -z "$(find out/manual out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
@@ -361,7 +380,7 @@ jobs:
         run: |
           python3 tools/check_links.py \
             out/manual out/oruk-mini out/kitchen out/kitchen-flag \
-            out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs
+            out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs out/manual-official
 
       - name: Page-weight budget (NFR-P2)
         run: python3 tools/page_weight.py --report --budget-kb 300 out/manual out/kitchen out/oruk-mini
@@ -380,7 +399,7 @@ jobs:
           (cd tools/a11y && npx playwright install --with-deps chromium)
 
       - name: Accessibility checks — axe-core WCAG 2.2 AA (NFR-A1)
-        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs
+        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official
 
       - name: Visual snapshots for govuk-frontend upgrades (NFR-M2)
         run: |

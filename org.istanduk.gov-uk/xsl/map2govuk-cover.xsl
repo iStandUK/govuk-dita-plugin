@@ -87,6 +87,9 @@ map transformation with the plugin's values.
     <xsl:if test="$GOVUK-BRANDING = 'nhs'">
       <link rel="stylesheet" href="govuk/overlay-nhs.css"/>
     </xsl:if>
+    <xsl:if test="$GOVUK-BRANDING = 'official'">
+      <link rel="stylesheet" href="govuk/overlay-official.css"/>
+    </xsl:if>
     <xsl:if test="string-length($CSS) gt 0">
       <link rel="stylesheet" href="{concat($CSSPATH, $CSS)}"/>
     </xsl:if>
@@ -333,6 +336,7 @@ map transformation with the plugin's values.
         <xsl:with-param name="index" select="if (exists($govuk-ix)) then 'yes' else 'no'"/>
         <xsl:with-param name="figurelist" select="if ($govuk-wants-figurelist) then 'yes' else 'no'"/>
         <xsl:with-param name="tablelist" select="if ($govuk-wants-tablelist) then 'yes' else 'no'"/>
+        <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
       </xsl:call-template>
       <script type="module">
         <xsl:text>import { initAll } from './govuk/govuk-frontend-</xsl:text>
@@ -432,6 +436,7 @@ map transformation with the plugin's values.
             <xsl:with-param name="index" select="if (exists($govuk-ix)) then 'yes' else 'no'"/>
             <xsl:with-param name="figurelist" select="if ($govuk-wants-figurelist) then 'yes' else 'no'"/>
             <xsl:with-param name="tablelist" select="if ($govuk-wants-tablelist) then 'yes' else 'no'"/>
+            <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
           </xsl:call-template>
           <script src="pagefind/pagefind-ui.js"></script>
           <script>

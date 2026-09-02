@@ -43,7 +43,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <equals arg1="${govuk.branding}" arg2="official"/>
     </condition>
     <echo if:set="govuk.branding.official" level="warning"
-          message="govuk.branding=official: the GOV.UK crown and GDS Transport font are legally restricted to official GOV.UK services. Official mode is not yet implemented; the build will use neutral assets."/>
+          message="govuk.branding=official: the GOV.UK crown and GDS Transport font are legally restricted to genuine GOV.UK services. Use this only for an official GOV.UK service. GDS Transport is not bundled - install the licensed font on the host or text falls back to Arial."/>
     <condition property="govuk.branding.nhs">
       <equals arg1="${govuk.branding}" arg2="nhs"/>
     </condition>

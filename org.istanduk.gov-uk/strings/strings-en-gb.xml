@@ -27,4 +27,8 @@ collisions with toolkit variables.
   <variable id="govuk-dita.copyright">©</variable>
   <variable id="govuk-dita.published-by">Published by</variable>
   <variable id="govuk-dita.authored-by">By</variable>
+  <variable id="govuk-dita.ogl-prefix">All content is available under the </variable>
+  <variable id="govuk-dita.ogl-name">Open Government Licence v3.0</variable>
+  <variable id="govuk-dita.ogl-suffix">, except where otherwise stated</variable>
+  <variable id="govuk-dita.crown-copyright">© Crown copyright</variable>
 </variables>
