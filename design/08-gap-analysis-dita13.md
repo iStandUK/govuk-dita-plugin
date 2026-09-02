@@ -173,9 +173,9 @@ and the reuse/addressing machinery (keys, scopes, conref in all forms, chunking,
 works as specified with two investigable exceptions. What separates v0.2 from a
 community-credible 1.0 is a bounded list: **five correctness items, five styling-parity
 items, and three completeness workstreams**, each verified here with a reproducible fixture.
-Per decision D-15 this list targets **v0.9** (epic #26), together with official branding
-(#20) and the verification NFRs (#35); the registry listing (#21) follows at 1.0 only after
-0.9 has proven robust in live use.
+Per decision D-15 this list targets **v0.9** (epic #26), together with the verification NFRs
+(#35). Official branding (#20) moved to the v1 epic (#15) per D-16, and the registry listing
+(#21) follows at 1.0 only after 0.9 has proven robust in live use.
 
 ## #29 investigation findings (2026-09-02)
 

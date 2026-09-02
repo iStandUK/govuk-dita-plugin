@@ -290,3 +290,24 @@ regression) belong to the robustness work, not the listing step.
 
 **Consequences:** #21 narrowed to registry-only; verification NFRs moved to #35 inside the
 0.9 epic; epic #15 restaged as 0.9 → live trials → 1.0.
+
+## D-16 · Official branding deferred from 0.9 to 1.0
+
+**Date:** 2026-09-02.
+
+**Options:** keep official branding (`govuk.branding=official`, #20) inside the v0.9 epic as
+D-15 first framed it; or move it to the v1.0 epic so it does not gate live trials.
+
+**Decision:** Move **#20 out of the v0.9 epic (#26) and into the v1 epic (#15)**. v0.9 ships
+with neutral and iStandUK branding only; official branding lands for **1.0**.
+
+**Rationale:** Live trials run on iStandUK's own publications, which use neutral/iStandUK
+branding — official GOV.UK branding is not needed to start them, and holding 0.9 for it only
+delays the feedback the staging exists to gather. Official mode also carries the heaviest
+legal surface (crown, GDS Transport, OGL, entitlement assertion) and depends on assets the
+publisher supplies from their own govuk-frontend copy; that scrutiny belongs with the 1.0
+release gate, not the robustness milestone. Refines D-15, which had bundled it into 0.9.
+
+**Consequences:** #26 goal and acceptance drop official branding; #15 gains #20 as a direct
+sub-issue; design/08 and the C-13 disposition note the 1.0 target. The build-log warning and
+neutral-default guarantees already shipped are unaffected.
