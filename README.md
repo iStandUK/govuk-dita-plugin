@@ -3,19 +3,19 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: v0.9 — robust, entering live trials** —
-[v0.9.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.0) closes the
-[v0.9 epic](https://github.com/iStandUK/govuk-dita-plugin/issues/26): full DITA 1.3 spec
-coverage and a CI safety net (WCAG 2.2 AA via axe-core, valid HTML, internal-link and
-page-weight checks, build determinism). Next comes a period of live trials on real
-publications, then a [1.0 registry listing](https://github.com/iStandUK/govuk-dita-plugin/issues/15)
-(where official GOV.UK branding also lands). Coverage of bookmaps, keys, chunking, and the SVG
-domain is verified against a real corpus ([gap analysis](design/07-gap-analysis-oruk.md)).
+**Status: v0.9 — robust, in live trials** —
+[v0.9.1](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.1) builds on the
+v0.9.0 base (full DITA 1.3 spec coverage and a CI safety net — WCAG 2.2 AA via axe-core, valid
+HTML, internal-link and page-weight checks, build determinism) with **NHS and official GOV.UK
+branding** (#47) and **parameter-driven page furniture** — phase banner, service URL, favicon,
+footer links and licence (#49). Next is a [1.0 registry listing](https://github.com/iStandUK/govuk-dita-plugin/issues/15)
+after the trials. Coverage of bookmaps, keys, chunking, and the SVG domain is verified against a
+real corpus ([gap analysis](design/07-gap-analysis-oruk.md)).
 
 ## Try it
 
 ```bash
-dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.9.0/org.istanduk.gov-uk-0.9.0.zip
+dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.9.1/org.istanduk.gov-uk-0.9.1.zip
 dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 

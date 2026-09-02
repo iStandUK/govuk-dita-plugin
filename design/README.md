@@ -4,7 +4,7 @@ A design for an open-source **DITA Open Toolkit (DITA-OT) plugin** that publishe
 directly as a static website using the **GOV.UK Design System** (GDS), with no dependency on
 commercial help-output tooling.
 
-**Status:** Implemented through **v0.9.0** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
+**Status:** Implemented through **v0.9.1** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
 
 ## How to read this folder
 
@@ -47,6 +47,7 @@ See [05-decision-log.md](05-decision-log.md) for the reasoning behind each of th
 | DITA 1.3 gap analysis ([08](08-gap-analysis-dita13.md)) | Full-spec coverage assessment with the `dita13-kitchen` fixture; the verified 1.0 gap list |
 | [**v0.3.0**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.3.0) | v0.9 epic ([#26](https://github.com/iStandUK/govuk-dita-plugin/issues/26)) tranche: valid HTML5 throughout (hazard panels, modern choicetable/properties tables, #27), native MathML (#28) and inline SVG with working links (#37), dl/lq/ui-d and task/troubleshooting styling (#30, #31), DITAVAL flag styling (#29), reading-order pagination (#32), bookmap figure/table lists and appendix grouping (#33). Official branding deferred to 1.0 (D-16) |
 | [**v0.9.0**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.0) | Closes the v0.9 epic ([#26](https://github.com/iStandUK/govuk-dita-plugin/issues/26)): residue verification fixtures (conref push, ditavalref, flag images, object, frontmatter/backmatter, coderef, glossgroup, RTL) with a glossary dead-link fix (#34); bookmap metadata in the footer (#42); and the CI safety net — axe-core WCAG 2.2 AA, internal-link check, page-weight budget, build determinism, visual snapshots, DITA-OT version matrix (#35). **Robust enough for live trials.** |
+| [**v0.9.1**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.1) | During trials: **NHS and official GOV.UK branding** variants on a Sass-recompiled palette foundation, gated and documented (#47, D-17, [09](09-nhs-branding.md)); **FR-T3 page furniture** — phase banner, `govuk.service.url`, `govuk.favicon`, `govuk.footer.links`/`footer.licence` (#49). |
 
 Per-requirement status lives in the **Status column of
 [02-requirements.md](02-requirements.md)**. v0.9.0 closes the P1–P3 gap list in

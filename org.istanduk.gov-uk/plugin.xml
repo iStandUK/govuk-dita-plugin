@@ -3,7 +3,7 @@
 This file is part of the govuk-dita-plugin project.
 Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
 -->
-<plugin id="org.istanduk.gov-uk" version="0.9.0">
+<plugin id="org.istanduk.gov-uk" version="0.9.1">
   <require plugin="org.dita.html5"/>
   <transtype name="govuk" extends="html5" desc="GOV.UK Design System HTML5">
     <param name="govuk.branding"
