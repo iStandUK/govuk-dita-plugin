@@ -22,4 +22,6 @@ collisions with toolkit variables.
   <variable id="govuk-dita.support-links">Support links</variable>
   <variable id="govuk-dita.cause">Cause</variable>
   <variable id="govuk-dita.remedy">Remedy</variable>
+  <variable id="govuk-dita.figures">Figures</variable>
+  <variable id="govuk-dita.tables">Tables</variable>
 </variables>

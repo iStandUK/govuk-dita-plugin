@@ -19,7 +19,7 @@
       <title>Start</title>
       <p>For a publication that is one linear guide: a green start button leads straight
         into the first page, with the guide's sections listed beneath.</p>
-      <fig outputclass="app-screenshot">
+      <fig id="fig-start" outputclass="app-screenshot">
         <title>The start layout</title>
         <image href="../images/homepage-start.png">
           <alt>Home page with the title, abstract, a green Start now button, and a contents
@@ -31,7 +31,7 @@
       <title>Annotated contents</title>
       <p>Each top-level entry appears with its short description — write good
         <codeph>shortdesc</codeph> elements and this layout writes itself.</p>
-      <fig outputclass="app-screenshot">
+      <fig id="fig-annotated" outputclass="app-screenshot">
         <title>The annotated layout</title>
         <image href="../images/homepage-annotated.png">
           <alt>Home page listing each entry as a linked heading with a one-line description
@@ -43,7 +43,7 @@
       <title>Grouped sections</title>
       <p>The default for this manual: a heading per chapter with its pages listed beneath,
         each with a hint-styled description.</p>
-      <fig outputclass="app-screenshot">
+      <fig id="fig-grouped" outputclass="app-screenshot">
         <title>The grouped layout</title>
         <image href="../images/homepage-grouped.png">
           <alt>Home page with chapter headings, each followed by a list of page links with
@@ -55,7 +55,7 @@
       <title>Grid</title>
       <p>Chapters side by side in columns — the GOV.UK answer to a tile grid, using
         typography rather than boxes.</p>
-      <fig outputclass="app-screenshot">
+      <fig id="fig-grid" outputclass="app-screenshot">
         <title>The grid layout</title>
         <image href="../images/homepage-grid.png">
           <alt>Home page with three columns, each a chapter heading, description, and its
@@ -68,7 +68,7 @@
       <p>For very large publications: each group collapses behind a toggle, with
         <q>Show all sections</q> provided by the Design System component. Without
         JavaScript every section simply shows open.</p>
-      <fig outputclass="app-screenshot">
+      <fig id="fig-accordion" outputclass="app-screenshot">
         <title>The accordion layout</title>
         <image href="../images/homepage-accordion.png">
           <alt>Home page with collapsed accordion sections named after the chapters, each

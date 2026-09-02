@@ -15,5 +15,7 @@ unaffected.
   <param name="GOVUK-GLOSSARY" expression="${govuk.glossary.present}" if:set="govuk.glossary.present"/>
   <param name="GOVUK-INDEX" expression="${govuk.index.present}" if:set="govuk.index.present"/>
   <param name="GOVUK-PAGINATION" expression="${govuk.pagination}" if:set="govuk.pagination"/>
+  <param name="GOVUK-FIGURELIST" expression="${govuk.figurelist.present}" if:set="govuk.figurelist.present"/>
+  <param name="GOVUK-TABLELIST" expression="${govuk.tablelist.present}" if:set="govuk.tablelist.present"/>
   <param name="GOVUK-SVG-INLINE" expression="${govuk.svg.inline}" if:set="govuk.svg.inline"/>
 </params>

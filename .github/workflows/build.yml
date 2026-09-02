@@ -208,6 +208,24 @@ jobs:
           ! grep -q 'glossary.html' out/oruk-mini/item.html
           test ! -f out/oruk-mini/glossary.html
           test ! -f out/oruk-mini/index-page.html
+          # Figure list / table list from bookmap booklists (#33 / FR-X)
+          grep -q 'app-itemlist' out/manual/figurelist.html
+          grep -q 'app-itemlist' out/manual/tablelist.html
+          grep -q 'The start layout' out/manual/figurelist.html
+          # figures/tables with an id deep-link to that element (topic-id__element-id)
+          grep -q 'topics/layouts.html#layouts__fig-start' out/manual/figurelist.html
+          grep -q 'Note type mapping' out/manual/tablelist.html
+          # footer support links for both lists on content pages
+          grep -q 'figurelist.html' out/manual/topics/introduction.html
+          grep -q 'tablelist.html' out/manual/topics/introduction.html
+          # only generated when the bookmap requests them (oruk-mini booklists has toc only)
+          test ! -f out/oruk-mini/figurelist.html
+          test ! -f out/oruk-mini/tablelist.html
+          ! grep -q 'figurelist.html' out/oruk-mini/item.html
+          # bookmap appendix builds and groups on the home page (auto layout, #33)
+          test -f out/manual/topics/legal.html
+          grep -q 'Licensing and legal' out/manual/index.html
+          grep -q 'href="topics/legal.html"' out/manual/index.html
           # Hazard panels and modern choicetable/properties tables (#27)
           # topichead-grouped maps link their children from the home page (auto layout)
           grep -q 'href="topics/blocks.html"' out/kitchen/index.html

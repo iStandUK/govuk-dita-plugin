@@ -2,9 +2,9 @@
 <!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
 <concept id="glossary-index" xml:lang="en-GB">
   <title>Glossary and index</title>
-  <shortdesc>Publications that use DITA glossary entries or index markup get an A–Z glossary
-    page and a back-of-book index page generated automatically, linked from every page's
-    footer as GOV.UK support links.</shortdesc>
+  <shortdesc>Publications that use DITA glossary entries, index markup, or a bookmap's
+    booklists get generated glossary, index, figure-list and table-list pages, linked from
+    every page's footer as GOV.UK support links.</shortdesc>
   <conbody>
     <p><indexterm>glossary</indexterm><indexterm>index</indexterm>Both pages are built from
       your source with no configuration:</p>
@@ -27,6 +27,23 @@
         sub-entries, and <codeph>index-see</codeph> cross-references render as
         <q>see</q> lines. This manual indexes its own pages — follow the Index link in the
         footer to see the result.</p>
+    </section>
+    <section>
+      <title>Figure and table lists</title>
+      <p>A bookmap can ask for a list of figures or tables through its front-matter
+        <codeph>booklists</codeph>:</p>
+      <codeblock>&lt;frontmatter>
+  &lt;booklists>
+    &lt;toc/>
+    &lt;figurelist/>
+    &lt;tablelist/>
+  &lt;/booklists>
+&lt;/frontmatter></codeblock>
+      <p>Each requested list becomes its own page, numbering every titled figure or table in
+        reading order and linking to it — to the figure or table itself where it has an
+        <codeph>@id</codeph>, otherwise to its topic. The Figures and Tables links then join
+        the footer's support links. This manual requests both; follow those links to see the
+        result.</p>
     </section>
   </conbody>
 </concept>

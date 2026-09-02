@@ -126,6 +126,18 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <condition property="govuk.index.present" value="yes" else="no">
       <not><equals arg1="${govuk.index.count}" arg2="0"/></not>
     </condition>
+    <resourcecount property="govuk.figurelist.count">
+      <fileset dir="${govuk.input.dir}" includes="**/*.ditamap"><contains text="&lt;figurelist"/></fileset>
+    </resourcecount>
+    <resourcecount property="govuk.tablelist.count">
+      <fileset dir="${govuk.input.dir}" includes="**/*.ditamap"><contains text="&lt;tablelist"/></fileset>
+    </resourcecount>
+    <condition property="govuk.figurelist.present" value="yes" else="no">
+      <not><equals arg1="${govuk.figurelist.count}" arg2="0"/></not>
+    </condition>
+    <condition property="govuk.tablelist.present" value="yes" else="no">
+      <not><equals arg1="${govuk.tablelist.count}" arg2="0"/></not>
+    </condition>
   </target>
 
   <target name="dita2govuk"

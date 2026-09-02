@@ -323,6 +323,16 @@ li.olchildlink {
   color: #505a5f;
 }
 
+/* Figure list / table list (booklists, #33) */
+.app-itemlist > li {
+  margin-bottom: 10px;
+}
+
+.app-itemlist__num {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 /* Toolkit-generated links (term and abbreviated-form references) carry no
    class; give them the standard link treatment */
 #main-content a:not([class]) {

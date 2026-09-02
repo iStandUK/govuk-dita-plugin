@@ -19,6 +19,8 @@
   <frontmatter>
     <booklists>
       <toc/>
+      <figurelist/>
+      <tablelist/>
     </booklists>
   </frontmatter>
   <chapter>
@@ -61,4 +63,11 @@
     </topicmeta>
     <topicref keyref="development"/>
   </chapter>
+  <appendix>
+    <topicmeta>
+      <navtitle>Licensing and legal</navtitle>
+      <shortdesc>Apache-2.0 and the assets reserved for official GOV.UK services.</shortdesc>
+    </topicmeta>
+    <topicref keyref="legal"/>
+  </appendix>
 </bookmap>
