@@ -311,3 +311,29 @@ release gate, not the robustness milestone. Refines D-15, which had bundled it i
 **Consequences:** #26 goal and acceptance drop official branding; #15 gains #20 as a direct
 sub-issue; design/08 and the C-13 disposition note the 1.0 target. The build-log warning and
 neutral-default guarantees already shipped are unaffected.
+
+## D-17 · Official branding: NHS and crown as recoloured GDS, not nhsuk-frontend
+
+**Date:** 2026-09-02.
+
+**Options:** (a) build a true NHS Design System output on `nhsuk-frontend` (its own `nhsuk-*`
+markup and components); (b) offer NHS as a **brand variant** of the existing GOV.UK Design
+System output — NHS colour, typography, header/footer identity on GDS component structure.
+
+**Decision:** Option (b). Add **`govuk.branding=nhs`** alongside the crown `official`, both
+delivered by a **Sass recompile** of `govuk-frontend` against brand colour variables at
+maintainer/vendor time (the compiled CSS stays vendored, so builds remain Node-free — preserves
+D-12), plus a thin per-variant overlay for header/footer/logo. No `nhsuk-frontend`, no
+NHS-specific components ([design/09](09-nhs-branding.md), #47).
+
+**Rationale:** `nhsuk-frontend` is a separate frontend, not a GDS theme; adopting it would fork
+the whole rendering chain and duplicate the plugin. Most NHS *conformance* the users need is
+identity, colour, typography and accessibility — all reachable as a recoloured GDS variant. The
+NHS's Frutiger font (licensed, not web-shipped, Arial fallback) mirrors the GDS Transport
+situation we already handle, and the NHS logo is legally restricted to NHS organisations exactly
+as the crown is to GOV.UK services — so both are gated by one mechanism.
+
+**Consequences:** `govuk.branding` gains `nhs`; #47 delivers both official identities on a shared
+recompiled-palette foundation and supersedes #20's crown-only scope; the accepted residual is
+that recoloured GDS components are not NHS Design System components (documented). Neutral stays
+the default and no restricted asset (crown, NHS logo, Frutiger, GDS Transport) is ever bundled.

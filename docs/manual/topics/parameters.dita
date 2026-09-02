@@ -24,10 +24,11 @@
             <row>
               <entry><codeph>govuk.branding</codeph></entry>
               <entry><codeph>neutral</codeph> (default), <codeph>istanduk</codeph>,
-                <codeph>official</codeph></entry>
+                <codeph>nhs</codeph>, <codeph>official</codeph></entry>
               <entry>Branding mode. The iStandUK theme layers brand colours and the logo on
-                top of neutral; official mode is reserved for genuine GOV.UK services and is
-                not yet implemented. See <xref keyref="branding"/>.</entry>
+                top of neutral; <codeph>nhs</codeph> applies the NHS Design System palette and
+                header, and <codeph>official</codeph> the full GOV.UK crown branding — each for
+                the entitled organisation only. See <xref keyref="branding"/>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.service.name</codeph></entry>

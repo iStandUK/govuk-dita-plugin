@@ -139,18 +139,33 @@ element-level typography.
     <xsl:apply-templates select="." mode="gen-user-head"/>
   </xsl:template>
 
-  <!-- Stylesheets: vendored govuk-frontend, the neutral overlay (unless the
-       publisher opted into official branding), plugin furniture styles, then
-       any user stylesheet from args.css so publishers can override (FR-T4). -->
+  <!-- Brand-recoloured base stylesheet: NHS uses a Sass-recompiled govuk-frontend
+       palette (#47, D-17); every other brand uses the stock build. -->
+  <xsl:variable name="govuk-frontend-css" as="xs:string"
+                select="if ($GOVUK-BRANDING = 'nhs')
+                        then concat('govuk-frontend-', $govuk-frontend-version, '-nhs.min.css')
+                        else concat('govuk-frontend-', $govuk-frontend-version, '.min.css')"/>
+
+  <!-- Stylesheets: the (brand-specific) govuk-frontend base, plugin furniture,
+       then a font/brand overlay, then any args.css user stylesheet (FR-T4).
+       The neutral overlay aliases GDS Transport to system fonts; official ships
+       GDS Transport and NHS bakes its own font stack into the recompiled CSS,
+       so neither takes the neutral overlay. -->
   <xsl:template name="generateCssLinks">
     <link rel="stylesheet"
-          href="{concat($govuk-root, 'govuk/govuk-frontend-', $govuk-frontend-version, '.min.css')}"/>
+          href="{concat($govuk-root, 'govuk/', $govuk-frontend-css)}"/>
     <link rel="stylesheet" href="{concat($govuk-root, 'govuk/plugin.css')}"/>
-    <xsl:if test="$GOVUK-BRANDING ne 'official'">
+    <xsl:if test="$GOVUK-BRANDING = ('neutral', 'istanduk')">
       <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-neutral.css')}"/>
     </xsl:if>
     <xsl:if test="$GOVUK-BRANDING = 'istanduk'">
       <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-istanduk.css')}"/>
+    </xsl:if>
+    <xsl:if test="$GOVUK-BRANDING = 'nhs'">
+      <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-nhs.css')}"/>
+    </xsl:if>
+    <xsl:if test="$GOVUK-BRANDING = 'official'">
+      <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-official.css')}"/>
     </xsl:if>
     <xsl:if test="string-length($CSS) gt 0">
       <link rel="stylesheet" href="{concat($govuk-root, $CSSPATH, $CSS)}"/>
@@ -227,6 +242,7 @@ element-level typography.
         <xsl:with-param name="index" select="$GOVUK-INDEX"/>
         <xsl:with-param name="figurelist" select="$GOVUK-FIGURELIST"/>
         <xsl:with-param name="tablelist" select="$GOVUK-TABLELIST"/>
+        <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
       </xsl:call-template>
       <script src="{concat($govuk-root, 'govuk/plugin.js')}"></script>
       <script type="module">

@@ -39,6 +39,51 @@
       </fig>
     </section>
     <section>
+      <title>NHS branding</title>
+      <p><indexterm>branding<indexterm>NHS</indexterm></indexterm>Setting
+        <codeph>govuk.branding=nhs</codeph> applies the NHS Design System's colour palette,
+        focus colour, and typography to the same GOV.UK Design System components, and gives the
+        pages the white NHS header with the blue NHS logo and an NHS footer.</p>
+      <note type="important">The NHS identity — the <q>NHS</q> letters and logo — is restricted
+        to NHS organisations; non-NHS bodies need permission from NHS England or the Department
+        of Health and Social Care. The build warns whenever this mode is used.</note>
+      <p>This is <i>NHS-branded GOV.UK Design System output</i>, not a rebuild on the NHS's own
+        <codeph>nhsuk-frontend</codeph>. The components keep their GOV.UK structure recoloured
+        to the NHS palette, so a warning or a table looks like its GOV.UK counterpart in NHS
+        colours rather than the NHS Design System's own component — and NHS-specific components
+        (care cards and the like) are not provided. Frutiger, the NHS brand font, is licensed to
+        NHS organisations and is not bundled, so the text falls back to Arial unless you install
+        it on the host.</p>
+      <fig outputclass="app-screenshot">
+        <title>NHS branding</title>
+        <image href="../images/branding-nhs.png">
+          <alt>Home page with a white NHS header carrying the blue NHS logo and the publication
+            title, a search field, and a blue rule beneath the header.</alt>
+        </image>
+      </fig>
+    </section>
+    <section>
+      <title>Official GOV.UK branding</title>
+      <p><indexterm>branding<indexterm>official mode</indexterm></indexterm>Setting
+        <codeph>govuk.branding=official</codeph> gives the pages the full GOV.UK identity: the
+        black header with the crown and <codeph>GOV.UK</codeph> logotype, and a footer carrying
+        the Open Government Licence statement and <q>© Crown copyright</q>.</p>
+      <note type="important">The GOV.UK crown and the GDS Transport typeface are legally
+        restricted to genuine GOV.UK services. Use this mode only for an official GOV.UK
+        service; the build warns whenever it is used.</note>
+      <p>GDS Transport is licensed and is <i>not</i> bundled: install the font on the host and
+        it is used, otherwise the text falls back to Arial. The plugin ships no crown crest
+        image — the crown appears only in the header logo, and the footer states the licence and
+        copyright in text.</p>
+      <fig outputclass="app-screenshot">
+        <title>Official GOV.UK branding</title>
+        <image href="../images/branding-official.png">
+          <alt>Home page with the black GOV.UK header carrying the crown and GOV.UK logotype and
+            the publication title, and a search field.</alt>
+        </image>
+      </fig>
+    </section>
+    <section>
       <title>Footer credits from the bookmap</title>
       <p>Whatever the branding, the footer credits the publication itself, drawn from the
         bookmap's <codeph>bookmeta</codeph>:</p>
@@ -51,15 +96,9 @@
       </ul>
       <p>The same credit appears on every page — content, home, glossary and the rest —
         so it travels with each page a reader might land on or print. A map with no
-        <codeph>bookmeta</codeph> simply shows its title instead.</p>
-    </section>
-    <section>
-      <title>Official mode (not yet implemented)</title>
-      <p>Setting <codeph>govuk.branding=official</codeph> is reserved for genuine GOV.UK
-        services. The build currently prints a warning and continues with neutral assets;
-        when implemented, official mode will source fonts and crown imagery from the
-        publisher's own copy of govuk-frontend rather than from this plugin, which never
-        redistributes them.</p>
+        <codeph>bookmeta</codeph> simply shows its title instead. This applies to neutral,
+        iStandUK and NHS branding; official mode shows the Open Government Licence and Crown
+        copyright there instead, as GOV.UK services do.</p>
     </section>
   </conbody>
 </concept>
