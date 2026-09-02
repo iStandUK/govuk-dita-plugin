@@ -37,6 +37,20 @@
                 bookmap's main book title.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.phase</codeph></entry>
+              <entry>text</entry>
+              <entry>Shows a GOV.UK phase banner above the content with this tag, for example
+                <codeph>alpha</codeph> or <codeph>beta</codeph>. Empty (default) shows no
+                banner. Works in every branding mode.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.feedback.url</codeph></entry>
+              <entry>text</entry>
+              <entry>Feedback link shown in the phase banner (used only when
+                <codeph>govuk.phase</codeph> is set). Empty shows the banner text without a
+                link.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.homepage.layout</codeph></entry>
               <entry><codeph>auto</codeph> (default), <codeph>start</codeph>,
                 <codeph>annotated</codeph>, <codeph>list</codeph>, <codeph>grid</codeph>,

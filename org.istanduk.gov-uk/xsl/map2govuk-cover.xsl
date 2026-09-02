@@ -35,6 +35,8 @@ map transformation with the plugin's values.
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>
   <xsl:param name="GOVUK-SEARCH" select="'no'"/>
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
+  <xsl:param name="GOVUK-PHASE" select="''"/>
+  <xsl:param name="GOVUK-FEEDBACK-URL" select="''"/>
 
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
 
@@ -222,6 +224,10 @@ map transformation with the plugin's values.
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
       </xsl:call-template>
       <div class="govuk-width-container">
+        <xsl:call-template name="govuk-phase-banner">
+          <xsl:with-param name="phase" select="$GOVUK-PHASE"/>
+          <xsl:with-param name="feedback" select="$GOVUK-FEEDBACK-URL"/>
+        </xsl:call-template>
         <main class="govuk-main-wrapper" id="main-content">
           <div class="govuk-grid-row">
             <div class="govuk-grid-column-two-thirds">
@@ -421,6 +427,10 @@ map transformation with the plugin's values.
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
           </xsl:call-template>
           <div class="govuk-width-container">
+            <xsl:call-template name="govuk-phase-banner">
+              <xsl:with-param name="phase" select="$GOVUK-PHASE"/>
+              <xsl:with-param name="feedback" select="$GOVUK-FEEDBACK-URL"/>
+            </xsl:call-template>
             <main class="govuk-main-wrapper" id="main-content">
               <div class="govuk-grid-row">
                 <div class="govuk-grid-column-two-thirds">

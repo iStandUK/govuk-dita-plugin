@@ -23,6 +23,8 @@ element-level typography.
   <xsl:param name="GOVUK-PAGINATION" select="'yes'"/>
   <xsl:param name="GOVUK-FIGURELIST" select="'no'"/>
   <xsl:param name="GOVUK-TABLELIST" select="'no'"/>
+  <xsl:param name="GOVUK-PHASE" select="''"/>
+  <xsl:param name="GOVUK-FEEDBACK-URL" select="''"/>
 
   <!-- Pinned vendored govuk-frontend release (see resource/govuk-frontend/VERSION.txt) -->
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
@@ -213,6 +215,10 @@ element-level typography.
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
       </xsl:call-template>
       <div class="govuk-width-container">
+        <xsl:call-template name="govuk-phase-banner">
+          <xsl:with-param name="phase" select="$GOVUK-PHASE"/>
+          <xsl:with-param name="feedback" select="$GOVUK-FEEDBACK-URL"/>
+        </xsl:call-template>
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-one-third app-sidebar">
             <xsl:attribute name="data-label-menu">

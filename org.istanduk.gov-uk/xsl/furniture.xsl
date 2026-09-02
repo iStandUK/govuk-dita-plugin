@@ -132,6 +132,46 @@ template, the cover, and the generated utility pages.
     </header>
   </xsl:template>
 
+  <!-- GOV.UK phase banner (FR-T3, #49). Rendered above the content when
+       govuk.phase is set; the tag text is the phase value, with an optional
+       feedback link from govuk.feedback.url. Brand-agnostic. -->
+  <xsl:template name="govuk-phase-banner">
+    <xsl:param name="phase" as="xs:string" select="''"/>
+    <xsl:param name="feedback" as="xs:string" select="''"/>
+    <xsl:if test="normalize-space($phase)">
+      <div class="govuk-phase-banner">
+        <p class="govuk-phase-banner__content">
+          <strong class="govuk-tag govuk-phase-banner__content__tag">
+            <xsl:value-of select="concat(upper-case(substring(normalize-space($phase), 1, 1)),
+                                          substring(normalize-space($phase), 2))"/>
+          </strong>
+          <span class="govuk-phase-banner__text">
+            <xsl:choose>
+              <xsl:when test="normalize-space($feedback)">
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'govuk-dita.phase-prefix'"/>
+                </xsl:call-template>
+                <a class="govuk-link" href="{$feedback}">
+                  <xsl:call-template name="getVariable">
+                    <xsl:with-param name="id" select="'govuk-dita.phase-feedback'"/>
+                  </xsl:call-template>
+                </a>
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'govuk-dita.phase-suffix'"/>
+                </xsl:call-template>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'govuk-dita.phase-plain'"/>
+                </xsl:call-template>
+              </xsl:otherwise>
+            </xsl:choose>
+          </span>
+        </p>
+      </div>
+    </xsl:if>
+  </xsl:template>
+
   <xsl:template name="govuk-site-footer">
     <xsl:param name="prefix" as="xs:string" select="''"/>
     <xsl:param name="name" as="xs:string"/>

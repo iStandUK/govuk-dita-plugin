@@ -17,6 +17,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <param name="govuk.service.name"
            desc="Service or publication name shown in the masthead and footer. Defaults to the map title."
            type="string"/>
+    <param name="govuk.phase"
+           desc="Show a GOV.UK phase banner above the content with this tag, e.g. 'alpha' or 'beta'. Empty (default) shows no banner. Works in every branding mode."
+           type="string"/>
+    <param name="govuk.feedback.url"
+           desc="Feedback link shown in the phase banner (used only when govuk.phase is set). Empty (default) shows the banner text without a link."
+           type="string"/>
     <param name="govuk.homepage.layout"
            desc="Landing-page layout. 'auto' (default) selects from the map's shape: one top-level entry gives a start-button page, a few give an annotated contents list, many or multi-chapter bookmaps give grouped sections."
            type="enum">

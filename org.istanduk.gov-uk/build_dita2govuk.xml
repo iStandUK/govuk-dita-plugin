@@ -157,6 +157,8 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-SERVICE-NAME" expression="${govuk.service.name}" if:set="govuk.service.name"/>
       <param name="GOVUK-SEARCH" expression="${govuk.search.enabled}"/>
       <param name="GOVUK-BRANDING" expression="${govuk.branding}"/>
+      <param name="GOVUK-PHASE" expression="${govuk.phase}" if:set="govuk.phase"/>
+      <param name="GOVUK-FEEDBACK-URL" expression="${govuk.feedback.url}" if:set="govuk.feedback.url"/>
     </html5.map>
   </target>
 
