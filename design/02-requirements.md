@@ -31,7 +31,7 @@ Remaining ⬜/🔶 items are the v1-release backlog (see
 | FR-N2 | Navigation sections expand/collapse with JavaScript; **without JavaScript the full tree is visible and usable** (progressive enhancement) | M | ✅ |
 | FR-N3 | Each page shows an "On this page" contents list of its own second-level headings when there are two or more | S | ⬜ |
 | FR-N4 | On small viewports the sidebar collapses behind a menu control, following the tech-docs/service-navigation mobile pattern | M | ✅ |
-| FR-N5 | Previous/next links (GOV.UK pagination component, block variant) appear at the foot of each page in map reading order | S | ⬜ |
+| FR-N5 | Previous/next links (GOV.UK pagination component, block variant) appear at the foot of each page in map reading order | S | ✅ (#32); `govuk.pagination=no` disables |
 | FR-N6 | Breadcrumbs (GOV.UK breadcrumbs component) can be enabled by parameter; default off in the sidebar layout | C | ⬜ |
 | FR-N7 | Every page has a skip link, correct landmark structure (`header`, `nav`, `main`, `footer`), and a visible focus order matching the Design System | M | ✅ landmark/h1 structure asserted in CI |
 | FR-N8 | A site home page is generated from the map (title, shortdesc/abstract, top-level entry links) | S | ✅ with the D-13 layouts: auto-selected start/annotated/grouped plus list/grid/accordion overrides |
