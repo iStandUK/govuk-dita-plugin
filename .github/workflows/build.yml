@@ -208,6 +208,13 @@ jobs:
           grep -q 'app-hazard__banner' out/kitchen/topics/hazard.html
           ! grep -q 'govuk-warning-text"' out/kitchen/topics/hazard.html
           grep -q 'choicetable govuk-table' out/kitchen/topics/task-full.html
+          # Task labels, troubleshooting labels, ui-d, dl/lq styling (#30, #31)
+          grep -q '<h2 class="sectiontitle tasklabel">Procedure' out/kitchen/topics/task-full.html
+          grep -q 'app-trouble-label">Cause' out/kitchen/topics/troubleshooting.html
+          grep -q 'app-trouble-label">Remedy' out/kitchen/topics/troubleshooting.html
+          grep -q 'uicontrol app-uicontrol' out/kitchen/topics/inline-domains.html
+          grep -q '<dl class="dl">' out/kitchen/topics/blocks.html
+          grep -q '<blockquote class="lq">' out/kitchen/topics/blocks.html
           # MathML passthrough (#28) and native inline SVG with working links (#37)
           grep -q '<math xmlns="http://www.w3.org/1998/Math/MathML"' out/kitchen/topics/math.html
           grep -q '<svg ' out/kitchen/topics/media.html

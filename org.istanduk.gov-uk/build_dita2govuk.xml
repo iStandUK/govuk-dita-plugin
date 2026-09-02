@@ -19,6 +19,9 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
          A user-supplied nav-toc property still wins because properties are
          immutable once set. -->
     <property name="nav-toc" value="full"/>
+    <!-- Generate task section labels (Before you begin, Procedure, Results…)
+         by default so task topics read with structure (FR-R6). -->
+    <property name="args.gen.task.lbl" value="YES"/>
     <!-- Neutral branding unless the publisher explicitly opts in (FR-T1). -->
     <property name="govuk.branding" value="neutral"/>
     <fail message="govuk.branding must be 'neutral', 'istanduk', or 'official', was: ${govuk.branding}">

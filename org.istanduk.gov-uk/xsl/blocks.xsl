@@ -325,6 +325,47 @@ sections) follow at the end.
     <xsl:if test="$ARTLBL = 'yes'"> [<xsl:value-of select="@href"/>] </xsl:if>
   </xsl:template>
 
+  <!-- ===== User-interface domain (ui-d): emphasise controls (#30) ===== -->
+
+  <xsl:template match="*[contains(@class, ' ui-d/uicontrol ')]" mode="set-output-class">
+    <xsl:param name="default"/>
+    <xsl:next-match>
+      <xsl:with-param name="default" select="normalize-space(concat($default, ' app-uicontrol'))"/>
+    </xsl:next-match>
+  </xsl:template>
+
+  <!-- ===== Troubleshooting topic: label cause and remedy (#31) ===== -->
+
+  <xsl:template match="*[contains(@class, ' troubleshooting/cause ')]">
+    <section>
+      <xsl:call-template name="commonattributes">
+        <xsl:with-param name="default-output-class" select="'cause'"/>
+      </xsl:call-template>
+      <xsl:call-template name="setid"/>
+      <h2 class="govuk-heading-s app-trouble-label">
+        <xsl:call-template name="getVariable">
+          <xsl:with-param name="id" select="'govuk-dita.cause'"/>
+        </xsl:call-template>
+      </h2>
+      <xsl:apply-templates/>
+    </section>
+  </xsl:template>
+
+  <xsl:template match="*[contains(@class, ' troubleshooting/remedy ')]">
+    <section>
+      <xsl:call-template name="commonattributes">
+        <xsl:with-param name="default-output-class" select="'remedy'"/>
+      </xsl:call-template>
+      <xsl:call-template name="setid"/>
+      <h2 class="govuk-heading-s app-trouble-label">
+        <xsl:call-template name="getVariable">
+          <xsl:with-param name="id" select="'govuk-dita.remedy'"/>
+        </xsl:call-template>
+      </h2>
+      <xsl:apply-templates/>
+    </section>
+  </xsl:template>
+
   <!-- ===== Notes: inset text or warning text (FR-R2) ===== -->
 
   <xsl:variable name="govuk-warning-note-types"

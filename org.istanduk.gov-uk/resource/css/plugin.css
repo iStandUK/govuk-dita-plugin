@@ -468,6 +468,94 @@ figure.app-screenshot img {
   margin-bottom: 0;
 }
 
+/* ===== Definition lists (dl, dlhead, parml) — #30 ===== */
+
+#main-content dl.dl,
+#main-content dl.parml {
+  margin: 0 0 20px;
+}
+
+#main-content dl.dl dt,
+#main-content dl.parml dt {
+  margin-top: 15px;
+  font-weight: 700;
+}
+
+#main-content dl.dl dd,
+#main-content dl.parml dd {
+  margin: 0 0 0 30px;
+}
+
+/* dlhead: term/definition column headings */
+#main-content dl.dl dt.dthd,
+#main-content dl.dl dd.ddhd {
+  margin-top: 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #b1b4b6;
+  font-weight: 700;
+}
+
+/* ===== Long quotations (lq) — #30 ===== */
+
+#main-content blockquote.lq {
+  margin: 0 0 20px;
+  padding: 10px 0 10px 20px;
+  border-left: 5px solid #b1b4b6;
+  color: #0b0c0c;
+}
+
+#main-content blockquote.lq cite {
+  display: block;
+  margin-top: 5px;
+  color: #505a5f;
+  font-style: normal;
+}
+
+/* ===== User-interface domain (ui-d) — #30 ===== */
+
+.app-uicontrol {
+  font-weight: 700;
+}
+
+/* menucascade separators between the uicontrols it joins */
+#main-content .menucascade abbr {
+  color: #505a5f;
+  text-decoration: none;
+}
+
+/* ===== Task section labels and step structure (#31) ===== */
+
+#main-content .sectiontitle.tasklabel {
+  margin-top: 30px;
+  margin-bottom: 10px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+#main-content .stepsection {
+  margin: 15px 0 10px;
+  font-weight: 700;
+}
+
+#main-content .stepresult,
+#main-content .stepxmp,
+#main-content .info {
+  margin: 5px 0 10px;
+}
+
+/* ===== Troubleshooting topic (#31) ===== */
+
+#main-content .app-trouble-label {
+  margin-top: 20px;
+  margin-bottom: 5px;
+}
+
+#main-content .responsibleParty {
+  color: #505a5f;
+}
+
 /* ===== Content furniture without a govuk-frontend component ===== */
 
 pre.codeblock,
