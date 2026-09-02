@@ -107,7 +107,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | `conref`, `conkeyref`, `conref`+`conrefend` range | ✅ *(all three verified)* |
 | conref push (`@conaction`) | ⬜ untested |
 | `chunk="to-content"` | ✅ (v0.1; upstream xref limitation documented in 07) |
-| `chunk="by-topic"` on composite documents | ✅ *(verified: file split into per-topic pages)* |
+| `chunk="by-topic"` on composite documents | ✅ split into per-topic pages; the split children's `$PATH2PROJ` comes out empty upstream (breaks asset links in plain html5 too) — the plugin derives asset paths from `get-path2map-dir` instead, so CSS/JS/home links resolve correctly *(fixed)* |
 | `copy-to` | ✅ *(verified: copies produced)* — see keyscope caveat |
 | `topichead`/`topicgroup` | ✅ sidebar group labels; also drive the grouped landing layout so their children are linked from the home page *(auto-layout fix)* |
 | Reltables → related links | ✅ *(verified: "Related information" section with styled links)* |

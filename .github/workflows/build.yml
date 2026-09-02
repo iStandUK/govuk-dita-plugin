@@ -82,6 +82,8 @@ jobs:
             --format govuk --output out/kitchen-flag --filter fixtures/dita13-kitchen/flags.ditaval
           # spot-checks of verified processing behaviour
           test -f out/kitchen/topics/composite_comp-child-one.html
+          # chunk=by-topic children resolve assets to the output root (upstream PATH2PROJ bug worked around)
+          grep -q '"../govuk/plugin.css"' out/kitchen/topics/composite_comp-child-one.html
           grep -q 'Reused safety note' out/kitchen/topics/conref-use.html
           ! grep -q 'excluded by the filter' out/kitchen-flag/topics/blocks.html
           grep -q 'administrators' out/kitchen-flag/topics/blocks.html
