@@ -109,7 +109,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | `chunk="to-content"` | ✅ (v0.1; upstream xref limitation documented in 07) |
 | `chunk="by-topic"` on composite documents | ✅ *(verified: file split into per-topic pages)* |
 | `copy-to` | ✅ *(verified: copies produced)* — see keyscope caveat |
-| `topichead`/`topicgroup` | ✅ *(verified: render as sidebar group labels)* |
+| `topichead`/`topicgroup` | ✅ sidebar group labels; also drive the grouped landing layout so their children are linked from the home page *(auto-layout fix)* |
 | Reltables → related links | ✅ *(verified: "Related information" section with styled links)* |
 | `collection-type="sequence"` | ⚠️ no previous/next links generated *(verified)*; fold into FR-N5 pagination so sequences and reading order both produce the GOV.UK pagination component |
 | DITAVAL filtering | ✅ *(verified: exclude honoured)* |

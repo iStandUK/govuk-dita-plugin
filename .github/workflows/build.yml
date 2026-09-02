@@ -200,6 +200,9 @@ jobs:
           test ! -f out/oruk-mini/glossary.html
           test ! -f out/oruk-mini/index-page.html
           # Hazard panels and modern choicetable/properties tables (#27)
+          # topichead-grouped maps link their children from the home page (auto layout)
+          grep -q 'href="topics/blocks.html"' out/kitchen/index.html
+          grep -q 'app-group-list' out/kitchen/index.html
           grep -q 'app-hazard__banner' out/kitchen/topics/hazard.html
           ! grep -q 'govuk-warning-text"' out/kitchen/topics/hazard.html
           grep -q 'choicetable govuk-table' out/kitchen/topics/task-full.html
