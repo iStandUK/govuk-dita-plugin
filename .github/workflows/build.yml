@@ -233,6 +233,10 @@ jobs:
           grep -q 'glossary.html' out/manual/topics/introduction.html
           grep -q 'index-page.html' out/manual/topics/introduction.html
           grep -q 'abbreviated-form' out/manual/topics/glossary-index.html
+          # Accessibility topic (documents the WCAG 2.2 AA posture + author statement)
+          test -f out/manual/topics/accessibility.html
+          grep -q 'Publishing your accessibility statement' out/manual/topics/accessibility.html
+          grep -q 'accessibility.html' out/manual/index.html
           ! grep -q 'glossary.html' out/oruk-mini/item.html
           test ! -f out/oruk-mini/glossary.html
           test ! -f out/oruk-mini/index-page.html

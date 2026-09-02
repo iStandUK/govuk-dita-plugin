@@ -11,9 +11,9 @@
     <section>
       <title>Glossary</title>
       <p>Every <codeph>glossentry</codeph> topic referenced from the map — including
-        resource-only key definitions — appears on the glossary page, sorted A to Z with
-        letter navigation, showing its term, acronym, and definition, linked to the full
-        entry. In running text, a reference like
+        resource-only key definitions and the members of a <codeph>glossgroup</codeph> —
+        appears on the glossary page, sorted A to Z with letter navigation, showing its term,
+        acronym, and definition in full. In running text, a reference like
         <abbreviated-form keyref="gloss-gds"/> expands on first use and shows the acronym
         thereafter (<abbreviated-form keyref="gloss-gds"/>), while a
         <codeph>term</codeph> reference such as <term keyref="gloss-transtype">transtype</term>
