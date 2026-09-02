@@ -103,7 +103,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | Feature | Status |
 |---|---|
 | Keys, `keyref`, `keydef`, resource-only maprefs | ✅ (ORUK-verified at scale) |
-| **Key scopes (1.3)** | ✅ scoped resolution works *(verified)*. The **keyscope + `copy-to`** reuse pattern leaves keyrefs unresolved in the copied topic — **confirmed upstream** (identical under plain `-f html5`; the copied temp file keeps `<ph keyref>` unresolved), #29. Plugin-independent; workaround below |
+| **Key scopes (1.3)** | ✅ scoped resolution works *(verified in a control build)* — but ⚠️ the canonical **keyscope + `copy-to`** reuse pattern left keyrefs unresolved *(verified)*; investigate (likely upstream) |
 | `conref`, `conkeyref`, `conref`+`conrefend` range | ✅ *(all three verified)* |
 | conref push (`@conaction`) | ⬜ untested |
 | `chunk="to-content"` | ✅ (v0.1; upstream xref limitation documented in 07) |
@@ -113,8 +113,8 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | Reltables → related links | ✅ *(verified: "Related information" section with styled links)* |
 | `collection-type="sequence"` | ⚠️ no previous/next links generated *(verified)*; fold into FR-N5 pagination so sequences and reading order both produce the GOV.UK pagination component |
 | DITAVAL filtering | ✅ *(verified: exclude honoured)* |
-| DITAVAL flagging (styles) | ✅ colour and **style decorations** (bold/italic/underline/…) both render — the `flag__style--*` classes, lost when the base `commonltr.css` was dropped, are now re-declared in `plugin.css` *(#29)*; start/end flag images ⬜ |
-| DITAVAL revisions (`revprop`, changebars) | ✅ revision **style** flags render (same `flag__style--*` fix, #29). ⚠️ **changebars** are not emitted by html5 output at all — upstream limitation, documented |
+| DITAVAL flagging (styles) | ✅ *(verified: flag style applied)*; start/end flag images ⬜ |
+| DITAVAL revisions (`revprop`, changebars) | ⚠️ no revision styling appeared in the flagged build *(verified)*; investigate |
 | Branch filtering (`ditavalref`, 1.3) | ⬜ untested (toolkit supports) |
 | `@cascade`, `@print`, `@deliveryTarget` | ◐ |
 | `anchor`/`navref` (runtime map integration) | ✖ niche; document as unsupported |
@@ -145,8 +145,8 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 1. ~~`hazardstatement` dedicated rendering~~ — **done (#27)**: safety panel, valid HTML
 2. ~~`choicetable` modern markup~~ + `properties` table — **done (#27)**: `govuk-table`, valid HTML
 3. ~~MathML/equation passthrough~~ — **done (#28)**: native MathML, browsers render it
-4. ~~DITAVAL revision flagging~~ — **done (#29)**: style flags render (missing `flag__style--*` CSS restored); changebars unsupported upstream (documented)
-5. ~~Keyscope + `copy-to`~~ — **investigated (#29)**: confirmed upstream (plain html5 identical); documented with workaround, upstream report drafted
+4. DITAVAL revision flagging investigation (no changebars/styles applied)
+5. Keyscope + `copy-to` resolution failure investigation (report upstream if confirmed)
 
 **P2 — styling parity** (renders, but below GOV.UK standard):
 6. ~~`dl`/`dlhead`/`parml` styling~~ — **done (#30)**
@@ -175,25 +175,3 @@ items, and three completeness workstreams**, each verified here with a reproduci
 Per decision D-15 this list targets **v0.9** (epic #26), together with official branding
 (#20) and the verification NFRs (#35); the registry listing (#21) follows at 1.0 only after
 0.9 has proven robust in live use.
-
-## #29 investigation findings (2026-09-02)
-
-**Revision / style flagging — plugin regression, fixed.** DITAVAL `style` decorations
-(`bold`, `italics`, `underline`, `double-underline`, `overline`, `line-through`, for both
-`prop` and `revprop`) are emitted by the toolkit as `class="flag__style--…"`, whose CSS lives
-in the base `commonltr.css`. The plugin deletes that file (no govuk page links it), so the
-decorations rendered as nothing — while colour flags (`backcolor`/`color`) survived because
-they arrive as an inline `style` attribute. Fixed by re-declaring the `flag__style--*` classes
-in `plugin.css`. **Changebars** (`revprop/@changebar`) are a separate matter: html5 output
-does not emit any changebar markup for them, so they cannot be styled — an upstream
-limitation, documented as unsupported.
-
-**Keyscope + `copy-to` — upstream, confirmed.** A topicref carrying both a `keyscope` and a
-`copy-to` (the canonical "one source topic, published once per scope with scope-local key
-bindings" pattern) leaves `keyref`s inside the copied topic **unresolved**: the copied temp
-file still contains `<ph keyref="…"/>`, and the output renders an empty element. Verified
-plugin-independent — plain `-f html5` produces the identical empty result. No existing
-upstream issue found (searched `keyscope copy-to`, `copy-to keyref`, …); filed upstream as [dita-ot/dita-ot#4788](https://github.com/dita-ot/dita-ot/issues/4788) (draft retained in [design/drafts/dita-ot-keyscope-copyto-issue.md](drafts/dita-ot-keyscope-copyto-issue.md)).
-**Authoring workaround:** don't rely on a `copy-to` topic resolving keys bound by its
-topicref's `keyscope`; instead publish genuinely separate source topics per variant, or move
-the varying value out of the scoped-key mechanism (e.g. conref, or a filtered build).

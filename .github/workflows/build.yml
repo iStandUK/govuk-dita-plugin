@@ -87,9 +87,6 @@ jobs:
           grep -q 'Reused safety note' out/kitchen/topics/conref-use.html
           ! grep -q 'excluded by the filter' out/kitchen-flag/topics/blocks.html
           grep -q 'administrators' out/kitchen-flag/topics/blocks.html
-          # DITAVAL style flags render — flag__style--* CSS shipped and applied (#29)
-          grep -q 'flag__style--italics' out/kitchen-flag/govuk/plugin.css
-          grep -q 'flag__style--italics' out/kitchen-flag/topics/blocks.html
 
       - name: Build iStandUK theme
         run: |

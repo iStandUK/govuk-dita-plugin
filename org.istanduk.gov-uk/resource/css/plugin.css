@@ -556,20 +556,6 @@ figure.app-screenshot img {
   color: #505a5f;
 }
 
-/* ===== DITAVAL style flags (#29) ===== */
-
-/* The toolkit emits these classes for DITAVAL prop/revprop style flags
-   (audience, rev, etc.); their definitions live in the base commonltr.css,
-   which this plugin does not ship, so they are re-declared here. Colour flags
-   (backcolor/color) arrive as inline style and need no class. Note: revision
-   changebars are not rendered in html5 output upstream. */
-.flag__style--italics { font-style: italic; }
-.flag__style--bold { font-weight: 700; }
-.flag__style--underline { text-decoration: underline; }
-.flag__style--double-underline { text-decoration: underline double; }
-.flag__style--overline { text-decoration: overline; }
-.flag__style--line-through { text-decoration: line-through; }
-
 /* ===== Content furniture without a govuk-frontend component ===== */
 
 pre.codeblock,
