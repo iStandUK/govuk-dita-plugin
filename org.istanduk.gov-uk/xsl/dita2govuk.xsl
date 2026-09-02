@@ -14,5 +14,6 @@ we do not override keeps its default html5 rendering.
   <xsl:import href="furniture.xsl"/>
   <xsl:import href="template.xsl"/>
   <xsl:import href="blocks.xsl"/>
+  <xsl:import href="foreign.xsl"/>
 
 </xsl:stylesheet>

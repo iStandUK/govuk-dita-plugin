@@ -14,4 +14,5 @@ unaffected.
   <param name="GOVUK-SEARCH" expression="${govuk.search.enabled}" if:set="govuk.search.enabled"/>
   <param name="GOVUK-GLOSSARY" expression="${govuk.glossary.present}" if:set="govuk.glossary.present"/>
   <param name="GOVUK-INDEX" expression="${govuk.index.present}" if:set="govuk.index.present"/>
+  <param name="GOVUK-SVG-INLINE" expression="${govuk.svg.inline}" if:set="govuk.svg.inline"/>
 </params>

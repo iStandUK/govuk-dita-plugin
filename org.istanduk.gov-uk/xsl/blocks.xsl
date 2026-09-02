@@ -306,11 +306,12 @@ sections) follow at the end.
     <xsl:apply-templates select="*[contains(@class, ' ditaot-d/ditaval-endprop ')]" mode="out-of-line"/>
   </xsl:template>
 
-  <!-- ===== SVG diagrams: give the generated img an accessible name ===== -->
+  <!-- ===== SVG diagrams: img fallback ===== -->
 
-  <!-- Mirrors the base svg-d rendering, adding @alt derived from the enclosing
-       figure's title (empty when there is none, so the caption-less case reads
-       as decorative rather than announcing a filename) — issue #10, NFR-A1 -->
+  <!-- foreign.xsl inlines local SVG references (issue #37); this img rendering
+       is the fallback it reaches by next-match for external/unresolvable refs.
+       @alt is derived from the enclosing figure's title (empty when there is
+       none, so the caption-less case reads as decorative) — issue #10, NFR-A1 -->
   <xsl:template match="*[contains(@class, ' svg-d/svgref ')]" name="topic.svg-d.svgref">
     <xsl:apply-templates select="*[contains(@class, ' ditaot-d/ditaval-startprop ')]" mode="out-of-line"/>
     <img>

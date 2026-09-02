@@ -56,7 +56,7 @@ CALS `table` 506 (`entry` 8,745; **column spans** `@namest`/`@nameend` 361; `@fr
 | **Bookmap** structures | ✅ Builds and navigates. Masthead title bug **fixed** (F1); GOV.UK home page renders `booktitlealt` abstract and `bookmeta` attribution (F5 — **#8 closed**) |
 | `chunk="to-content"` | ✅ **Verified** — children merge into the parent page with correctly demoted headings (`h2` + anchor ids); sidebar links to `page#anchor` |
 | `@toc="no"` / `@navtitle` | ✅ **Verified** — hidden from the sidebar; navtitles honoured |
-| SVG domain: `svgref` by `@href` **and** `@keyref` | ✅ **Verified** — renders as `<img src>`, SVG assets copied to output. Spurious `govuk-link` class **fixed** (F2) |
+| SVG domain: `svgref` by `@href` **and** `@keyref` | ✅ **Verified** — now inlined as native SVG (#37) so links inside model diagrams work; SVG assets still copied to output. (Originally rendered as `<img>`; spurious `govuk-link` class fixed in F2.) |
 | `fig` + `title` captions | ✅ Styled captions; `svgref` images carry an accessible name derived from the figure title (F3 — **#10 closed**) |
 | `xref` by key **to a chunked-away topic** | ⚠️ Upstream DITA-OT limitation observed (F4) — **issue #11** |
 | `@audience`/`@xml:lang` pass-through | ✅ Inherited; DITAVAL filtering available if ever needed |

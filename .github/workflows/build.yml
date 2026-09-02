@@ -137,7 +137,7 @@ jobs:
           grep -q 'govuk-table__caption' out/manual/topics/demo-tables.html
           grep -q 'colspan="3"' out/manual/topics/demo-tables.html
           # Manual demonstrations render (C-16)
-          grep -q 'alt="Publishing pipeline, referenced by key"' out/manual/topics/demo-figures.html
+          grep -q 'aria-label="Publishing pipeline, referenced by key"' out/manual/topics/demo-figures.html
           test -f out/manual/images/architecture.svg
           grep -q 'govuk-list--number' out/manual/topics/install.html
           # ORUK idioms (design/07-gap-analysis-oruk.md): bookmap masthead uses
@@ -145,7 +145,7 @@ jobs:
           # keyref xrefs resolve; column spans and chunked headings survive
           grep -q '>ORUK Mini Test</a>' out/oruk-mini/item.html
           ! grep -q 'booktitlealt\|long abstract' out/oruk-mini/item.html
-          grep -q '<img class="xref svgref" src="images/sample.svg"' out/oruk-mini/class-page.html
+          grep -q '<svg [^>]*role="img"' out/oruk-mini/class-page.html
           test -f out/oruk-mini/images/sample.svg
           grep -q 'colspan="3"' out/oruk-mini/item.html
           grep -q 'href="child3.html"' out/oruk-mini/chapter.html
@@ -163,7 +163,7 @@ jobs:
           test -f out/manual/govuk/plugin.js
           grep -q 'govuk/plugin.js' out/manual/topics/introduction.html
           # svgref accessible name (#10 / NFR-A1)
-          grep -q 'alt="Sample diagram"' out/oruk-mini/item.html
+          grep -q 'aria-label="Sample diagram"' out/oruk-mini/item.html
           # Search (#16 / FR-S): enabled on the manual, gracefully absent on oruk-mini
           test -f out/manual/pagefind/pagefind-ui.js
           grep -q 'search.html' out/manual/topics/introduction.html
@@ -208,6 +208,12 @@ jobs:
           grep -q 'app-hazard__banner' out/kitchen/topics/hazard.html
           ! grep -q 'govuk-warning-text"' out/kitchen/topics/hazard.html
           grep -q 'choicetable govuk-table' out/kitchen/topics/task-full.html
+          # MathML passthrough (#28) and native inline SVG with working links (#37)
+          grep -q '<math xmlns="http://www.w3.org/1998/Math/MathML"' out/kitchen/topics/math.html
+          grep -q '<svg ' out/kitchen/topics/media.html
+          grep -Eq 'xlink:href="blocks.html"|href="blocks.html"' out/kitchen/topics/media.html
+          grep -Eq 'xlink:href="reference-full.html"|href="reference-full.html"' out/kitchen/topics/media.html
+          ! grep -q '<img class="xref svgref"' out/kitchen/topics/media.html
           ! grep -Eq 'cellpadding|cellspacing|choicetableborder' out/kitchen/topics/task-full.html out/kitchen/topics/reference-full.html
           # Plugin CSS never names the restricted typeface; the tile wrapper ships
           ! grep -q 'GDS Transport' out/manual/govuk/plugin.css

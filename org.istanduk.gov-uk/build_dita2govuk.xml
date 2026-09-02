@@ -59,6 +59,16 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         </or></not>
       </condition>
     </fail>
+    <!-- Inline local SVG references natively (issue #37) unless disabled -->
+    <property name="govuk.svg.inline" value="yes"/>
+    <fail message="govuk.svg.inline must be 'yes' or 'no', was: ${govuk.svg.inline}">
+      <condition>
+        <not><or>
+          <equals arg1="${govuk.svg.inline}" arg2="yes"/>
+          <equals arg1="${govuk.svg.inline}" arg2="no"/>
+        </or></not>
+      </condition>
+    </fail>
     <!-- Search (FR-S): probe for Pagefind; auto enables when found, yes
          requires it, no disables. -->
     <property name="govuk.search" value="auto"/>
