@@ -64,6 +64,12 @@
                 <codeph>PATH</codeph>.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.svg.inline</codeph></entry>
+              <entry><codeph>yes</codeph> (default), <codeph>no</codeph></entry>
+              <entry>Inline local SVG diagrams as native SVG so links inside them work;
+                <codeph>no</codeph> keeps the image rendering.</entry>
+            </row>
+            <row>
               <entry namest="c1" nameend="c3">Further parameters — phase banner, footer
                 links, favicon — arrive with their features; each is listed here when it
                 lands.</entry>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 60" width="200" height="60">
+  <title>Clickable diagram</title>
+  <a xlink:href="blocks.html"><rect x="5" y="5" width="90" height="50" fill="#1d70b8"/><text x="50" y="35" fill="#fff" text-anchor="middle" font-size="12">Blocks</text></a>
+  <a xlink:href="tables.html"><rect x="105" y="5" width="90" height="50" fill="#5bac26"/><text x="150" y="35" fill="#fff" text-anchor="middle" font-size="12">Reference</text></a>
+</svg>

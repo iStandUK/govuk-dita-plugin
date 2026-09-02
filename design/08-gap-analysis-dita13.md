@@ -93,10 +93,10 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | CALS tables incl. spans, header scoping | ✅ (v0.1) |
 | `simpletable`, `properties` | ✅ *(verified)* |
 | `image` inline and `placement="break"`, `alt` | ✅/◐ *(verified)* |
-| svg-d (`svg-container`/`svgref`) | ✅ (v0.2, ORUK) |
+| svg-d (`svg-container`/`svgref`) | ✅ local `svgref` inlined as native SVG so links inside diagrams work; `govuk.svg.inline=no` keeps the img rendering *(#37)*; inline `svg-container` already native |
 | ut-d `imagemap`/`area` | ✅ works *(verified: map/area/usemap emitted with alt and titles)*; styling ◐ |
 | `object` (media embed) | ⬜ untested |
-| **equation-d + mathml-d (1.3)** | ⚠️ **MathML is silently dropped** *(verified: equation-inline/equation-block render empty)*. Modern browsers render MathML natively — pass the markup through; `equation-figure` with it |
+| **equation-d + mathml-d (1.3)** | ✅ MathML passed through natively (equation-inline/-block render the `m:math` markup, browsers render it) *(#28)* |
 
 ### Map features and processing
 
@@ -144,7 +144,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 **P1 — correctness** (wrong or invalid output today):
 1. ~~`hazardstatement` dedicated rendering~~ — **done (#27)**: safety panel, valid HTML
 2. ~~`choicetable` modern markup~~ + `properties` table — **done (#27)**: `govuk-table`, valid HTML
-3. MathML/equation passthrough (currently silently dropped)
+3. ~~MathML/equation passthrough~~ — **done (#28)**: native MathML, browsers render it
 4. DITAVAL revision flagging investigation (no changebars/styles applied)
 5. Keyscope + `copy-to` resolution failure investigation (report upstream if confirmed)
 

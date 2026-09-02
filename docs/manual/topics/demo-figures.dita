@@ -16,8 +16,10 @@
       <title>Publishing pipeline, referenced by path</title>
       <svg-container><svgref href="../images/architecture.svg"/></svg-container>
     </fig>
-    <p>In both cases the image receives an accessible name derived from the figure title,
-      the caption is numbered automatically, and the diagram never overflows the content
-      column.</p>
+    <p>Local SVG diagrams are inlined as native SVG, so any links inside a diagram are
+      clickable and the artwork stays crisp at any size. Each image also receives an
+      accessible name derived from the figure title, the caption is numbered automatically,
+      and the diagram never overflows the content column. Set
+      <codeph>govuk.svg.inline=no</codeph> to keep the plain image rendering instead.</p>
   </conbody>
 </concept>

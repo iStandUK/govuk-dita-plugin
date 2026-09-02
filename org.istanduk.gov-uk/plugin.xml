@@ -40,6 +40,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <param name="govuk.pagefind.cmd"
            desc="Path to the Pagefind executable. Defaults to 'pagefind' on the PATH."
            type="string"/>
+    <param name="govuk.svg.inline"
+           desc="Inline local SVG diagrams (svgref) as native SVG so links and interactivity inside them work. 'yes' (default) inlines; 'no' keeps the image rendering."
+           type="enum">
+      <val default="true">yes</val>
+      <val>no</val>
+    </param>
   </transtype>
   <feature extension="dita.conductor.transtype.check" value="govuk"/>
   <feature extension="ant.import" file="build_dita2govuk.xml"/>

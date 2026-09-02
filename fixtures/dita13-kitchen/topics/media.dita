@@ -10,6 +10,10 @@
       <desc>The description element supplements the caption.</desc>
       <image href="../images/dot.svg" placement="break"><alt>a dot, larger</alt></image>
     </fig>
+    <fig>
+      <title>Clickable diagram (svgref, inline SVG)</title>
+      <svg-container><svgref href="../images/linked.svg"/></svg-container>
+    </fig>
     <imagemap>
       <image href="../images/dot.svg"><alt>clickable dot</alt></image>
       <area><shape>rect</shape><coords>0,0,40,40</coords>
