@@ -14,7 +14,7 @@ live in `blocks.xsl`, and the home page is `map2govuk-cover.xsl` (see
 | ID | Component | Description | Size* | Status |
 |---|---|---|---|---|
 | C-01 | **Transtype & Ant glue** | `plugin.xml` (transtype `govuk` extends `html5`, parameter declarations), `insertParameters.xml`, `build_dita2govuk.xml` orchestrating: delegate to `dita2html5` → glossary pass → index pass → asset copy → branding branch → Pagefind step | S | ✅ core (glossary/index/Pagefind steps arrive with C-08/C-09/C-11) |
-| C-02 | **Page template module** | `template.xsl` — GOV.UK page skeleton (skip link, header, service row, phase banner, grid, footer), `js-enabled` snippet, module script block, metadata head | M | ✅ (phase banner pending FR-T3) |
+| C-02 | **Page template module** | `template.xsl` — GOV.UK page skeleton (skip link, header, service row, phase banner, grid, footer), `js-enabled` snippet, module script block, metadata head | M | ✅ (phase banner + furniture params done, #49) |
 | C-03 | **Navigation module** | sidebar tree from inherited nav output (restyled in `template.xsl`/`plugin.css`) + `plugin.js` — current-page highlighting (chunked pages included), expand/collapse enhancement, mobile menu toggle, "On this page" contents, prev/next pagination, optional breadcrumbs | L | 🔶 sidebar, highlighting, menu, carets done; "On this page" (FR-N3), prev/next (FR-N5), breadcrumbs (FR-N6) pending |
 | C-04 | **Block rendering module** | `blocks.xsl` — paragraphs, lists, notes→inset/warning, codeblocks, figures, quotes, section titles/heading levels | M | ✅ |
 | C-05 | **Table module** | CALS `table` and `simpletable` → `govuk-table` (in `blocks.xsl`), captions, header scoping, column spans, overflow wrapper | M | ✅ |
