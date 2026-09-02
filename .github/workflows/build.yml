@@ -328,12 +328,24 @@ jobs:
           test -f out/manual-istanduk/govuk/istanduk-logo.svg
           ! grep -q 'overlay-istanduk.css' out/manual/topics/introduction.html
           test -z "$(find out/manual-istanduk -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
-          # NHS branding (govuk.branding=nhs, #47): recoloured base CSS, no neutral overlay
+          # NHS branding (govuk.branding=nhs, #47): recoloured base CSS, no neutral overlay,
+          # on topic pages AND the generated cover (both build their own CSS links)
           grep -q 'govuk-frontend-6.5.0-nhs.min.css' out/manual-nhs/topics/introduction.html
+          grep -q 'govuk-frontend-6.5.0-nhs.min.css' out/manual-nhs/index.html
           ! grep -q 'overlay-neutral.css' out/manual-nhs/topics/introduction.html
+          ! grep -q 'overlay-neutral.css' out/manual-nhs/index.html
           grep -q '#005eb8' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
           grep -q 'Frutiger W01' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
           ! grep -q 'GDS Transport' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
+          # NHS header identity (G3) and footer overlay (G4)
+          test -f out/manual-nhs/govuk/overlay-nhs.css
+          grep -q 'overlay-nhs.css' out/manual-nhs/topics/introduction.html
+          grep -q 'app-masthead--nhs' out/manual-nhs/index.html
+          grep -q 'app-masthead__nhs-logo' out/manual-nhs/index.html
+          grep -q 'aria-label="NHS"' out/manual-nhs/index.html
+          # other brands never load the NHS overlay
+          ! grep -q 'overlay-nhs.css' out/manual/topics/introduction.html
+          ! grep -q 'overlay-nhs.css' out/manual-istanduk/topics/introduction.html
           # NHS mode bundles no restricted font/crown assets either
           test -z "$(find out/manual-nhs -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # FR-T1: neutral builds ship no restricted assets and load no external

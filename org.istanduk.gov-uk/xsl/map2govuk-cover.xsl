@@ -68,15 +68,24 @@ map transformation with the plugin's values.
     <xsl:apply-templates select="." mode="gen-user-head"/>
   </xsl:template>
 
+  <!-- Kept in step with template.xsl's generateCssLinks; the cover is at the site
+       root so paths carry no $govuk-root prefix. NHS uses the Sass-recompiled base
+       CSS (#47) and its own overlay; the neutral font overlay is for the
+       non-identity brands only. -->
   <xsl:template name="generateCssLinks">
     <link rel="stylesheet"
-          href="{concat('govuk/govuk-frontend-', $govuk-frontend-version, '.min.css')}"/>
+          href="{concat('govuk/', if ($GOVUK-BRANDING = 'nhs')
+                                   then concat('govuk-frontend-', $govuk-frontend-version, '-nhs.min.css')
+                                   else concat('govuk-frontend-', $govuk-frontend-version, '.min.css'))}"/>
     <link rel="stylesheet" href="govuk/plugin.css"/>
-    <xsl:if test="$GOVUK-BRANDING ne 'official'">
+    <xsl:if test="$GOVUK-BRANDING = ('neutral', 'istanduk')">
       <link rel="stylesheet" href="govuk/overlay-neutral.css"/>
     </xsl:if>
     <xsl:if test="$GOVUK-BRANDING = 'istanduk'">
       <link rel="stylesheet" href="govuk/overlay-istanduk.css"/>
+    </xsl:if>
+    <xsl:if test="$GOVUK-BRANDING = 'nhs'">
+      <link rel="stylesheet" href="govuk/overlay-nhs.css"/>
     </xsl:if>
     <xsl:if test="string-length($CSS) gt 0">
       <link rel="stylesheet" href="{concat($CSSPATH, $CSS)}"/>

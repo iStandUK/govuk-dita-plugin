@@ -1,0 +1,74 @@
+/*
+ * This file is part of the govuk-dita-plugin project.
+ * Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+ *
+ * NHS Design System overlay (#47, gaps G3/G4). Loaded after the NHS-recoloured
+ * govuk-frontend when govuk.branding=nhs. It styles the header identity (white
+ * bar, blue NHS logo) and the footer — the parts the palette recompile alone
+ * does not reach. The NHS identity (logo and "NHS" letters) is restricted to NHS
+ * organisations; the build logs a warning (see the manual).
+ */
+
+/* ===== Header (G3): white NHS bar with the blue NHS logo ===== */
+
+.app-masthead--nhs {
+  background: #ffffff;
+  border-bottom: 4px solid #005eb8;
+}
+
+.app-masthead--nhs .app-masthead__title {
+  display: inline-flex;
+  align-items: center;
+  color: #212b32;
+}
+
+/* The lozenge takes this colour; the "NHS" letters are cut through to the
+   white header behind, giving the standard blue-on-white logo. */
+.app-masthead--nhs .app-masthead__nhs-logo {
+  color: #005eb8;
+  margin-right: 12px;
+  flex: none;
+}
+
+.app-masthead--nhs .app-masthead__title:focus {
+  color: #212b32;
+  background-color: #ffeb3b;
+  box-shadow: 0 -2px #ffeb3b, 0 4px #212b32;
+}
+
+/* Search field on a white header */
+.app-masthead--nhs .app-masthead__search-input {
+  border: 2px solid #4c6272;
+  border-right: 0;
+}
+
+.app-masthead--nhs .app-masthead__search-input:focus {
+  outline: 3px solid #ffeb3b;
+  outline-offset: 0;
+}
+
+.app-masthead--nhs .app-masthead__search-button {
+  border: 0;
+  background: #005eb8;
+  color: #ffffff;
+}
+
+.app-masthead--nhs .app-masthead__search-button:hover {
+  background: #003d78;
+}
+
+.app-masthead--nhs .app-masthead__search-button:focus {
+  background: #ffeb3b;
+  color: #212b32;
+  outline: 3px solid #ffeb3b;
+  outline-offset: 0;
+}
+
+/* ===== Footer (G4) ===== */
+
+/* NHS footer sits on the NHS pale-grey surface with an NHS-blue keyline that
+   echoes the header rule. Footer links are already NHS blue from the palette. */
+.govuk-footer {
+  border-top: 4px solid #005eb8;
+  background: #f0f4f5;
+}

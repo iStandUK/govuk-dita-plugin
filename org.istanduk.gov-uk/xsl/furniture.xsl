@@ -63,12 +63,23 @@ template, the cover, and the generated utility pages.
     <xsl:param name="home-href" as="xs:string"/>
     <xsl:param name="search-enabled" as="xs:string" select="'no'"/>
     <xsl:param name="branding" as="xs:string" select="'neutral'"/>
-    <header class="app-masthead">
+    <header class="app-masthead{if ($branding = 'nhs') then ' app-masthead--nhs' else ''}">
       <div class="govuk-width-container app-masthead__row">
         <a class="app-masthead__title" href="{$home-href}">
           <xsl:if test="$branding = 'istanduk'">
             <img class="app-masthead__logo"
                  src="{concat($prefix, 'govuk/istanduk-logo.svg')}" alt="iStandUK"/>
+          </xsl:if>
+          <xsl:if test="$branding = 'nhs'">
+            <!-- NHS logo (nhsuk-frontend, MIT). currentColor lets the overlay
+                 render the blue lozenge with the "NHS" letters cut through to the
+                 white header. The NHS identity is restricted to NHS organisations
+                 (build-log warning; see the manual). -->
+            <svg class="app-masthead__nhs-logo" xmlns="http://www.w3.org/2000/svg"
+                 viewBox="0 0 200 80" height="32" width="80" focusable="false"
+                 role="img" aria-label="NHS">
+              <path fill="currentColor" d="M200 0v80H0V0h200Zm-27.5 5.5c-14.5 0-29 5-29 22 0 10.2 7.7 13.5 14.7 16.3l.7.3c5.4 2 10.1 3.9 10.1 8.4 0 6.5-8.5 7.5-14 7.5s-12.5-1.5-16-3.5L135 70c5.5 2 13.5 3.5 20 3.5 15.5 0 32-4.5 32-22.5 0-19.5-25.5-16.5-25.5-25.5 0-5.5 5.5-6.5 12.5-6.5a35 35 0 0 1 14.5 3l4-13.5c-4.5-2-12-3-20-3Zm-131 2h-22l-14 65H22l9-45h.5l13.5 45h21.5l14-65H64l-9 45h-.5l-13-45Zm63 0h-18l-13 65h17l6-28H117l-5.5 28H129l13.5-65H125L119.5 32h-20l5-24.5Z"/>
+            </svg>
           </xsl:if>
           <xsl:value-of select="$name"/>
         </a>

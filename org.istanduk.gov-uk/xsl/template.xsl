@@ -161,6 +161,9 @@ element-level typography.
     <xsl:if test="$GOVUK-BRANDING = 'istanduk'">
       <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-istanduk.css')}"/>
     </xsl:if>
+    <xsl:if test="$GOVUK-BRANDING = 'nhs'">
+      <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-nhs.css')}"/>
+    </xsl:if>
     <xsl:if test="string-length($CSS) gt 0">
       <link rel="stylesheet" href="{concat($govuk-root, $CSSPATH, $CSS)}"/>
     </xsl:if>
