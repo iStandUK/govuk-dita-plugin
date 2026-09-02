@@ -70,6 +70,9 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         </or></not>
       </condition>
     </fail>
+    <!-- Publisher favicon (FR-T3): the basename is passed to the XSLT for the
+         head link; the file itself is copied by govuk.copy-assets. -->
+    <basename property="govuk.favicon.name" file="${govuk.favicon}" if:set="govuk.favicon"/>
     <!-- Inline local SVG references natively (issue #37) unless disabled -->
     <property name="govuk.svg.inline" value="yes"/>
     <fail message="govuk.svg.inline must be 'yes' or 'no', was: ${govuk.svg.inline}">
@@ -159,6 +162,10 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-BRANDING" expression="${govuk.branding}"/>
       <param name="GOVUK-PHASE" expression="${govuk.phase}" if:set="govuk.phase"/>
       <param name="GOVUK-FEEDBACK-URL" expression="${govuk.feedback.url}" if:set="govuk.feedback.url"/>
+      <param name="GOVUK-SERVICE-URL" expression="${govuk.service.url}" if:set="govuk.service.url"/>
+      <param name="GOVUK-FAVICON" expression="${govuk.favicon.name}" if:set="govuk.favicon"/>
+      <param name="GOVUK-FOOTER-LINKS" expression="${govuk.footer.links}" if:set="govuk.footer.links"/>
+      <param name="GOVUK-FOOTER-LICENCE" expression="${govuk.footer.licence}" if:set="govuk.footer.licence"/>
     </html5.map>
   </target>
 
@@ -180,6 +187,8 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <include name="*.js"/>
       </fileset>
     </copy>
+    <!-- Publisher favicon (FR-T3): copied next to the CSS, linked by its basename -->
+    <copy file="${govuk.favicon}" todir="${dita.output.dir}/govuk" if:set="govuk.favicon"/>
     <!-- Theme assets (safe to redistribute: outlined-path artwork, see
          resource/brand/istanduk/README.md) -->
     <copy if:set="govuk.branding.istanduk" todir="${dita.output.dir}/govuk">

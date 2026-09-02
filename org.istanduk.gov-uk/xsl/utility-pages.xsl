@@ -213,6 +213,8 @@ indexterm markup. Imported by map2govuk-cover.xsl.
             <xsl:with-param name="figurelist" select="if ($govuk-wants-figurelist) then 'yes' else 'no'"/>
             <xsl:with-param name="tablelist" select="if ($govuk-wants-tablelist) then 'yes' else 'no'"/>
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
+            <xsl:with-param name="footer-links" select="$GOVUK-FOOTER-LINKS"/>
+            <xsl:with-param name="footer-licence" select="$GOVUK-FOOTER-LICENCE"/>
           </xsl:call-template>
         </body>
       </html>

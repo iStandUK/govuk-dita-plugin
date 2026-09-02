@@ -25,6 +25,10 @@ element-level typography.
   <xsl:param name="GOVUK-TABLELIST" select="'no'"/>
   <xsl:param name="GOVUK-PHASE" select="''"/>
   <xsl:param name="GOVUK-FEEDBACK-URL" select="''"/>
+  <xsl:param name="GOVUK-SERVICE-URL" select="''"/>
+  <xsl:param name="GOVUK-FAVICON" select="''"/>
+  <xsl:param name="GOVUK-FOOTER-LINKS" select="''"/>
+  <xsl:param name="GOVUK-FOOTER-LICENCE" select="''"/>
 
   <!-- Pinned vendored govuk-frontend release (see resource/govuk-frontend/VERSION.txt) -->
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
@@ -59,9 +63,11 @@ element-level typography.
                 select="if (exists($input.map.url) and normalize-space($input.map.url))
                         then string($pathToMapDir) else string($PATH2PROJ)"/>
 
-  <!-- Masthead link target: the generated cover (home) page at the site root -->
+  <!-- Masthead link target: govuk.service.url if set (the live service), else the
+       generated cover (home) page at the site root (FR-T3, #49) -->
   <xsl:variable name="govuk-home-href" as="xs:string"
-                select="concat($govuk-root, 'index', $OUTEXT)"/>
+                select="if (normalize-space($GOVUK-SERVICE-URL)) then normalize-space($GOVUK-SERVICE-URL)
+                        else concat($govuk-root, 'index', $OUTEXT)"/>
 
   <!-- Previous/next pagination (FR-N5, #32): adjacent navigable topics in the
        map's linear reading order, which also surfaces collection-type=sequence. -->
@@ -154,6 +160,10 @@ element-level typography.
        GDS Transport and NHS bakes its own font stack into the recompiled CSS,
        so neither takes the neutral overlay. -->
   <xsl:template name="generateCssLinks">
+    <xsl:call-template name="govuk-favicon-link">
+      <xsl:with-param name="prefix" select="$govuk-root"/>
+      <xsl:with-param name="favicon" select="$GOVUK-FAVICON"/>
+    </xsl:call-template>
     <link rel="stylesheet"
           href="{concat($govuk-root, 'govuk/', $govuk-frontend-css)}"/>
     <link rel="stylesheet" href="{concat($govuk-root, 'govuk/plugin.css')}"/>
@@ -249,6 +259,8 @@ element-level typography.
         <xsl:with-param name="figurelist" select="$GOVUK-FIGURELIST"/>
         <xsl:with-param name="tablelist" select="$GOVUK-TABLELIST"/>
         <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
+        <xsl:with-param name="footer-links" select="$GOVUK-FOOTER-LINKS"/>
+        <xsl:with-param name="footer-licence" select="$GOVUK-FOOTER-LICENCE"/>
       </xsl:call-template>
       <script src="{concat($govuk-root, 'govuk/plugin.js')}"></script>
       <script type="module">
