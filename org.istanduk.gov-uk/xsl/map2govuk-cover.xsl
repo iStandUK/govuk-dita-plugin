@@ -35,6 +35,12 @@ map transformation with the plugin's values.
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>
   <xsl:param name="GOVUK-SEARCH" select="'no'"/>
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
+  <xsl:param name="GOVUK-PHASE" select="''"/>
+  <xsl:param name="GOVUK-FEEDBACK-URL" select="''"/>
+  <xsl:param name="GOVUK-SERVICE-URL" select="''"/>
+  <xsl:param name="GOVUK-FAVICON" select="''"/>
+  <xsl:param name="GOVUK-FOOTER-LINKS" select="''"/>
+  <xsl:param name="GOVUK-FOOTER-LICENCE" select="''"/>
 
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
 
@@ -49,6 +55,11 @@ map transformation with the plugin's values.
   <xsl:variable name="govuk-masthead-name" as="xs:string"
                 select="if (normalize-space($GOVUK-SERVICE-NAME)) then normalize-space($GOVUK-SERVICE-NAME)
                         else $govuk-cover-title"/>
+
+  <!-- Masthead home link: govuk.service.url if set, else the site home (FR-T3) -->
+  <xsl:variable name="govuk-home-href" as="xs:string"
+                select="if (normalize-space($GOVUK-SERVICE-URL)) then normalize-space($GOVUK-SERVICE-URL)
+                        else concat('index', $OUTEXT)"/>
 
   <xsl:template name="chapter-setup">
     <html class="govuk-template">
@@ -73,6 +84,9 @@ map transformation with the plugin's values.
        CSS (#47) and its own overlay; the neutral font overlay is for the
        non-identity brands only. -->
   <xsl:template name="generateCssLinks">
+    <xsl:call-template name="govuk-favicon-link">
+      <xsl:with-param name="favicon" select="$GOVUK-FAVICON"/>
+    </xsl:call-template>
     <link rel="stylesheet"
           href="{concat('govuk/', if ($GOVUK-BRANDING = 'nhs')
                                    then concat('govuk-frontend-', $govuk-frontend-version, '-nhs.min.css')
@@ -217,11 +231,15 @@ map transformation with the plugin's values.
       </a>
       <xsl:call-template name="govuk-masthead">
         <xsl:with-param name="name" select="$govuk-masthead-name"/>
-        <xsl:with-param name="home-href" select="concat('index', $OUTEXT)"/>
+        <xsl:with-param name="home-href" select="$govuk-home-href"/>
         <xsl:with-param name="search-enabled" select="$GOVUK-SEARCH"/>
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
       </xsl:call-template>
       <div class="govuk-width-container">
+        <xsl:call-template name="govuk-phase-banner">
+          <xsl:with-param name="phase" select="$GOVUK-PHASE"/>
+          <xsl:with-param name="feedback" select="$GOVUK-FEEDBACK-URL"/>
+        </xsl:call-template>
         <main class="govuk-main-wrapper" id="main-content">
           <div class="govuk-grid-row">
             <div class="govuk-grid-column-two-thirds">
@@ -337,6 +355,8 @@ map transformation with the plugin's values.
         <xsl:with-param name="figurelist" select="if ($govuk-wants-figurelist) then 'yes' else 'no'"/>
         <xsl:with-param name="tablelist" select="if ($govuk-wants-tablelist) then 'yes' else 'no'"/>
         <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
+        <xsl:with-param name="footer-links" select="$GOVUK-FOOTER-LINKS"/>
+        <xsl:with-param name="footer-licence" select="$GOVUK-FOOTER-LICENCE"/>
       </xsl:call-template>
       <script type="module">
         <xsl:text>import { initAll } from './govuk/govuk-frontend-</xsl:text>
@@ -416,11 +436,15 @@ map transformation with the plugin's values.
           </a>
           <xsl:call-template name="govuk-masthead">
             <xsl:with-param name="name" select="$govuk-masthead-name"/>
-            <xsl:with-param name="home-href" select="concat('index', $OUTEXT)"/>
+            <xsl:with-param name="home-href" select="$govuk-home-href"/>
             <xsl:with-param name="search-enabled" select="'no'"/>
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
           </xsl:call-template>
           <div class="govuk-width-container">
+            <xsl:call-template name="govuk-phase-banner">
+              <xsl:with-param name="phase" select="$GOVUK-PHASE"/>
+              <xsl:with-param name="feedback" select="$GOVUK-FEEDBACK-URL"/>
+            </xsl:call-template>
             <main class="govuk-main-wrapper" id="main-content">
               <div class="govuk-grid-row">
                 <div class="govuk-grid-column-two-thirds">
@@ -437,6 +461,8 @@ map transformation with the plugin's values.
             <xsl:with-param name="figurelist" select="if ($govuk-wants-figurelist) then 'yes' else 'no'"/>
             <xsl:with-param name="tablelist" select="if ($govuk-wants-tablelist) then 'yes' else 'no'"/>
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
+            <xsl:with-param name="footer-links" select="$GOVUK-FOOTER-LINKS"/>
+            <xsl:with-param name="footer-licence" select="$GOVUK-FOOTER-LICENCE"/>
           </xsl:call-template>
           <script src="pagefind/pagefind-ui.js"></script>
           <script>

@@ -37,6 +37,47 @@
                 bookmap's main book title.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.phase</codeph></entry>
+              <entry>text</entry>
+              <entry>Shows a GOV.UK phase banner above the content with this tag, for example
+                <codeph>alpha</codeph> or <codeph>beta</codeph>. Empty (default) shows no
+                banner. Works in every branding mode.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.feedback.url</codeph></entry>
+              <entry>text</entry>
+              <entry>Feedback link shown in the phase banner (used only when
+                <codeph>govuk.phase</codeph> is set). Empty shows the banner text without a
+                link.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.service.url</codeph></entry>
+              <entry>text</entry>
+              <entry>Target of the masthead home link. Empty (default) links to the generated
+                site's own home page.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.favicon</codeph></entry>
+              <entry>text</entry>
+              <entry>Path to a favicon (<codeph>.ico</codeph>, <codeph>.png</codeph> or
+                <codeph>.svg</codeph>) to copy into the output and link from every page. Empty
+                ships no favicon.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.footer.links</codeph></entry>
+              <entry>text</entry>
+              <entry>Extra footer links as a <codeph>;</codeph>-separated list of
+                <codeph>label|url</codeph> pairs, for example
+                <codeph>Privacy|https://…/privacy;Contact|https://…/contact</codeph>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.footer.licence</codeph></entry>
+              <entry>text</entry>
+              <entry>Override the footer licence/credit line (neutral, iStandUK and NHS modes;
+                official always shows the Open Government Licence). Empty uses the bookmap's
+                copyright.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.homepage.layout</codeph></entry>
               <entry><codeph>auto</codeph> (default), <codeph>start</codeph>,
                 <codeph>annotated</codeph>, <codeph>list</codeph>, <codeph>grid</codeph>,

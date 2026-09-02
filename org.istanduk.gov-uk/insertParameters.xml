@@ -11,6 +11,12 @@ unaffected.
 <params xmlns:if="ant:if">
   <param name="GOVUK-BRANDING" expression="${govuk.branding}" if:set="govuk.branding"/>
   <param name="GOVUK-SERVICE-NAME" expression="${govuk.service.name}" if:set="govuk.service.name"/>
+  <param name="GOVUK-PHASE" expression="${govuk.phase}" if:set="govuk.phase"/>
+  <param name="GOVUK-FEEDBACK-URL" expression="${govuk.feedback.url}" if:set="govuk.feedback.url"/>
+  <param name="GOVUK-SERVICE-URL" expression="${govuk.service.url}" if:set="govuk.service.url"/>
+  <param name="GOVUK-FAVICON" expression="${govuk.favicon.name}" if:set="govuk.favicon"/>
+  <param name="GOVUK-FOOTER-LINKS" expression="${govuk.footer.links}" if:set="govuk.footer.links"/>
+  <param name="GOVUK-FOOTER-LICENCE" expression="${govuk.footer.licence}" if:set="govuk.footer.licence"/>
   <param name="GOVUK-SEARCH" expression="${govuk.search.enabled}" if:set="govuk.search.enabled"/>
   <param name="GOVUK-GLOSSARY" expression="${govuk.glossary.present}" if:set="govuk.glossary.present"/>
   <param name="GOVUK-INDEX" expression="${govuk.index.present}" if:set="govuk.index.present"/>

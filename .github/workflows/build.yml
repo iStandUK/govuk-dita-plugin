@@ -77,11 +77,12 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-accordion -Dgovuk.homepage.layout=accordion
 
-      - name: Build depth override
+      - name: Build depth override (also exercises the phase banner, FR-T3/#49)
         run: |
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-depth1 \
-            -Dgovuk.homepage.layout=grid -Dgovuk.homepage.depth=1
+            -Dgovuk.homepage.layout=grid -Dgovuk.homepage.depth=1 \
+            -Dgovuk.phase=beta -Dgovuk.feedback.url=https://example.org/feedback
 
       # Spec-coverage fixture (design/08) - fully Nu-validated
       - name: Build DITA 1.3 kitchen sink
@@ -116,6 +117,16 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-official -Dgovuk.branding=official
 
+      - name: Build FR-T3 furniture params (service URL, favicon, footer links/licence)
+        run: |
+          printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#1d70b8"/></svg>' > favicon.svg
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-frt3 \
+            -Dgovuk.service.url=https://example.gov.uk \
+            -Dgovuk.favicon="$PWD/favicon.svg" \
+            "-Dgovuk.footer.links=Privacy|https://example.gov.uk/privacy;Contact|https://example.gov.uk/contact" \
+            "-Dgovuk.footer.licence=© 2026 Example Service"
+
       # The brand-recoloured CSS is a vendored artifact (#47): guard against it
       # drifting from its Sass source. Rebuild it and fail on any diff.
       - name: Branding CSS is current
@@ -146,7 +157,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -219,6 +230,14 @@ jobs:
           # govuk.homepage.depth=1: entry headings only, no child lists
           grep -q 'app-entry__heading' out/manual-depth1/index.html
           ! grep -q 'app-group-list' out/manual-depth1/index.html
+          # Phase banner (govuk.phase, FR-T3/#49): shown on every page when set,
+          # with the tag capitalised and the feedback link; absent by default
+          grep -q 'govuk-phase-banner' out/manual-depth1/index.html
+          grep -q 'govuk-phase-banner' out/manual-depth1/topics/introduction.html
+          grep -q 'govuk-phase-banner' out/manual-depth1/glossary.html
+          grep -q 'phase-banner__content__tag">Beta<' out/manual-depth1/index.html
+          grep -q 'href="https://example.org/feedback"' out/manual-depth1/topics/introduction.html
+          ! grep -q 'govuk-phase-banner' out/manual/topics/introduction.html
           grep -q 'app-group-list' out/manual-grid/index.html
           # Manual documents the layouts with screenshots of itself
           grep -q 'homepage-grid.png' out/manual/topics/layouts.html
@@ -367,6 +386,18 @@ jobs:
           test -z "$(find out/manual-official -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           ! grep -q 'overlay-official.css' out/manual/topics/introduction.html
           ! grep -q 'overlay-official.css' out/manual-nhs/topics/introduction.html
+          # FR-T3 furniture params (#49): service URL, favicon, footer links/licence
+          grep -q 'app-masthead__title" href="https://example.gov.uk"' out/manual-frt3/index.html
+          grep -q 'app-masthead__title" href="https://example.gov.uk"' out/manual-frt3/topics/introduction.html
+          grep -q '<link rel="icon" href="govuk/favicon.svg" type="image/svg+xml">' out/manual-frt3/index.html
+          grep -q '<link rel="icon" href="../govuk/favicon.svg"' out/manual-frt3/topics/introduction.html
+          test -f out/manual-frt3/govuk/favicon.svg
+          grep -q 'href="https://example.gov.uk/privacy">Privacy</a>' out/manual-frt3/topics/introduction.html
+          grep -q 'href="https://example.gov.uk/contact">Contact</a>' out/manual-frt3/glossary.html
+          grep -q 'licence-description">© 2026 Example Service' out/manual-frt3/topics/introduction.html
+          # defaults: none of these appear in a plain build
+          ! grep -q '<link rel="icon"' out/manual/topics/introduction.html
+          ! grep -q 'Example Service' out/manual/topics/introduction.html
           # FR-T1: neutral builds ship no restricted assets and load no external
           # resources (external hyperlinks in content are fine; external assets are not)
           test -z "$(find out/manual out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
@@ -380,7 +411,7 @@ jobs:
         run: |
           python3 tools/check_links.py \
             out/manual out/oruk-mini out/kitchen out/kitchen-flag \
-            out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs out/manual-official
+            out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3
 
       - name: Page-weight budget (NFR-P2)
         run: python3 tools/page_weight.py --report --budget-kb 300 out/manual out/kitchen out/oruk-mini
@@ -399,7 +430,7 @@ jobs:
           (cd tools/a11y && npx playwright install --with-deps chromium)
 
       - name: Accessibility checks — axe-core WCAG 2.2 AA (NFR-A1)
-        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official
+        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3
 
       - name: Visual snapshots for govuk-frontend upgrades (NFR-M2)
         run: |

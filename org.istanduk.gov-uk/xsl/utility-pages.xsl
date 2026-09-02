@@ -193,6 +193,10 @@ indexterm markup. Imported by map2govuk-cover.xsl.
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
           </xsl:call-template>
           <div class="govuk-width-container">
+            <xsl:call-template name="govuk-phase-banner">
+              <xsl:with-param name="phase" select="$GOVUK-PHASE"/>
+              <xsl:with-param name="feedback" select="$GOVUK-FEEDBACK-URL"/>
+            </xsl:call-template>
             <main class="govuk-main-wrapper" id="main-content">
               <div class="govuk-grid-row">
                 <div class="govuk-grid-column-two-thirds">
@@ -209,6 +213,8 @@ indexterm markup. Imported by map2govuk-cover.xsl.
             <xsl:with-param name="figurelist" select="if ($govuk-wants-figurelist) then 'yes' else 'no'"/>
             <xsl:with-param name="tablelist" select="if ($govuk-wants-tablelist) then 'yes' else 'no'"/>
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
+            <xsl:with-param name="footer-links" select="$GOVUK-FOOTER-LINKS"/>
+            <xsl:with-param name="footer-licence" select="$GOVUK-FOOTER-LICENCE"/>
           </xsl:call-template>
         </body>
       </html>

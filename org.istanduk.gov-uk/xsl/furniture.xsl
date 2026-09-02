@@ -132,6 +132,65 @@ template, the cover, and the generated utility pages.
     </header>
   </xsl:template>
 
+  <!-- GOV.UK phase banner (FR-T3, #49). Rendered above the content when
+       govuk.phase is set; the tag text is the phase value, with an optional
+       feedback link from govuk.feedback.url. Brand-agnostic. -->
+  <xsl:template name="govuk-phase-banner">
+    <xsl:param name="phase" as="xs:string" select="''"/>
+    <xsl:param name="feedback" as="xs:string" select="''"/>
+    <xsl:if test="normalize-space($phase)">
+      <div class="govuk-phase-banner">
+        <p class="govuk-phase-banner__content">
+          <strong class="govuk-tag govuk-phase-banner__content__tag">
+            <xsl:value-of select="concat(upper-case(substring(normalize-space($phase), 1, 1)),
+                                          substring(normalize-space($phase), 2))"/>
+          </strong>
+          <span class="govuk-phase-banner__text">
+            <xsl:choose>
+              <xsl:when test="normalize-space($feedback)">
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'govuk-dita.phase-prefix'"/>
+                </xsl:call-template>
+                <a class="govuk-link" href="{$feedback}">
+                  <xsl:call-template name="getVariable">
+                    <xsl:with-param name="id" select="'govuk-dita.phase-feedback'"/>
+                  </xsl:call-template>
+                </a>
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'govuk-dita.phase-suffix'"/>
+                </xsl:call-template>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'govuk-dita.phase-plain'"/>
+                </xsl:call-template>
+              </xsl:otherwise>
+            </xsl:choose>
+          </span>
+        </p>
+      </div>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Publisher favicon link (FR-T3, #49). The file is copied to govuk/ by the
+       build; here we link it by its basename with a type from the extension. -->
+  <xsl:template name="govuk-favicon-link">
+    <xsl:param name="prefix" as="xs:string" select="''"/>
+    <xsl:param name="favicon" as="xs:string" select="''"/>
+    <xsl:if test="normalize-space($favicon)">
+      <xsl:variable name="ext" select="lower-case(tokenize(normalize-space($favicon), '\.')[last()])"/>
+      <link rel="icon" href="{concat($prefix, 'govuk/', normalize-space($favicon))}">
+        <xsl:if test="$ext = ('svg', 'png', 'ico', 'gif')">
+          <xsl:attribute name="type"
+                         select="if ($ext = 'svg') then 'image/svg+xml'
+                                 else if ($ext = 'png') then 'image/png'
+                                 else if ($ext = 'gif') then 'image/gif'
+                                 else 'image/x-icon'"/>
+        </xsl:if>
+      </link>
+    </xsl:if>
+  </xsl:template>
+
   <xsl:template name="govuk-site-footer">
     <xsl:param name="prefix" as="xs:string" select="''"/>
     <xsl:param name="name" as="xs:string"/>
@@ -140,6 +199,8 @@ template, the cover, and the generated utility pages.
     <xsl:param name="figurelist" as="xs:string" select="'no'"/>
     <xsl:param name="tablelist" as="xs:string" select="'no'"/>
     <xsl:param name="branding" as="xs:string" select="'neutral'"/>
+    <xsl:param name="footer-links" as="xs:string" select="''"/>
+    <xsl:param name="footer-licence" as="xs:string" select="''"/>
     <footer class="govuk-footer">
       <div class="govuk-width-container">
         <div class="govuk-footer__meta">
@@ -189,6 +250,19 @@ template, the cover, and the generated utility pages.
                 </xsl:if>
               </ul>
             </xsl:if>
+            <!-- Publisher footer links (FR-T3): 'label|url' pairs, ';'-separated -->
+            <xsl:if test="normalize-space($footer-links)">
+              <ul class="govuk-footer__inline-list">
+                <xsl:for-each select="tokenize($footer-links, ';')[normalize-space()]">
+                  <xsl:variable name="parts" as="xs:string*" select="tokenize(., '\|')"/>
+                  <li class="govuk-footer__inline-list-item">
+                    <a class="govuk-footer__link" href="{normalize-space($parts[2])}">
+                      <xsl:value-of select="normalize-space($parts[1])"/>
+                    </a>
+                  </li>
+                </xsl:for-each>
+              </ul>
+            </xsl:if>
             <xsl:choose>
               <xsl:when test="$branding = 'official'">
                 <!-- Open Government Licence + Crown copyright, per the GOV.UK footer.
@@ -218,6 +292,9 @@ template, the cover, and the generated utility pages.
               <xsl:otherwise>
                 <span class="govuk-footer__licence-description">
                   <xsl:choose>
+                    <xsl:when test="normalize-space($footer-licence)">
+                      <xsl:value-of select="normalize-space($footer-licence)"/>
+                    </xsl:when>
                     <xsl:when test="$govuk-copyr-owner ne ''">
                       <xsl:call-template name="getVariable">
                         <xsl:with-param name="id" select="'govuk-dita.copyright'"/>

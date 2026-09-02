@@ -31,4 +31,8 @@ collisions with toolkit variables.
   <variable id="govuk-dita.ogl-name">Open Government Licence v3.0</variable>
   <variable id="govuk-dita.ogl-suffix">, except where otherwise stated</variable>
   <variable id="govuk-dita.crown-copyright">© Crown copyright</variable>
+  <variable id="govuk-dita.phase-prefix">This is a new service – your </variable>
+  <variable id="govuk-dita.phase-feedback">feedback</variable>
+  <variable id="govuk-dita.phase-suffix"> will help us to improve it.</variable>
+  <variable id="govuk-dita.phase-plain">This is a new service.</variable>
 </variables>

@@ -85,7 +85,7 @@ requirements govern its behaviour.
 |---|---|---|---|
 | FR-T1 | Default branding is **neutral**: no crown, no GDS Transport font (system font stack; no request for font assets is ever made), a plain header bar carrying the service/publication name | M | ✅ asserted in CI on every build |
 | FR-T2 | `govuk.branding=official` enables full GOV.UK branding: crown logotype in the header, GDS Transport fonts copied and loaded, OGL/crown-copyright footer — for use only by genuine GOV.UK services (documented prominently) | M | ⬜ parameter declared with build-time warning; behaviour not implemented |
-| FR-T3 | Service name, home link, phase banner (alpha/beta with feedback link), footer links, and footer licence text are all parameter-driven | M | 🔶 service name and home link done; phase banner and footer params pending |
+| FR-T3 | Service name, home link, phase banner (alpha/beta with feedback link), footer links, and footer licence text are all parameter-driven | M | ✅ `govuk.service.name`/`service.url`, `govuk.phase`/`feedback.url`, `govuk.footer.links`/`footer.licence`, `govuk.favicon` (#49) |
 | FR-T4 | Publishers can append their own stylesheet after the plugin's (standard `args.css`/`args.cssroot` behaviour preserved) | S | ✅ |
 | FR-T5 | Favicon and social-preview metadata are parameter-driven, with neutral defaults | C | ⬜ |
 
