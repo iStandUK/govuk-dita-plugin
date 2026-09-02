@@ -3,18 +3,19 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: working, pre-v1** — [v0.3.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.3.0)
-is released and installable. Search, glossary, index, and landing-page layouts have shipped;
-the remaining spec-coverage, styling, and robustness work is tracked in the
-[v0.9 epic](https://github.com/iStandUK/govuk-dita-plugin/issues/26), which precedes live
-trials and a [1.0 registry listing](https://github.com/iStandUK/govuk-dita-plugin/issues/15)
-(official GOV.UK branding lands at 1.0). Coverage of bookmaps, keys, chunking, and the SVG
+**Status: v0.9 — robust, entering live trials** —
+[v0.9.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.0) closes the
+[v0.9 epic](https://github.com/iStandUK/govuk-dita-plugin/issues/26): full DITA 1.3 spec
+coverage and a CI safety net (WCAG 2.2 AA via axe-core, valid HTML, internal-link and
+page-weight checks, build determinism). Next comes a period of live trials on real
+publications, then a [1.0 registry listing](https://github.com/iStandUK/govuk-dita-plugin/issues/15)
+(where official GOV.UK branding also lands). Coverage of bookmaps, keys, chunking, and the SVG
 domain is verified against a real corpus ([gap analysis](design/07-gap-analysis-oruk.md)).
 
 ## Try it
 
 ```bash
-dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.3.0/org.istanduk.gov-uk-0.3.0.zip
+dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.9.0/org.istanduk.gov-uk-0.9.0.zip
 dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 
