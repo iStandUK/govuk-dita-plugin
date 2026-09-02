@@ -193,8 +193,7 @@ limitation, documented as unsupported.
 bindings" pattern) leaves `keyref`s inside the copied topic **unresolved**: the copied temp
 file still contains `<ph keyref="…"/>`, and the output renders an empty element. Verified
 plugin-independent — plain `-f html5` produces the identical empty result. No existing
-upstream issue found (searched `keyscope copy-to`, `copy-to keyref`, …); an issue is drafted
-in [design/drafts/dita-ot-keyscope-copyto-issue.md](drafts/dita-ot-keyscope-copyto-issue.md).
+upstream issue found (searched `keyscope copy-to`, `copy-to keyref`, …); filed upstream as [dita-ot/dita-ot#4788](https://github.com/dita-ot/dita-ot/issues/4788) (draft retained in [design/drafts/dita-ot-keyscope-copyto-issue.md](drafts/dita-ot-keyscope-copyto-issue.md)).
 **Authoring workaround:** don't rely on a `copy-to` topic resolving keys bound by its
 topicref's `keyscope`; instead publish genuinely separate source topics per variant, or move
 the varying value out of the scoped-key mechanism (e.g. conref, or a filtered build).

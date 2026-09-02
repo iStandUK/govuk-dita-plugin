@@ -1,4 +1,6 @@
-# DRAFT — upstream issue for dita-ot/dita-ot (not yet filed)
+# Upstream issue — FILED as dita-ot/dita-ot#4788
+
+(Originally drafted here before filing; retained for the record.)
 
 Verified against DITA-OT 4.4.1 on 2026-09-02. Searched the tracker first
 (`keyscope copy-to`, `copy-to keyref`, `key not resolved copy-to`) — no existing issue found.
