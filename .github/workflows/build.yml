@@ -5,12 +5,16 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  DITA_OT_VERSION: 4.4.1
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    # DITA-OT version matrix (NFR-M1): add 4.x releases here as they appear.
+    strategy:
+      fail-fast: false
+      matrix:
+        dita-ot-version: ["4.4.1"]
+    env:
+      DITA_OT_VERSION: ${{ matrix.dita-ot-version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -18,6 +22,12 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: tools/a11y/package.json
 
       - name: Cache DITA-OT
         id: cache-dita-ot
@@ -304,8 +314,46 @@ jobs:
           ! grep -Eroh '<link[^>]*href="https?://' out/manual out/oruk-mini --include='*.html'
           echo "All output checks passed"
 
+      # Verification NFRs (#35)
+
+      - name: Internal link check
+        run: |
+          python3 tools/check_links.py \
+            out/manual out/oruk-mini out/kitchen out/kitchen-flag \
+            out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk
+
+      - name: Page-weight budget (NFR-P2)
+        run: python3 tools/page_weight.py --report --budget-kb 300 out/manual out/kitchen out/oruk-mini
+
+      - name: Build determinism (FR-B6)
+        run: |
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/det-a -Dgovuk.search=no
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/det-b -Dgovuk.search=no
+          diff -r out/det-a out/det-b && echo "double build is byte-identical"
+
+      - name: Install accessibility tooling
+        run: |
+          (cd tools/a11y && npm ci)
+          (cd tools/a11y && npx playwright install --with-deps chromium)
+
+      - name: Accessibility checks — axe-core WCAG 2.1 AA (NFR-A1)
+        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk
+
+      - name: Visual snapshots for govuk-frontend upgrades (NFR-M2)
+        run: |
+          node tools/a11y/snapshot.mjs out/manual out/snapshots/neutral
+          node tools/a11y/snapshot.mjs out/manual-istanduk out/snapshots/istanduk
+
+      - name: Upload visual snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-snapshots-${{ matrix.dita-ot-version }}
+          path: out/snapshots
+
       - name: Upload site artifact
         uses: actions/upload-artifact@v4
         with:
-          name: manual-site
+          name: manual-site-${{ matrix.dita-ot-version }}
           path: out/manual

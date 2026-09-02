@@ -13,8 +13,9 @@ sections) follow at the end.
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns:table="http://dita-ot.sourceforge.net/ns/201007/dita-ot/table"
+                xmlns:ditamsg="http://dita-ot.sourceforge.net/ns/200704/ditamsg"
                 version="3.0"
-                exclude-result-prefixes="xs table">
+                exclude-result-prefixes="xs table ditamsg">
 
   <!-- ===== Headings ===== -->
 
@@ -323,6 +324,49 @@ sections) follow at the end.
     </img>
     <xsl:apply-templates select="*[contains(@class, ' ditaot-d/ditaval-endprop ')]" mode="out-of-line"/>
     <xsl:if test="$ARTLBL = 'yes'"> [<xsl:value-of select="@href"/>] </xsl:if>
+  </xsl:template>
+
+  <!-- ===== Media object: accessible name from desc (#35 / NFR-A1) ===== -->
+
+  <!-- The base emits <object> with no accessible name, which fails axe's
+       object-alt (WCAG). Mirror the base template but expose the DITA <desc>
+       as the object's aria-label. -->
+  <xsl:template match="*[contains(@class, ' topic/object ')]" name="govuk-object">
+    <object>
+      <xsl:copy-of select="@id | @declare | @codebase | @type | @archive | @height
+                            | @usemap | @tabindex | @classid | @data | @codetype
+                            | @standby | @width | @name"/>
+      <xsl:variable name="desc"
+                    select="normalize-space(string(*[contains(@class, ' topic/desc ')][1]))"/>
+      <xsl:if test="$desc ne ''">
+        <xsl:attribute name="aria-label" select="$desc"/>
+      </xsl:if>
+      <xsl:apply-templates select="*[contains(@class, ' topic/param ')]"/>
+      <xsl:if test="@longdescref or *[contains(@class, ' topic/longdescref ')]">
+        <xsl:apply-templates select="." mode="ditamsg:longdescref-on-object"/>
+      </xsl:if>
+      <xsl:apply-templates select="node() except *[contains(@class, ' topic/param ')]"/>
+    </object>
+  </xsl:template>
+
+  <!-- ===== Preformatted blocks: keyboard-scrollable (#35 / NFR-A1) ===== -->
+
+  <!-- plugin.css gives pre blocks overflow-x:auto, which makes them a scrollable
+       region; axe (scrollable-region-focusable) then requires keyboard access.
+       Mirror the base topic.pre but add tabindex="0" so keyboard users can focus
+       and scroll a wide code block. Covers codeblock/screen/msgblock (all pre). -->
+  <xsl:template match="*[contains(@class, ' topic/pre ')]" name="topic.pre">
+    <xsl:if test="contains(@frame, 'top')"><hr/></xsl:if>
+    <xsl:apply-templates select="*[contains(@class, ' ditaot-d/ditaval-startprop ')]" mode="out-of-line"/>
+    <xsl:call-template name="spec-title-nospace"/>
+    <pre tabindex="0">
+      <xsl:call-template name="commonattributes"/>
+      <xsl:call-template name="setscale"/>
+      <xsl:call-template name="setidaname"/>
+      <xsl:apply-templates/>
+    </pre>
+    <xsl:apply-templates select="*[contains(@class, ' ditaot-d/ditaval-endprop ')]" mode="out-of-line"/>
+    <xsl:if test="contains(@frame, 'bot')"><hr/></xsl:if>
   </xsl:template>
 
   <!-- ===== User-interface domain (ui-d): emphasise controls (#30) ===== -->
