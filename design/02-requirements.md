@@ -21,7 +21,7 @@ Remaining ⬜/🔶 items are the v1-release backlog (see
 | FR-B3 | All behaviour described below is controlled by documented build parameters (`govuk.*`), settable on the command line, in `.ditaotproject`/project files, or via Ant properties | M | 🔶 `govuk.branding`, `govuk.service.name`, `govuk.homepage.layout`, `govuk.search`, `govuk.pagefind.cmd` exist; phase-banner/footer/favicon params follow their features |
 | FR-B4 | The core build requires only DITA-OT (4.4.1 or later) and its bundled Java — no Node.js, no network access | M | ✅ verified |
 | FR-B5 | The build works with standard DITA 1.3 maps and bookmaps, including keys/keyscopes, conref, chunking, and DITAVAL filtering (all inherited from `html5` preprocessing and must not be broken by overrides) | M | ✅ verified against the ORUK corpus (design/07) |
-| FR-B6 | A build from unchanged source produces byte-identical output (deterministic), so hosting diffs are meaningful | S | ⬜ not yet verified |
+| FR-B6 | A build from unchanged source produces byte-identical output (deterministic), so hosting diffs are meaningful | S | ✅ CI double-builds the manual and diffs byte-for-byte (#35) |
 
 ### Navigation and layout (FR-N)
 
@@ -93,16 +93,16 @@ requirements govern its behaviour.
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| NFR-A1 | Generated sites conform to **WCAG 2.2 AA**. Everything govuk-frontend provides (contrast, focus states, touch targets) is preserved; everything the plugin adds (nav tree, glossary, index, search page) is built and tested to the same standard | M | 🔶 foundations in place (focus states, landmarks, ARIA on enhancements, image alt); no automated axe checks yet |
+| NFR-A1 | Generated sites conform to **WCAG 2.2 AA**. Everything govuk-frontend provides (contrast, focus states, touch targets) is preserved; everything the plugin adds (nav tree, glossary, index, search page) is built and tested to the same standard | M | ✅ CI runs axe-core at WCAG 2.2 AA over the manual, kitchen and iStandUK sites (#35); found and fixed object accessible-name, scrollable-`pre` keyboard access, and nav/letter-nav target-size |
 | NFR-A2 | Output is valid HTML5 (checked in CI with the Nu validator) with a single `h1` per page and a correct heading hierarchy | M | ✅ in CI on both fixtures |
 | NFR-A3 | Full functionality except search is available with JavaScript disabled | M | ✅ |
 | NFR-P1 | Sites are fully self-contained: **no CDN, no external requests** of any kind at runtime | M | ✅ asserted in CI |
-| NFR-P2 | Page weight budget: HTML+CSS+JS for a typical topic page under ~300 KB uncompressed excluding content images; no render-blocking JS | S | ⬜ not yet measured (assets ≈190 KB, so likely met) |
+| NFR-P2 | Page weight budget: HTML+CSS+JS for a typical topic page under ~300 KB uncompressed excluding content images; no render-blocking JS | S | ✅ CI measures every page's shell (#35); typical topic pages ≈165 KB uncompressed (≈25 KB gzipped), well under budget; the search page (Pagefind UI) is exempt |
 | NFR-V1 | Output URLs derive deterministically from source file paths, so republishing does not break inbound links | M | ✅ inherited behaviour, resolves OQ-3 |
 | NFR-V2 | No cookies are set and no personal data is processed by default, so no cookie banner is required; any future analytics integration must be opt-in and bring its own consent handling | M | ✅ |
 | NFR-I1 | All generated UI text (labels like "Contents", "Warning", "Search", "Menu") comes from DITA-OT string files, overridable and translatable; `@xml:lang` flows through to `lang` attributes | S | ✅ plugin strings via `dita.xsl.strings` (en-GB shipped, empty-lang fallback); JavaScript reads labels from page data attributes |
-| NFR-M1 | The plugin uses **only documented DITA-OT extension points** — no copied/patched toolkit internals — and CI builds a fixture publication against each supported DITA-OT minor release | M | ✅ CI on 4.4.1 (the only supported minor so far) |
-| NFR-M2 | The vendored govuk-frontend release is pinned and recorded; upgrades are deliberate changes validated by visual regression snapshots | M | 🔶 pin, NOTICE, and upgrade process in place; no visual-regression snapshots yet |
+| NFR-M1 | The plugin uses **only documented DITA-OT extension points** — no copied/patched toolkit internals — and CI builds a fixture publication against each supported DITA-OT minor release | M | ✅ CI runs a DITA-OT version matrix (#35), currently `[4.4.1]` — the only supported minor; new 4.x releases are a one-line addition |
+| NFR-M2 | The vendored govuk-frontend release is pinned and recorded; upgrades are deliberate changes validated by visual regression snapshots | M | ✅ CI captures full-page snapshots of the neutral and iStandUK sites as an artifact for review on a govuk-frontend bump (#35); pin, NOTICE and upgrade process already in place |
 | NFR-L1 | Licence Apache-2.0; vendored govuk-frontend (MIT) retained with its licence and attribution; release versioning is semver | M | ✅ v0.1.0 released |
 
 ## Deferred (roadmap)

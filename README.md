@@ -37,7 +37,9 @@ dita --input=publication.ditamap --format=govuk
 The output uses GOV.UK Design System components, typography, and accessibility behaviour, laid
 out in the style of the GDS Technical Documentation Template (persistent left-hand
 navigation), with optional client-side search, a generated A–Z glossary, and a back-of-book
-index.
+index. Generated sites are built to **WCAG 2.2 AA** and checked on every build with
+[axe-core](https://github.com/dequelabs/axe-core), the Nu HTML validator, an internal
+link checker, and a page-weight budget in CI.
 
 ## Why
 

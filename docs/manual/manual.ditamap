@@ -46,6 +46,7 @@
     <topicref keyref="layouts"/>
     <topicref keyref="search"/>
     <topicref keyref="glossary-index"/>
+    <topicref keyref="accessibility"/>
   </chapter>
   <chapter>
     <topicmeta>

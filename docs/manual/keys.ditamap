@@ -35,4 +35,14 @@
   <keydef keys="design-system" href="https://design-system.service.gov.uk/" format="html" scope="external">
     <topicmeta><linktext>GOV.UK Design System</linktext></topicmeta>
   </keydef>
+  <keydef keys="accessibility" href="topics/accessibility.dita" format="dita" scope="local"/>
+  <keydef keys="a11y-regulations" href="https://www.gov.uk/guidance/accessibility-requirements-for-public-sector-websites-and-apps" format="html" scope="external">
+    <topicmeta><linktext>accessibility requirements for public sector websites and apps</linktext></topicmeta>
+  </keydef>
+  <keydef keys="a11y-model-statement" href="https://www.gov.uk/guidance/model-accessibility-statement" format="html" scope="external">
+    <topicmeta><linktext>model accessibility statement</linktext></topicmeta>
+  </keydef>
+  <keydef keys="wcag22" href="https://www.w3.org/TR/WCAG22/" format="html" scope="external">
+    <topicmeta><linktext>WCAG 2.2</linktext></topicmeta>
+  </keydef>
 </map>

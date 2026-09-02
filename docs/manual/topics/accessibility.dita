@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="accessibility" xml:lang="en-GB">
+  <title>Accessibility</title>
+  <shortdesc>What the plugin makes accessible for you, what stays your responsibility as the
+    author, and how to publish your own accessibility statement.</shortdesc>
+  <conbody>
+    <p><indexterm>accessibility<indexterm>WCAG</indexterm></indexterm>The plugin is built so
+      that its output meets <xref keyref="wcag22"/> at level AA. Every build is checked with
+      the <xref href="https://github.com/dequelabs/axe-core" scope="external"
+      format="html">axe-core</xref> accessibility engine in continuous integration, and the
+      checks must pass before a change is released.</p>
+    <section>
+      <title>What the plugin provides</title>
+      <ul>
+        <li>the GOV.UK Design System's colour contrast, visible focus states, and 24&#160;px
+          minimum target sizes;</li>
+        <li>a correct landmark structure (<codeph>header</codeph>, <codeph>nav</codeph>,
+          <codeph>main</codeph>, <codeph>footer</codeph>), one <codeph>h1</codeph> per page,
+          and a skip link;</li>
+        <li>the plugin's own additions — the navigation tree, glossary, index, figure and
+          table lists, search page and footer — built and tested to the same standard;</li>
+        <li>the page's language from <codeph>@xml:lang</codeph>, and right-to-left direction
+          from <codeph>@dir</codeph>, carried through to the output.</li>
+      </ul>
+      <p>Neutral branding changes none of this: it substitutes system fonts for GDS Transport
+        but keeps every accessibility behaviour.</p>
+    </section>
+    <section>
+      <title>What stays your responsibility</title>
+      <p>The plugin cannot make inaccessible source content accessible. When you author, you
+        are responsible for:</p>
+      <ul>
+        <li>meaningful <codeph>alt</codeph> text on every <codeph>image</codeph>, and a
+          <codeph>title</codeph> or <codeph>desc</codeph> on figures and diagrams;</li>
+        <li>a logical heading order — let topic and section titles set the hierarchy rather
+          than styling text to look like a heading;</li>
+        <li>link text that makes sense out of context (avoid <q>click here</q>);</li>
+        <li>table headers marked up as headers, and simple table structures where possible;</li>
+        <li>captions or transcripts for any audio or video you embed.</li>
+      </ul>
+      <note>Writing accessible DITA is the same discipline as writing accessible content
+        anywhere; the plugin simply preserves the accessibility of what you give it.</note>
+    </section>
+    <section>
+      <title>Publishing your accessibility statement</title>
+      <p><indexterm>accessibility statement</indexterm>UK public sector bodies must publish an
+        accessibility statement — see <xref keyref="a11y-regulations"/>. The plugin does not
+        write that statement for you (only you can describe your service, its known issues,
+        and how to report problems), but it publishes one as easily as any other page:</p>
+      <ol>
+        <li>write an accessibility-statement topic in DITA, using the GOV.UK
+          <xref keyref="a11y-model-statement"/> as your template;</li>
+        <li>reference it from your map so it appears in the site — for a bookmap, the
+          <codeph>backmatter</codeph> is a natural home:
+          <codeblock>&lt;backmatter>
+  &lt;topicref keyref="accessibility-statement"/>
+&lt;/backmatter></codeblock></li>
+        <li>link to it from wherever readers expect it — commonly the footer of every page.</li>
+      </ol>
+      <p>Your statement can cite this plugin's WCAG 2.2 AA conformance for the framework, and
+        add anything specific to your own content and hosting.</p>
+    </section>
+  </conbody>
+</concept>

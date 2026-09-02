@@ -376,7 +376,11 @@ map transformation with the plugin's values.
 
   <!-- ===== Search page (FR-S2) ===== -->
 
+  <!-- Only emit the search page when search is actually enabled (Pagefind
+       present); otherwise nothing links to it and its pagefind/* assets would
+       be dead. -->
   <xsl:template name="govuk-search-page">
+    <xsl:if test="$GOVUK-SEARCH = 'yes'">
     <xsl:variable name="search-label">
       <xsl:call-template name="getVariable">
         <xsl:with-param name="id" select="'govuk-dita.search'"/>
@@ -447,6 +451,7 @@ map transformation with the plugin's values.
         </body>
       </html>
     </xsl:result-document>
+    </xsl:if>
   </xsl:template>
 
 </xsl:stylesheet>
