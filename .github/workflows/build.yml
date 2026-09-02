@@ -338,7 +338,7 @@ jobs:
           (cd tools/a11y && npm ci)
           (cd tools/a11y && npx playwright install --with-deps chromium)
 
-      - name: Accessibility checks — axe-core WCAG 2.1 AA (NFR-A1)
+      - name: Accessibility checks — axe-core WCAG 2.2 AA (NFR-A1)
         run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk
 
       - name: Visual snapshots for govuk-frontend upgrades (NFR-M2)
