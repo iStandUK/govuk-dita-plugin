@@ -199,7 +199,12 @@ jobs:
           # Glossary and index (#17, #18 / FR-G, FR-X)
           grep -q 'app-az-letter' out/manual/glossary.html
           grep -q '(DITA)' out/manual/glossary.html
-          grep -q 'href="glossary/gloss-gds.html"' out/manual/glossary.html
+          # glossary is self-contained: full definitions inline, no links to
+          # per-entry pages (which do not exist for resource-only glossentries) (#34)
+          ! grep -q 'href="glossary/' out/manual/glossary.html
+          # glossgroup members are harvested, not just standalone glossentry topics (#34)
+          grep -q '>Saxon<' out/manual/glossary.html
+          grep -q '>Pagefind<' out/manual/glossary.html
           grep -q 'app-index-sublist' out/manual/index-page.html
           grep -q 'see notes' out/manual/index-page.html
           grep -q 'glossary.html' out/manual/topics/introduction.html
@@ -226,6 +231,26 @@ jobs:
           test -f out/manual/topics/legal.html
           grep -q 'Licensing and legal' out/manual/index.html
           grep -q 'href="topics/legal.html"' out/manual/index.html
+          # Spec-residue verification fixtures (#34)
+          # bookmap frontmatter/backmatter content topics build
+          test -f out/manual/topics/preface.html
+          test -f out/manual/topics/colophon.html
+          grep -q 'About this manual' out/manual/topics/preface.html
+          # conref push: pushreplace + pushbefore land in the target page
+          grep -q 'delivered by conref push' out/kitchen/topics/conref-push.html
+          grep -q 'inserted before the marker' out/kitchen/topics/conref-push.html
+          # coderef pulls external code into the codeblock
+          grep -q '&lt;config&gt;' out/kitchen/topics/programming.html
+          # object media embed renders as HTML <object> with fallback
+          grep -q '<object ' out/kitchen/topics/media.html
+          # ditavalref branch filter removes only its subtree's excluded content
+          grep -q 'Common content' out/kitchen/topics/branch.html
+          ! grep -q 'Draft-only' out/kitchen/topics/branch.html
+          # RTL: @dir and @xml:lang propagate to the page
+          grep -q 'lang="ar"' out/kitchen/topics/rtl.html
+          grep -q 'dir="rtl"' out/kitchen/topics/rtl.html
+          # DITAVAL start-flag image renders with its alt-text (flagged build)
+          grep -q 'flag-new.svg" alt="New"' out/kitchen-flag/topics/blocks.html
           # Hazard panels and modern choicetable/properties tables (#27)
           # topichead-grouped maps link their children from the home page (auto layout)
           grep -q 'href="topics/blocks.html"' out/kitchen/index.html

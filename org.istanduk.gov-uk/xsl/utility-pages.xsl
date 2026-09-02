@@ -23,7 +23,12 @@ indexterm markup. Imported by map2govuk-cover.xsl.
     <xsl:apply-templates select="/*[contains(@class, ' map/map ')]" mode="normalize-map"/>
   </xsl:variable>
 
-  <!-- Every distinct local DITA target in the map, resource-only included -->
+  <!-- Every distinct local DITA target in the map, resource-only included. A
+       target is either a glossentry topic or a glossgroup collecting several;
+       either way we harvest each glossentry. The glossary page shows the full
+       term, acronym and definition inline, so entries are not linked out to a
+       per-topic page — those pages do not exist for resource-only glossentries
+       or for the members of a glossgroup. -->
   <xsl:variable name="govuk-gloss" as="element()*">
     <xsl:for-each-group select="$govuk-norm-map//*[contains(@class, ' map/topicref ')]
                                 [@href][not(@scope = 'external')]
@@ -32,17 +37,21 @@ indexterm markup. Imported by map2govuk-cover.xsl.
       <xsl:variable name="uri" select="resolve-uri(current-grouping-key(), $govuk-map-base)"/>
       <xsl:if test="doc-available($uri)">
         <xsl:variable name="root" select="doc($uri)/*"/>
-        <xsl:if test="contains($root/@class, ' glossentry/glossentry ')">
-          <xsl:variable name="href"><xsl:apply-templates select="." mode="govuk-href"/></xsl:variable>
+        <xsl:variable name="glossentries" as="element()*"
+                      select="if (contains($root/@class, ' glossentry/glossentry '))
+                              then $root
+                              else if (contains($root/@class, ' glossgroup/glossgroup '))
+                              then $root//*[contains(@class, ' glossentry/glossentry ')]
+                              else ()"/>
+        <xsl:for-each select="$glossentries">
           <xsl:element name="entry">
             <xsl:attribute name="term"
-                           select="normalize-space(string(($root/*[contains(@class, ' glossentry/glossterm ')])[1]))"/>
+                           select="normalize-space(string((*[contains(@class, ' glossentry/glossterm ')])[1]))"/>
             <xsl:attribute name="acronym"
-                           select="normalize-space(string(($root//*[contains(@class, ' glossentry/glossAcronym ')])[1]))"/>
-            <xsl:attribute name="href" select="string($href)"/>
-            <xsl:value-of select="normalize-space(string(($root/*[contains(@class, ' glossentry/glossdef ')])[1]))"/>
+                           select="normalize-space(string((.//*[contains(@class, ' glossentry/glossAcronym ')])[1]))"/>
+            <xsl:value-of select="normalize-space(string((*[contains(@class, ' glossentry/glossdef ')])[1]))"/>
           </xsl:element>
-        </xsl:if>
+        </xsl:for-each>
       </xsl:if>
     </xsl:for-each-group>
   </xsl:variable>
@@ -243,7 +252,7 @@ indexterm markup. Imported by map2govuk-cover.xsl.
           </h2>
           <xsl:for-each select="current-group()">
             <h3 class="govuk-heading-s app-entry__heading">
-              <a class="govuk-link" href="{@href}"><xsl:value-of select="@term"/></a>
+              <xsl:value-of select="@term"/>
               <xsl:if test="@acronym ne ''">
                 <xsl:text> (</xsl:text><xsl:value-of select="@acronym"/><xsl:text>)</xsl:text>
               </xsl:if>

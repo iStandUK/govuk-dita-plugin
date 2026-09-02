@@ -15,6 +15,9 @@
   <keydef keys="gloss-gds" href="glossary/gloss-gds.dita" format="dita" scope="local" processing-role="resource-only"/>
   <keydef keys="gloss-wcag" href="glossary/gloss-wcag.dita" format="dita" scope="local" processing-role="resource-only"/>
   <keydef keys="gloss-transtype" href="glossary/gloss-transtype.dita" format="dita" scope="local" processing-role="resource-only"/>
+  <keydef keys="gloss-group" href="glossary/gloss-group.dita" format="dita" scope="local" processing-role="resource-only"/>
+  <keydef keys="preface" href="topics/preface.dita" format="dita" scope="local"/>
+  <keydef keys="colophon" href="topics/colophon.dita" format="dita" scope="local"/>
   <keydef keys="demo-typography" href="topics/demo-typography.dita" format="dita" scope="local"/>
   <keydef keys="demo-notes" href="topics/demo-notes.dita" format="dita" scope="local"/>
   <keydef keys="demo-tables" href="topics/demo-tables.dita" format="dita" scope="local"/>

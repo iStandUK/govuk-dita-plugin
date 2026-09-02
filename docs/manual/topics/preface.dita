@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="preface" xml:lang="en-GB">
+  <title>About this manual</title>
+  <shortdesc>How the manual is organised and who it is for.</shortdesc>
+  <body>
+    <p>This manual is itself a DITA bookmap published with the plugin, so every page is a live
+      demonstration of the output. It is written for two audiences: authors who want to publish
+      an existing DITA corpus as a GOV.UK-styled site, and developers extending the plugin.</p>
+    <p>Start with <i>Getting started</i> to install the plugin and build your first site; the
+      <i>Reference</i> chapter documents each build parameter and the branding choices.</p>
+  </body>
+</topic>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="conref-pusher" xml:lang="en-GB">
+  <title>Conref pusher</title>
+  <shortdesc>Not rendered; pushes content into conref-push.dita.</shortdesc>
+  <body>
+    <!-- pushreplace: this replaces #original in the target -->
+    <p conaction="pushreplace" conref="conref-push.dita#conref-push/original">Replacement
+      paragraph, delivered by conref push (pushreplace).</p>
+    <!-- pushbefore: content element, then the marking element that names the target -->
+    <p conaction="pushbefore">Paragraph inserted before the marker by conref push
+      (pushbefore).</p>
+    <p conaction="mark" conref="conref-push.dita#conref-push/marker"/>
+  </body>
+</topic>

@@ -18,5 +18,7 @@
       </groupseq>
     </syntaxdiagram>
     <codeblock>let x = compute();</codeblock>
+    <p>A code block pulled from an external file with <codeph>coderef</codeph>:</p>
+    <codeblock><coderef href="../code/config.xml"/></codeblock>
   </body>
 </topic>

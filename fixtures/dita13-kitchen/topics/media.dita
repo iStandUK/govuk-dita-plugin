@@ -19,5 +19,9 @@
       <area><shape>rect</shape><coords>0,0,40,40</coords>
         <xref href="blocks.dita">Blocks</xref></area>
     </imagemap>
+    <p>An embedded media object:</p>
+    <object data="../images/dot.svg" type="image/svg+xml" height="40" width="40">
+      <desc>An embedded SVG object, with a text fallback.</desc>
+    </object>
   </body>
 </topic>

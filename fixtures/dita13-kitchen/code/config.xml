@@ -1,0 +1,4 @@
+<config>
+  <param name="format" value="govuk"/>
+  <param name="output" value="site"/>
+</config>

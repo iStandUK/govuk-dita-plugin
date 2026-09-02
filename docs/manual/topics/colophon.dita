@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="colophon" xml:lang="en-GB">
+  <title>How this manual was produced</title>
+  <shortdesc>The toolchain behind the pages you are reading.</shortdesc>
+  <body>
+    <p>This manual was authored in DITA and published with the
+      <codeph>org.istanduk.gov-uk</codeph> plugin for the DITA Open Toolkit, extending the
+      toolkit's HTML5 transformation with the GOV.UK Design System. No content on these pages
+      was hand-written in HTML.</p>
+  </body>
+</topic>

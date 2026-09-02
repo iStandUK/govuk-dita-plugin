@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="conref-push" xml:lang="en-GB">
+  <title>Conref push target</title>
+  <shortdesc>This topic is modified from another topic by conref push.</shortdesc>
+  <body>
+    <p id="original">Original paragraph — replaced by a pushreplace.</p>
+    <p id="marker">Marker paragraph.</p>
+  </body>
+</topic>

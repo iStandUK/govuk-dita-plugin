@@ -2,5 +2,8 @@
 <val>
   <prop att="audience" val="admin" action="flag" style="double-underline" backcolor="#fff7bf"/>
   <prop att="audience" val="secret" action="exclude"/>
+  <prop att="platform" val="new" action="flag">
+    <startflag imageref="images/flag-new.svg"><alt-text>New</alt-text></startflag>
+  </prop>
   <revprop val="r2" action="flag" changebar="solid" style="italics"/>
 </val>
