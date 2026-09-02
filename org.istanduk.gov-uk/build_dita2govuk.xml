@@ -26,11 +26,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <property name="args.gen.task.lbl" value="YES"/>
     <!-- Neutral branding unless the publisher explicitly opts in (FR-T1). -->
     <property name="govuk.branding" value="neutral"/>
-    <fail message="govuk.branding must be 'neutral', 'istanduk', or 'official', was: ${govuk.branding}">
+    <fail message="govuk.branding must be 'neutral', 'istanduk', 'nhs', or 'official', was: ${govuk.branding}">
       <condition>
         <not><or>
           <equals arg1="${govuk.branding}" arg2="neutral"/>
           <equals arg1="${govuk.branding}" arg2="istanduk"/>
+          <equals arg1="${govuk.branding}" arg2="nhs"/>
           <equals arg1="${govuk.branding}" arg2="official"/>
         </or></not>
       </condition>
@@ -43,6 +44,11 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     </condition>
     <echo if:set="govuk.branding.official" level="warning"
           message="govuk.branding=official: the GOV.UK crown and GDS Transport font are legally restricted to official GOV.UK services. Official mode is not yet implemented; the build will use neutral assets."/>
+    <condition property="govuk.branding.nhs">
+      <equals arg1="${govuk.branding}" arg2="nhs"/>
+    </condition>
+    <echo if:set="govuk.branding.nhs" level="warning"
+          message="govuk.branding=nhs: the NHS identity ('NHS' letters and logo) is restricted to NHS organisations; non-NHS bodies need permission from NHS England / DHSC. Use this only for a genuine NHS service. The NHS brand font (Frutiger) is licensed to NHS organisations and is not bundled - the build falls back to Arial."/>
     <!-- Landing-page layout (D-13) -->
     <property name="govuk.homepage.layout" value="auto"/>
     <property name="govuk.homepage.depth" value="2"/>

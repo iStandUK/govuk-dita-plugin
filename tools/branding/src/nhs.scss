@@ -1,0 +1,22 @@
+// NHS-recoloured govuk-frontend (#47) — see design/09-nhs-branding.md and D-17.
+// Vendor-time recompile only; the compiled CSS is committed so end-user builds
+// stay Node-free (D-12). Colours from the NHS Design System; Frutiger is the NHS
+// brand font (licensed, not bundled) so the stack falls back to Arial.
+@use "govuk-frontend/dist/govuk" as * with (
+  $govuk-functional-colours: (
+    brand: #005eb8,
+    text: #212b32,
+    secondary-text: #4c6272,
+    focus: #ffeb3b,
+    focus-text: #212b32,
+    error: #d5281b,
+    success: #007f3b,
+    link: #005eb8,
+    link-visited: #330072,
+    link-hover: #7c2855,
+    link-active: #002f5c
+  ),
+  $govuk-button-background-colour: #007f3b,
+  $govuk-font-family: ("Frutiger W01", arial, sans-serif),
+  $govuk-assets-path: "/govuk/assets/"
+);

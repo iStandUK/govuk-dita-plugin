@@ -106,6 +106,19 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-istanduk -Dgovuk.branding=istanduk
 
+      - name: Build NHS branding
+        run: |
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-nhs -Dgovuk.branding=nhs
+
+      # The brand-recoloured CSS is a vendored artifact (#47): guard against it
+      # drifting from its Sass source. Rebuild it and fail on any diff.
+      - name: Branding CSS is current
+        run: |
+          (cd tools/branding && npm ci && npm run build)
+          git diff --exit-status -- org.istanduk.gov-uk/resource/govuk-frontend/*-nhs.min.css \
+            || { echo "Vendored brand CSS is stale — run 'npm run build' in tools/branding and commit."; exit 1; }
+
       - name: Cache Nu validator
         id: cache-vnu
         uses: actions/cache@v4
@@ -311,6 +324,14 @@ jobs:
           test -f out/manual-istanduk/govuk/istanduk-logo.svg
           ! grep -q 'overlay-istanduk.css' out/manual/topics/introduction.html
           test -z "$(find out/manual-istanduk -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
+          # NHS branding (govuk.branding=nhs, #47): recoloured base CSS, no neutral overlay
+          grep -q 'govuk-frontend-6.5.0-nhs.min.css' out/manual-nhs/topics/introduction.html
+          ! grep -q 'overlay-neutral.css' out/manual-nhs/topics/introduction.html
+          grep -q '#005eb8' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
+          grep -q 'Frutiger W01' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
+          ! grep -q 'GDS Transport' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
+          # NHS mode bundles no restricted font/crown assets either
+          test -z "$(find out/manual-nhs -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # FR-T1: neutral builds ship no restricted assets and load no external
           # resources (external hyperlinks in content are fine; external assets are not)
           test -z "$(find out/manual out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
@@ -324,7 +345,7 @@ jobs:
         run: |
           python3 tools/check_links.py \
             out/manual out/oruk-mini out/kitchen out/kitchen-flag \
-            out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk
+            out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs
 
       - name: Page-weight budget (NFR-P2)
         run: python3 tools/page_weight.py --report --budget-kb 300 out/manual out/kitchen out/oruk-mini
@@ -343,7 +364,7 @@ jobs:
           (cd tools/a11y && npx playwright install --with-deps chromium)
 
       - name: Accessibility checks — axe-core WCAG 2.2 AA (NFR-A1)
-        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk
+        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs
 
       - name: Visual snapshots for govuk-frontend upgrades (NFR-M2)
         run: |
