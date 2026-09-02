@@ -16,7 +16,9 @@
       <ul>
         <li>system fonts stand in for GDS Transport</li>
         <li>a plain masthead carries your service name instead of the crown</li>
-        <li>the footer carries no crest and no crown-copyright statement</li>
+        <li>the footer carries no crest and no crown-copyright or Open Government Licence
+          statement — instead it shows <i>your</i> publication's copyright and attribution,
+          drawn from the bookmap's <codeph>bookmeta</codeph> (see below)</li>
       </ul>
       <p>This makes neutral mode safe for standards bodies, local government partnerships,
         and any publisher who wants the Design System's clarity without its insignia.</p>
@@ -35,6 +37,21 @@
             title, a search field, and a dark blue rule beneath the header.</alt>
         </image>
       </fig>
+    </section>
+    <section>
+      <title>Footer credits from the bookmap</title>
+      <p>Whatever the branding, the footer credits the publication itself, drawn from the
+        bookmap's <codeph>bookmeta</codeph>:</p>
+      <ul>
+        <li>a copyright line — the <codeph>©</codeph> symbol, the years from
+          <codeph>copyrfirst</codeph>/<codeph>copyrlast</codeph>, and the
+          <codeph>bookowner</codeph> — for example <q>© 2026 iStandUK</q>;</li>
+        <li>an attribution line naming the <codeph>author</codeph> or
+          <codeph>publisherinformation</codeph> when it differs from the owner.</li>
+      </ul>
+      <p>The same credit appears on every page — content, home, glossary and the rest —
+        so it travels with each page a reader might land on or print. A map with no
+        <codeph>bookmeta</codeph> simply shows its title instead.</p>
     </section>
     <section>
       <title>Official mode (not yet implemented)</title>

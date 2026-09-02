@@ -134,6 +134,7 @@ inherited html5 rendering (styled acceptably by base typography rules).
 | glossary topics | A–Z glossary page |
 | `indexterm`s | A–Z index page |
 | Pagefind | Header search field + search page |
+| bookmap `bookmeta` (bookrights, author, publisher) | Footer copyright line (`© years owner`) + attribution, on every page (#42) |
 
 ## Requirements traceability
 
