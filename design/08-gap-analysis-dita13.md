@@ -111,7 +111,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | `copy-to` | ✅ *(verified: copies produced)* — see keyscope caveat |
 | `topichead`/`topicgroup` | ✅ sidebar group labels; also drive the grouped landing layout so their children are linked from the home page *(auto-layout fix)* |
 | Reltables → related links | ✅ *(verified: "Related information" section with styled links)* |
-| `collection-type="sequence"` | ⚠️ no previous/next links generated *(verified)*; fold into FR-N5 pagination so sequences and reading order both produce the GOV.UK pagination component |
+| `collection-type="sequence"` | ✅ previous/next GOV.UK pagination at each page foot follows the map's linear reading order (which encompasses sequences) *(#32, FR-N5)* |
 | DITAVAL filtering | ✅ *(verified: exclude honoured)* |
 | DITAVAL flagging (styles) | ✅ colour and **style decorations** (bold/italic/underline/…) both render — the `flag__style--*` classes, lost when the base `commonltr.css` was dropped, are now re-declared in `plugin.css` *(#29)*; start/end flag images ⬜ |
 | DITAVAL revisions (`revprop`, changebars) | ✅ revision **style** flags render (same `flag__style--*` fix, #29). ⚠️ **changebars** are not emitted by html5 output at all — upstream limitation, documented |
@@ -156,7 +156,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 10. ~~markup-d/xml-d monospace~~ — already `<code>`; verified, no change needed
 
 **P3 — completeness** (spec features not yet surfaced):
-11. Sequence/reading-order previous-next links = FR-N5 GOV.UK pagination
+11. ~~Sequence/reading-order previous-next links~~ — **done (#32)**: GOV.UK block pagination in map reading order
 12. Bookmap booklists: `indexlist` → existing index page; `figurelist`/`tablelist` generators; appendix grouping in `auto` layout
 13. Verification fixtures for the ⬜ set: conref push, `ditavalref` branch filtering, flag images, `object`, frontmatter/backmatter topics, RTL, `coderef`, `glossgroup`
 

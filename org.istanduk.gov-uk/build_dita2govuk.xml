@@ -19,6 +19,8 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
          A user-supplied nav-toc property still wins because properties are
          immutable once set. -->
     <property name="nav-toc" value="full"/>
+    <!-- Previous/next pagination (FR-N5) on by default -->
+    <property name="govuk.pagination" value="yes"/>
     <!-- Generate task section labels (Before you begin, Procedure, Results…)
          by default so task topics read with structure (FR-R6). -->
     <property name="args.gen.task.lbl" value="YES"/>

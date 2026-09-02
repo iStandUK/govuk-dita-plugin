@@ -40,6 +40,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <param name="govuk.pagefind.cmd"
            desc="Path to the Pagefind executable. Defaults to 'pagefind' on the PATH."
            type="string"/>
+    <param name="govuk.pagination"
+           desc="Show previous/next links (GOV.UK pagination) at the foot of each page in the map's reading order. 'yes' (default) or 'no'."
+           type="enum">
+      <val default="true">yes</val>
+      <val>no</val>
+    </param>
     <param name="govuk.svg.inline"
            desc="Inline local SVG diagrams (svgref) as native SVG so links and interactivity inside them work. 'yes' (default) inlines; 'no' keeps the image rendering."
            type="enum">

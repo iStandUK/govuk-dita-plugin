@@ -10,8 +10,9 @@ element-level typography.
 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                xmlns:dita-ot="http://dita-ot.sourceforge.net/ns/201007/dita-ot"
                 version="3.0"
-                exclude-result-prefixes="xs">
+                exclude-result-prefixes="xs dita-ot">
 
   <!-- Passed from insertParameters.xml -->
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
@@ -19,6 +20,7 @@ element-level typography.
   <xsl:param name="GOVUK-SEARCH" select="'no'"/>
   <xsl:param name="GOVUK-GLOSSARY" select="'no'"/>
   <xsl:param name="GOVUK-INDEX" select="'no'"/>
+  <xsl:param name="GOVUK-PAGINATION" select="'yes'"/>
 
   <!-- Pinned vendored govuk-frontend release (see resource/govuk-frontend/VERSION.txt) -->
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
@@ -56,6 +58,69 @@ element-level typography.
   <!-- Masthead link target: the generated cover (home) page at the site root -->
   <xsl:variable name="govuk-home-href" as="xs:string"
                 select="concat($govuk-root, 'index', $OUTEXT)"/>
+
+  <!-- Previous/next pagination (FR-N5, #32): adjacent navigable topics in the
+       map's linear reading order, which also surfaces collection-type=sequence. -->
+  <xsl:template name="govuk-pagination">
+    <xsl:variable name="reading" as="element()*"
+                  select="$input.map//*[contains(@class, ' map/topicref ')]
+                          [normalize-space(@href)]
+                          [not(@processing-role = 'resource-only')]
+                          [not(@scope = 'external')]
+                          [not(@format) or @format = 'dita']"/>
+    <!-- Match the current page by its resolved href rather than nav.xsl's
+         $current-topicref, which for keyref maps can resolve to the
+         resource-only keydef (excluded from $reading). -->
+    <xsl:variable name="pos" as="xs:integer*"
+                  select="for $i in 1 to count($reading)
+                          return $i[dita-ot:get-path($PATH2PROJ, $reading[$i]) = $current-file]"/>
+    <xsl:if test="exists($pos)">
+      <xsl:variable name="i" select="$pos[1]" as="xs:integer"/>
+      <xsl:variable name="prev" select="$reading[$i - 1]" as="element()?"/>
+      <xsl:variable name="next" select="$reading[$i + 1]" as="element()?"/>
+      <xsl:if test="exists($prev) or exists($next)">
+        <nav class="govuk-pagination govuk-pagination--block" aria-label="Pagination">
+          <xsl:if test="exists($prev)">
+            <div class="govuk-pagination__prev">
+              <a class="govuk-pagination__link" rel="prev">
+                <xsl:attribute name="href"><xsl:apply-templates select="$prev" mode="govuk-page-href"/></xsl:attribute>
+                <svg class="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
+                  <path d="m6.5938-0.0078125-6.7266 6.7266 6.7441 6.4062 1.377-1.449-4.1856-3.9768h12.896v-2h-12.984l4.2931-4.293-1.3888-1.3852z"></path>
+                </svg>
+                <span class="govuk-pagination__link-title govuk-pagination__link-title--decorated">
+                  <xsl:apply-templates select="$prev" mode="get-navtitle"/>
+                </span>
+              </a>
+            </div>
+          </xsl:if>
+          <xsl:if test="exists($next)">
+            <div class="govuk-pagination__next">
+              <a class="govuk-pagination__link" rel="next">
+                <xsl:attribute name="href"><xsl:apply-templates select="$next" mode="govuk-page-href"/></xsl:attribute>
+                <svg class="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
+                  <path d="m8.107-0.0078125-1.4136 1.414 4.3021 4.2949h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7295-6.7285z"></path>
+                </svg>
+                <span class="govuk-pagination__link-title govuk-pagination__link-title--decorated">
+                  <xsl:apply-templates select="$next" mode="get-navtitle"/>
+                </span>
+              </a>
+            </div>
+          </xsl:if>
+        </nav>
+      </xsl:if>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Output page href for a topicref, relative to the current page -->
+  <xsl:template match="*[contains(@class, ' map/topicref ')]" mode="govuk-page-href">
+    <xsl:variable name="target">
+      <xsl:call-template name="replace-extension">
+        <xsl:with-param name="filename" select="if (@copy-to) then @copy-to else @href"/>
+        <xsl:with-param name="extension" select="$OUTEXT"/>
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:value-of select="concat($govuk-root, $target)"/>
+  </xsl:template>
 
   <!-- Root element carries the GOV.UK template class -->
   <xsl:template name="chapter-setup">
@@ -147,6 +212,9 @@ element-level typography.
           </div>
           <div class="govuk-grid-column-two-thirds">
             <xsl:apply-templates select="." mode="addContentToHtmlBodyElement"/>
+            <xsl:if test="$GOVUK-PAGINATION = 'yes'">
+              <xsl:call-template name="govuk-pagination"/>
+            </xsl:if>
           </div>
         </div>
       </div>

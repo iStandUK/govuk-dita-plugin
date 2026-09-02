@@ -186,6 +186,7 @@ Status as of v0.1.0: ✅ implemented · ⬜ planned (each arrives with its featu
 | `govuk.pagefind.cmd` | path; default `pagefind` on PATH | Locate the Pagefind binary | ✅ |
 | `govuk.homepage.layout` | `auto` (default) \| `start` \| `annotated` \| `list` \| `grid` \| `grouped` \| `accordion` | D-13 — landing-page layout; `auto` selects from map shape | ✅ |
 | `govuk.homepage.depth` | 1–9; default `2` | Levels of the map shown by the grid/grouped/accordion/start layouts (1 = entries only; 2 = + children; 3+ nest) | ✅ |
+| `govuk.pagination` | `yes` (default) \| `no` | FR-N5 — previous/next block pagination in reading order | ✅ |
 | `govuk.breadcrumbs` | `no` (default) \| `yes` | FR-N6 | ⬜ |
 | `govuk.footer.links` | file/ref | Footer link list (title+URL pairs) | ⬜ |
 | `govuk.footer.licence` | text/HTML ref | Neutral-mode licence statement | ⬜ |

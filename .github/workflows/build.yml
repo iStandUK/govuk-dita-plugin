@@ -165,6 +165,10 @@ jobs:
           # Navigation enhancement shipped (#9 / FR-N2, FR-N4)
           test -f out/manual/govuk/plugin.js
           grep -q 'govuk/plugin.js' out/manual/topics/introduction.html
+          # Previous/next pagination in reading order (#32 / FR-N5)
+          grep -q 'govuk-pagination--block' out/manual/topics/install.html
+          grep -q 'link-title--decorated">About the plugin' out/manual/topics/install.html
+          grep -q 'link-title--decorated">Building a website' out/manual/topics/install.html
           # svgref accessible name (#10 / NFR-A1)
           grep -q 'aria-label="Sample diagram"' out/oruk-mini/item.html
           # Search (#16 / FR-S): enabled on the manual, gracefully absent on oruk-mini
