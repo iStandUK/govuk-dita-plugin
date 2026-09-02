@@ -13,6 +13,50 @@ template, the cover, and the generated utility pages.
                 version="3.0"
                 exclude-result-prefixes="xs">
 
+  <!-- ===== Footer metadata from bookmap bookmeta (#42) =====
+       Read from the input map's own URL so topic pages get the copyright and
+       attribution too, not just the cover (which already sees the map as its
+       context). A plain map, or a bookmap without bookrights, simply yields no
+       copyright/attribution and the footer keeps the service name. -->
+  <!-- On a topic page the principal document is the topic, so the map comes from
+       its URL; on the generated cover and utility pages the principal document is
+       the map itself, where that URL is not set — fall back to the context root. -->
+  <xsl:variable name="govuk-book" as="element()?"
+                select="((if (exists($input.map.url) and normalize-space($input.map.url))
+                          then document($input.map.url)/*[contains(@class, ' map/map ')]
+                          else ()),
+                         /*[contains(@class, ' map/map ')])[1]"/>
+  <xsl:variable name="govuk-bookmeta" as="element()?"
+                select="$govuk-book/*[contains(@class, ' bookmap/bookmeta ')]"/>
+
+  <!-- Copyright owner: the organization or person named in bookrights/bookowner -->
+  <xsl:variable name="govuk-copyr-owner" as="xs:string"
+                select="normalize-space(string((
+                          $govuk-bookmeta//*[contains(@class, ' bookmap/bookowner ')]
+                            //*[contains(@class, ' bookmap/organization ')
+                                or contains(@class, ' topic/author ')])[1]))"/>
+  <xsl:variable name="govuk-copyr-first" as="xs:string"
+                select="normalize-space(string($govuk-bookmeta//*[contains(@class, ' bookmap/copyrfirst ')][1]))"/>
+  <xsl:variable name="govuk-copyr-last" as="xs:string"
+                select="normalize-space(string($govuk-bookmeta//*[contains(@class, ' bookmap/copyrlast ')][1]))"/>
+  <xsl:variable name="govuk-copyr-years" as="xs:string"
+                select="if ($govuk-copyr-first ne '' and $govuk-copyr-last ne '' and $govuk-copyr-first ne $govuk-copyr-last)
+                        then concat($govuk-copyr-first, '&#8211;', $govuk-copyr-last)
+                        else if ($govuk-copyr-first ne '') then $govuk-copyr-first
+                        else $govuk-copyr-last"/>
+
+  <!-- Publisher(s), then any author(s) other than the copyright owner -->
+  <xsl:variable name="govuk-publishers" as="xs:string*"
+                select="distinct-values($govuk-bookmeta
+                          //*[contains(@class, ' bookmap/publisherinformation ')]
+                          //*[contains(@class, ' bookmap/organization ')
+                              or contains(@class, ' topic/author ')]
+                          /normalize-space()[. ne ''])"/>
+  <xsl:variable name="govuk-authors" as="xs:string*"
+                select="distinct-values($govuk-bookmeta
+                          /*[contains(@class, ' topic/author ')]
+                          /normalize-space()[. ne ''][. ne $govuk-copyr-owner])"/>
+
   <xsl:template name="govuk-masthead">
     <xsl:param name="prefix" as="xs:string" select="''"/>
     <xsl:param name="name" as="xs:string"/>
@@ -113,8 +157,42 @@ template, the cover, and the generated utility pages.
               </ul>
             </xsl:if>
             <span class="govuk-footer__licence-description">
-              <xsl:value-of select="$name"/>
+              <xsl:choose>
+                <xsl:when test="$govuk-copyr-owner ne ''">
+                  <xsl:call-template name="getVariable">
+                    <xsl:with-param name="id" select="'govuk-dita.copyright'"/>
+                  </xsl:call-template>
+                  <xsl:text> </xsl:text>
+                  <xsl:if test="$govuk-copyr-years ne ''">
+                    <xsl:value-of select="$govuk-copyr-years"/><xsl:text> </xsl:text>
+                  </xsl:if>
+                  <xsl:value-of select="$govuk-copyr-owner"/>
+                </xsl:when>
+                <xsl:otherwise>
+                  <xsl:value-of select="$name"/>
+                </xsl:otherwise>
+              </xsl:choose>
             </span>
+            <xsl:if test="exists($govuk-publishers) or exists($govuk-authors)">
+              <span class="app-footer__attribution">
+                <xsl:choose>
+                  <xsl:when test="exists($govuk-publishers)">
+                    <xsl:call-template name="getVariable">
+                      <xsl:with-param name="id" select="'govuk-dita.published-by'"/>
+                    </xsl:call-template>
+                    <xsl:text> </xsl:text>
+                    <xsl:value-of select="string-join($govuk-publishers, ' · ')"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:call-template name="getVariable">
+                      <xsl:with-param name="id" select="'govuk-dita.authored-by'"/>
+                    </xsl:call-template>
+                    <xsl:text> </xsl:text>
+                    <xsl:value-of select="string-join($govuk-authors, ' · ')"/>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </span>
+            </xsl:if>
           </div>
         </div>
       </div>

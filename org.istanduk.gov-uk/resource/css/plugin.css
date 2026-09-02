@@ -580,6 +580,15 @@ figure.app-screenshot img {
 .flag__style--overline { text-decoration: overline; }
 .flag__style--line-through { text-decoration: line-through; }
 
+/* ===== Footer bookmap attribution (#42) ===== */
+
+.app-footer__attribution {
+  display: block;
+  margin-top: 5px;
+  color: #505a5f;
+  font-size: 0.875rem;
+}
+
 /* ===== Content furniture without a govuk-frontend component ===== */
 
 pre.codeblock,

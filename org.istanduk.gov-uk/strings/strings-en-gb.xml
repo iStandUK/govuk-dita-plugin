@@ -24,4 +24,7 @@ collisions with toolkit variables.
   <variable id="govuk-dita.remedy">Remedy</variable>
   <variable id="govuk-dita.figures">Figures</variable>
   <variable id="govuk-dita.tables">Tables</variable>
+  <variable id="govuk-dita.copyright">©</variable>
+  <variable id="govuk-dita.published-by">Published by</variable>
+  <variable id="govuk-dita.authored-by">By</variable>
 </variables>

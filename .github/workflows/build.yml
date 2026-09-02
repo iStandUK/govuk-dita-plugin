@@ -196,6 +196,19 @@ jobs:
           grep -q 'app-masthead__search' out/manual/index.html
           grep -q 'govuk-footer__inline-list' out/manual/topics/introduction.html
           ! grep -q 'app-masthead__search' out/oruk-mini/item.html
+          # Bookmap metadata in the footer on every page type (#42)
+          grep -q '© 2026 iStandUK' out/manual/topics/introduction.html
+          grep -q '© 2026 iStandUK' out/manual/index.html
+          grep -q '© 2026 iStandUK' out/manual/glossary.html
+          # author == owner: no redundant attribution line
+          ! grep -q 'app-footer__attribution' out/manual/topics/introduction.html
+          # author distinct from owner surfaces as a footer attribution (oruk-mini)
+          grep -q '© The Open Referral Initiative' out/oruk-mini/item.html
+          grep -q '© The Open Referral Initiative' out/oruk-mini/index.html
+          grep -q 'By Open Referral' out/oruk-mini/item.html
+          # plain map (no bookmeta) keeps the service-name fallback, no copyright
+          ! grep -q 'app-footer__attribution' out/kitchen/topics/blocks.html
+          ! grep -q '©' out/kitchen/topics/blocks.html
           # Glossary and index (#17, #18 / FR-G, FR-X)
           grep -q 'app-az-letter' out/manual/glossary.html
           grep -q '(DITA)' out/manual/glossary.html
