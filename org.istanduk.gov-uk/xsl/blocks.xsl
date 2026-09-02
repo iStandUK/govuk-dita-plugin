@@ -156,6 +156,156 @@ sections) follow at the end.
     </caption>
   </xsl:template>
 
+  <!-- ===== Hazard statements (hazard-d): safety panel ===== -->
+
+  <!-- hazardstatement specialises note but carries block structure, so it
+       gets its own panel instead of the inset/warning treatment (which would
+       wrap blocks in strong - invalid HTML). Banner label follows the note
+       type; the message panel keeps hazard, consequence, and avoidance in
+       reading order per the domain's model. -->
+  <xsl:template match="*[contains(@class, ' hazard-d/hazardstatement ')]" priority="10">
+    <xsl:variable name="hazard-type" as="xs:string"
+                  select="lower-case(if (@type and @type ne 'other') then string(@type) else 'warning')"/>
+    <div>
+      <xsl:call-template name="commonattributes">
+        <xsl:with-param name="default-output-class" select="'app-hazard'"/>
+      </xsl:call-template>
+      <xsl:call-template name="setid"/>
+      <p class="app-hazard__banner">
+        <span class="govuk-warning-text__icon app-hazard__icon" aria-hidden="true">!</span>
+        <strong>
+          <xsl:call-template name="getVariable">
+            <xsl:with-param name="id"
+                            select="concat(upper-case(substring($hazard-type, 1, 1)), substring($hazard-type, 2))"/>
+          </xsl:call-template>
+        </strong>
+      </p>
+      <div class="app-hazard__panel">
+        <xsl:apply-templates select="*[contains(@class, ' hazard-d/hazardsymbol ')]"/>
+        <xsl:for-each select="*[contains(@class, ' hazard-d/messagepanel ')]">
+          <p class="app-hazard__hazard">
+            <strong><xsl:apply-templates select="*[contains(@class, ' hazard-d/typeofhazard ')]/node()"/></strong>
+          </p>
+          <xsl:for-each select="*[contains(@class, ' hazard-d/consequence ')]">
+            <p class="govuk-body"><xsl:apply-templates/></p>
+          </xsl:for-each>
+          <xsl:for-each select="*[contains(@class, ' hazard-d/howtoavoid ')]">
+            <p class="govuk-body app-hazard__avoid"><xsl:apply-templates/></p>
+          </xsl:for-each>
+        </xsl:for-each>
+      </div>
+    </div>
+  </xsl:template>
+
+  <!-- ===== Choice tables (task): modern govuk-table markup ===== -->
+
+  <!-- Replaces the inherited legacy renderer, which emits obsolete HTML4
+       attributes (border/cellpadding/summary/frame/rules) -->
+  <!-- Suppress the base's choicetableborder output-class; the govuk-table class
+       comes from the inherited simpletable set-output-class mapping -->
+  <xsl:template match="*[contains(@class, ' task/choicetable ')]" mode="get-output-class"/>
+
+  <xsl:template match="*[contains(@class, ' task/choicetable ')]" priority="10">
+    <table>
+      <xsl:call-template name="commonattributes"/>
+      <xsl:call-template name="setid"/>
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <xsl:choose>
+            <xsl:when test="*[contains(@class, ' task/chhead ')]">
+              <th scope="col" class="govuk-table__header">
+                <xsl:apply-templates select="*[contains(@class, ' task/chhead ')]/*[contains(@class, ' task/choptionhd ')]/node()"/>
+              </th>
+              <th scope="col" class="govuk-table__header">
+                <xsl:apply-templates select="*[contains(@class, ' task/chhead ')]/*[contains(@class, ' task/chdeschd ')]/node()"/>
+              </th>
+            </xsl:when>
+            <xsl:otherwise>
+              <th scope="col" class="govuk-table__header">
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'Option'"/>
+                </xsl:call-template>
+              </th>
+              <th scope="col" class="govuk-table__header">
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'Description'"/>
+                </xsl:call-template>
+              </th>
+            </xsl:otherwise>
+          </xsl:choose>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        <xsl:for-each select="*[contains(@class, ' task/chrow ')]">
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">
+              <xsl:apply-templates select="*[contains(@class, ' task/choption ')]/node()"/>
+            </th>
+            <td class="govuk-table__cell">
+              <xsl:apply-templates select="*[contains(@class, ' task/chdesc ')]/node()"/>
+            </td>
+          </tr>
+        </xsl:for-each>
+      </tbody>
+    </table>
+  </xsl:template>
+
+  <!-- ===== Properties tables (reference): drop legacy table attributes ===== -->
+
+  <!-- Mirrors the base reference.properties template minus the obsolete
+       cellpadding/cellspacing/border attributes; row and cell rendering (and
+       generated headers) stay inherited -->
+  <xsl:template match="*[contains(@class, ' reference/properties ')]" name="reference.properties">
+    <xsl:call-template name="spec-title"/>
+    <xsl:apply-templates select="*[contains(@class, ' ditaot-d/ditaval-startprop ')]" mode="out-of-line"/>
+    <xsl:call-template name="setaname"/>
+    <table>
+      <xsl:call-template name="setid"/>
+      <!-- ancestry supplies simpletable/properties; the simpletable
+           set-output-class mapping appends govuk-table -->
+      <xsl:call-template name="commonattributes"/>
+      <xsl:apply-templates select="." mode="generate-table-summary-attribute"/>
+      <xsl:call-template name="setscale"/>
+      <xsl:call-template name="dita2html:simpletable-cols"
+                         xmlns:dita2html="http://dita-ot.sourceforge.net/ns/200801/dita2html"/>
+      <xsl:variable name="header" select="*[contains(@class, ' reference/prophead ')]"/>
+      <xsl:variable name="properties" select="*[contains(@class, ' reference/property ')]"/>
+      <xsl:variable name="hasType" select="exists($header/*[contains(@class, ' reference/proptypehd ')] | $properties/*[contains(@class, ' reference/proptype ')])"/>
+      <xsl:variable name="hasValue" select="exists($header/*[contains(@class, ' reference/propvaluehd ')] | $properties/*[contains(@class, ' reference/propvalue ')])"/>
+      <xsl:variable name="hasDesc" select="exists($header/*[contains(@class, ' reference/propdeschd ')] | $properties/*[contains(@class, ' reference/propdesc ')])"/>
+      <xsl:variable name="prophead" as="element()">
+        <xsl:choose>
+          <xsl:when test="*[contains(@class, ' reference/prophead ')]">
+            <xsl:sequence select="*[contains(@class, ' reference/prophead ')]"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:variable name="gen" as="element(gen)?">
+              <xsl:call-template name="gen-prophead">
+                <xsl:with-param name="hasType" select="$hasType"/>
+                <xsl:with-param name="hasValue" select="$hasValue"/>
+                <xsl:with-param name="hasDesc" select="$hasDesc"/>
+              </xsl:call-template>
+            </xsl:variable>
+            <xsl:sequence select="$gen/*"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <xsl:apply-templates select="$prophead">
+        <xsl:with-param name="hasType" select="$hasType"/>
+        <xsl:with-param name="hasValue" select="$hasValue"/>
+        <xsl:with-param name="hasDesc" select="$hasDesc"/>
+      </xsl:apply-templates>
+      <tbody class="govuk-table__body">
+        <xsl:apply-templates select="*[contains(@class, ' reference/property ')] | processing-instruction()">
+          <xsl:with-param name="hasType" select="$hasType"/>
+          <xsl:with-param name="hasValue" select="$hasValue"/>
+          <xsl:with-param name="hasDesc" select="$hasDesc"/>
+        </xsl:apply-templates>
+      </tbody>
+    </table>
+    <xsl:apply-templates select="*[contains(@class, ' ditaot-d/ditaval-endprop ')]" mode="out-of-line"/>
+  </xsl:template>
+
   <!-- ===== SVG diagrams: give the generated img an accessible name ===== -->
 
   <!-- Mirrors the base svg-d rendering, adding @alt derived from the enclosing
@@ -180,7 +330,7 @@ sections) follow at the end.
                 select="('warning', 'caution', 'danger', 'important', 'attention', 'notice')"
                 as="xs:string+"/>
 
-  <xsl:template match="*[contains(@class, ' topic/note ')]">
+  <xsl:template match="*[contains(@class, ' topic/note ')][not(contains(@class, ' hazard-d/hazardstatement '))]">
     <xsl:variable name="note-type" as="xs:string"
                   select="lower-case(if (@type and @type ne 'other') then string(@type) else 'note')"/>
     <xsl:choose>

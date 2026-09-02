@@ -44,9 +44,18 @@ element-level typography.
     </xsl:choose>
   </xsl:variable>
 
+  <!-- Path from the current page to the output root, for assets and home
+       links. The toolkit's $PATH2PROJ comes out empty for topics split by
+       chunk="by-topic" (an upstream bug, present in plain html5 too), which
+       breaks their CSS/JS; the navigation's own get-path2map-dir is reliable
+       there, so we reuse it. Falls back to $PATH2PROJ when no map is in play. -->
+  <xsl:variable name="govuk-root" as="xs:string"
+                select="if (exists($input.map.url) and normalize-space($input.map.url))
+                        then string($pathToMapDir) else string($PATH2PROJ)"/>
+
   <!-- Masthead link target: the generated cover (home) page at the site root -->
   <xsl:variable name="govuk-home-href" as="xs:string"
-                select="concat($PATH2PROJ, 'index', $OUTEXT)"/>
+                select="concat($govuk-root, 'index', $OUTEXT)"/>
 
   <!-- Root element carries the GOV.UK template class -->
   <xsl:template name="chapter-setup">
@@ -68,16 +77,16 @@ element-level typography.
        any user stylesheet from args.css so publishers can override (FR-T4). -->
   <xsl:template name="generateCssLinks">
     <link rel="stylesheet"
-          href="{concat($PATH2PROJ, 'govuk/govuk-frontend-', $govuk-frontend-version, '.min.css')}"/>
-    <link rel="stylesheet" href="{concat($PATH2PROJ, 'govuk/plugin.css')}"/>
+          href="{concat($govuk-root, 'govuk/govuk-frontend-', $govuk-frontend-version, '.min.css')}"/>
+    <link rel="stylesheet" href="{concat($govuk-root, 'govuk/plugin.css')}"/>
     <xsl:if test="$GOVUK-BRANDING ne 'official'">
-      <link rel="stylesheet" href="{concat($PATH2PROJ, 'govuk/overlay-neutral.css')}"/>
+      <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-neutral.css')}"/>
     </xsl:if>
     <xsl:if test="$GOVUK-BRANDING = 'istanduk'">
-      <link rel="stylesheet" href="{concat($PATH2PROJ, 'govuk/overlay-istanduk.css')}"/>
+      <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-istanduk.css')}"/>
     </xsl:if>
     <xsl:if test="string-length($CSS) gt 0">
-      <link rel="stylesheet" href="{concat($PATH2PROJ, $CSSPATH, $CSS)}"/>
+      <link rel="stylesheet" href="{concat($govuk-root, $CSSPATH, $CSS)}"/>
     </xsl:if>
   </xsl:template>
 
@@ -115,7 +124,7 @@ element-level typography.
         </xsl:call-template>
       </a>
       <xsl:call-template name="govuk-masthead">
-        <xsl:with-param name="prefix" select="string($PATH2PROJ)"/>
+        <xsl:with-param name="prefix" select="$govuk-root"/>
         <xsl:with-param name="name" select="$govuk-service-name"/>
         <xsl:with-param name="home-href" select="$govuk-home-href"/>
         <xsl:with-param name="search-enabled" select="$GOVUK-SEARCH"/>
@@ -142,15 +151,15 @@ element-level typography.
         </div>
       </div>
       <xsl:call-template name="govuk-site-footer">
-        <xsl:with-param name="prefix" select="string($PATH2PROJ)"/>
+        <xsl:with-param name="prefix" select="$govuk-root"/>
         <xsl:with-param name="name" select="$govuk-service-name"/>
         <xsl:with-param name="glossary" select="$GOVUK-GLOSSARY"/>
         <xsl:with-param name="index" select="$GOVUK-INDEX"/>
       </xsl:call-template>
-      <script src="{concat($PATH2PROJ, 'govuk/plugin.js')}"></script>
+      <script src="{concat($govuk-root, 'govuk/plugin.js')}"></script>
       <script type="module">
-        <xsl:text>import { initAll } from './</xsl:text>
-        <xsl:value-of select="$PATH2PROJ"/>
+        <xsl:text>import { initAll } from '</xsl:text>
+        <xsl:value-of select="if (string-length($govuk-root) gt 0) then $govuk-root else './'"/>
         <xsl:text>govuk/govuk-frontend-</xsl:text>
         <xsl:value-of select="$govuk-frontend-version"/>
         <xsl:text>.min.js'; initAll();</xsl:text>
