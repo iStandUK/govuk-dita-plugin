@@ -116,8 +116,12 @@ jobs:
       - name: Branding CSS is current
         run: |
           (cd tools/branding && npm ci && npm run build)
-          git diff --exit-status -- org.istanduk.gov-uk/resource/govuk-frontend/*-nhs.min.css \
-            || { echo "Vendored brand CSS is stale — run 'npm run build' in tools/branding and commit."; exit 1; }
+          if [ -n "$(git status --porcelain -- org.istanduk.gov-uk/resource/govuk-frontend)" ]; then
+            echo "Vendored brand CSS is stale — run 'npm run build' in tools/branding and commit:"
+            git --no-pager diff -- org.istanduk.gov-uk/resource/govuk-frontend | head -40
+            exit 1
+          fi
+          echo "vendored brand CSS matches its Sass source"
 
       - name: Cache Nu validator
         id: cache-vnu
