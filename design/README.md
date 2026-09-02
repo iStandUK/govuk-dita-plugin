@@ -18,6 +18,7 @@ commercial help-output tooling.
 | [06-open-questions.md](06-open-questions.md) | Questions still needing a decision before or during implementation |
 | [07-gap-analysis-oruk.md](07-gap-analysis-oruk.md) | Gap analysis of the Open Referral UK corpus: full-sweep feature inventory, verified dispositions, findings |
 | [08-gap-analysis-dita13.md](08-gap-analysis-dita13.md) | Gap analysis of the full DITA 1.3 specification against the plugin, with the verified 1.0 gap list |
+| [09-nhs-branding.md](09-nhs-branding.md) | NHS branding gap analysis and the recoloured-GDS approach for the NHS and crown official variants (#47) |
 
 ## Summary of agreed direction
 
@@ -51,8 +52,10 @@ Per-requirement status lives in the **Status column of
 [02-requirements.md](02-requirements.md)**. v0.9.0 closes the P1–P3 gap list in
 [08-gap-analysis-dita13.md](08-gap-analysis-dita13.md) and the verification NFRs. The 1.0
 backlog = **live trials**, then the remaining v1 epic ([#15](https://github.com/iStandUK/govuk-dita-plugin/issues/15))
-items: official branding (FR-T2, [#20](https://github.com/iStandUK/govuk-dita-plugin/issues/20))
-and the registry listing ([#21](https://github.com/iStandUK/govuk-dita-plugin/issues/21)).
+items: branded frontend variants — NHS and official/crown ([#47](https://github.com/iStandUK/govuk-dita-plugin/issues/47),
+delivering FR-T2/[#20](https://github.com/iStandUK/govuk-dita-plugin/issues/20) on a
+Sass-recompiled palette; see [09-nhs-branding.md](09-nhs-branding.md) / D-17) and the registry
+listing ([#21](https://github.com/iStandUK/govuk-dita-plugin/issues/21)).
 
 ## Glossary of terms used throughout
 
