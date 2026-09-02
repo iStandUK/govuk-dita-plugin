@@ -21,6 +21,12 @@
   </topichead>
   <topichead navtitle="Reuse and processing">
     <topicref href="topics/conref-use.dita"/>
+    <topicref href="topics/conref-push.dita"/>
+    <topicref href="topics/conref-pusher.dita" processing-role="resource-only"/>
+    <topicref href="topics/branch.dita">
+      <ditavalref href="branch.ditaval"/>
+    </topicref>
+    <topicref href="topics/rtl.dita"/>
     <topicref href="topics/composite.dita" chunk="by-topic"/>
     <topicref href="topics/shared.dita" copy-to="topics/shared-alpha.dita" keyscope="alpha">
       <keydef keys="prodname"><topicmeta><keywords><keyword>Alpha Edition</keyword></keywords></topicmeta></keydef>

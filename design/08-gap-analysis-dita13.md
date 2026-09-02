@@ -53,7 +53,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | `task` — `steptroubleshooting`, `tasktroubleshooting` | ✅ labelled via generated task labels *(#31)* |
 | `troubleshooting` topic (1.3) | ✅ Cause/Remedy labelled (localised) with GOV.UK headings *(#31)* |
 | `glossentry`, glossary page, `abbreviated-form`, `term` | ✅ (v0.2) |
-| `glossgroup` | ◐ same class family as glossentry; verify when touched |
+| `glossgroup` | ✅ (#34) — the glossary generator harvests each nested `glossentry` from a glossgroup, not just standalone glossentry topics |
 
 ### Blocks
 
@@ -84,7 +84,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | markup-d + xml-d: `xmlelement xmlatt textentity numcharref …` | ✅ already emitted as `<code>` (monospace) — verified, no change needed |
 | `keyword term ph text cite q state data tm` | ◐ *(verified)* |
 | `syntaxdiagram` | ✅ *(verified: the toolkit renders it as inline SVG)* |
-| `coderef` | ⬜ untested |
+| `coderef` | ✅ (#34) — external code pulled into `codeblock` and rendered (kitchen `programming`) |
 
 ### Tables, media, math
 
@@ -95,7 +95,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | `image` inline and `placement="break"`, `alt` | ✅/◐ *(verified)* |
 | svg-d (`svg-container`/`svgref`) | ✅ local `svgref` inlined as native SVG so links inside diagrams work; `govuk.svg.inline=no` keeps the img rendering *(#37)*; inline `svg-container` already native |
 | ut-d `imagemap`/`area` | ✅ works *(verified: map/area/usemap emitted with alt and titles)*; styling ◐ |
-| `object` (media embed) | ⬜ untested |
+| `object` (media embed) | ✅ (#34) — emits HTML `<object>` with fallback (kitchen `media`); Nu-valid |
 | **equation-d + mathml-d (1.3)** | ✅ MathML passed through natively (equation-inline/-block render the `m:math` markup, browsers render it) *(#28)* |
 
 ### Map features and processing
@@ -105,7 +105,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | Keys, `keyref`, `keydef`, resource-only maprefs | ✅ (ORUK-verified at scale) |
 | **Key scopes (1.3)** | ✅ scoped resolution works *(verified)*. The **keyscope + `copy-to`** reuse pattern leaves keyrefs unresolved in the copied topic — **confirmed upstream** (identical under plain `-f html5`; the copied temp file keeps `<ph keyref>` unresolved), #29. Plugin-independent; workaround below |
 | `conref`, `conkeyref`, `conref`+`conrefend` range | ✅ *(all three verified)* |
-| conref push (`@conaction`) | ⬜ untested |
+| conref push (`@conaction`) | ✅ (#34) — `pushreplace` and `pushbefore` land in the target page (kitchen `conref-push`) |
 | `chunk="to-content"` | ✅ (v0.1; upstream xref limitation documented in 07) |
 | `chunk="by-topic"` on composite documents | ✅ split into per-topic pages; the split children's `$PATH2PROJ` comes out empty upstream (breaks asset links in plain html5 too) — the plugin derives asset paths from `get-path2map-dir` instead, so CSS/JS/home links resolve correctly *(fixed)* |
 | `copy-to` | ✅ *(verified: copies produced)* — see keyscope caveat |
@@ -113,9 +113,9 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | Reltables → related links | ✅ *(verified: "Related information" section with styled links)* |
 | `collection-type="sequence"` | ✅ previous/next GOV.UK pagination at each page foot follows the map's linear reading order (which encompasses sequences) *(#32, FR-N5)* |
 | DITAVAL filtering | ✅ *(verified: exclude honoured)* |
-| DITAVAL flagging (styles) | ✅ colour and **style decorations** (bold/italic/underline/…) both render — the `flag__style--*` classes, lost when the base `commonltr.css` was dropped, are now re-declared in `plugin.css` *(#29)*; start/end flag images ⬜ |
+| DITAVAL flagging (styles) | ✅ colour and **style decorations** (bold/italic/underline/…) render — the `flag__style--*` classes, lost when the base `commonltr.css` was dropped, are re-declared in `plugin.css` *(#29)*; **start/end flag images** also render with their `alt-text` *(#34)* |
 | DITAVAL revisions (`revprop`, changebars) | ✅ revision **style** flags render (same `flag__style--*` fix, #29). ⚠️ **changebars** are not emitted by html5 output at all — upstream limitation, documented |
-| Branch filtering (`ditavalref`, 1.3) | ⬜ untested (toolkit supports) |
+| Branch filtering (`ditavalref`, 1.3) | ✅ (#34) — a branch `ditavalref` filters only its subtree, leaving the rest of the build untouched (kitchen `branch`) |
 | `@cascade`, `@print`, `@deliveryTarget` | ◐ |
 | `anchor`/`navref` (runtime map integration) | ✖ niche; document as unsupported |
 
@@ -125,7 +125,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 |---|---|
 | `chapter`, `part` | ✅ (nav groups + layout grouping) |
 | `appendix`/`appendices` | ✅ (#33) — now counted as a group by the `auto` layout heuristic |
-| `frontmatter`/`backmatter` content (preface, notices, bookabstract, colophon…) | ⬜ untested |
+| `frontmatter`/`backmatter` content (preface, notices, bookabstract, colophon…) | ✅ (#34) — `preface` and `colophon` topics build and render (manual) |
 | `booklists`: `toc` | ✅ |
 | `booklists`: `indexlist` | ✅ — the existing index page is served and footer-linked |
 | `booklists`: `figurelist`, `tablelist` | ✅ (#33) — generated as A-Z-style utility pages, deep-linked, footer-linked |
@@ -137,7 +137,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 | Feature | Status |
 |---|---|
 | `@xml:lang` flow-through; UI strings localisable | ✅ (v0.2) |
-| Right-to-left (`@dir`) | ⬜ untested; govuk-frontend ships an RTL stylesheet question — investigate before claiming |
+| Right-to-left (`@dir`) | ◐ (#34) smoke test: `@dir`/`@xml:lang` propagate to `<html lang="ar" dir="rtl">` and content is Nu-valid, so browsers render the text RTL; full mirrored-layout RTL is not attempted (govuk-frontend 6.5.0 ships no RTL build) |
 | Table header associations, image alt, landmarks, single-h1 | ✅ (CI-enforced) |
 
 ## The 1.0 gap list
@@ -159,7 +159,7 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 **P3 — completeness** (spec features not yet surfaced):
 11. ~~Sequence/reading-order previous-next links~~ — **done (#32)**: GOV.UK block pagination in map reading order
 12. ~~Bookmap booklists~~ — **done (#33)**: `indexlist` serves the existing index page; `figurelist`/`tablelist` generate deep-linked utility pages (footer-linked); `appendix`/`appendices` now group in the `auto` layout
-13. Verification fixtures for the ⬜ set: conref push, `ditavalref` branch filtering, flag images, `object`, frontmatter/backmatter topics, RTL, `coderef`, `glossgroup`
+13. ~~Verification fixtures for the ⬜ set~~ — **done (#34)**: conref push, `ditavalref` branch filtering, start-flag images, `object`, frontmatter/backmatter topics, RTL smoke test, `coderef`, and `glossgroup` all exercised by fixtures with CI assertions; a dead-link bug in the generated glossary (links to non-existent resource-only glossentry pages) was fixed by making the glossary self-contained
 
 The kitchen-sink fixture now passes **full Nu validation** in CI (the #27 correctness fixes
 removed the last invalid-HTML blockers), with assertions for the hazard panel and

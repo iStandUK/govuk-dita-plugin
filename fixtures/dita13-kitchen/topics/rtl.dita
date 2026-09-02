@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="rtl" xml:lang="ar" dir="rtl">
+  <title>اتجاه من اليمين إلى اليسار</title>
+  <shortdesc>A right-to-left smoke test: the language and direction should flow to the output.</shortdesc>
+  <body>
+    <p>هذه فقرة نصية باللغة العربية لاختبار الاتجاه من اليمين إلى اليسار.</p>
+    <p dir="ltr">A left-to-right paragraph nested inside the right-to-left topic.</p>
+  </body>
+</topic>

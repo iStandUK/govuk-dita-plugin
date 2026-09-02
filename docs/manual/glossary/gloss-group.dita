@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossgroup PUBLIC "-//OASIS//DTD DITA Glossary Group//EN" "glossgroup.dtd">
+<glossgroup id="gloss-group" xml:lang="en-GB">
+  <title>Build tooling</title>
+  <glossentry id="gloss-saxon">
+    <glossterm>Saxon</glossterm>
+    <glossdef>The XSLT 3.0 processor DITA-OT uses to run the plugin's stylesheets.</glossdef>
+  </glossentry>
+  <glossentry id="gloss-pagefind">
+    <glossterm>Pagefind</glossterm>
+    <glossdef>The static-site search indexer the plugin runs, when present, to add site
+      search.</glossdef>
+  </glossentry>
+</glossgroup>

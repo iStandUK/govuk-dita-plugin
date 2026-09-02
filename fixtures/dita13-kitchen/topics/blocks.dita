@@ -33,6 +33,7 @@ Line two kept</lines>
     <p audience="admin">Conditional paragraph flagged for administrators.</p>
     <p audience="secret">Conditional paragraph excluded by the filter.</p>
     <p rev="r2">Paragraph marked as revision r2.</p>
+    <p platform="new">Paragraph flagged with a start-flag image by the DITAVAL.</p>
     <draft-comment author="no">Draft comment (only with args.draft=yes).</draft-comment>
   </body>
 </topic>
