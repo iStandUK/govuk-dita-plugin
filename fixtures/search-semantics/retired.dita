@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="retired">
+  <title outputclass="element search-demote">Widget Code (Retired)</title>
+  <shortdesc>The former widget code, replaced in 2024 and kept for reference.</shortdesc>
+  <body>
+    <p>Widget Code was retired when the widget register moved to gadget codes.</p>
+  </body>
+</topic>

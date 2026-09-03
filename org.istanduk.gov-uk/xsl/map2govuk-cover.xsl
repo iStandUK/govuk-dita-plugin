@@ -35,6 +35,7 @@ map transformation with the plugin's values.
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>
   <xsl:param name="GOVUK-SEARCH" select="'no'"/>
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
+  <xsl:param name="GOVUK-SEARCH-RANKING" select="'default'"/>
   <xsl:param name="GOVUK-PHASE" select="''"/>
   <xsl:param name="GOVUK-FEEDBACK-URL" select="''"/>
   <xsl:param name="GOVUK-SERVICE-URL" select="''"/>
@@ -43,6 +44,44 @@ map transformation with the plugin's values.
   <xsl:param name="GOVUK-FOOTER-LICENCE" select="''"/>
 
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
+
+  <!-- Pagefind ranking options for the search page (#54): a preset name or a
+       JSON object passed through. Command lines tend to strip double quotes, so
+       bare keys and single quotes are tolerated before validation. An unusable
+       value is reported (GOVK002E) and Pagefind's defaults apply; values that are
+       plainly wrong are rejected earlier by the Ant build. -->
+  <xsl:variable name="govuk-search-ranking-json" as="xs:string">
+    <xsl:variable name="value" select="normalize-space($GOVUK-SEARCH-RANKING)"/>
+    <xsl:choose>
+      <xsl:when test="$value = ('', 'default')">
+        <xsl:sequence select="''"/>
+      </xsl:when>
+      <xsl:when test="$value = 'reference'">
+        <xsl:sequence select="'{ &quot;termFrequency&quot;: 0.0, &quot;pageLength&quot;: 0.0 }'"/>
+      </xsl:when>
+      <xsl:when test="starts-with($value, '{')">
+        <xsl:variable name="normalised" as="xs:string"
+                      select="replace(replace($value, '''', '&quot;'),
+                                      '([\{,]\s*)([A-Za-z_][A-Za-z0-9_]*)\s*:', '$1&quot;$2&quot;:')"/>
+        <xsl:try select="if (parse-json($normalised) instance of map(*)) then $normalised else error()">
+          <xsl:catch>
+            <xsl:call-template name="output-message">
+              <xsl:with-param name="id" select="'GOVK002E'"/>
+              <xsl:with-param name="msgparams">%1=<xsl:value-of select="$value"/></xsl:with-param>
+            </xsl:call-template>
+            <xsl:sequence select="''"/>
+          </xsl:catch>
+        </xsl:try>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="output-message">
+          <xsl:with-param name="id" select="'GOVK002E'"/>
+          <xsl:with-param name="msgparams">%1=<xsl:value-of select="$value"/></xsl:with-param>
+        </xsl:call-template>
+        <xsl:sequence select="''"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
 
   <xsl:variable name="govuk-cover-title" as="xs:string">
     <xsl:variable name="main" as="element()?"
@@ -497,7 +536,7 @@ map transformation with the plugin's values.
           <script>
             <xsl:text>window.addEventListener('DOMContentLoaded', function () {
   if (window.PagefindUI) {
-    new PagefindUI({ element: '#app-search', showSubResults: true });
+    new PagefindUI({ element: '#app-search', showSubResults: true</xsl:text><xsl:if test="$govuk-search-ranking-json != ''"><xsl:text>, ranking: </xsl:text><xsl:value-of select="$govuk-search-ranking-json"/></xsl:if><xsl:text> });
     var q = new URLSearchParams(window.location.search).get('q');
     if (q) {
       window.requestAnimationFrame(function () {

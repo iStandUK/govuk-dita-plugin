@@ -106,6 +106,16 @@
                 <codeph>PATH</codeph>.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.search.ranking</codeph></entry>
+              <entry><codeph>default</codeph> (default), <codeph>reference</codeph>, or a
+                JSON object</entry>
+              <entry>How search results are scored. <codeph>reference</codeph> ranks
+                exact-title pages first (raw term counts, no long-page penalty), which
+                suits dictionaries, catalogues and standards; a JSON object passes
+                Pagefind ranking options through unchanged. See
+                <xref keyref="search"/>.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.svg.inline</codeph></entry>
               <entry><codeph>yes</codeph> (default), <codeph>no</codeph></entry>
               <entry>Inline local SVG diagrams as native SVG so links inside them work;
