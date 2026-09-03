@@ -35,6 +35,7 @@
   <keydef keys="design-system" href="https://design-system.service.gov.uk/" format="html" scope="external">
     <topicmeta><linktext>GOV.UK Design System</linktext></topicmeta>
   </keydef>
+  <keydef keys="troubleshooting" href="topics/troubleshooting.dita" format="dita" scope="local"/>
   <keydef keys="accessibility" href="topics/accessibility.dita" format="dita" scope="local"/>
   <keydef keys="a11y-regulations" href="https://www.gov.uk/guidance/accessibility-requirements-for-public-sector-websites-and-apps" format="html" scope="external">
     <topicmeta><linktext>accessibility requirements for public sector websites and apps</linktext></topicmeta>

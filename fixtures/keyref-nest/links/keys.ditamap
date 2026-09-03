@@ -1,0 +1,7 @@
+<?xml version="1.0"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map><title>Keys</title>
+  <keydef keys="k-sub" href="../maps/sub.ditamap" format="ditamap"/>
+  <keydef keys="k-sub2" href="../maps/deep/sub2.ditamap" format="ditamap"/>
+  <keydef keys="k-ov" href="../ov.dita" processing-role="normal" toc="no"/>
+  <keydef keys="k-t1" href="../t1.dita" processing-role="normal" toc="no"/>
+</map>
