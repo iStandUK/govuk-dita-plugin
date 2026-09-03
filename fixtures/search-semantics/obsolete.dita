@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="obsolete" importance="obsolete">
+  <title>Old Widget Register</title>
+  <shortdesc>The register that preceded widget codes.</shortdesc>
+  <body>
+    <p>Obsolete since widget codes were introduced.</p>
+  </body>
+</topic>

@@ -31,5 +31,44 @@
       <note type="tip">Without JavaScript the search page explains that search is
         unavailable; everything else on the site works as normal.</note>
     </section>
+    <section id="relevance">
+      <title>Relevance: what ranks first</title>
+      <p><indexterm>search<indexterm>relevance</indexterm></indexterm><indexterm>search-ignore</indexterm><indexterm>search-demote</indexterm>Pagefind scores like a general web search: a term's density counts,
+        and long pages are penalised. In a reference publication that is backwards — the
+        definition page for a term is long and mentions it constantly — so the plugin lets
+        the DITA decide, and lets the publisher choose how results are scored.</p>
+      <p><codeph>govuk.search.ranking</codeph> selects the scoring. <codeph>default</codeph>
+        keeps Pagefind's behaviour. <codeph>reference</codeph> scores on raw term counts with
+        no long-page penalty; measured on a 10,000-page data dictionary, it put the exact-title
+        page first for seven of ten test queries where the default managed three. Any other
+        need is met by passing a JSON object of Pagefind ranking options, for example
+        <codeph>{termFrequency:0,pageLength:0,metaWeights:{keywords:3}}</codeph> (keys may be left
+        unquoted, since command lines tend to strip quotes). A value that is not a preset or
+        an object fails the build; an object that cannot be parsed is reported as an error
+        and Pagefind's defaults apply.</p>
+      <p>The DITA itself carries the rest, translated into Pagefind's attributes:</p>
+      <ul>
+        <li>The <codeph>shortdesc</codeph> is weighted four times ordinary text: it is the most
+          searched-for sentence on a reference page.</li>
+        <li><codeph>outputclass="search-ignore"</codeph> on any element keeps it on the page but
+          out of the index. Use it for cross-reference lists ("where used" tables, long link
+          lists) that otherwise let a page that merely mentions a term outrank the page that
+          defines it; in the measurements this was the only remedy for those cases.</li>
+        <li><codeph>outputclass="search-demote"</codeph> on a topic or its title, or the
+          topic's own <codeph>importance="obsolete"</codeph> or
+          <codeph>"deprecated"</codeph>, demotes the topic: its title weight drops to 2, its
+          body to 0.3 and its short description to 1, so retired or superseded items rank below
+          live items that share their words but remain findable. Weighting the body alone does
+          almost nothing; the title weight is what decides.</li>
+        <li>Prolog <codeph>keywords</codeph> become searchable metadata, the natural home for
+          "also known as" aliases; boost them with <codeph>metaWeights.keywords</codeph> in the
+          ranking object.</li>
+        <li>A <codeph>searchtitle</codeph> becomes the result title, and prolog
+          <codeph>category</codeph> and <codeph>audience</codeph> become filters, which the
+          search page offers as facets when a publication defines them.</li>
+      </ul>
+      <p>None of this changes how a page looks, and a publication that uses none of the
+        markup is unaffected apart from the short-description weight.</p>
+    </section>
   </conbody>
 </concept>

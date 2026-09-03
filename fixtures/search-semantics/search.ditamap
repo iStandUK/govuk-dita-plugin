@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map id="search-semantics"><title>Search semantics fixture</title>
+  <topicref href="live.dita"/>
+  <topicref href="retired.dita"/>
+  <topicref href="obsolete.dita"/>
+</map>

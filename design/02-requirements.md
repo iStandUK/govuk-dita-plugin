@@ -78,6 +78,7 @@ requirements govern its behaviour.
 | FR-S2 | A search field appears in the header/sidebar area, with results shown on a dedicated search page; markup degrades gracefully (field hidden) when no index is present | M | ✅ sidebar/home "Search this site" link + generated search page; link omitted entirely when search is off |
 | FR-S3 | Navigation, headers, and footers are excluded from indexing (`data-pagefind-body` scoping) so results match page content only | M | ✅ asserted in CI |
 | FR-S4 | If Pagefind is not installed, the build **succeeds with a clear notice**, producing a site without search — Pagefind is never a hard dependency | M | ✅ CI exercises both paths; `yes` without the binary fails the build by design |
+| FR-S5 | Relevance follows the DITA: `shortdesc` weighting, `search-ignore` / `search-demote` outputclass tokens and `importance`, prolog keywords as searchable metadata, `searchtitle` as result title, `category`/`audience` filters; scoring presets via `govuk.search.ranking` | S | ✅ #54, measured on the NHS Data Dictionary trial |
 
 ### Branding and theming (FR-T)
 

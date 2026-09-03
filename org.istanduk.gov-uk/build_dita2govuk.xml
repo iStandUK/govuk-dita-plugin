@@ -87,6 +87,16 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
          requires it, no disables. -->
     <property name="govuk.search" value="auto"/>
     <property name="govuk.pagefind.cmd" value="pagefind"/>
+    <property name="govuk.search.ranking" value="default"/>
+    <fail message="govuk.search.ranking must be 'default', 'reference' or a JSON object such as {&quot;termFrequency&quot;:0,&quot;pageLength&quot;:0}, was: ${govuk.search.ranking}">
+      <condition>
+        <not><or>
+          <equals arg1="${govuk.search.ranking}" arg2="default"/>
+          <equals arg1="${govuk.search.ranking}" arg2="reference"/>
+          <matches string="${govuk.search.ranking}" pattern="^\s*\{.*\}\s*$"/>
+        </or></not>
+      </condition>
+    </fail>
     <property environment="govuk.env"/>
     <condition property="govuk.pagefind.available">
       <or>
@@ -159,6 +169,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-HOMEPAGE-DEPTH" expression="${govuk.homepage.depth}"/>
       <param name="GOVUK-SERVICE-NAME" expression="${govuk.service.name}" if:set="govuk.service.name"/>
       <param name="GOVUK-SEARCH" expression="${govuk.search.enabled}"/>
+      <param name="GOVUK-SEARCH-RANKING" expression="${govuk.search.ranking}"/>
       <param name="GOVUK-BRANDING" expression="${govuk.branding}"/>
       <param name="GOVUK-PHASE" expression="${govuk.phase}" if:set="govuk.phase"/>
       <param name="GOVUK-FEEDBACK-URL" expression="${govuk.feedback.url}" if:set="govuk.feedback.url"/>
