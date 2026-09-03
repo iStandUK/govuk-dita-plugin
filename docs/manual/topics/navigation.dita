@@ -15,6 +15,9 @@
       <p>Topics with <codeph>toc="no"</codeph> stay out of the tree but are still built and
         linkable — useful for large reference sets addressed by cross-reference rather than
         browsing, as in the Open Referral UK publications.</p>
+      <p>An entry that appears as plain text with nothing beneath it usually means a key the
+        toolkit never resolved; the build warns (<codeph>GOVK001W</codeph>) and
+        <xref keyref="troubleshooting"/> explains the cause and the fix.</p>
     </section>
     <section>
       <title>The home page</title>

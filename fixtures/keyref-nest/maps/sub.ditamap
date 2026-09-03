@@ -1,0 +1,7 @@
+<?xml version="1.0"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map id="sub"><title>Sub</title>
+  <topicset id="grp" keyref="k-ov" navtitle="Group">
+    <mapref keyref="k-sub2" toc="yes"/>
+    <topicref keyref="k-t1"/>
+  </topicset>
+</map>

@@ -76,4 +76,5 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
   <feature extension="ant.import" file="build_dita2govuk.xml"/>
   <feature extension="dita.conductor.html5.param" file="insertParameters.xml"/>
   <feature extension="dita.xsl.strings" file="strings/strings.xml"/>
+  <feature extension="dita.xsl.messages" file="messages.xml"/>
 </plugin>

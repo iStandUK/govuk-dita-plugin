@@ -102,11 +102,11 @@ typography · ⚠️ **1.0 gap** (styling or correctness) · ⬜ untested, needs
 
 | Feature | Status |
 |---|---|
-| Keys, `keyref`, `keydef`, resource-only maprefs | ✅ (ORUK-verified at scale) |
+| Keys, `keyref`, `keydef`, resource-only maprefs | ✅ (ORUK-verified at scale; DITA-OT 4.4.1 resolves no key inside a keyref'd mapref — plugin warns `GOVK001W`, manual Troubleshooting, #51/#52) |
 | **Key scopes (1.3)** | ✅ scoped resolution works *(verified)*. The **keyscope + `copy-to`** reuse pattern leaves keyrefs unresolved in the copied topic — **confirmed upstream** (identical under plain `-f html5`; the copied temp file keeps `<ph keyref>` unresolved), #29. Plugin-independent; workaround below |
 | `conref`, `conkeyref`, `conref`+`conrefend` range | ✅ *(all three verified)* |
 | conref push (`@conaction`) | ✅ (#34) — `pushreplace` and `pushbefore` land in the target page (kitchen `conref-push`) |
-| `chunk="to-content"` | ✅ (v0.1; upstream xref limitation documented in 07) |
+| `chunk="to-content"` | ✅ (v0.1; upstream xref limitation documented in 07; DITA-OT 4.4 compatibility-mode regression and its remedy in the manual Troubleshooting topic, #52) |
 | `chunk="by-topic"` on composite documents | ✅ split into per-topic pages; the split children's `$PATH2PROJ` comes out empty upstream (breaks asset links in plain html5 too) — the plugin derives asset paths from `get-path2map-dir` instead, so CSS/JS/home links resolve correctly *(fixed)* |
 | `copy-to` | ✅ *(verified: copies produced)* — see keyscope caveat |
 | `topichead`/`topicgroup` | ✅ sidebar group labels; also drive the grouped landing layout so their children are linked from the home page *(auto-layout fix)* |

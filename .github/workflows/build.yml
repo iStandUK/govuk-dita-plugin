@@ -65,10 +65,11 @@ jobs:
       # Built with Pagefind on the PATH: search auto-enables (FR-S1)
       - name: Build manual
         run: |
+          set -o pipefail
           "dita-ot-${DITA_OT_VERSION}/bin/dita" \
             --input docs/manual/manual.ditamap \
             --format govuk \
-            --output out/manual
+            --output out/manual 2>&1 | tee manual-build.log
 
       - name: Build layout overrides
         run: |
@@ -127,6 +128,26 @@ jobs:
             "-Dgovuk.footer.links=Privacy|https://example.gov.uk/privacy;Contact|https://example.gov.uk/contact" \
             "-Dgovuk.footer.licence=© 2026 Example Service"
 
+      # Trial finding (#51): DITA-OT resolves no key inside a submap included with
+      # <mapref keyref>; the plugin must warn (GOVK001W) and name the entry, and
+      # stay silent for the same submap included with <mapref href> and for the manual.
+      - name: Build keyref-nest fixture (unresolved keys, #51)
+        run: |
+          set -o pipefail
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/keyref-nest/root-keyref.ditamap \
+            --format govuk --output out/keyref-nest 2>&1 | tee keyref-nest.log
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/keyref-nest/root-href.ditamap \
+            --format govuk --output out/keyref-nest-href 2>&1 | tee keyref-nest-href.log
+          grep -q "\[GOVK001W\]" keyref-nest.log
+          grep -q "Navigation entry 'Group' has keyref='k-ov'" keyref-nest.log
+          # once per affected branch: the nested mapref and topicref beneath 'Group' stay quiet
+          test "$(grep -c 'GOVK001W' keyref-nest.log)" = 1
+          ! grep -q "GOVK001W" keyref-nest-href.log
+          ! grep -q "GOVK001W" manual-build.log
+          # the symptom the warning describes, and its absence with <mapref href>
+          grep -q '<span>Group</span>' out/keyref-nest/ov.html
+          grep -q 'href="ov.html">Overview T</a>' out/keyref-nest-href/t1.html
+
       # The brand-recoloured CSS is a vendored artifact (#47): guard against it
       # drifting from its Sass source. Rebuild it and fail on any diff.
       - name: Branding CSS is current
@@ -157,7 +178,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -411,7 +432,8 @@ jobs:
         run: |
           python3 tools/check_links.py \
             out/manual out/oruk-mini out/kitchen out/kitchen-flag \
-            out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3
+            out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 \
+            out/keyref-nest out/keyref-nest-href
 
       - name: Page-weight budget (NFR-P2)
         run: python3 tools/page_weight.py --report --budget-kb 300 out/manual out/kitchen out/oruk-mini

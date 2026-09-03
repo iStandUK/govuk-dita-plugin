@@ -61,7 +61,36 @@ map transformation with the plugin's values.
                 select="if (normalize-space($GOVUK-SERVICE-URL)) then normalize-space($GOVUK-SERVICE-URL)
                         else concat('index', $OUTEXT)"/>
 
+  <!-- Trial finding (#51): DITA-OT resolves no key inside a submap that was itself
+       included with <mapref keyref>, and says nothing; the entry then renders as
+       plain text with no children. Run once per build, over the merged map, and
+       name each entry whose key never resolved — once per affected branch, since
+       everything beneath an unresolved entry is unresolved for the same reason.
+       Containers without a link are legitimate (topichead, topicgroup, chapters),
+       so the check keys on an unresolved @keyref, never on the absence of @href
+       alone. -->
+  <xsl:template name="govuk-check-map">
+    <xsl:for-each select="//*[contains(@class, ' map/topicref ')]
+                          [normalize-space(@keyref)][not(normalize-space(@href))]
+                          [not(@processing-role = 'resource-only')]
+                          [not(contains(@class, ' mapgroup-d/keydef '))]
+                          [not(contains(@class, ' mapgroup-d/topichead '))]
+                          [not(contains(@class, ' mapgroup-d/topicgroup '))]
+                          [not(ancestor::*[contains(@class, ' map/topicref ')]
+                                          [normalize-space(@keyref)][not(normalize-space(@href))])]">
+      <xsl:variable name="title" as="xs:string"
+                    select="normalize-space(string((*[contains(@class, ' map/topicmeta ')]
+                                                     /*[contains(@class, ' topic/navtitle ')],
+                                                    @navtitle, @keyref)[1]))"/>
+      <xsl:call-template name="output-message">
+        <xsl:with-param name="id" select="'GOVK001W'"/>
+        <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate($title, ';', ',')"/>;%2=<xsl:value-of select="@keyref"/></xsl:with-param>
+      </xsl:call-template>
+    </xsl:for-each>
+  </xsl:template>
+
   <xsl:template name="chapter-setup">
+    <xsl:call-template name="govuk-check-map"/>
     <html class="govuk-template">
       <xsl:call-template name="setTopicLanguage"/>
       <xsl:call-template name="chapterHead"/>

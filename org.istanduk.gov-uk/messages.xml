@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+Build messages contributed to the toolkit (dita.xsl.messages). Ids follow the
+DITA-OT convention: four letters, three digits, severity (I/W/E/F).
+-->
+<messages>
+  <message id="GOVK001W" type="WARN">
+    <reason>Navigation entry '%1' has keyref='%2' that was not resolved, so it is rendered without a link and without children.</reason>
+    <response>DITA-OT does not resolve keys inside a map that is itself included with &lt;mapref keyref="..."&gt;. Include that submap with &lt;mapref href="..."&gt; instead, or check that the key is defined.</response>
+  </message>
+</messages>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="troubleshooting" xml:lang="en-GB">
+  <title>Troubleshooting</title>
+  <shortdesc>Toolkit behaviours that publishers of large, key-based publications meet on
+    DITA-OT 4.4, what they look like in the build log and on the page, and the remedy for
+    each.</shortdesc>
+  <conbody>
+    <p><indexterm>troubleshooting</indexterm><indexterm>DITA-OT<indexterm>known
+      limitations</indexterm></indexterm>Everything below was characterised on a real
+      publication of about ten thousand topics during the plugin's live trials. None of it
+      is caused by the plugin, and none of it can be fixed by the plugin, because it happens
+      in the toolkit's preprocessing before any rendering; a plain <codeph>html5</codeph>
+      build shows the same results. The plugin's part is to say so clearly.</p>
+    <section id="chunk">
+      <title>Merged pages fail on DITA-OT 4.4: "Failed to move chunk"</title>
+      <p><indexterm>chunking<indexterm>DITA-OT 4.4</indexterm></indexterm>DITA-OT 4.4
+        processes a DITA 1.x <codeph>chunk="to-content"</codeph> with its new DITA 2.0
+        chunking code in a compatibility mode. That code has three defects that a
+        publication merging index pages from many topics is likely to meet:</p>
+      <ul>
+        <li>If the chunked submap is included both normally and as the target of a
+          <codeph>format="ditamap"</codeph> key definition in a resource-only links map, the
+          chunk is generated twice and the build reports
+          <codeph>Failed to move chunk</codeph>. The merged page is missing, every link to it
+          fails with <codeph>DOTX031E</codeph>, and links from the map to its sections warn
+          with <codeph>DOTX061W</codeph> and <codeph>DOTX026W</codeph>.</li>
+        <li><codeph>copy-to</codeph> on a chunked topicref is not honoured, so the merged page
+          is written under the wrong name or not at all.</li>
+        <li>When the chunked topic is also the target of an ordinary key definition, the
+          merge can be silently skipped: no message, and the page contains only its own
+          topic.</li>
+      </ul>
+      <p>The remedy is to switch the toolkit back to its earlier chunking code. In the
+        toolkit installation, edit <filepath>config/configuration.properties</filepath> and
+        change the line</p>
+      <codeblock>compatibility.chunk.v2-for-v1=true</codeblock>
+      <p>to <codeph>false</codeph>. That file is the only place the setting is read; it
+        cannot be passed on the command line, and installing or removing plugins leaves it
+        untouched. Every toolkit you publish from needs the same edit, including any
+        continuous-integration environment.</p>
+      <p>Alongside that, reference chunked submaps with
+        <codeph>&lt;mapref href="..."&gt;</codeph> rather than by key, for the reason in
+        the next section. Links from other topics to the merged page keep working: keys
+        that name the chunked topic resolve to the merged page whatever its file name.</p>
+    </section>
+    <section id="keyref-mapref">
+      <title>A section shows no link and no children: keys inside a keyref'd submap</title>
+      <p><indexterm>keys<indexterm>keyref'd maprefs</indexterm></indexterm><indexterm>GOVK001W</indexterm>DITA-OT 4.4.1 does not resolve any key inside a submap that was itself
+        included with <codeph>&lt;mapref keyref="..."&gt;</codeph>: a topicref or
+        topicset whose target is a key gets no link, a nested
+        <codeph>&lt;mapref keyref&gt;</codeph> is not included at all, and a keyed child
+        topic is dropped from the tree. The same submap included with
+        <codeph>&lt;mapref href="..."&gt;</codeph> resolves completely. On the page this
+        appears as a sidebar or home-page entry rendered as plain text with nothing beneath
+        it.</p>
+      <p>The toolkit reports nothing. The plugin does: each affected entry produces a build
+        warning naming the entry and the key.</p>
+      <codeblock>Warning: [GOVK001W]: Navigation entry 'Data Sets' has keyref='data_sets_overview' that was
+not resolved, so it is rendered without a link and without children. DITA-OT does not resolve
+keys inside a map that is itself included with &lt;mapref keyref="..."&gt;. Include that submap
+with &lt;mapref href="..."&gt; instead, or check that the key is defined.</codeblock>
+      <p>Change the map references to use <codeph>href</codeph>. Keys that name whole maps
+        are then usually unused and can be dropped from the links map, which also removes
+        the double inclusion described above.</p>
+    </section>
+    <section id="chunked-keys">
+      <title>Links to topics merged into another page</title>
+      <p>A key that names a topic which <codeph>chunk="to-content"</codeph> merges into
+        another page cannot be resolved by the toolkit after the merge, and every reference
+        to it reports <codeph>DOTX031E</codeph>. Key the merged parent instead, with a
+        fragment for the child (<codeph>parent.dita#child-id</codeph>). The design records
+        the full analysis against a real corpus.</p>
+    </section>
+  </conbody>
+</concept>
