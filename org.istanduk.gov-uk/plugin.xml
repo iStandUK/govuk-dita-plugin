@@ -59,6 +59,9 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <param name="govuk.pagefind.cmd"
            desc="Path to the Pagefind executable. Defaults to 'pagefind' on the PATH."
            type="string"/>
+    <param name="govuk.search.ranking"
+           desc="How search results are scored. 'default' (Pagefind's own scoring); 'reference' (raw term counts, no long-page penalty: exact-title pages first, suited to dictionaries, catalogues and standards); or a JSON object of Pagefind ranking options passed through as-is, e.g. {&quot;termFrequency&quot;:0,&quot;pageLength&quot;:0,&quot;metaWeights&quot;:{&quot;keywords&quot;:3}}."
+           type="string"/>
     <param name="govuk.pagination"
            desc="Show previous/next links (GOV.UK pagination) at the foot of each page in the map's reading order. 'yes' (default) or 'no'."
            type="enum">

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="live">
+  <title>Widget Code</title>
+  <titlealts><searchtitle>Widget Code (Data Element)</searchtitle></titlealts>
+  <shortdesc>The code that identifies a widget in every data set that carries one.</shortdesc>
+  <prolog>
+    <metadata>
+      <audience type="analyst"/>
+      <category>Data Element</category>
+      <keywords><keyword>widget identifier</keyword><keyword>gadget code</keyword></keywords>
+    </metadata>
+  </prolog>
+  <body>
+    <p>A widget code is assigned once and never reused.</p>
+    <section><title>Where used</title>
+      <simpletable outputclass="search-ignore">
+        <sthead><stentry>Data set</stentry><stentry>Widget Code</stentry></sthead>
+        <strow><stentry>Widget Return</stentry><stentry>Widget Code appears here</stentry></strow>
+        <strow><stentry>Gadget Census</stentry><stentry>Widget Code appears here too</stentry></strow>
+      </simpletable>
+    </section>
+  </body>
+</topic>

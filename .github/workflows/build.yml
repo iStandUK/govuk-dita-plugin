@@ -148,6 +148,38 @@ jobs:
           grep -q '<span>Group</span>' out/keyref-nest/ov.html
           grep -q 'href="ov.html">Overview T</a>' out/keyref-nest-href/t1.html
 
+      # Search relevance from DITA semantics (#54): attributes derived from the DITA,
+      # the ranking presets, and validation of the parameter (Pagefind is installed,
+      # so search.html is produced).
+      - name: Build search-semantics fixture (#54)
+        run: |
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
+            --format govuk --output out/search-semantics -Dgovuk.search.ranking=reference
+          # live topic: shortdesc weighted, "Where used" table ignored, keywords/searchtitle/filters in head
+          grep -Eq '<p [^>]*class="[^"]*shortdesc[^"]*"[^>]*data-pagefind-weight="4"' out/search-semantics/live.html
+          grep -Eq '<table [^>]*data-pagefind-ignore' out/search-semantics/live.html
+          grep -q 'name="keywords" data-pagefind-meta="keywords\[content\]" content="widget identifier, gadget code"' out/search-semantics/live.html
+          grep -q 'data-pagefind-meta="title\[content\]" content="Widget Code (Data Element)"' out/search-semantics/live.html
+          grep -q 'data-pagefind-filter="category\[content\]" content="Data Element"' out/search-semantics/live.html
+          grep -q 'data-pagefind-filter="audience\[content\]" content="analyst"' out/search-semantics/live.html
+          ! grep -q 'data-pagefind-weight="0.3"' out/search-semantics/live.html
+          # demoted by outputclass on the title, and by importance="obsolete" on the topic
+          for t in retired obsolete; do
+            grep -Eq '<h1 [^>]*data-pagefind-weight="2"' out/search-semantics/$t.html
+            grep -Eq '<div [^>]*class="body[^"]*"[^>]*data-pagefind-weight="0.3"' out/search-semantics/$t.html
+            grep -Eq '<p [^>]*class="[^"]*shortdesc[^"]*"[^>]*data-pagefind-weight="1"' out/search-semantics/$t.html
+          done
+          # ranking: preset, JSON pass-through, and an invalid value must fail the build
+          grep -q 'ranking: { "termFrequency": 0.0, "pageLength": 0.0 }' out/search-semantics/search.html
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
+            --format govuk --output out/search-semantics-json '-Dgovuk.search.ranking={termFrequency:0.5,metaWeights:{keywords:3}}'
+          grep -q 'ranking: {"termFrequency":0.5,"metaWeights":{"keywords":3}}' out/search-semantics-json/search.html
+          ! "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
+            --format govuk --output out/search-semantics-bad -Dgovuk.search.ranking=fastest
+          # the manual: shortdesc weighting applies everywhere, ranking stays Pagefind's default
+          grep -q 'data-pagefind-weight="4"' out/manual/topics/introduction.html
+          ! grep -q 'ranking:' out/manual/search.html
+
       # The brand-recoloured CSS is a vendored artifact (#47): guard against it
       # drifting from its Sass source. Rebuild it and fail on any diff.
       - name: Branding CSS is current
@@ -178,7 +210,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href out/search-semantics out/search-semantics-json
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -433,7 +465,7 @@ jobs:
           python3 tools/check_links.py \
             out/manual out/oruk-mini out/kitchen out/kitchen-flag \
             out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 \
-            out/keyref-nest out/keyref-nest-href
+            out/keyref-nest out/keyref-nest-href out/search-semantics out/search-semantics-json
 
       - name: Page-weight budget (NFR-P2)
         run: python3 tools/page_weight.py --report --budget-kb 300 out/manual out/kitchen out/oruk-mini

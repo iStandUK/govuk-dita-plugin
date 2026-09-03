@@ -7,6 +7,10 @@ Build messages contributed to the toolkit (dita.xsl.messages). Ids follow the
 DITA-OT convention: four letters, three digits, severity (I/W/E/F).
 -->
 <messages>
+  <message id="GOVK002E" type="ERROR">
+    <reason>govuk.search.ranking must be 'default', 'reference' or a JSON object of Pagefind ranking options; got '%1'.</reason>
+    <response>Fix the parameter value. See the manual's search topic for the options.</response>
+  </message>
   <message id="GOVK001W" type="WARN">
     <reason>Navigation entry '%1' has keyref='%2' that was not resolved, so it is rendered without a link and without children.</reason>
     <response>DITA-OT does not resolve keys inside a map that is itself included with &lt;mapref keyref="..."&gt;. Include that submap with &lt;mapref href="..."&gt; instead, or check that the key is defined.</response>
