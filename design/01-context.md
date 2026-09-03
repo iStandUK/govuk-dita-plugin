@@ -25,7 +25,7 @@ transformations, or its assets.
    DITA-OT plugin registry, usable by anyone publishing DITA.
 4. Feature parity with the parts of the current commercial output the publications actually use: navigable table of
    contents, search, index, and responsive layout.
-5. Legally safe defaults: no crown logo or GDS Transport font unless the publisher is an
+5. Legally safe defaults: no crown logo, GDS Transport font, NHS logo or Frutiger unless the publisher is an
    official GOV.UK service and switches them on.
 
 ## Non-goals
@@ -43,7 +43,7 @@ transformations, or its assets.
 
 | # | Constraint | Consequence |
 |---|---|---|
-| C1 | GDS Transport font and the crown are licensed only for official GOV.UK services | Branding must default off; assets copied into output only when explicitly enabled |
+| C1 | GDS Transport font and the crown are licensed only for official GOV.UK services; the NHS identity (the letters and logo) only to NHS organisations, and Frutiger under licence | Branding must default off; a restricted identity renders only in an explicitly chosen mode, with a build warning, and no restricted font or crest file is ever bundled |
 | C2 | UK public-sector accessibility regulations; GOV.UK Frontend targets WCAG 2.2 AA | The plugin must not undermine the accessibility govuk-frontend provides; custom markup must meet the same bar |
 | C3 | Target DITA-OT 4.4.1 or later (the latest release when pinned — D-11) | XSLT 3.0/Saxon available; must use only documented extension points to survive minor upgrades |
 | C4 | Static hosting (GitHub Pages, S3, plain web server) | No server-side includes; search must be client-side; relative links throughout |

@@ -337,3 +337,53 @@ as the crown is to GOV.UK services — so both are gated by one mechanism.
 recompiled-palette foundation and supersedes #20's crown-only scope; the accepted residual is
 that recoloured GDS components are not NHS Design System components (documented). Neutral stays
 the default and no restricted asset (crown, NHS logo, Frutiger, GDS Transport) is ever bundled.
+
+## D-18 · Search relevance follows the DITA, with a query-time scoring preset
+
+**Date:** 2026-09-03.
+
+**Options:** (a) leave Pagefind's scoring and markup untouched; (b) tune weights inside the
+plugin by element type; (c) expose Pagefind's ranking options as a build parameter and let DITA
+semantics drive the index attributes.
+
+**Decision:** Option (c), both halves ([#54](https://github.com/iStandUK/govuk-dita-plugin/issues/54)).
+`govuk.search.ranking` selects `default`, `reference` (`termFrequency: 0, pageLength: 0`) or a
+JSON object passed through; the DITA carries the rest — `shortdesc` weighted 4,
+`outputclass="search-ignore"` excludes, `outputclass="search-demote"` or
+`importance="obsolete|deprecated"` demotes (body 0.3, title 2, shortdesc 1), prolog `keywords`
+become searchable metadata, `searchtitle` the result title, `category`/`audience` filters.
+
+**Rationale:** measured on the 10,000-page trial index with ten queries: Pagefind's defaults
+buried exact-title definition pages; index-time multipliers (title weight 7 → 10, boosted
+keywords) changed nothing because repeated terms saturate; the query-time preset fixed seven
+of ten; only exclusion fixed the rest; and demotion works through the title weight, not the
+body. Publishers' DITA already encodes the needed semantics (summaries, retired items,
+cross-reference lists), so the plugin translates rather than guesses.
+
+**Consequences:** search relevance is a documented, testable contract (FR-S5, fixture,
+manual section); the default scoring is unchanged for existing sites; publishers with
+dictionary-like content set `reference` and mark their lists; generated corpora gain three
+cheap markers.
+
+## D-19 · Toolkit limitations: diagnose, warn, document — do not reimplement
+
+**Date:** 2026-09-03.
+
+**Context:** the first live trial hit two DITA-OT 4.4.1 behaviours — the chunk
+compatibility-mode regression and keys left unresolved inside keyref'd maprefs — both
+reproduced in plain `html5` output with three-topic cases.
+
+**Decision:** the plugin does not work around toolkit preprocessing defects by
+re-implementing key resolution or chunking. It (1) confirms the behaviour upstream with a
+minimal reproduction, (2) makes the silent case loud where it is the last to see the merged
+map (`GOVK001W`), and (3) documents the remedy for publishers (manual Troubleshooting topic)
+and for the source generator (hand-off notes). Reproductions are kept in `design/drafts/`
+until filed.
+
+**Rationale:** preprocessing is the toolkit's contract (NFR-M1); duplicating it would fork
+behaviour the plugin cannot keep in step with, while a warning plus a documented setting or
+source change resolves the trial in practice and helps every other DITA-OT user.
+
+**Consequences:** `messages.xml` and the `keyref-nest` fixture exist; the manual carries a
+Troubleshooting topic; upstream filing (dita-ot#4755 already covers the `copy-to` half) is a
+standing offer rather than a blocker.

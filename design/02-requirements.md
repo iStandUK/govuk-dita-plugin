@@ -18,7 +18,7 @@ Remaining ⬜/🔶 items are the v1-release backlog (see
 |---|---|---|---|
 | FR-B1 | The plugin registers a transtype **`govuk`** that extends `html5`, so `dita --input=<map> --format=govuk` performs a complete build | M | ✅ |
 | FR-B2 | The plugin installs with `dita install <zip-or-url>` and, once published, by name from the DITA-OT plugin registry | M | 🔶 zip/URL install verified from releases; registry listing deliberately deferred to v1.0 after 0.9 live trials (D-15) |
-| FR-B3 | All behaviour described below is controlled by documented build parameters (`govuk.*`), settable on the command line, in `.ditaotproject`/project files, or via Ant properties | M | 🔶 `govuk.branding`, `govuk.service.name`, `govuk.homepage.layout`, `govuk.search`, `govuk.pagefind.cmd` exist; phase-banner/footer/favicon params follow their features |
+| FR-B3 | All behaviour described below is controlled by documented build parameters (`govuk.*`), settable on the command line, in `.ditaotproject`/project files, or via Ant properties | M | ✅ every behaviour has a documented `govuk.*` parameter (branding; service name/URL; phase and feedback URL; favicon; footer links/licence; layout/depth; search, Pagefind command, ranking; pagination; SVG inlining) — see the manual's parameters table |
 | FR-B4 | The core build requires only DITA-OT (4.4.1 or later) and its bundled Java — no Node.js, no network access | M | ✅ verified |
 | FR-B5 | The build works with standard DITA 1.3 maps and bookmaps, including keys/keyscopes, conref, chunking, and DITAVAL filtering (all inherited from `html5` preprocessing and must not be broken by overrides) | M | ✅ verified against the ORUK corpus (design/07) |
 | FR-B6 | A build from unchanged source produces byte-identical output (deterministic), so hosting diffs are meaningful | S | ✅ CI double-builds the manual and diffs byte-for-byte (#35) |
@@ -85,10 +85,10 @@ requirements govern its behaviour.
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
 | FR-T1 | Default branding is **neutral**: no crown, no GDS Transport font (system font stack; no request for font assets is ever made), a plain header bar carrying the service/publication name | M | ✅ asserted in CI on every build |
-| FR-T2 | `govuk.branding=official` enables full GOV.UK branding: crown logotype in the header, GDS Transport fonts copied and loaded, OGL/crown-copyright footer — for use only by genuine GOV.UK services (documented prominently) | M | ⬜ parameter declared with build-time warning; behaviour not implemented |
+| FR-T2 | `govuk.branding=official` enables full GOV.UK branding (crown and GOV.UK logotype in the masthead, OGL/crown-copyright footer) and `govuk.branding=nhs` the NHS identity on a recoloured palette — each for entitled organisations only, documented prominently and warned in the build log. No restricted font or crest file is bundled: GDS Transport and Frutiger fall back to a system stack and an entitled publisher supplies them via `args.css`; the logos render inline from MIT-licensed artwork only in the chosen mode | M | ✅ v0.9.1 (#47/#48, D-17); CI asserts no restricted font or crest asset ships in any mode |
 | FR-T3 | Service name, home link, phase banner (alpha/beta with feedback link), footer links, and footer licence text are all parameter-driven | M | ✅ `govuk.service.name`/`service.url`, `govuk.phase`/`feedback.url`, `govuk.footer.links`/`footer.licence`, `govuk.favicon` (#49) |
 | FR-T4 | Publishers can append their own stylesheet after the plugin's (standard `args.css`/`args.cssroot` behaviour preserved) | S | ✅ |
-| FR-T5 | Favicon and social-preview metadata are parameter-driven, with neutral defaults | C | ⬜ |
+| FR-T5 | Favicon and social-preview metadata are parameter-driven, with neutral defaults | C | 🔶 `govuk.favicon` ✅ (#49); social-preview metadata ⬜ |
 
 ## Non-functional requirements
 
