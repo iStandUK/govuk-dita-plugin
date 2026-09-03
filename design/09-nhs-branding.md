@@ -4,6 +4,11 @@
 **NHS-branded** output, and record the approach agreed for [#47](https://github.com/iStandUK/govuk-dita-plugin/issues/47).
 Companion to the official (GOV.UK crown) branding in [#20](https://github.com/iStandUK/govuk-dita-plugin/issues/20).
 
+**Status (2026-09-03):** implemented in **v0.9.1** via #48 — `govuk.branding=nhs` and `official`
+on a Sass-recompiled palette (`tools/branding`), each gated by a build warning; documented in
+the manual's branding and legal topics. The analysis below is retained as the record of how the
+scope was set.
+
 ## The key distinction
 
 The **NHS Design System is a separate frontend** — [`nhsuk-frontend`](https://github.com/nhsuk/nhsuk-frontend)

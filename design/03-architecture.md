@@ -30,8 +30,8 @@ flowchart TD
         TOPICS --> WRAP
         WRAP --> ASSETS["Asset copy<br/>govuk-frontend dist CSS/JS,<br/>overlay CSS, plugin JS"]
         ASSETS --> BRAND{"govuk.branding?"}
-        BRAND -- "neutral (default)" --> NOFONT["Skip fonts & crown assets;<br/>neutral overlay active"]
-        BRAND -- official --> FONT["Copy GDS Transport fonts,<br/>crown/OGL assets"]
+        BRAND -- "neutral (default) / istanduk" --> NOFONT["Stock CSS + neutral overlay<br/>(+ iStandUK overlay); no restricted asset"]
+        BRAND -- "nhs / official" --> IDENT["NHS: recompiled palette CSS + NHS overlay<br/>official: stock CSS + crown overlay<br/>inline logo, build warning, no font or crest file"]
     end
 
     NOFONT --> OUT[/"Static site"/]
@@ -72,14 +72,18 @@ org.istanduk.gov-uk/
 │   └── map2govuk-cover.xsl    # GOV.UK home page: title, bookmap abstract,
 │   │                          #   attribution, contents tree (args.html5.toc.xsl)
 │   └── utility-pages.xsl      # glossary + index harvest and A–Z pages (FR-G, FR-X)
+│   └── search.xsl             # Pagefind attributes from DITA semantics (FR-S5, #54)
 ├── resource/
 │   ├── govuk-frontend/        # vendored v6.5.0 compiled CSS/JS + maps, VERSION,
-│   │                          #   LICENSE, NOTICE — no fonts or crown imagery
+│   │                          #   LICENSE, NOTICE — no fonts or crown imagery;
+│   │                          #   + NHS-palette recompile (-nhs.min.css, tools/branding)
 │   ├── css/
 │   │   ├── overlay-neutral.css  # neutral branding: local font aliasing, crest suppression
+│   │   ├── overlay-istanduk.css, overlay-nhs.css, overlay-official.css  # per-mode mastheads/footers
 │   │   └── plugin.css           # masthead, sidebar, contents, figures, code, links
 │   └── js/
 │       └── plugin.js          # menu toggle, caret collapse, chunked-page highlight
+├── messages.xml               # build messages GOVK001W/002E (dita.xsl.messages)
 └── strings/                   # generated-text registry + strings-en-gb.xml (NFR-I1)
 ```
 
@@ -177,20 +181,21 @@ Status as of v0.1.0: ✅ implemented · ⬜ planned (each arrives with its featu
 
 | Parameter | Values / default | Purpose | Status |
 |---|---|---|---|
-| `govuk.branding` | `neutral` (default) \| `istanduk` \| `official` | FR-T1/T2 — crown, fonts, OGL footer; `istanduk` layers the iStandUK theme (D-14) on neutral | ✅ neutral + istanduk; `official` warns and is not yet implemented |
+| `govuk.branding` | `neutral` (default) \| `istanduk` \| `nhs` \| `official` | FR-T1/T2 — neutral carries no restricted identity; `istanduk` layers the iStandUK theme (D-14); `nhs` and `official` the NHS and crown identities on a recompiled palette (D-17), each warned in the build log | ✅ all four (v0.9.1) |
 | `govuk.service.name` | text; default map/book title | Masthead service/publication name | ✅ |
-| `govuk.service.url` | URL; default site home | Masthead link target | ⬜ (masthead links to `index.html`) |
-| `govuk.phase` | `none` (default) \| `alpha` \| `beta` | Phase banner | ⬜ |
-| `govuk.phase.feedback.url` | URL | Phase banner feedback link | ⬜ |
+| `govuk.service.url` | URL; default site home | Masthead link target | ✅ (#49) |
+| `govuk.phase` | empty (default) \| `alpha` \| `beta` \| any tag | Phase banner | ✅ (#49) |
+| `govuk.feedback.url` | URL | Phase banner feedback link | ✅ (#49) |
 | `govuk.search` | `auto` (default) \| `yes` \| `no` | Search UI + Pagefind step; `auto` = on if Pagefind found | ✅ |
 | `govuk.pagefind.cmd` | path; default `pagefind` on PATH | Locate the Pagefind binary | ✅ |
+| `govuk.search.ranking` | `default` \| `reference` \| JSON object | FR-S5 — how results are scored; `reference` favours exact-title pages (D-18) | ✅ (#54) |
 | `govuk.homepage.layout` | `auto` (default) \| `start` \| `annotated` \| `list` \| `grid` \| `grouped` \| `accordion` | D-13 — landing-page layout; `auto` selects from map shape | ✅ |
 | `govuk.homepage.depth` | 1–9; default `2` | Levels of the map shown by the grid/grouped/accordion/start layouts (1 = entries only; 2 = + children; 3+ nest) | ✅ |
 | `govuk.pagination` | `yes` (default) \| `no` | FR-N5 — previous/next block pagination in reading order | ✅ |
 | `govuk.breadcrumbs` | `no` (default) \| `yes` | FR-N6 | ⬜ |
-| `govuk.footer.links` | file/ref | Footer link list (title+URL pairs) | ⬜ |
-| `govuk.footer.licence` | text/HTML ref | Neutral-mode licence statement | ⬜ |
-| `govuk.favicon` | path | Custom favicon set | ⬜ |
+| `govuk.footer.links` | `label\|url;label\|url` | Extra footer links | ✅ (#49) |
+| `govuk.footer.licence` | text | Footer licence/credit line (neutral, iStandUK, NHS; official keeps the OGL) | ✅ (#49) |
+| `govuk.favicon` | path | Favicon copied into the output and linked from every page | ✅ (#49) |
 | `args.css`, `args.cssroot`, `args.copycss` | inherited | Publisher CSS appended last (FR-T4) | ✅ |
 
 ## Search architecture
@@ -211,21 +216,37 @@ self-hosted JS/CSS bundle — consistent with the no-CDN rule.
 
 ## Branding architecture
 
-Neutral by default; official on request. The two modes differ in three places only:
+Neutral by default; the iStandUK theme, the NHS identity and the official GOV.UK identity on
+request (`govuk.branding`, D-14, D-17). All four modes render the same GOV.UK Design System
+component markup; they differ in three places only:
 
-1. **Assets copied** — fonts and crown/OGL imagery are copied into the output only in
-   official mode. In neutral mode nothing references them, so nothing 404s.
-2. **Overlay stylesheet** — `overlay-neutral.css` loads after `govuk-frontend.min.css` and
-   re-declares the font stack (system fonts) so `GDS Transport` is never requested, and
-   restyles the header bar to a plain dark bar without the crown. Official mode omits the
-   overlay. (We override the compiled CSS rather than recompiling Sass — the cost of the
-   vendored-dist decision, kept small by limiting overrides to fonts and header/footer.)
-3. **Template branches** — header and footer XSLT templates branch on `govuk.branding`:
-   neutral emits service name only and a configurable footer; official emits the GOV.UK
-   header with crown logotype and the OGL/crown-copyright footer.
+1. **Base stylesheet** — neutral, iStandUK and official load the unmodified vendored
+   `govuk-frontend` dist; NHS loads `govuk-frontend-6.5.0-nhs.min.css`, the same release
+   recompiled from its Sass against the NHS palette at vendor time by `tools/branding` and
+   committed (builds stay Node-free, D-12; CI rebuilds it and fails on drift).
+2. **Overlay stylesheet** — one small overlay per mode loads after the base:
+   `overlay-neutral.css` aliases the font stack to system fonts and suppresses crest/crown
+   rules (also under iStandUK, which adds `overlay-istanduk.css` for its masthead);
+   `overlay-nhs.css` and `overlay-official.css` style the identity mastheads and footers.
+3. **Template branches** — masthead and footer templates branch on the mode: neutral emits the
+   service name; iStandUK its logo; NHS the white masthead with the NHS logo and an NHS footer;
+   official the GOV.UK masthead with crown-and-wordmark and the Open Government Licence /
+   Crown copyright footer.
 
-CI asserts the neutral build's output contains no font files, no crown assets, and no request
-for either (NFR-M2 snapshot + a simple grep-style check).
+What is and is not shipped is the legal core of the design (constraint C1):
+
+- **No restricted font file** — GDS Transport (official GOV.UK services) and Frutiger (NHS
+  organisations) are never bundled; both modes fall back to a system stack and an entitled
+  publisher supplies the font via `args.css`.
+- **No crest or favicon imagery** — the crown-and-wordmark and the NHS logo are inline SVG
+  drawn from the MIT-licensed artwork of govuk-frontend and nhsuk-frontend, emitted only in
+  the corresponding mode; the footer crest image is not shipped.
+- **A build-log warning in both restricted modes** every time they are used; selecting the
+  mode asserts entitlement (gov.uk services; NHS organisations or others with permission
+  from NHS England / DHSC). The manual's legal topic states the position for publishers.
+
+CI asserts that no mode's output contains a font file or crest asset, that neutral output
+references no restricted asset at all, and that the NHS stylesheet matches its Sass source.
 
 ## Glossary and index generation
 
@@ -255,8 +276,8 @@ html5 base — they are the plugin's largest pieces of genuinely new processing 
 |---|---|---|
 | govuk-frontend markup contracts change between releases (components require exact structure/classes) | Medium / High | Pin the vendored release (NFR-M2); visual-regression + axe snapshots on upgrade; keep component markup in few, focused XSLT modules |
 | DITA-OT html5 internals shift between 4.x minors | Medium / Medium | Only documented extension points (NFR-M1); CI matrix across supported releases (4.4.1 upward) with a fixture publication |
-| Full nav tree on every page bloats output for very large maps | Medium / Medium | Accept for v1 (typical standards pubs are hundreds of topics, not tens of thousands); roadmap: partial tree + JSON fetch |
-| Neutral-mode CSS overlay drifts from the compiled dist as govuk-frontend evolves | Medium / Low | Keep the overlay minimal (fonts + header/footer only); CI check that no font/crown asset is referenced |
+| Full nav tree on every page bloats output for very large maps | Medium / Medium | Accept for v1; measured on the 10,000-topic trial at ~24 KB per page (site 324 → 569 MB once a large branch joined the tree), inside the 300 KB page budget; roadmap: partial tree + JSON fetch (OQ-11) |
+| Overlay CSS or the NHS recompile drifts from the vendored dist as govuk-frontend evolves | Medium / Low | Keep overlays minimal (fonts + masthead/footer only); CI rebuilds the NHS stylesheet from Sass and fails on drift; CI checks that no font/crest asset is referenced |
 | Pagefind availability varies across environments | High / Low | `auto` mode with graceful skip (FR-S4); document binary install; consider bundling per-OS binaries later |
 | Index/glossary logic has no upstream reference implementation in html5 | Certain / Medium | Treat as first-class components with their own fixtures and tests; PDF plugin's index behaviour is the semantic reference |
-| Legal misuse: someone flips `govuk.branding=official` without being a GOV.UK service | Low / High (reputational) | Prominent documentation + build-time warning banner in the log when official mode is enabled |
+| Legal misuse: someone selects `govuk.branding=official` without being a GOV.UK service, or `nhs` without being an NHS organisation | Low / High (reputational) | Prominent documentation (README, manual legal topic) + a build-log warning every time either restricted mode is used; no restricted font or crest file ships in any mode |
