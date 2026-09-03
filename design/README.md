@@ -4,7 +4,7 @@ A design for an open-source **DITA Open Toolkit (DITA-OT) plugin** that publishe
 directly as a static website using the **GOV.UK Design System** (GDS), with no dependency on
 commercial help-output tooling.
 
-**Status:** Implemented through **v0.9.1** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
+**Status:** Implemented through **v0.9.2** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
 
 ## How to read this folder
 
@@ -52,15 +52,15 @@ See [05-decision-log.md](05-decision-log.md) for the reasoning behind each of th
 | [**v0.9.0**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.0) | Closes the v0.9 epic ([#26](https://github.com/iStandUK/govuk-dita-plugin/issues/26)): residue verification fixtures (conref push, ditavalref, flag images, object, frontmatter/backmatter, coderef, glossgroup, RTL) with a glossary dead-link fix (#34); bookmap metadata in the footer (#42); and the CI safety net — axe-core WCAG 2.2 AA, internal-link check, page-weight budget, build determinism, visual snapshots, DITA-OT version matrix (#35). **Robust enough for live trials.** |
 | [**v0.9.1**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.1) | During trials: **NHS and official GOV.UK branding** variants on a Sass-recompiled palette foundation, gated and documented (#47, D-17, [09](09-nhs-branding.md)); **FR-T3 page furniture** — phase banner, `govuk.service.url`, `govuk.favicon`, `govuk.footer.links`/`footer.licence` (#49). |
 | **Live trial 1** (NHS Data Dictionary, ~10,000 topics, Sept 2026) | Built cleanly once two DITA-OT 4.4 behaviours were characterised: the chunk compatibility-mode regression (duplicate chunk generation, `copy-to`, silent skips; remedy `compatibility.chunk.v2-for-v1=false`) and unresolved keys inside keyref'd maprefs. Plugin now warns on the latter (`GOVK001W`, #51); both documented in the manual's Troubleshooting topic (#52). |
-| **On `main`, unreleased** (towards v0.9.2) | Search relevance follows the DITA (#54, D-18): `govuk.search.ranking` presets, `shortdesc` weighting, `search-ignore` / `search-demote` and `importance`, prolog keywords as searchable metadata, `searchtitle`, category/audience filters — measured on the trial corpus. With #51/#52 above, the next release. |
+| [**v0.9.2**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.2) | Trial follow-ups: `GOVK001W` warning for unresolved navigation keys (#51), the manual's Troubleshooting topic (#52), search relevance following the DITA (#54, D-18): `govuk.search.ranking` presets, `shortdesc` weighting, `search-ignore` / `search-demote` and `importance`, prolog keywords as searchable metadata, `searchtitle`, category/audience filters — measured on the trial corpus; and the licensing-caveat documentation sweep (#57). |
 
 Per-requirement status lives in the **Status column of
 [02-requirements.md](02-requirements.md)**. v0.9.0 closed the P1–P3 gap list in
 [08-gap-analysis-dita13.md](08-gap-analysis-dita13.md) and the verification NFRs; v0.9.1
 shipped the branded variants ([#47](https://github.com/iStandUK/govuk-dita-plugin/issues/47),
 delivering FR-T2 and closing [#20](https://github.com/iStandUK/govuk-dita-plugin/issues/20)).
-The 1.0 backlog = the **live trials** (the first is complete, findings above), a **v0.9.2**
-release carrying the trial follow-ups now on `main`, then the last v1 epic
+The 1.0 backlog = the **live trials** (the first is complete and released as v0.9.2; 1.0 waits
+for the regenerated trial DITA to be tested), then the last v1 epic
 ([#15](https://github.com/iStandUK/govuk-dita-plugin/issues/15)) item: the registry listing
 ([#21](https://github.com/iStandUK/govuk-dita-plugin/issues/21)).
 
