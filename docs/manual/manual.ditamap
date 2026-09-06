@@ -38,7 +38,7 @@
   <chapter>
     <topicmeta>
       <navtitle>Reference</navtitle>
-      <shortdesc>Build parameters, branding and the legal position, navigation, and search.</shortdesc>
+      <shortdesc>Build parameters, branding and the legal position, navigation, search, and printing.</shortdesc>
     </topicmeta>
     <topicref keyref="parameters"/>
     <topicref keyref="branding"/>
@@ -46,6 +46,7 @@
     <topicref keyref="layouts"/>
     <topicref keyref="search"/>
     <topicref keyref="glossary-index"/>
+    <topicref keyref="print"/>
     <topicref keyref="accessibility"/>
     <topicref keyref="troubleshooting"/>
   </chapter>

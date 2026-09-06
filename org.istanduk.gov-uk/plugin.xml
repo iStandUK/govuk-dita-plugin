@@ -74,6 +74,27 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val default="true">yes</val>
       <val>no</val>
     </param>
+    <param name="govuk.print"
+           desc="Also write the whole publication as one self-contained file, print.html, for printing or saving as PDF from a browser: cover, contents, every topic in reading order, glossary and index. 'no' (default) or 'yes'. Linked from the cover and the footer."
+           type="enum">
+      <val default="true">no</val>
+      <val>yes</val>
+    </param>
+    <param name="govuk.print.max-topics"
+           desc="Largest publication (distinct topic files) for which the print document is written; above it the build says so (GOVK003I) and writes none. Default 500."
+           type="string"/>
+    <param name="govuk.print.toc.depth"
+           desc="How many map levels the print document's contents list shows. 1-9; default 3."
+           type="string"/>
+    <param name="govuk.pdf.paper"
+           desc="Paper size for printing: a CSS page-size keyword (A5, A4, A3, B5, B4, JIS-B5, JIS-B4, Letter, Legal, Ledger) or a width and height as CSS lengths such as '210mm 297mm'. Default A4. Applies to the print stylesheet now and to the PDF engine planned for 1.1."
+           type="string"/>
+    <param name="govuk.pdf.orientation"
+           desc="Page orientation for printing with a named paper size: 'portrait' (default) or 'landscape'."
+           type="enum">
+      <val default="true">portrait</val>
+      <val>landscape</val>
+    </param>
   </transtype>
   <feature extension="dita.conductor.transtype.check" value="govuk"/>
   <feature extension="ant.import" file="build_dita2govuk.xml"/>

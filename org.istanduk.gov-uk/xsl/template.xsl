@@ -11,8 +11,9 @@ element-level typography.
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns:dita-ot="http://dita-ot.sourceforge.net/ns/201007/dita-ot"
+                xmlns:govuk="https://github.com/iStandUK/govuk-dita-plugin"
                 version="3.0"
-                exclude-result-prefixes="xs dita-ot">
+                exclude-result-prefixes="xs dita-ot govuk">
 
   <!-- Passed from insertParameters.xml -->
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
@@ -29,9 +30,17 @@ element-level typography.
   <xsl:param name="GOVUK-FAVICON" select="''"/>
   <xsl:param name="GOVUK-FOOTER-LINKS" select="''"/>
   <xsl:param name="GOVUK-FOOTER-LICENCE" select="''"/>
+  <xsl:param name="GOVUK-PRINT" select="'no'"/>
+  <xsl:param name="GOVUK-PRINT-MAX-TOPICS" select="'500'"/>
 
   <!-- Pinned vendored govuk-frontend release (see resource/govuk-frontend/VERSION.txt) -->
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
+
+  <!-- Whether print.html exists for this publication (FR-P2): the map decides,
+       with the same test the print transform applies -->
+  <xsl:variable name="govuk-print-available" as="xs:string"
+                select="govuk:print-available($GOVUK-PRINT, $input.map/*[contains(@class, ' map/map ')],
+                                              $GOVUK-PRINT-MAX-TOPICS)"/>
 
   <!-- Service name shown in the masthead: explicit parameter, else map title -->
   <xsl:variable name="govuk-service-name" as="xs:string">
@@ -167,6 +176,7 @@ element-level typography.
     <link rel="stylesheet"
           href="{concat($govuk-root, 'govuk/', $govuk-frontend-css)}"/>
     <link rel="stylesheet" href="{concat($govuk-root, 'govuk/plugin.css')}"/>
+    <link rel="stylesheet" href="{concat($govuk-root, 'govuk/print.css')}" media="print"/>
     <xsl:if test="$GOVUK-BRANDING = ('neutral', 'istanduk')">
       <link rel="stylesheet" href="{concat($govuk-root, 'govuk/overlay-neutral.css')}"/>
     </xsl:if>
@@ -261,6 +271,7 @@ element-level typography.
         <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
         <xsl:with-param name="footer-links" select="$GOVUK-FOOTER-LINKS"/>
         <xsl:with-param name="footer-licence" select="$GOVUK-FOOTER-LICENCE"/>
+        <xsl:with-param name="print" select="$govuk-print-available"/>
       </xsl:call-template>
       <script src="{concat($govuk-root, 'govuk/plugin.js')}"></script>
       <script type="module">

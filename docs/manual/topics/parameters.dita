@@ -122,6 +122,41 @@
                 <codeph>no</codeph> keeps the image rendering.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.print</codeph></entry>
+              <entry><codeph>no</codeph> (default), <codeph>yes</codeph></entry>
+              <entry>Also write the whole publication as one file,
+                <filepath>print.html</filepath>, for printing or saving as PDF from a browser;
+                see <xref keyref="print"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.print.max-topics</codeph></entry>
+              <entry>whole number; default <codeph>500</codeph></entry>
+              <entry>Largest publication, in topic files, for which the print document is
+                written; above it the build warns (<codeph>GOVK003W</codeph>) and writes
+                none.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.print.toc.depth</codeph></entry>
+              <entry>1–9; default <codeph>3</codeph></entry>
+              <entry>How many map levels the print document's contents list shows.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.pdf.paper</codeph></entry>
+              <entry><codeph>A4</codeph> (default), <codeph>A5</codeph>, <codeph>A3</codeph>,
+                <codeph>B5</codeph>, <codeph>B4</codeph>, <codeph>JIS-B5</codeph>,
+                <codeph>JIS-B4</codeph>, <codeph>Letter</codeph>, <codeph>Legal</codeph>,
+                <codeph>Ledger</codeph>, or a width and height such as
+                <codeph>148mm 210mm</codeph></entry>
+              <entry>Paper size the print stylesheet asks for (and, from 1.1, the PDF page
+                size).</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.pdf.orientation</codeph></entry>
+              <entry><codeph>portrait</codeph> (default), <codeph>landscape</codeph></entry>
+              <entry>Page orientation with a named paper size; explicit lengths are already
+                width then height.</entry>
+            </row>
+            <row>
               <entry namest="c1" nameend="c3">Further parameters — phase banner, footer
                 links, favicon — arrive with their features; each is listed here when it
                 lands.</entry>

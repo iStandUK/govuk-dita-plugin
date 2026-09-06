@@ -10,8 +10,58 @@ template, the cover, and the generated utility pages.
 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                xmlns:govuk="https://github.com/iStandUK/govuk-dita-plugin"
                 version="3.0"
-                exclude-result-prefixes="xs">
+                exclude-result-prefixes="xs govuk">
+
+  <!-- ===== Print document helpers (FR-P2, D-20) =====
+       Shared by the topic template, the cover and the print transform, so every
+       page agrees on whether print.html exists: it does when govuk.print=yes
+       and the publication's distinct topic files fit within the ceiling. -->
+
+  <!-- The file a topicref renders (copy-to wins), without any fragment -->
+  <xsl:function name="govuk:print-file" as="xs:string">
+    <xsl:param name="ref" as="element()"/>
+    <xsl:sequence select="replace(string(if (normalize-space($ref/@copy-to)) then $ref/@copy-to else $ref/@href),
+                                  '#.*$', '')"/>
+  </xsl:function>
+
+  <!-- Its output page, relative to the site root -->
+  <xsl:function name="govuk:print-page" as="xs:string">
+    <xsl:param name="file" as="xs:string"/>
+    <xsl:sequence select="concat(replace($file, '\.[^./]*$', ''), $OUTEXT)"/>
+  </xsl:function>
+
+  <!-- Every topicref that contributes a topic to the print document: a local
+       DITA target, navigable (not resource-only, not toc="no", inherited),
+       outside relationship tables -->
+  <xsl:function name="govuk:print-topicrefs" as="element()*">
+    <xsl:param name="map" as="element()?"/>
+    <xsl:sequence select="$map//*[contains(@class, ' map/topicref ')]
+                          [normalize-space(@href)]
+                          [not(@scope = 'external')]
+                          [not(@format) or @format = 'dita']
+                          [not(ancestor-or-self::*[contains(@class, ' map/topicref ')]
+                                                  [@processing-role = 'resource-only' or @toc = 'no'])]
+                          [not(ancestor::*[contains(@class, ' map/reltable ')])]"/>
+  </xsl:function>
+
+  <xsl:function name="govuk:print-topic-count" as="xs:integer">
+    <xsl:param name="map" as="element()?"/>
+    <xsl:sequence select="count(distinct-values(govuk:print-topicrefs($map)/govuk:print-file(.)))"/>
+  </xsl:function>
+
+  <!-- 'yes' when the print document is produced for this map -->
+  <xsl:function name="govuk:print-available" as="xs:string">
+    <xsl:param name="enabled" as="xs:string?"/>
+    <xsl:param name="map" as="element()?"/>
+    <xsl:param name="max" as="xs:string?"/>
+    <xsl:variable name="count" as="xs:integer"
+                  select="if ($enabled = 'yes' and exists($map)) then govuk:print-topic-count($map) else 0"/>
+    <xsl:variable name="ceiling" as="xs:integer"
+                  select="if ($max castable as xs:integer) then xs:integer($max) else 500"/>
+    <xsl:sequence select="if ($count gt 0 and $count le $ceiling) then 'yes' else 'no'"/>
+  </xsl:function>
 
   <!-- ===== Footer metadata from bookmap bookmeta (#42) =====
        Read from the input map's own URL so topic pages get the copyright and
@@ -201,11 +251,12 @@ template, the cover, and the generated utility pages.
     <xsl:param name="branding" as="xs:string" select="'neutral'"/>
     <xsl:param name="footer-links" as="xs:string" select="''"/>
     <xsl:param name="footer-licence" as="xs:string" select="''"/>
+    <xsl:param name="print" as="xs:string" select="'no'"/>
     <footer class="govuk-footer">
       <div class="govuk-width-container">
         <div class="govuk-footer__meta">
           <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
-            <xsl:if test="$glossary = 'yes' or $index = 'yes' or $figurelist = 'yes' or $tablelist = 'yes'">
+            <xsl:if test="$glossary = 'yes' or $index = 'yes' or $figurelist = 'yes' or $tablelist = 'yes' or $print = 'yes'">
               <h2 class="govuk-visually-hidden">
                 <xsl:call-template name="getVariable">
                   <xsl:with-param name="id" select="'govuk-dita.support-links'"/>
@@ -244,6 +295,16 @@ template, the cover, and the generated utility pages.
                     <a class="govuk-footer__link" href="{concat($prefix, 'index-page.html')}">
                       <xsl:call-template name="getVariable">
                         <xsl:with-param name="id" select="'govuk-dita.index'"/>
+                      </xsl:call-template>
+                    </a>
+                  </li>
+                </xsl:if>
+                <!-- The whole publication as one file (FR-P2) -->
+                <xsl:if test="$print = 'yes'">
+                  <li class="govuk-footer__inline-list-item">
+                    <a class="govuk-footer__link" href="{concat($prefix, 'print.html')}">
+                      <xsl:call-template name="getVariable">
+                        <xsl:with-param name="id" select="'govuk-dita.print-version'"/>
                       </xsl:call-template>
                     </a>
                   </li>

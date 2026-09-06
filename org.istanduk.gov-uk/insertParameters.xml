@@ -24,4 +24,6 @@ unaffected.
   <param name="GOVUK-FIGURELIST" expression="${govuk.figurelist.present}" if:set="govuk.figurelist.present"/>
   <param name="GOVUK-TABLELIST" expression="${govuk.tablelist.present}" if:set="govuk.tablelist.present"/>
   <param name="GOVUK-SVG-INLINE" expression="${govuk.svg.inline}" if:set="govuk.svg.inline"/>
+  <param name="GOVUK-PRINT" expression="${govuk.print}" if:set="govuk.print"/>
+  <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}" if:set="govuk.print.max-topics"/>
 </params>

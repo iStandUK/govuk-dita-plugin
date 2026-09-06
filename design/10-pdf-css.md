@@ -1,6 +1,6 @@
 # 10 — PDF output through CSS: feasibility and scale
 
-**Status:** agreed 2026-09-06 as **D-20** (no code yet; FR-P1–P3 in [02](02-requirements.md)) · **Date:** 2026-09-06 · **Question:** can the plugin produce PDF
+**Status:** agreed 2026-09-06 as **D-20**; the 1.0 half — FR-P1 and FR-P2 — implemented in [#63](https://github.com/iStandUK/govuk-dita-plugin/issues/63) (`print.css`, `map2govuk-print.xsl`, `print-document.xsl`); FR-P3 remains the 1.1 epic (FR-P1–P3 in [02](02-requirements.md)) · **Date:** 2026-09-06 · **Question:** can the plugin produce PDF
 documents from the same DITA, styled with CSS rather than XSL-FO, on common UK, European and
 international paper sizes — and is that feasible for the 1.0 release? · **Feeds:** a decision on
 1.0 scope (D-15), the roadmap item R3, and a possible 1.1 epic.

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="print" xml:lang="en-GB">
+  <title>Printing and PDF</title>
+  <shortdesc>Every page prints, or saves as PDF, from a browser on A4 by default; with
+    <codeph>govuk.print=yes</codeph> the build also writes the whole publication as one file
+    for printing end to end.</shortdesc>
+  <conbody>
+    <p><indexterm>printing<indexterm>print stylesheet</indexterm><indexterm>print
+      document</indexterm></indexterm><indexterm>PDF</indexterm>Websites are the primary
+      output, and GOV.UK guidance is to publish HTML first and PDF only as a last resort. The
+      plugin follows that: nothing is bundled to make PDFs, but every page carries a print
+      stylesheet, and a publication can be written as a single document that a browser prints
+      whole. Building PDFs inside the toolkit, with page-numbered contents and index, is
+      planned for release 1.1.</p>
+    <section>
+      <title>Printing a page</title>
+      <p>Use the browser's print or save-as-PDF command on any page. The print stylesheet
+        hides the masthead, sidebar, search, pagination and footer, lays the content out in
+        one column, keeps headings with the text that follows them, keeps tables, figures and
+        code blocks whole where it can, repeats table headers across pages, and puts the page
+        number in the bottom margin. Links to other websites print with their address after
+        the link text, as the Design System's own print rules provide.</p>
+      <p>The paper size is set at build time with <codeph>govuk.pdf.paper</codeph>
+        (<codeph>A4</codeph> by default; also <codeph>A5</codeph>, <codeph>A3</codeph>,
+        <codeph>B5</codeph>, <codeph>B4</codeph>, <codeph>JIS-B5</codeph>,
+        <codeph>JIS-B4</codeph>, <codeph>Letter</codeph>, <codeph>Legal</codeph> and
+        <codeph>Ledger</codeph>, or a width and height such as <codeph>148mm 210mm</codeph>)
+        and <codeph>govuk.pdf.orientation</codeph> (<codeph>portrait</codeph> by default, or
+        <codeph>landscape</codeph>). Browsers offer their own paper choice in the print dialog
+        as well; the build's setting is the default the page asks for. The same two parameters
+        will drive the 1.1 PDF step, so a publisher sets them once.</p>
+    </section>
+    <section>
+      <title>The print document</title>
+      <p>Set <codeph>govuk.print=yes</codeph> and the build writes <filepath>print.html</filepath>
+        beside <filepath>index.html</filepath>: the whole publication in one self-contained
+        file, linked from the home page and from every footer as "Whole publication (print
+        version)". It holds:</p>
+      <ul>
+        <li>a cover block with the publication's title, abstract and authorship from the
+          bookmap or map;</li>
+        <li>a linked contents list, to <codeph>govuk.print.toc.depth</codeph> levels
+          (<codeph>3</codeph> by default);</li>
+        <li>every navigable topic in the map's reading order, rendered exactly as on its own
+          page, with headings stepped down by its depth in the map so the document's outline
+          is a single hierarchy — chapters, parts and appendices each start a new printed
+          page;</li>
+        <li>footnotes gathered at the end of their topic;</li>
+        <li>the glossary and the index as final parts, their entries linking to the topics.</li>
+      </ul>
+      <p>Every id the website uses is kept, so cross-references between topics become links
+        within the document and the index resolves without page numbers. Topics excluded from
+        navigation (<codeph>toc="no"</codeph>) and resource-only references are left out;
+        a topic reached from more than one place is included once. The file is never indexed
+        by site search, so it cannot duplicate every result.</p>
+      <p>On screen it reads as one long single-column page — useful for offline reading,
+        review circulation or archiving. Printed, or saved as PDF from a browser, it becomes
+        the whole publication with running page numbers; Chromium-based browsers also produce
+        a tagged PDF with a document outline from the headings. A publisher with a CSS Paged
+        Media formatter can render the same file directly.</p>
+      <p>Very large publications are not one printable document. The build writes the file only
+        when the publication has no more than <codeph>govuk.print.max-topics</codeph> topic
+        files (<codeph>500</codeph> by default); above that it reports <codeph>GOVK003W</codeph>
+        and writes nothing, and no page links to it. Publications of that size can produce
+        print documents per part by building their submaps, or leave printing to the
+        per-page stylesheet.</p>
+    </section>
+    <section>
+      <title>What a browser cannot do yet</title>
+      <p>Browsers implement the paged parts of CSS unevenly, so at this release the contents
+        list and index carry links rather than page numbers, footnotes appear as endnotes,
+        and the accessibility tagging of a saved PDF is the browser's own. All three become
+        page-numbered, footnoted and tagged to PDF/UA from the same file under the 1.1 PDF
+        step, which adds a pure-Java CSS engine to the build with no other software to
+        install. The design is recorded in the project's design folder as decision D-20.</p>
+    </section>
+  </conbody>
+</concept>

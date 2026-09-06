@@ -157,10 +157,61 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <condition property="govuk.tablelist.present" value="yes" else="no">
       <not><equals arg1="${govuk.tablelist.count}" arg2="0"/></not>
     </condition>
+    <!-- Print stylesheet and print document (FR-P1/FR-P2, D-20, #63) -->
+    <property name="govuk.print" value="no"/>
+    <fail message="govuk.print must be 'yes' or 'no', was: ${govuk.print}">
+      <condition>
+        <not><or>
+          <equals arg1="${govuk.print}" arg2="yes"/>
+          <equals arg1="${govuk.print}" arg2="no"/>
+        </or></not>
+      </condition>
+    </fail>
+    <condition property="govuk.print.on">
+      <equals arg1="${govuk.print}" arg2="yes"/>
+    </condition>
+    <property name="govuk.print.max-topics" value="500"/>
+    <fail message="govuk.print.max-topics must be a whole number, was: ${govuk.print.max-topics}">
+      <condition>
+        <not><matches pattern="^[0-9]+$" string="${govuk.print.max-topics}"/></not>
+      </condition>
+    </fail>
+    <property name="govuk.print.toc.depth" value="3"/>
+    <fail message="govuk.print.toc.depth must be a single digit 1-9, was: ${govuk.print.toc.depth}">
+      <condition>
+        <not><matches pattern="^[1-9]$" string="${govuk.print.toc.depth}"/></not>
+      </condition>
+    </fail>
+    <!-- Paper for print.css (and, in 1.1, the PDF engine): a CSS page-size
+         keyword, or a width and height as CSS lengths -->
+    <property name="govuk.pdf.paper" value="A4"/>
+    <fail message="govuk.pdf.paper must be one of A5, A4, A3, B5, B4, JIS-B5, JIS-B4, Letter, Legal, Ledger, or a width and height such as '210mm 297mm', was: ${govuk.pdf.paper}">
+      <condition>
+        <not><or>
+          <matches pattern="^(A5|A4|A3|B5|B4|JIS-B5|JIS-B4|letter|legal|ledger)$" string="${govuk.pdf.paper}" casesensitive="false"/>
+          <matches pattern="^[0-9]+(\.[0-9]+)?(mm|cm|in|pt|pc|px) [0-9]+(\.[0-9]+)?(mm|cm|in|pt|pc|px)$" string="${govuk.pdf.paper}"/>
+        </or></not>
+      </condition>
+    </fail>
+    <property name="govuk.pdf.orientation" value="portrait"/>
+    <fail message="govuk.pdf.orientation must be 'portrait' or 'landscape', was: ${govuk.pdf.orientation}">
+      <condition>
+        <not><or>
+          <equals arg1="${govuk.pdf.orientation}" arg2="portrait"/>
+          <equals arg1="${govuk.pdf.orientation}" arg2="landscape"/>
+        </or></not>
+      </condition>
+    </fail>
+    <!-- CSS takes the orientation keyword only with a named size; explicit
+         lengths are already width then height -->
+    <condition property="govuk.print.page-size"
+               value="${govuk.pdf.paper} ${govuk.pdf.orientation}" else="${govuk.pdf.paper}">
+      <matches pattern="^[A-Za-z]" string="${govuk.pdf.paper}"/>
+    </condition>
   </target>
 
   <target name="dita2govuk"
-          depends="dita2govuk.init, dita2html5, govuk.cover, govuk.copy-assets, govuk.search-index"/>
+          depends="dita2govuk.init, dita2html5, govuk.cover, govuk.print, govuk.copy-assets, govuk.search-index"/>
 
   <target name="govuk.cover"
           description="Generate the GOV.UK home page and search page from the map">
@@ -177,7 +228,46 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-FAVICON" expression="${govuk.favicon.name}" if:set="govuk.favicon"/>
       <param name="GOVUK-FOOTER-LINKS" expression="${govuk.footer.links}" if:set="govuk.footer.links"/>
       <param name="GOVUK-FOOTER-LICENCE" expression="${govuk.footer.licence}" if:set="govuk.footer.licence"/>
+      <param name="GOVUK-PRINT" expression="${govuk.print}"/>
+      <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}"/>
     </html5.map>
+  </target>
+
+  <!-- The same map transformation as the cover, with the topic-rendering
+       stylesheets loaded, whose output is the one-file print document. Runs
+       only when asked, so ordinary builds render each topic once. -->
+  <target name="govuk.print" if="govuk.print.on"
+          description="Write the whole publication as one print document, print.html (FR-P2)">
+    <local name="govuk.print.output.dir"/>
+    <condition property="govuk.print.output.dir" value="${dita.output.dir}" else="${_dita.map.output.dir}">
+      <isset property="inner.transform"/>
+    </condition>
+    <pipeline message="Convert DITA map to print document" taskname="xslt">
+      <xslt destdir="${govuk.print.output.dir}"
+            style="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/map2govuk-print.xsl">
+        <ditafileset input="true" format="ditamap"/>
+        <param name="FILTERFILE" expression="${dita.input.valfile.url}" if:set="dita.input.valfile"/>
+        <param name="OUTEXT" expression="${out.ext}" if:set="out.ext"/>
+        <param name="CSS" expression="${args.css.file}" if:set="args.css.file"/>
+        <param name="CSSPATH" expression="${user.csspath}" if:set="user.csspath"/>
+        <param name="GOVUK-SERVICE-NAME" expression="${govuk.service.name}" if:set="govuk.service.name"/>
+        <param name="GOVUK-SEARCH" expression="${govuk.search.enabled}"/>
+        <param name="GOVUK-BRANDING" expression="${govuk.branding}"/>
+        <param name="GOVUK-FAVICON" expression="${govuk.favicon.name}" if:set="govuk.favicon"/>
+        <param name="GOVUK-SVG-INLINE" expression="${govuk.svg.inline}"/>
+        <param name="GOVUK-PRINT" expression="${govuk.print}"/>
+        <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}"/>
+        <param name="GOVUK-PRINT-TOC-DEPTH" expression="${govuk.print.toc.depth}"/>
+        <mapper type="merge" to="print.html"/>
+        <xmlcatalog refid="dita.catalog"/>
+      </xslt>
+    </pipeline>
+    <!-- Above govuk.print.max-topics the transform writes nothing (GOVK003I) -->
+    <delete>
+      <fileset dir="${govuk.print.output.dir}" includes="print.html">
+        <size value="0" when="equal"/>
+      </fileset>
+    </delete>
   </target>
 
   <target name="govuk.copy-assets"
@@ -193,10 +283,19 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       </fileset>
       <fileset dir="${dita.plugin.org.istanduk.gov-uk.dir}/resource/css">
         <include name="*.css"/>
+        <exclude name="print.css"/>
       </fileset>
       <fileset dir="${dita.plugin.org.istanduk.gov-uk.dir}/resource/js">
         <include name="*.js"/>
       </fileset>
+    </copy>
+    <!-- Print stylesheet (FR-P1): the page size is filled in from the paper
+         parameters at copy time -->
+    <copy file="${dita.plugin.org.istanduk.gov-uk.dir}/resource/css/print.css"
+          todir="${dita.output.dir}/govuk" overwrite="true">
+      <filterset>
+        <filter token="GOVUK_PAGE_SIZE" value="${govuk.print.page-size}"/>
+      </filterset>
     </copy>
     <!-- Publisher favicon (FR-T3): copied next to the CSS, linked by its basename -->
     <copy file="${govuk.favicon}" todir="${dita.output.dir}/govuk" if:set="govuk.favicon"/>

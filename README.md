@@ -10,8 +10,10 @@ HTML, internal-link and page-weight checks, build determinism) with **NHS and of
 branding** (#47), **parameter-driven page furniture** — phase banner, service URL, favicon,
 footer links and licence (#49) — and the first live trial's findings from a 10,000-topic data
 dictionary: a build warning for navigation keys the toolkit leaves unresolved (#51), a
-Troubleshooting topic for two DITA-OT 4.4 behaviours (#52), and **search relevance driven by
-the DITA itself** (#54). Next is a
+Troubleshooting topic for two DITA-OT 4.4 behaviours (#52), **search relevance driven by
+the DITA itself** (#54), and **printing** — a print stylesheet on every page and, with
+`govuk.print=yes`, the whole publication as one file to print or save as PDF (#63, D-20;
+a bundled PDF step follows in 1.1). Next is a
 [1.0 registry listing](https://github.com/iStandUK/govuk-dita-plugin/issues/15) after the
 trials. Coverage of bookmaps, keys, chunking, and the SVG domain is verified against real
 corpora ([ORUK](design/07-gap-analysis-oruk.md), [DITA 1.3](design/08-gap-analysis-dita13.md)).
