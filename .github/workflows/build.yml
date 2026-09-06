@@ -185,10 +185,13 @@ jobs:
       - name: Build print document (#63)
         run: |
           set -o pipefail
+          # bash -e ignores a negated command, so a plain "! grep" can never fail
+          # the step; negative assertions go through this instead
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-print -Dgovuk.print=yes 2>&1 | tee manual-print.log
           test -f out/manual-print/print.html
-          ! grep -q "GOVK003W" manual-print.log
+          absent -q "GOVK003W" manual-print.log
           # cover block, contents, chapter groups, topics with demoted headings, glossary and index parts
           grep -q '<h1 class="govuk-heading-xl">GOV.UK DITA plugin manual</h1>' out/manual-print/print.html
           grep -q 'app-print-contents__list' out/manual-print/print.html
@@ -201,8 +204,8 @@ jobs:
           grep -q 'href="#install"' out/manual-print/print.html
           grep -q 'src="images/' out/manual-print/print.html
           # nothing for search to index, no site chrome, no related-links block, no duplicate ids
-          ! grep -q 'data-pagefind' out/manual-print/print.html
-          ! grep -Eq 'app-masthead|app-sidebar|govuk-footer|related-links' out/manual-print/print.html
+          absent -q 'data-pagefind' out/manual-print/print.html
+          absent -Eq 'app-masthead|app-sidebar|govuk-footer|related-links' out/manual-print/print.html
           test -z "$(grep -o ' id="[^"]*"' out/manual-print/print.html | sort | uniq -d)"
           # linked from the cover and every footer; print.css on every page with the A4 default
           grep -q 'href="print.html">Whole publication (print version)' out/manual-print/index.html
@@ -210,18 +213,21 @@ jobs:
           grep -q 'href="print.html">Whole publication (print version)' out/manual-print/glossary.html
           grep -q 'govuk/print.css" media="print"' out/manual-print/topics/install.html
           grep -q 'size: A4 portrait;' out/manual-print/govuk/print.css
-          # the default build: no print document and no links to one; print.css still shipped
+          # the default build: no print document and no links to one (the manual's own
+          # topics/print.html page is a different file); print.css still shipped
           test ! -f out/manual/print.html
-          ! grep -q 'print.html' out/manual/index.html
-          ! grep -q 'print.html' out/manual/topics/install.html
+          absent -q 'href="print.html"' out/manual/index.html
+          absent -q 'href="../print.html"' out/manual/topics/install.html
           grep -q 'govuk/print.css" media="print"' out/manual/index.html
           # paper parameters flow into print.css; a bad size fails the build
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
             --format govuk --output out/oruk-print -Dgovuk.print=yes \
             -Dgovuk.pdf.paper=Letter -Dgovuk.pdf.orientation=landscape
           grep -q 'size: Letter landscape;' out/oruk-print/govuk/print.css
-          ! "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
-            --format govuk --output out/oruk-print-bad -Dgovuk.pdf.paper=A9
+          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
+            --format govuk --output out/oruk-print-bad -Dgovuk.pdf.paper=A9; then
+            echo "govuk.pdf.paper=A9 should have failed the build"; exit 1
+          fi
           # a chunked file renders once, its nested topics keep their ids and take cross-references
           test "$(grep -c 'id="item"' out/oruk-print/print.html)" = 1
           grep -q 'id="child2"' out/oruk-print/print.html
@@ -240,8 +246,8 @@ jobs:
             -Dgovuk.print.max-topics=3 -Dgovuk.search=no 2>&1 | tee ceiling.log
           grep -q "\[GOVK003W\]" ceiling.log
           test ! -f out/manual-print-ceiling/print.html
-          ! grep -q 'print.html' out/manual-print-ceiling/index.html
-          ! grep -q 'print.html' out/manual-print-ceiling/topics/install.html
+          absent -q 'href="print.html"' out/manual-print-ceiling/index.html
+          absent -q 'href="../print.html"' out/manual-print-ceiling/topics/install.html
 
       # The brand-recoloured CSS is a vendored artifact (#47): guard against it
       # drifting from its Sass source. Rebuild it and fail on any diff.
