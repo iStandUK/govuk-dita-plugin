@@ -16,6 +16,7 @@ defaults, and fixtures.
 | ~~OQ-8~~ | **Resolved in practice (v0.1.0).** Two synthetic fixtures exist and run in CI: `fixtures/poc` (element coverage) and `fixtures/oruk-mini` (ORUK idioms). Real corpora are used for local verification only (design/07); nothing licensed sits in the public repo | — | — |
 | OQ-9 | **Languages.** Is en-GB-only acceptable for v1 UI strings (structure is translation-ready, NFR-I1), with Welsh as roadmap R7? | Confirm | C-14 scope |
 | OQ-10 | **Roadmap ordering.** After v1: which of R1 (syntax highlighting), R2 (version switcher), R3 (print CSS), R8 (guide layout) matters most to you? | Prioritisation only | Post-v1 planning |
+| ~~OQ-12~~ | **Resolved (D-20, 2026-09-06).** PDF through CSS in two steps: print stylesheet and print document in 1.0 (FR-P1, FR-P2), the bundled Java CSS engine in 1.1 (FR-P3) after a spike; A4 default, PDF/UA on by default, a bundled OFL TrueType family chosen in the spike | — | — |
 | OQ-11 | **Sidebar weight on very large publications.** The full tree on every page cost the 10,000-topic trial about 24 KB per page (site 324 → 569 MB once the data-sets branch joined the tree), still inside the 300 KB page budget. Is that acceptable for hosting, or should a partial tree / fetched navigation come forward from the roadmap? | Accept / `govuk.nav.depth`-style limit / lazy navigation | Roadmap ordering |
 
 ## Suggested next steps (updated at v0.1.0)

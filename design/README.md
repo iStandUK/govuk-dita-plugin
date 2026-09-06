@@ -19,6 +19,7 @@ commercial help-output tooling.
 | [07-gap-analysis-oruk.md](07-gap-analysis-oruk.md) | Gap analysis of the Open Referral UK corpus: full-sweep feature inventory, verified dispositions, findings |
 | [08-gap-analysis-dita13.md](08-gap-analysis-dita13.md) | Gap analysis of the full DITA 1.3 specification against the plugin, with the verified 1.0 gap list |
 | [09-nhs-branding.md](09-nhs-branding.md) | NHS branding gap analysis and the recoloured-GDS approach for the NHS and crown official variants (#47) |
+| [10-pdf-css.md](10-pdf-css.md) | PDF output through CSS Paged Media on UK, European and international paper sizes: options, scale, and the agreed two-step plan (D-20) |
 
 ## Summary of agreed direction
 
@@ -32,7 +33,9 @@ and the NHS identity to NHS organisations, and no restricted font or crest file 
 bundled (D-17, [09](09-nhs-branding.md)). Site search uses **Pagefind** as an
 optional post-build step. The layout follows the **GDS Technical Documentation Template**
 pattern (persistent left-hand navigation). Version 1 includes **glossary/abbreviation** and
-**back-of-book index** generation. The plugin is released under **Apache-2.0** on GitHub and
+**back-of-book index** generation, and **print output through CSS**: a print stylesheet and a
+single merged print document in 1.0, a bundled Java CSS Paged Media engine for A4-first PDF
+with tagged PDF/UA in 1.1 (D-20, [10](10-pdf-css.md)). The plugin is released under **Apache-2.0** on GitHub and
 listed in the DITA-OT plugin registry, targeting **DITA-OT 4.4.1 or later**.
 
 See [05-decision-log.md](05-decision-log.md) for the reasoning behind each of these.

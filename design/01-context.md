@@ -32,7 +32,7 @@ transformations, or its assets.
 
 - **No commercial-product involvement** — no vendor transtype as a base, no post-processing of
   vendor output, no reuse of vendor assets, stylesheets, or scripts.
-- **No PDF output** — existing PDF routes are unaffected and out of scope.
+- **No PDF output** in the initial releases — existing PDF routes are unaffected. A CSS-based PDF route is assessed in [10](10-pdf-css.md): print stylesheet for 1.0, build-time PDF proposed for 1.1.
 - **No authoring features** — the plugin does not change how DITA is written or validated.
 - **No server-side runtime** — output is purely static files; no CMS, no dynamic search
   backend, no analytics service (analytics hooks are a roadmap item, off by default).
@@ -72,7 +72,7 @@ design:
 | Breadcrumbs | **Kept, optional** — off by default in the sidebar layout | FR-N6 | ⬜ |
 | Previous/next topic links | **Kept** — GOV.UK pagination component | FR-N5 | ⬜ |
 | Responsive/mobile layout | **Kept** — govuk grid + mobile navigation | FR-N4, NFR-A* | ✅ |
-| Print-friendly CSS | **Deferred** — roadmap | Roadmap R3 | — |
+| Print-friendly CSS | **Deferred** — roadmap; proposed for 1.0 in [10](10-pdf-css.md) | Roadmap R3 | — |
 | Search-term highlighting in results | **Deferred** — depends on Pagefind capabilities | Roadmap R4 | — |
 | Rating / feedback widget | **Dropped** — replaced (optionally) by GOV.UK "is this page useful" pattern later | Roadmap R6 | — |
 | PDF link integration | **Dropped** — out of scope | Non-goal | — |

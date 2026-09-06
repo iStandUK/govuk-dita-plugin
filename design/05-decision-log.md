@@ -387,3 +387,46 @@ source change resolves the trial in practice and helps every other DITA-OT user.
 **Consequences:** `messages.xml` and the `keyref-nest` fixture exist; the manual carries a
 Troubleshooting topic; upstream filing (dita-ot#4755 already covers the `copy-to` half) is a
 standing offer rather than a blocker.
+
+## D-20 · PDF output: CSS Paged Media, in two steps — A4, PDF/UA and an open font by default
+
+**Date:** 2026-09-06.
+
+**Options:** (a) keep PDF a non-goal; (b) the toolkit's XSL-FO routes (`pdf2`, the theme
+generator) styled to resemble GOV.UK; (c) a CSS-based route — print stylesheet, a single merged
+print document, and a build-time CSS Paged Media engine; (d) commercial CSS formatters only.
+Analysis in [10-pdf-css.md](10-pdf-css.md).
+
+**Decision:** Option (c), staged. **1.0** ships the print stylesheet (FR-P1, closing roadmap
+R3) and the **print document** (FR-P2): one merged XHTML file per publication, off by default
+(`govuk.print`), with the guards in [10](10-pdf-css.md) §9a — topic ceiling, excluded from
+search and sitemap, honest heading levels, unique ids. **1.1** adds the build-time engine
+(FR-P3; Open HTML to PDF, pure Java, LGPL 2.1, bundled with its notice) after a one-week spike
+against the acceptance criteria in [10](10-pdf-css.md) §9. Defaults accepted as recommended:
+- **Paper A4** (`govuk.pdf.paper`); Letter, Legal, Ledger, A5, A3, the B and JIS sizes or
+  explicit lengths are one parameter away; portrait by default, `landscape` named pages for
+  wide tables, mirrored margins for double-sided printing on request.
+- **Tagged PDF/UA on by default**, with a documented opt-out, validated with veraPDF in CI.
+- **A bundled SIL Open Font Licence TrueType family** for neutral and iStandUK PDFs, chosen in
+  the spike from a shortlist (Noto Sans, Public Sans, Source Sans 3, each with a matching
+  monospace) by legibility at 12 pt, coverage of Welsh and European diacritics, TrueType
+  availability and size. Official and NHS PDFs embed only publisher-supplied fonts
+  (`govuk.pdf.fonts`), falling back to the bundled family with a warning — the web output's
+  posture (C1, D-17) carried into print. Commercial formatters are reachable through
+  `govuk.pdf.command` and never bundled.
+- **One PDF per publication**, written beside `index.html` and linked from the cover, named
+  after the map.
+
+**Rationale:** one stylesheet family (CSS) instead of two (CSS and XSL-FO) to keep in step;
+the print document is the engine-neutral, largest piece of the work and is useful on its own
+(browser printing of whole publications now that `@page` margin boxes are Baseline; offline
+single-file reading; a ready input for any CSS formatter); the Node-free build (D-12) holds
+because the engine is pure Java; the accessibility regulations make tagged PDF/UA the only
+defensible default; A4 is the UK and European norm while the toolkit's own PDF routes default
+to US Letter with the size buried in an attribute set.
+
+**Consequences:** FR-P1–P3 added; roughly two to three weeks added to 1.0 and three to five to
+1.1; a new LGPL dependency and a font family (a few megabytes) join the plugin at 1.1; PDF
+output for corpora above the topic ceiling is per part or none, by design; the engine's
+limits (no flexbox or grid, limited right-to-left text, TrueType only) shape the print
+document, which is why it is assembled by the plugin rather than fed the site's pages.
