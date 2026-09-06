@@ -434,3 +434,27 @@ to US Letter with the size buried in an attribute set.
 output for corpora above the topic ceiling is per part or none, by design; the engine's
 limits (no flexbox or grid, limited right-to-left text, TrueType only) shape the print
 document, which is why it is assembled by the plugin rather than fed the site's pages.
+
+## D-21 · Release 1.0.0 after the first live trial, with the registry listing
+
+**Date:** 2026-09-06.
+
+**Options:** hold 1.0 until the regenerated NHS Data Dictionary DITA has been rebuilt and
+tested (the position taken at v0.9.2); or release 1.0.0 now, with the print output in, and
+treat further trial rounds as ordinary maintenance.
+
+**Decision:** Release **v1.0.0** now — v0.9.2 plus FR-P1/FR-P2 (#63) — and submit the
+DITA-OT plugin registry entry with it (#21, D-15), so `dita install org.istanduk.gov-uk` works
+by name. The regenerated trial DITA is tested against 1.0.x as it arrives.
+
+**Rationale:** The first trial did its job: the toolkit behaviours it exposed are characterised,
+worked around and documented, and the plugin changes it called for (`GOVK001W`, search
+relevance from the DITA) are released and measured on the real corpus. Every Must-priority
+requirement in [02](02-requirements.md) is delivered except the registry half of FR-B2, which
+this release completes. The print output was the last 1.0 scope item (D-20). Waiting for the
+next regeneration of one publisher's DITA would gate a community release on that publisher's
+schedule.
+
+**Consequences:** the v1 epic (#15) closes; FR-B2 becomes ✅ when the registry pull request is
+merged; 1.1 is the PDF engine epic (FR-P3) plus #59–#61; further trial findings are 1.0.x point
+releases, each re-submitted to the registry as a new version entry.

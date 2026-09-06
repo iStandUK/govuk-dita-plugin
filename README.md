@@ -3,25 +3,25 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: v0.9 — robust, in live trials** —
-[v0.9.2](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.2) builds on the
-v0.9.0 base (full DITA 1.3 spec coverage and a CI safety net — WCAG 2.2 AA via axe-core, valid
-HTML, internal-link and page-weight checks, build determinism) with **NHS and official GOV.UK
-branding** (#47), **parameter-driven page furniture** — phase banner, service URL, favicon,
-footer links and licence (#49) — and the first live trial's findings from a 10,000-topic data
-dictionary: a build warning for navigation keys the toolkit leaves unresolved (#51), a
-Troubleshooting topic for two DITA-OT 4.4 behaviours (#52), **search relevance driven by
-the DITA itself** (#54), and **printing** — a print stylesheet on every page and, with
-`govuk.print=yes`, the whole publication as one file to print or save as PDF (#63, D-20;
-a bundled PDF step follows in 1.1). Next is a
-[1.0 registry listing](https://github.com/iStandUK/govuk-dita-plugin/issues/15) after the
-trials. Coverage of bookmaps, keys, chunking, and the SVG domain is verified against real
+**Status: v1.0.0 — released** —
+[v1.0.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.0) is the first
+release the DITA community can rely on: full DITA 1.3 spec coverage on a GOV.UK Design System
+frontend with a CI safety net (WCAG 2.2 AA via axe-core, valid HTML, internal-link and
+page-weight checks, build determinism); **NHS and official GOV.UK branding** (#47);
+**parameter-driven page furniture** — phase banner, service URL, favicon, footer links and
+licence (#49); the hardening a first live trial on a 10,000-topic data dictionary called for —
+a build warning for navigation keys the toolkit leaves unresolved (#51), a Troubleshooting topic
+for two DITA-OT 4.4 behaviours (#52), **search relevance driven by the DITA itself** (#54); and
+**printing** — a print stylesheet on every page and, with `govuk.print=yes`, the whole
+publication as one file to print or save as PDF (#63, D-20). Its listing in the
+[DITA-OT plugin registry](https://www.dita-ot.org/plugins) is submitted with this release
+(#21); 1.1 adds the bundled PDF step. Coverage of bookmaps, keys, chunking, and the SVG domain is verified against real
 corpora ([ORUK](design/07-gap-analysis-oruk.md), [DITA 1.3](design/08-gap-analysis-dita13.md)).
 
 ## Try it
 
 ```bash
-dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v0.9.2/org.istanduk.gov-uk-0.9.2.zip
+dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.0.0/org.istanduk.gov-uk-1.0.0.zip
 dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 

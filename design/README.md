@@ -4,7 +4,7 @@ A design for an open-source **DITA Open Toolkit (DITA-OT) plugin** that publishe
 directly as a static website using the **GOV.UK Design System** (GDS), with no dependency on
 commercial help-output tooling.
 
-**Status:** Implemented through **v0.9.2** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
+**Status:** Implemented through **v1.0.0** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
 
 ## How to read this folder
 
@@ -58,16 +58,18 @@ See [05-decision-log.md](05-decision-log.md) for the reasoning behind each of th
 | [**v0.9.2**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.2) | Trial follow-ups: `GOVK001W` warning for unresolved navigation keys (#51), the manual's Troubleshooting topic (#52), search relevance following the DITA (#54, D-18): `govuk.search.ranking` presets, `shortdesc` weighting, `search-ignore` / `search-demote` and `importance`, prolog keywords as searchable metadata, `searchtitle`, category/audience filters — measured on the trial corpus; and the licensing-caveat documentation sweep (#57). |
 
 | **Print output** (D-20, [10](10-pdf-css.md)) | The 1.0 half of the PDF design ([#63](https://github.com/iStandUK/govuk-dita-plugin/issues/63)): a print stylesheet on every page (A4 by default, `govuk.pdf.paper` / `govuk.pdf.orientation`) and, with `govuk.print=yes`, the whole publication as one self-contained file — cover, contents, every topic in reading order, glossary and index — with a topic ceiling, no search indexing, and a Chromium print smoke in CI. The bundled CSS PDF engine (FR-P3) is the 1.1 epic. |
+| [**v1.0.0**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.0) | **The 1.0 release** (D-21): v0.9.2 plus the print stylesheet and print document (#63); the first live trial complete; submitted to the DITA-OT plugin registry ([#21](https://github.com/iStandUK/govuk-dita-plugin/issues/21)) so `dita install org.istanduk.gov-uk` works by name; closes the v1 epic ([#15](https://github.com/iStandUK/govuk-dita-plugin/issues/15)). |
 
 Per-requirement status lives in the **Status column of
 [02-requirements.md](02-requirements.md)**. v0.9.0 closed the P1–P3 gap list in
 [08-gap-analysis-dita13.md](08-gap-analysis-dita13.md) and the verification NFRs; v0.9.1
 shipped the branded variants ([#47](https://github.com/iStandUK/govuk-dita-plugin/issues/47),
-delivering FR-T2 and closing [#20](https://github.com/iStandUK/govuk-dita-plugin/issues/20)).
-The 1.0 backlog = the **live trials** (the first is complete and released as v0.9.2; 1.0 waits
-for the regenerated trial DITA to be tested), then the last v1 epic
-([#15](https://github.com/iStandUK/govuk-dita-plugin/issues/15)) item: the registry listing
-([#21](https://github.com/iStandUK/govuk-dita-plugin/issues/21)).
+delivering FR-T2 and closing [#20](https://github.com/iStandUK/govuk-dita-plugin/issues/20));
+v0.9.2 carried the first live trial's findings; **v1.0.0** (2026-09-06, D-21) added printing
+and went to the registry. The **1.1 epic** is the build-time PDF engine (FR-P3, [10](10-pdf-css.md))
+with the ORUK discovery's plugin gaps ([#59](https://github.com/iStandUK/govuk-dita-plugin/issues/59),
+[#60](https://github.com/iStandUK/govuk-dita-plugin/issues/60),
+[#61](https://github.com/iStandUK/govuk-dita-plugin/issues/61)).
 
 ## Glossary of terms used throughout
 
