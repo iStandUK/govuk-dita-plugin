@@ -19,10 +19,11 @@ work plus decisions on fonts and licensing, against a 1.0 whose remaining scope 
 the registry listing.
 
 Recommendation: ship the **print stylesheet** (roadmap R3, a few days) in 1.0, so every page
-prints and "saves as PDF" cleanly from a browser on A4 or Letter with page numbers; document
-the toolkit's existing PDF routes for whole-publication PDFs in the meantime; and take the
-**build-time CSS PDF** to 1.1 through a one-week spike whose acceptance criteria are set out in
-Section 9.
+prints and "saves as PDF" cleanly from a browser on A4 or Letter with page numbers; ship the
+**print document** — the single merged file every engine needs — in 1.0 as well (Section 9a,
+agreed 2026-09-06), so whole publications print from a browser and render through any CSS
+formatter a publisher already has; and take the **build-time CSS PDF engine** to 1.1 through a
+one-week spike whose acceptance criteria are set out in Section 9.
 
 ## 2. Where we start from
 
@@ -300,9 +301,66 @@ If the spike passes, the epic proceeds at the size in Section 8; if it fails on 
 or engine health, the same print document and CSS move to option C, which is why the document
 and stylesheet are designed engine-neutral from the start.
 
+## 9a. Revision: bring the print document into 1.0
+
+Reviewing Section 9 with the sponsor (2026-09-06) settled that the **print document** — the
+single merged XHTML file of Section 6, step 1 — belongs in 1.0 alongside the print stylesheet,
+with only the engine step deferred to 1.1. The reasons:
+
+- It is the L-sized workstream on which every engine option depends and which no engine
+  changes. Built in 1.0, it lets the 1.1 spike start from the real document instead of a
+  hand-assembled sample, and reduces the 1.1 residue to M-sized items: engine integration,
+  fonts, PDF/UA validation, page-number features.
+- It is useful on its own. Browsers print it whole, on A4 or Letter with running page numbers
+  (margin boxes are Baseline); Chromium's print-to-PDF can add tags and an outline. A publisher
+  who already has a CSS formatter can render a full PDF from it at 1.0 through a documented
+  command (`govuk.pdf.command`, option E), with nothing bundled by the plugin.
+- It is a deliverable in its own right: one self-contained page for offline reading, review
+  circulation or archiving, which the site cannot offer today.
+
+**What it is.** One XHTML document per publication, written beside `index.html` and linked
+from the cover as "Whole publication (print version)": cover block from the bookmap
+(`mainbooktitle`, `booktitlealt`, `bookmeta`); a hyperlinked contents list to a configurable
+depth; every navigable topic in map reading order, rendered by the existing `blocks.xsl` and
+`foreign.xsl` templates with headings demoted by map depth; chapter and appendix boundaries
+marked for `break-before`; glossary and index as final parts, their entries linking to
+anchors; no masthead, sidebar, search, pagination or footer chrome; `print.css` (the option A
+stylesheet) plus a single-column screen layout so the file also reads on screen. Every topic
+and element id is preserved exactly as on the site, so cross-references become in-document
+anchors and the index resolves without page numbers.
+
+**Limits at 1.0, stated plainly in the manual.** In a browser the contents list has no page
+numbers, `fn` footnotes are rendered as endnotes at the end of their topic, and index and
+glossary entries link rather than cite pages; all three become page-numbered under the 1.1
+engine, from the same file. Tagged output in a browser is the browser's own.
+
+**Guards.** `govuk.print` defaults to `no`; `govuk.print.max-topics` (default 500) skips the
+document with a notice above the ceiling, since a 10,000-topic corpus is not one document —
+such publications produce print documents per part through their submaps or not at all. The
+print document carries no `data-pagefind-body`, so Pagefind never indexes it (the plugin scopes
+indexing to that attribute, and a page without it is skipped), which stops it duplicating every
+search result; it is excluded from the sitemap proposed in #60 by default. Heading depth: map
+nesting beyond six levels keeps the visual style of level six with `aria-level` set correctly,
+so the tag tree stays honest. Duplicate ids from `chunk` and `copy-to` topics are resolved the
+way the site already resolves them (the html5 base's id rewriting), and CI asserts uniqueness.
+
+**Verification in CI.** The manual's print document is built on every run: Nu, axe-core,
+internal-link check (all anchors resolve within the file), the determinism double-build, and a
+Chromium smoke through the Playwright already used for accessibility — print the document to
+A4 with `tagged` and `outline`, assert a page count above one and a non-empty outline. That
+smoke is CI-only evidence that the target works; it is not a build dependency.
+
+**Sizing.** Print document transform **L** (the same item as in Section 8), print stylesheet
+**S–M**, parameters, cover link, manual topic and CI **S–M**: about **two to three weeks**, on
+top of a 1.0 whose remaining items are the live trials and the registry listing. The 1.1 engine
+epic then needs roughly three to five weeks rather than six to nine.
+
+**Requirement.** Add to [02](02-requirements.md) as FR-P1 (print stylesheet, R3 delivered) and
+FR-P2 (print document), both 1.0, with FR-P3 (build-time PDF through a CSS engine) for 1.1.
+
 ## 10. Decisions needed
 
-- Whether 1.0 takes option A only (recommended) or waits for B.
+- ~~Whether 1.0 takes option A only or waits for B.~~ Settled 2026-09-06: 1.0 takes the print stylesheet **and** the print document (Section 9a); the engine step is 1.1.
 - The bundled TrueType family for neutral and iStandUK PDFs, and its licence notice.
 - Whether PDF/UA is mandatory (recommended: on by default, with a documented opt-out) given
   the accessibility regulations.
