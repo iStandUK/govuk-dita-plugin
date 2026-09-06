@@ -112,7 +112,7 @@ requirements govern its behaviour.
 |---|---|---|
 | R1 | Syntax-highlighted codeblocks | Build-time highlighting (no runtime JS highlighting); revisit when code-heavy publications need it |
 | R2 | Version switcher | `/v1/`, `/v2/` publishing with a switcher component and "not the latest version" notification banner |
-| R3 | Print stylesheet | Print-friendly CSS for single topics |
+| R3 | Print stylesheet | Print-friendly CSS for single topics; proposed for 1.0, with a build-time CSS PDF route for 1.1 ([10-pdf-css.md](10-pdf-css.md)) |
 | R4 | Search-term handling extras | Result highlighting, search suggestions — track Pagefind features |
 | R5 | Multi-publication landing site | One build aggregating several maps under a shared home page |
 | R6 | Feedback pattern | GOV.UK "Is this page useful?" — needs a backend, so out of static scope for now |

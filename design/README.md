@@ -19,6 +19,7 @@ commercial help-output tooling.
 | [07-gap-analysis-oruk.md](07-gap-analysis-oruk.md) | Gap analysis of the Open Referral UK corpus: full-sweep feature inventory, verified dispositions, findings |
 | [08-gap-analysis-dita13.md](08-gap-analysis-dita13.md) | Gap analysis of the full DITA 1.3 specification against the plugin, with the verified 1.0 gap list |
 | [09-nhs-branding.md](09-nhs-branding.md) | NHS branding gap analysis and the recoloured-GDS approach for the NHS and crown official variants (#47) |
+| [10-pdf-css.md](10-pdf-css.md) | Proposal: PDF output through CSS Paged Media on UK, European and international paper sizes — options, scale, and the 1.0 / 1.1 recommendation |
 
 ## Summary of agreed direction
 
