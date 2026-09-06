@@ -390,7 +390,11 @@ standing offer rather than a blocker.
 
 ## D-20 · PDF output: CSS Paged Media, in two steps — A4, PDF/UA and an open font by default
 
-**Date:** 2026-09-06.
+**Date:** 2026-09-06. **Implemented (1.0 half):** FR-P1 and FR-P2 in
+[#63](https://github.com/iStandUK/govuk-dita-plugin/issues/63); one departure from
+[10](10-pdf-css.md) §9a — the over-ceiling notice is a **warning** (`GOVK003W`), not an info
+message, because the toolkit's default build log shows no info-level messages and a
+publisher who asked for `govuk.print=yes` must see why no file appeared.
 
 **Options:** (a) keep PDF a non-goal; (b) the toolkit's XSL-FO routes (`pdf2`, the theme
 generator) styled to resemble GOV.UK; (c) a CSS-based route — print stylesheet, a single merged

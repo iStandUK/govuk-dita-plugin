@@ -7,6 +7,10 @@ Build messages contributed to the toolkit (dita.xsl.messages). Ids follow the
 DITA-OT convention: four letters, three digits, severity (I/W/E/F).
 -->
 <messages>
+  <message id="GOVK003W" type="WARN">
+    <reason>Print document skipped: the publication has %1 topic files, above govuk.print.max-topics=%2.</reason>
+    <response>Raise govuk.print.max-topics, or build print documents per part from submaps. Very large publications are not one printable document.</response>
+  </message>
   <message id="GOVK002E" type="ERROR">
     <reason>govuk.search.ranking must be 'default', 'reference' or a JSON object of Pagefind ranking options; got '%1'.</reason>
     <response>Fix the parameter value. See the manual's search topic for the options.</response>

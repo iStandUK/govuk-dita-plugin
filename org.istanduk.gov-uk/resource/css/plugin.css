@@ -638,3 +638,51 @@ kbd {
     display: table;
   }
 }
+
+/* ===== Print document (FR-P2, D-20): the single-file publication on screen;
+   print.css handles it on paper ===== */
+.app-print .app-print-cover {
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #b1b4b6;
+}
+
+.app-print .app-print-contents {
+  margin-bottom: 40px;
+}
+
+.app-print .app-print-contents__list {
+  margin: 0;
+  padding-left: 0;
+}
+
+.app-print .app-print-contents__list .app-print-contents__list {
+  margin-top: 5px;
+  padding-left: 20px;
+}
+
+.app-print .app-print-contents__list li {
+  margin-bottom: 5px;
+}
+
+.app-print .app-print-chapter {
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 1px solid #b1b4b6;
+}
+
+.app-print .app-print-topic + .app-print-topic,
+.app-print .app-print-group + .app-print-topic {
+  margin-top: 30px;
+}
+
+.app-print .app-print-endnotes {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #b1b4b6;
+  font-size: 1rem;
+}
+
+.app-print .app-print-link {
+  margin-top: 15px;
+}

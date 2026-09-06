@@ -215,6 +215,7 @@ indexterm markup. Imported by map2govuk-cover.xsl.
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
             <xsl:with-param name="footer-links" select="$GOVUK-FOOTER-LINKS"/>
             <xsl:with-param name="footer-licence" select="$GOVUK-FOOTER-LICENCE"/>
+            <xsl:with-param name="print" select="$govuk-print-available"/>
           </xsl:call-template>
         </body>
       </html>
@@ -235,6 +236,37 @@ indexterm markup. Imported by map2govuk-cover.xsl.
 
   <!-- ===== Glossary page (FR-G1) ===== -->
 
+  <!-- The glossary body (letter navigation, lettered groups, entries); the
+       page below and the print document (FR-P2) both use it -->
+  <xsl:template name="govuk-glossary-content">
+    <xsl:variable name="sorted" as="element()*">
+      <xsl:perform-sort select="$govuk-gloss">
+        <xsl:sort select="lower-case(@term)" lang="en-GB"/>
+      </xsl:perform-sort>
+    </xsl:variable>
+    <xsl:call-template name="govuk-letter-nav">
+      <xsl:with-param name="letters" select="distinct-values($sorted/govuk:letter(@term))"/>
+      <xsl:with-param name="prefix" select="'glossary'"/>
+    </xsl:call-template>
+    <xsl:for-each-group select="$sorted" group-by="govuk:letter(@term)">
+      <h2 class="govuk-heading-m app-az-letter"
+          id="glossary-{if (current-grouping-key() = '#') then 'other' else current-grouping-key()}">
+        <xsl:value-of select="current-grouping-key()"/>
+      </h2>
+      <xsl:for-each select="current-group()">
+        <h3 class="govuk-heading-s app-entry__heading">
+          <xsl:value-of select="@term"/>
+          <xsl:if test="@acronym ne ''">
+            <xsl:text> (</xsl:text><xsl:value-of select="@acronym"/><xsl:text>)</xsl:text>
+          </xsl:if>
+        </h3>
+        <xsl:if test="normalize-space(.) ne ''">
+          <p class="govuk-body app-entry__desc"><xsl:value-of select="."/></p>
+        </xsl:if>
+      </xsl:for-each>
+    </xsl:for-each-group>
+  </xsl:template>
+
   <xsl:template name="govuk-glossary-page">
     <xsl:if test="exists($govuk-gloss)">
       <xsl:variable name="glossary-label">
@@ -243,32 +275,7 @@ indexterm markup. Imported by map2govuk-cover.xsl.
         </xsl:call-template>
       </xsl:variable>
       <xsl:variable name="content" as="item()*">
-        <xsl:variable name="sorted" as="element()*">
-          <xsl:perform-sort select="$govuk-gloss">
-            <xsl:sort select="lower-case(@term)" lang="en-GB"/>
-          </xsl:perform-sort>
-        </xsl:variable>
-        <xsl:call-template name="govuk-letter-nav">
-          <xsl:with-param name="letters" select="distinct-values($sorted/govuk:letter(@term))"/>
-          <xsl:with-param name="prefix" select="'glossary'"/>
-        </xsl:call-template>
-        <xsl:for-each-group select="$sorted" group-by="govuk:letter(@term)">
-          <h2 class="govuk-heading-m app-az-letter"
-              id="glossary-{if (current-grouping-key() = '#') then 'other' else current-grouping-key()}">
-            <xsl:value-of select="current-grouping-key()"/>
-          </h2>
-          <xsl:for-each select="current-group()">
-            <h3 class="govuk-heading-s app-entry__heading">
-              <xsl:value-of select="@term"/>
-              <xsl:if test="@acronym ne ''">
-                <xsl:text> (</xsl:text><xsl:value-of select="@acronym"/><xsl:text>)</xsl:text>
-              </xsl:if>
-            </h3>
-            <xsl:if test="normalize-space(.) ne ''">
-              <p class="govuk-body app-entry__desc"><xsl:value-of select="."/></p>
-            </xsl:if>
-          </xsl:for-each>
-        </xsl:for-each-group>
+        <xsl:call-template name="govuk-glossary-content"/>
       </xsl:variable>
       <xsl:call-template name="govuk-utility-shell">
         <xsl:with-param name="file" select="'glossary.html'"/>
@@ -349,6 +356,80 @@ indexterm markup. Imported by map2govuk-cover.xsl.
     </xsl:for-each-group>
   </xsl:template>
 
+  <!-- The index body; the page below and the print document (FR-P2) both use it -->
+  <xsl:template name="govuk-index-content">
+    <xsl:variable name="sorted" as="element()*">
+      <xsl:perform-sort select="$govuk-ix">
+        <xsl:sort select="lower-case(@primary)" lang="en-GB"/>
+        <xsl:sort select="lower-case(@secondary)" lang="en-GB"/>
+      </xsl:perform-sort>
+    </xsl:variable>
+    <xsl:call-template name="govuk-letter-nav">
+      <xsl:with-param name="letters" select="distinct-values($sorted/govuk:letter(@primary))"/>
+      <xsl:with-param name="prefix" select="'index'"/>
+    </xsl:call-template>
+    <xsl:for-each-group select="$sorted" group-by="govuk:letter(@primary)">
+      <h2 class="govuk-heading-m app-az-letter"
+          id="index-{if (current-grouping-key() = '#') then 'other' else current-grouping-key()}">
+        <xsl:value-of select="current-grouping-key()"/>
+      </h2>
+      <ul class="govuk-list app-index-list">
+        <xsl:for-each-group select="current-group()" group-by="lower-case(@primary)">
+          <li>
+            <span class="app-index-term"><xsl:value-of select="current-group()[1]/@primary"/></span>
+            <xsl:variable name="direct" as="element()*"
+                          select="current-group()[@secondary = '']"/>
+            <xsl:if test="exists($direct[@page ne ''])">
+              <xsl:text> — </xsl:text>
+              <xsl:call-template name="govuk-index-locations">
+                <xsl:with-param name="occurrences" select="$direct"/>
+              </xsl:call-template>
+            </xsl:if>
+            <xsl:variable name="sees" as="xs:string*"
+                          select="distinct-values($direct/@see/tokenize(., '\|')[. ne ''])"/>
+            <xsl:variable name="seealsos" as="xs:string*"
+                          select="distinct-values($direct/@seealso/tokenize(., '\|')[. ne ''])"/>
+            <xsl:if test="exists($sees)">
+              <span class="app-index-see">
+                <xsl:text> — </xsl:text>
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'govuk-dita.see'"/>
+                </xsl:call-template>
+                <xsl:text> </xsl:text>
+                <xsl:value-of select="string-join($sees, '; ')"/>
+              </span>
+            </xsl:if>
+            <xsl:if test="exists($seealsos)">
+              <span class="app-index-see">
+                <xsl:text> — </xsl:text>
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'govuk-dita.see-also'"/>
+                </xsl:call-template>
+                <xsl:text> </xsl:text>
+                <xsl:value-of select="string-join($seealsos, '; ')"/>
+              </span>
+            </xsl:if>
+            <xsl:variable name="subs" as="element()*"
+                          select="current-group()[@secondary ne '']"/>
+            <xsl:if test="exists($subs)">
+              <ul class="govuk-list app-index-sublist">
+                <xsl:for-each-group select="$subs" group-by="lower-case(@secondary)">
+                  <li>
+                    <span class="app-index-term"><xsl:value-of select="current-group()[1]/@secondary"/></span>
+                    <xsl:text> — </xsl:text>
+                    <xsl:call-template name="govuk-index-locations">
+                      <xsl:with-param name="occurrences" select="current-group()"/>
+                    </xsl:call-template>
+                  </li>
+                </xsl:for-each-group>
+              </ul>
+            </xsl:if>
+          </li>
+        </xsl:for-each-group>
+      </ul>
+    </xsl:for-each-group>
+  </xsl:template>
+
   <xsl:template name="govuk-index-page">
     <xsl:if test="exists($govuk-ix)">
       <xsl:variable name="index-label">
@@ -357,76 +438,7 @@ indexterm markup. Imported by map2govuk-cover.xsl.
         </xsl:call-template>
       </xsl:variable>
       <xsl:variable name="content" as="item()*">
-        <xsl:variable name="sorted" as="element()*">
-          <xsl:perform-sort select="$govuk-ix">
-            <xsl:sort select="lower-case(@primary)" lang="en-GB"/>
-            <xsl:sort select="lower-case(@secondary)" lang="en-GB"/>
-          </xsl:perform-sort>
-        </xsl:variable>
-        <xsl:call-template name="govuk-letter-nav">
-          <xsl:with-param name="letters" select="distinct-values($sorted/govuk:letter(@primary))"/>
-          <xsl:with-param name="prefix" select="'index'"/>
-        </xsl:call-template>
-        <xsl:for-each-group select="$sorted" group-by="govuk:letter(@primary)">
-          <h2 class="govuk-heading-m app-az-letter"
-              id="index-{if (current-grouping-key() = '#') then 'other' else current-grouping-key()}">
-            <xsl:value-of select="current-grouping-key()"/>
-          </h2>
-          <ul class="govuk-list app-index-list">
-            <xsl:for-each-group select="current-group()" group-by="lower-case(@primary)">
-              <li>
-                <span class="app-index-term"><xsl:value-of select="current-group()[1]/@primary"/></span>
-                <xsl:variable name="direct" as="element()*"
-                              select="current-group()[@secondary = '']"/>
-                <xsl:if test="exists($direct[@page ne ''])">
-                  <xsl:text> — </xsl:text>
-                  <xsl:call-template name="govuk-index-locations">
-                    <xsl:with-param name="occurrences" select="$direct"/>
-                  </xsl:call-template>
-                </xsl:if>
-                <xsl:variable name="sees" as="xs:string*"
-                              select="distinct-values($direct/@see/tokenize(., '\|')[. ne ''])"/>
-                <xsl:variable name="seealsos" as="xs:string*"
-                              select="distinct-values($direct/@seealso/tokenize(., '\|')[. ne ''])"/>
-                <xsl:if test="exists($sees)">
-                  <span class="app-index-see">
-                    <xsl:text> — </xsl:text>
-                    <xsl:call-template name="getVariable">
-                      <xsl:with-param name="id" select="'govuk-dita.see'"/>
-                    </xsl:call-template>
-                    <xsl:text> </xsl:text>
-                    <xsl:value-of select="string-join($sees, '; ')"/>
-                  </span>
-                </xsl:if>
-                <xsl:if test="exists($seealsos)">
-                  <span class="app-index-see">
-                    <xsl:text> — </xsl:text>
-                    <xsl:call-template name="getVariable">
-                      <xsl:with-param name="id" select="'govuk-dita.see-also'"/>
-                    </xsl:call-template>
-                    <xsl:text> </xsl:text>
-                    <xsl:value-of select="string-join($seealsos, '; ')"/>
-                  </span>
-                </xsl:if>
-                <xsl:variable name="subs" as="element()*"
-                              select="current-group()[@secondary ne '']"/>
-                <xsl:if test="exists($subs)">
-                  <ul class="govuk-list app-index-sublist">
-                    <xsl:for-each-group select="$subs" group-by="lower-case(@secondary)">
-                      <li>
-                        <span class="app-index-term"><xsl:value-of select="current-group()[1]/@secondary"/></span>
-                        <xsl:text> — </xsl:text>
-                        <xsl:call-template name="govuk-index-locations">
-                          <xsl:with-param name="occurrences" select="current-group()"/>
-                        </xsl:call-template>
-                      </li>
-                    </xsl:for-each-group>
-                  </ul>
-                </xsl:if>
-              </li>
-            </xsl:for-each-group>
-          </ul>
-        </xsl:for-each-group>
+        <xsl:call-template name="govuk-index-content"/>
       </xsl:variable>
       <xsl:call-template name="govuk-utility-shell">
         <xsl:with-param name="file" select="'index-page.html'"/>

@@ -11,8 +11,9 @@ map transformation with the plugin's values.
 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                xmlns:govuk="https://github.com/iStandUK/govuk-dita-plugin"
                 version="3.0"
-                exclude-result-prefixes="xs">
+                exclude-result-prefixes="xs govuk">
 
   <xsl:import href="plugin:org.dita.html5:xsl/map2html5-cover.xsl"/>
   <xsl:import href="furniture.xsl"/>
@@ -42,8 +43,15 @@ map transformation with the plugin's values.
   <xsl:param name="GOVUK-FAVICON" select="''"/>
   <xsl:param name="GOVUK-FOOTER-LINKS" select="''"/>
   <xsl:param name="GOVUK-FOOTER-LICENCE" select="''"/>
+  <xsl:param name="GOVUK-PRINT" select="'no'"/>
+  <xsl:param name="GOVUK-PRINT-MAX-TOPICS" select="'500'"/>
 
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
+
+  <!-- Whether print.html is produced for this publication (FR-P2): the same
+       test the print transform applies, so links never point at a missing file -->
+  <xsl:variable name="govuk-print-available" as="xs:string"
+                select="govuk:print-available($GOVUK-PRINT, $govuk-norm-map[1], $GOVUK-PRINT-MAX-TOPICS)"/>
 
   <!-- Pagefind ranking options for the search page (#54): a preset name or a
        JSON object passed through. Command lines tend to strip double quotes, so
@@ -160,6 +168,7 @@ map transformation with the plugin's values.
                                    then concat('govuk-frontend-', $govuk-frontend-version, '-nhs.min.css')
                                    else concat('govuk-frontend-', $govuk-frontend-version, '.min.css'))}"/>
     <link rel="stylesheet" href="govuk/plugin.css"/>
+    <link rel="stylesheet" href="govuk/print.css" media="print"/>
     <xsl:if test="$GOVUK-BRANDING = ('neutral', 'istanduk')">
       <link rel="stylesheet" href="govuk/overlay-neutral.css"/>
     </xsl:if>
@@ -326,6 +335,16 @@ map transformation with the plugin's values.
                   <xsl:value-of select="string-join(distinct-values(($authors, $orgs)[. ne '']), ' · ')"/>
                 </p>
               </xsl:if>
+              <!-- The whole publication as one file for printing (FR-P2) -->
+              <xsl:if test="$govuk-print-available = 'yes'">
+                <p class="govuk-body app-print-link">
+                  <a class="govuk-link" href="print.html">
+                    <xsl:call-template name="getVariable">
+                      <xsl:with-param name="id" select="'govuk-dita.print-version'"/>
+                    </xsl:call-template>
+                  </a>
+                </p>
+              </xsl:if>
               <xsl:choose>
                 <xsl:when test="$layout = 'start'">
                   <xsl:call-template name="govuk-layout-start">
@@ -425,6 +444,7 @@ map transformation with the plugin's values.
         <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
         <xsl:with-param name="footer-links" select="$GOVUK-FOOTER-LINKS"/>
         <xsl:with-param name="footer-licence" select="$GOVUK-FOOTER-LICENCE"/>
+        <xsl:with-param name="print" select="$govuk-print-available"/>
       </xsl:call-template>
       <script type="module">
         <xsl:text>import { initAll } from './govuk/govuk-frontend-</xsl:text>
@@ -531,6 +551,7 @@ map transformation with the plugin's values.
             <xsl:with-param name="branding" select="$GOVUK-BRANDING"/>
             <xsl:with-param name="footer-links" select="$GOVUK-FOOTER-LINKS"/>
             <xsl:with-param name="footer-licence" select="$GOVUK-FOOTER-LICENCE"/>
+            <xsl:with-param name="print" select="$govuk-print-available"/>
           </xsl:call-template>
           <script src="pagefind/pagefind-ui.js"></script>
           <script>

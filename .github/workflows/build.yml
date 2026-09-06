@@ -180,6 +180,69 @@ jobs:
           grep -q 'data-pagefind-weight="4"' out/manual/topics/introduction.html
           ! grep -q 'ranking:' out/manual/search.html
 
+      # Print stylesheet and print document (#63 / FR-P1, FR-P2, D-20). Built to
+      # its own directory so the page-weight budget keeps measuring topic pages.
+      - name: Build print document (#63)
+        run: |
+          set -o pipefail
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-print -Dgovuk.print=yes 2>&1 | tee manual-print.log
+          test -f out/manual-print/print.html
+          ! grep -q "GOVK003W" manual-print.log
+          # cover block, contents, chapter groups, topics with demoted headings, glossary and index parts
+          grep -q '<h1 class="govuk-heading-xl">GOV.UK DITA plugin manual</h1>' out/manual-print/print.html
+          grep -q 'app-print-contents__list' out/manual-print/print.html
+          grep -q 'href="#introduction">About the plugin</a>' out/manual-print/print.html
+          grep -q '<section class="app-print-group app-print-chapter" id="app-print-group-' out/manual-print/print.html
+          grep -Eq '<h3 [^>]*id="t[0-9]+-ariaid-title1"[^>]*>Installing the plugin</h3>' out/manual-print/print.html
+          grep -q 'id="app-print-glossary"' out/manual-print/print.html
+          grep -q 'id="app-print-index"' out/manual-print/print.html
+          # cross-references become in-document anchors; images re-based to the document
+          grep -q 'href="#install"' out/manual-print/print.html
+          grep -q 'src="images/' out/manual-print/print.html
+          # nothing for search to index, no site chrome, no related-links block, no duplicate ids
+          ! grep -q 'data-pagefind' out/manual-print/print.html
+          ! grep -Eq 'app-masthead|app-sidebar|govuk-footer|related-links' out/manual-print/print.html
+          test -z "$(grep -o ' id="[^"]*"' out/manual-print/print.html | sort | uniq -d)"
+          # linked from the cover and every footer; print.css on every page with the A4 default
+          grep -q 'href="print.html">Whole publication (print version)' out/manual-print/index.html
+          grep -q 'href="../print.html">Whole publication (print version)' out/manual-print/topics/install.html
+          grep -q 'href="print.html">Whole publication (print version)' out/manual-print/glossary.html
+          grep -q 'govuk/print.css" media="print"' out/manual-print/topics/install.html
+          grep -q 'size: A4 portrait;' out/manual-print/govuk/print.css
+          # the default build: no print document and no links to one; print.css still shipped
+          test ! -f out/manual/print.html
+          ! grep -q 'print.html' out/manual/index.html
+          ! grep -q 'print.html' out/manual/topics/install.html
+          grep -q 'govuk/print.css" media="print"' out/manual/index.html
+          # paper parameters flow into print.css; a bad size fails the build
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
+            --format govuk --output out/oruk-print -Dgovuk.print=yes \
+            -Dgovuk.pdf.paper=Letter -Dgovuk.pdf.orientation=landscape
+          grep -q 'size: Letter landscape;' out/oruk-print/govuk/print.css
+          ! "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
+            --format govuk --output out/oruk-print-bad -Dgovuk.pdf.paper=A9
+          # a chunked file renders once, its nested topics keep their ids and take cross-references
+          test "$(grep -c 'id="item"' out/oruk-print/print.html)" = 1
+          grep -q 'id="child2"' out/oruk-print/print.html
+          grep -q 'href="#child2"' out/oruk-print/print.html
+          # kitchen: footnotes as per-file endnotes, copy-to duplicates prefixed, links inside inlined SVG re-based
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+            --format govuk --output out/kitchen-print -Dgovuk.print=yes
+          grep -Eq 'name="t[0-9]+-fnsrc_' out/kitchen-print/print.html
+          grep -q 'app-print-endnotes' out/kitchen-print/print.html
+          grep -Eq 'id="p[0-9]+-shared"' out/kitchen-print/print.html
+          grep -q 'xlink:href="#blocks"' out/kitchen-print/print.html
+          test -z "$(grep -o ' id="[^"]*"' out/kitchen-print/print.html | sort | uniq -d)"
+          # the topic ceiling: skipped with a warning, and nothing links to the missing file
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-print-ceiling -Dgovuk.print=yes \
+            -Dgovuk.print.max-topics=3 -Dgovuk.search=no 2>&1 | tee ceiling.log
+          grep -q "\[GOVK003W\]" ceiling.log
+          test ! -f out/manual-print-ceiling/print.html
+          ! grep -q 'print.html' out/manual-print-ceiling/index.html
+          ! grep -q 'print.html' out/manual-print-ceiling/topics/install.html
+
       # The brand-recoloured CSS is a vendored artifact (#47): guard against it
       # drifting from its Sass source. Rebuild it and fail on any diff.
       - name: Branding CSS is current
@@ -210,7 +273,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href out/search-semantics out/search-semantics-json
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/search-semantics out/search-semantics-json
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -465,7 +528,8 @@ jobs:
           python3 tools/check_links.py \
             out/manual out/oruk-mini out/kitchen out/kitchen-flag \
             out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 \
-            out/keyref-nest out/keyref-nest-href out/search-semantics out/search-semantics-json
+            out/keyref-nest out/keyref-nest-href out/search-semantics out/search-semantics-json \
+            out/manual-print out/oruk-print out/kitchen-print out/manual-print-ceiling
 
       - name: Page-weight budget (NFR-P2)
         run: python3 tools/page_weight.py --report --budget-kb 300 out/manual out/kitchen out/oruk-mini
@@ -473,9 +537,9 @@ jobs:
       - name: Build determinism (FR-B6)
         run: |
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
-            --format govuk --output out/det-a -Dgovuk.search=no
+            --format govuk --output out/det-a -Dgovuk.search=no -Dgovuk.print=yes
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
-            --format govuk --output out/det-b -Dgovuk.search=no
+            --format govuk --output out/det-b -Dgovuk.search=no -Dgovuk.print=yes
           diff -r out/det-a out/det-b && echo "double build is byte-identical"
 
       - name: Install accessibility tooling
@@ -484,7 +548,15 @@ jobs:
           (cd tools/a11y && npx playwright install --with-deps chromium)
 
       - name: Accessibility checks — axe-core WCAG 2.2 AA (NFR-A1)
-        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3
+        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 out/manual-print/print.html out/kitchen-print/print.html out/oruk-print/print.html
+
+      # FR-P1/FR-P2 evidence (#63): the print document and a topic page print to
+      # tagged, outlined, multi-page A4 PDFs in Chromium. CI-only; not a build
+      # dependency.
+      - name: Chromium print smoke (FR-P1, FR-P2)
+        run: |
+          node tools/a11y/print-smoke.mjs out/manual-print/print.html out/manual-print.pdf --paper A4
+          node tools/a11y/print-smoke.mjs out/manual-print/topics/parameters.html out/parameters.pdf --paper A4
 
       - name: Visual snapshots for govuk-frontend upgrades (NFR-M2)
         run: |

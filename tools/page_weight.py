@@ -100,8 +100,10 @@ def main(argv):
             print(f"{shell:9} {shell_gz:9} {img_raw:9}  {path}")
 
     # NFR-P2 budgets a "typical topic page"; the search page is exempt — it
-    # carries the third-party Pagefind UI bundle, not the plugin's own shell.
-    over = [r for r in rows if r[0] > budget and os.path.basename(r[3]) != "search.html"]
+    # carries the third-party Pagefind UI bundle, not the plugin's own shell —
+    # and so is the print document, which is the whole publication in one file.
+    over = [r for r in rows if r[0] > budget
+            and os.path.basename(r[3]) not in ("search.html", "print.html")]
     worst = rows[0] if rows else (0, 0)
     print(f"\nheaviest shell: {worst[0] / 1024:.1f} KB uncompressed / {worst[1] / 1024:.1f} KB gzipped "
           f"(budget {budget_kb:.0f} KB uncompressed) across {len(rows)} pages")

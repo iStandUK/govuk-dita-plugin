@@ -1,0 +1,119 @@
+/*
+ * This file is part of the govuk-dita-plugin project.
+ * Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+ *
+ * Print stylesheet (FR-P1, D-20), loaded with media="print" by every page.
+ * govuk-frontend already supplies print typography (point sizes, printed link
+ * URLs); this file adds the page box, hides the site chrome, sets a single
+ * column and controls page breaks. The page size is filled in at build time
+ * from govuk.pdf.paper and govuk.pdf.orientation.
+ */
+
+@page {
+  size: @GOVUK_PAGE_SIZE@;
+  margin: 20mm 18mm 22mm 18mm;
+
+  @bottom-right {
+    content: counter(page) " / " counter(pages);
+    font-family: sans-serif;
+    font-size: 9pt;
+    color: #505a5f;
+  }
+}
+
+/* Chrome with no meaning on paper */
+.govuk-skip-link,
+.app-masthead,
+.govuk-header,
+.govuk-phase-banner,
+.app-sidebar,
+.govuk-pagination,
+.govuk-footer,
+.govuk-back-link,
+.app-print-screen-only {
+  display: none !important;
+}
+
+/* Single column */
+.govuk-width-container {
+  max-width: none;
+  margin: 0;
+}
+
+.govuk-main-wrapper {
+  padding: 0;
+}
+
+.govuk-grid-column-two-thirds,
+.govuk-grid-column-one-third {
+  width: 100%;
+  float: none;
+  padding: 0;
+}
+
+/* Breaks */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+[role="heading"] {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+figure,
+table,
+pre,
+.govuk-inset-text,
+.govuk-warning-text,
+.app-hazard {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+thead {
+  display: table-header-group;
+}
+
+p,
+li,
+dd {
+  orphans: 3;
+  widows: 3;
+}
+
+/* Wide content flows rather than scrolls */
+#main-content table {
+  display: table;
+  overflow: visible;
+}
+
+pre {
+  white-space: pre-wrap;
+  overflow: visible;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+/* Print document structure (FR-P2): cover and contents on their own pages,
+   every chapter on a new page */
+.app-print-cover,
+.app-print-contents {
+  break-after: page;
+  page-break-after: always;
+}
+
+.app-print-chapter {
+  break-before: page;
+  page-break-before: always;
+}

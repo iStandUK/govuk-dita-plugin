@@ -193,6 +193,11 @@ Status as of v0.1.0: ✅ implemented · ⬜ planned (each arrives with its featu
 | `govuk.homepage.depth` | 1–9; default `2` | Levels of the map shown by the grid/grouped/accordion/start layouts (1 = entries only; 2 = + children; 3+ nest) | ✅ |
 | `govuk.pagination` | `yes` (default) \| `no` | FR-N5 — previous/next block pagination in reading order | ✅ |
 | `govuk.breadcrumbs` | `no` (default) \| `yes` | FR-N6 | ⬜ |
+| `govuk.print` | `no` (default) \| `yes` | FR-P2 — the whole publication as one file, `print.html`, linked from the cover and footers (D-20) | ✅ (#63) |
+| `govuk.print.max-topics` | whole number; default `500` | FR-P2 — ceiling on distinct topic files; above it `GOVK003W` and no file | ✅ (#63) |
+| `govuk.print.toc.depth` | 1–9; default `3` | FR-P2 — levels in the print document's contents list | ✅ (#63) |
+| `govuk.pdf.paper` | `A4` (default) \| `A5` \| `A3` \| `B5` \| `B4` \| `JIS-B5` \| `JIS-B4` \| `Letter` \| `Legal` \| `Ledger` \| `<width> <height>` | FR-P1 — `@page size` in `print.css` (filled in at copy time); FR-P3 will read the same value | ✅ (#63) |
+| `govuk.pdf.orientation` | `portrait` (default) \| `landscape` | FR-P1 — with a named paper size | ✅ (#63) |
 | `govuk.footer.links` | `label\|url;label\|url` | Extra footer links | ✅ (#49) |
 | `govuk.footer.licence` | text | Footer licence/credit line (neutral, iStandUK, NHS; official keeps the OGL) | ✅ (#49) |
 | `govuk.favicon` | path | Favicon copied into the output and linked from every page | ✅ (#49) |
