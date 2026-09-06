@@ -90,6 +90,14 @@ requirements govern its behaviour.
 | FR-T4 | Publishers can append their own stylesheet after the plugin's (standard `args.css`/`args.cssroot` behaviour preserved) | S | ✅ |
 | FR-T5 | Favicon and social-preview metadata are parameter-driven, with neutral defaults | C | 🔶 `govuk.favicon` ✅ (#49); social-preview metadata ⬜ |
 
+### Print and PDF (FR-P) — D-20
+
+| ID | Requirement | Priority | Status |
+|---|---|---|---|
+| FR-P1 | A print stylesheet: every page prints, or saves as PDF from a browser, on A4 (default) or Letter with page numbers in the page margins, the site chrome hidden and breaks controlled at headings, tables and figures | M (1.0) | ⬜ design agreed in [10](10-pdf-css.md); closes roadmap R3 |
+| FR-P2 | A print document: one self-contained XHTML file per publication (`govuk.print`, off by default) with cover, hyperlinked contents, every navigable topic in reading order, glossary and index, all site ids preserved; excluded from search and sitemap; a topic ceiling (`govuk.print.max-topics`, 500) guards very large publications | M (1.0) | ⬜ [10](10-pdf-css.md) §9a; Chromium print smoke in CI |
+| FR-P3 | Build-time PDF from the print document through a CSS Paged Media engine (pure Java, LGPL, bundled): `govuk.pdf.paper` (A4 default; A5, A3, B4, B5, JIS-B4/B5, Letter, Legal, Ledger or lengths), orientation, margins and mirrored sides; contents, index and cross-references with page numbers; footnotes; repeated table heads; bookmarks; tagged PDF/UA on by default with a documented opt-out; bundled OFL TrueType family, publisher-supplied fonts for official and NHS; commercial formatters via `govuk.pdf.command` | S (1.1) | ⬜ enters through the spike in [10](10-pdf-css.md) §9 |
+
 ## Non-functional requirements
 
 | ID | Requirement | Priority | Status |
@@ -112,7 +120,7 @@ requirements govern its behaviour.
 |---|---|---|
 | R1 | Syntax-highlighted codeblocks | Build-time highlighting (no runtime JS highlighting); revisit when code-heavy publications need it |
 | R2 | Version switcher | `/v1/`, `/v2/` publishing with a switcher component and "not the latest version" notification banner |
-| R3 | Print stylesheet | Print-friendly CSS for single topics; proposed for 1.0, with a build-time CSS PDF route for 1.1 ([10-pdf-css.md](10-pdf-css.md)) |
+| ~~R3~~ | Print stylesheet | Promoted into scope as FR-P1 (1.0), with the print document FR-P2 (1.0) and the CSS PDF engine FR-P3 (1.1) — D-20, [10-pdf-css.md](10-pdf-css.md) |
 | R4 | Search-term handling extras | Result highlighting, search suggestions — track Pagefind features |
 | R5 | Multi-publication landing site | One build aggregating several maps under a shared home page |
 | R6 | Feedback pattern | GOV.UK "Is this page useful?" — needs a backend, so out of static scope for now |

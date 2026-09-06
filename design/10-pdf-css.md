@@ -1,6 +1,6 @@
 # 10 — PDF output through CSS: feasibility and scale
 
-**Status:** proposal, no code · **Date:** 2026-09-06 · **Question:** can the plugin produce PDF
+**Status:** agreed 2026-09-06 as **D-20** (no code yet; FR-P1–P3 in [02](02-requirements.md)) · **Date:** 2026-09-06 · **Question:** can the plugin produce PDF
 documents from the same DITA, styled with CSS rather than XSL-FO, on common UK, European and
 international paper sizes — and is that feasible for the 1.0 release? · **Feeds:** a decision on
 1.0 scope (D-15), the roadmap item R3, and a possible 1.1 epic.
@@ -358,14 +358,15 @@ epic then needs roughly three to five weeks rather than six to nine.
 **Requirement.** Add to [02](02-requirements.md) as FR-P1 (print stylesheet, R3 delivered) and
 FR-P2 (print document), both 1.0, with FR-P3 (build-time PDF through a CSS engine) for 1.1.
 
-## 10. Decisions needed
+## 10. Decisions taken (D-20, 2026-09-06)
 
-- ~~Whether 1.0 takes option A only or waits for B.~~ Settled 2026-09-06: 1.0 takes the print stylesheet **and** the print document (Section 9a); the engine step is 1.1.
-- The bundled TrueType family for neutral and iStandUK PDFs, and its licence notice.
-- Whether PDF/UA is mandatory (recommended: on by default, with a documented opt-out) given
-  the accessibility regulations.
-- Default paper: A4 (recommended for a UK plugin) with Letter one parameter away.
-- The PDF's place in the site: linked from the cover, named after the map, one per publication.
+All recorded in the [decision log](05-decision-log.md) as D-20:
+
+- 1.0 takes the print stylesheet **and** the print document (Section 9a); the engine step is 1.1, entered through the Section 9 spike.
+- A bundled SIL Open Font Licence TrueType family for neutral and iStandUK PDFs, chosen in the spike from Noto Sans, Public Sans and Source Sans 3 (each with a matching monospace) by legibility at 12 pt, coverage of Welsh and European diacritics, TrueType availability and size; its licence notice ships with it. Official and NHS PDFs embed only publisher-supplied fonts.
+- Tagged PDF/UA on by default, with a documented opt-out, validated with veraPDF in CI.
+- Default paper A4, with Letter and the other sizes one parameter away.
+- One PDF per publication, linked from the cover and named after the map.
 
 ## 11. Sources checked (September 2026)
 
