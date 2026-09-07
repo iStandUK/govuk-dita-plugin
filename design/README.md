@@ -22,6 +22,7 @@ commercial help-output tooling.
 | [10-pdf-css.md](10-pdf-css.md) | PDF output through CSS Paged Media on UK, European and international paper sizes: options, scale, and the agreed two-step plan (D-20) |
 | [11-security.md](11-security.md) | Security review: threat model, findings by category and their dispositions, the publisher-choice/warnings principle, what CI proves, residual risks (NFR-S1–S4) |
 | [12-structured-data.md](12-structured-data.md) | Structured data and machine-readable metadata from DITA: what GOV.UK and NHS emit, what consumers still act on in 2026, the DITA → schema.org / Open Graph mapping, a DCAT catalogue record for data-standard publications, risks, and a proposed `govuk.metadata` / `govuk.dcat` shape (OQ-13) |
+| [13-print-page-numbers.md](13-print-page-numbers.md) | Page numbers in print — the options (external formatter hook, reader-side pagination, engine bundled in the core, a companion PDF product on a common core), comparison, and the recommended two-step: `govuk.pdf.command` now, `org.istanduk.gov-uk.pdf` for 1.1 (OQ-14) |
 
 ## Summary of agreed direction
 
