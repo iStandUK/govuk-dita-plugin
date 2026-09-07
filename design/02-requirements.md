@@ -17,7 +17,7 @@ Remaining ⬜/🔶 items are the v1-release backlog (see
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
 | FR-B1 | The plugin registers a transtype **`govuk`** that extends `html5`, so `dita --input=<map> --format=govuk` performs a complete build | M | ✅ |
-| FR-B2 | The plugin installs with `dita install <zip-or-url>` and, once published, by name from the DITA-OT plugin registry | M | 🔶 zip/URL install verified from every release; registry entry for v1.0.0 submitted as [dita-ot/registry#176](https://github.com/dita-ot/registry/pull/176) (D-15, D-21) — ✅ when merged |
+| FR-B2 | The plugin installs with `dita install <zip-or-url>` and, once published, by name from the DITA-OT plugin registry | M | ✅ listed in the registry from v1.0.0 ([dita-ot/registry#176](https://github.com/dita-ot/registry/pull/176), merged 2026-09-07); `dita install org.istanduk.gov-uk` verified in a clean toolkit (D-15, D-21) |
 | FR-B3 | All behaviour described below is controlled by documented build parameters (`govuk.*`), settable on the command line, in `.ditaotproject`/project files, or via Ant properties | M | ✅ every behaviour has a documented `govuk.*` parameter (branding; service name/URL; phase and feedback URL; favicon; footer links/licence; layout/depth; search, Pagefind command, ranking; pagination; SVG inlining) — see the manual's parameters table |
 | FR-B4 | The core build requires only DITA-OT (4.4.1 or later) and its bundled Java — no Node.js, no network access | M | ✅ verified |
 | FR-B5 | The build works with standard DITA 1.3 maps and bookmaps, including keys/keyscopes, conref, chunking, and DITAVAL filtering (all inherited from `html5` preprocessing and must not be broken by overrides) | M | ✅ verified against the ORUK corpus (design/07) |
