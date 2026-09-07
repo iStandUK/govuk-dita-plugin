@@ -198,6 +198,14 @@ Status as of v0.1.0: ✅ implemented · ⬜ planned (each arrives with its featu
 | `govuk.print.toc.depth` | 1–9; default `3` | FR-P2 — levels in the print document's contents list | ✅ (#63) |
 | `govuk.pdf.paper` | `A4` (default) \| `A5` \| `A3` \| `B5` \| `B4` \| `JIS-B5` \| `JIS-B4` \| `Letter` \| `Legal` \| `Ledger` \| `<width> <height>` | FR-P1 — `@page size` in `print.css` (filled in at copy time); FR-P3 will read the same value | ✅ (#63) |
 | `govuk.pdf.orientation` | `portrait` (default) \| `landscape` | FR-P1 — with a named paper size | ✅ (#63) |
+| `govuk.svg.sanitize` | `yes` (default) \| `no` | #78 — strip active/remote content from inlined SVG; findings warned (`GOVK004W`) | ✅ (#77) |
+| `govuk.inline.scope` | `input` (default) \| `any` | #80 — inline SVG/MathML only from under the input directory; departures warned (`GOVK005W`) | ✅ (#77) |
+| `govuk.content.warnings` | `yes` (default) \| `no` | #81 — report script-scheme links, remote images/objects, embeds (`GOVK006W`) | ✅ (#77) |
+| `govuk.content.policy` | `warn` (default) \| `strip` | #81 — render as authored, or replace with a placeholder | ✅ (#77) |
+| `govuk.csp` | `no` (default) \| `meta` \| policy | #82 — Content-Security-Policy meta; conflicts warned (`GOVK007W`) | ✅ (#77) |
+| `govuk.site.url` | URL | #60 — published base URL for `sitemap.xml` | ✅ (#77) |
+| `govuk.sitemap` | `auto` (default) \| `yes` \| `no` | #60 — `sitemap.xml` + `robots.txt`; search page and print document excluded | ✅ (#77) |
+| `govuk.dates` | `no` (default) \| `updated` \| `both` | #61 — critdates as a metadata line; sitemap `lastmod` | ✅ (#77) |
 | `govuk.footer.links` | `label\|url;label\|url` | Extra footer links | ✅ (#49) |
 | `govuk.footer.licence` | text | Footer licence/credit line (neutral, iStandUK, NHS; official keeps the OGL) | ✅ (#49) |
 | `govuk.favicon` | path | Favicon copied into the output and linked from every page | ✅ (#49) |

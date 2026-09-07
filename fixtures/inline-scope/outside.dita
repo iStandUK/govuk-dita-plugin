@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="outside" xml:lang="en-GB">
+  <title>A diagram from outside the input directory</title>
+  <shortdesc>The svgref below points at a sibling fixture's file, outside this map's directory.</shortdesc>
+  <body>
+    <fig>
+      <title>Sibling fixture's diagram</title>
+      <svg-container><svgref href="../dita13-kitchen/images/linked.svg"/></svg-container>
+    </fig>
+  </body>
+</topic>

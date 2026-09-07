@@ -29,6 +29,7 @@ live in `blocks.xsl`, and the home page is `map2govuk-cover.xsl` (see
 | C-14 | **Localisation strings** | `strings.xml` + `strings-en-gb.xml` for all generated text; wired to the toolkit's generated-text mechanism | S | ✅ (JavaScript labels passed via data attributes; further locales are additive files) |
 | C-15 | **Fixture publication & test harness** | Sample DITA publications exercising the mapped elements (CI subjects); HTML validation (Nu), axe-core accessibility checks, visual-regression snapshots, DITA-OT version matrix, neutral-mode asset assertions | L | ✅ fixtures, Nu validation, structural/asset assertions, internal-link check, page-weight budget, build-determinism diff, axe-core WCAG 2.2 AA, visual snapshots, and a DITA-OT version matrix all in CI (#35) |
 | C-16 | **Documentation** | User guide (install, parameters, branding rules and the legal position, search setup, theming) — authored in DITA and published with the plugin itself as its live demo | M | ✅ manual authored as a DITA bookmap in `docs/manual/` (getting started; reference incl. parameters, branding and the legal position, navigation, layouts, search and relevance, glossary/index, printing, accessibility, troubleshooting; capability demonstrations; development), built and asserted in CI as the primary fixture |
+| C-18 | **Content policy and CSP** ([11](11-security.md)) | `content-policy.xsl` (remote/script/embed findings, warn or strip), the sanitiser and scope check in `foreign.xsl`, `govuk.csp` meta in `furniture.xsl`, static `search.js`/`init.js`, `dates.xsl`, the sitemap in the cover; `tools/a11y/csp-check.mjs` | M | ✅ (#77) NFR-S1, NFR-S3 |
 | C-17 | **Print output** (D-20) | `print.css` (paged rules, chrome hidden, break control; paper from parameters) on every page, and the print document: `map2govuk-print.xsl` + `print-document.xsl` render every navigable topic through the site's own templates into one XHTML file with a fix-up pass (heading demotion, link and asset re-basing, id scoping), glossary and index parts reused from C-08/C-09; `govuk.print` Ant target, topic ceiling, footer/cover links | L | ✅ (#63) FR-P1, FR-P2; the 1.1 engine step (FR-P3) attaches here |
 
 \* Relative effort: S = small, M = medium, L = large.
@@ -149,6 +150,7 @@ inherited html5 rendering (styled acceptably by base typography rules).
 | FR-S1–S4 (search) | C-11 |
 | FR-T1–T5 (branding) | C-13, C-12 (T1 overlay), C-02 (T3 template params) |
 | FR-P1–P3 (print and PDF) | C-17 (P1, P2 delivered; P3 in 1.1), C-08/C-09 (glossary and index parts); verified by C-15 (Nu, axe, links, determinism, Chromium print smoke) |
+| NFR-S1–S4 (security) | C-18 (S1, S3), C-16 (hosting and author guidance, build-messages reference), repository workflow and policy files (S2, S4); verified by C-15 (same-origin assertions, CSP check, fixture assertions) |
 | NFR-A1–A3 (accessibility, validity, no-JS) | C-02, C-03, C-12; verified by C-15 |
 | NFR-P1–P2 (self-contained, weight) | C-12, C-11 (self-hosted search UI); verified by C-15 |
 | NFR-V1–V2 (stable URLs, privacy) | C-01 (naming), C-12 (no trackers); verified by C-15 |
