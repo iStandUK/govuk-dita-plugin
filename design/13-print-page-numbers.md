@@ -14,6 +14,20 @@ FR-P1 and FR-P2 shipped in 1.0.0: every page prints on A4 (or the chosen size) w
 
 A CSS Paged Media engine that implements, over the existing print document: `target-counter(attr(href url), page)` for contents, index and cross-references; `string-set` and margin-box `string()` for running heads; `float: footnote` and the footnote area; named pages (`page: landscape` for wide tables); `bookmark-level` for the outline; `break-*` and widows/orphans (already in `print.css`); repeated `thead`; and, for a compliant government PDF, PDF/UA tagging with embedded TrueType fonts. Everything else — the document, the ids, the paper parameters — exists.
 
+## 3a. What the reader sees: page references on cross-references
+
+Both the external-formatter route (A) and the companion engine (D) give page numbers on cross-references, because both consume the same print document, in which every cross-reference to an included topic is already an in-document anchor — `<a class="xref govuk-link" href="#install">Installing the plugin</a>`. The number is then generated content in the stylesheet, not a change to the HTML:
+
+```css
+.app-print a.xref[href^="#"]::after {
+  content: " (" attr(data-page-label) " " target-counter(attr(href url), page) ")";
+}
+```
+
+which renders **"Installing the plugin (page 13)"**. The label is not a literal in the CSS: the print document's fix-up pass stamps `data-page-label` on each in-document link from the string registry, so the wording is localisable (NFR-I1). The same mechanism numbers the contents (`leader('.') target-counter(…)` where the formatter has `leader()`; a right-aligned number otherwise) and the index entries (`target-counter` in place of the link), and `target-text(attr(href url))` can add the target's title where a link's text does not already carry it.
+
+Three limits are the vocabulary's, not the plugin's: "above"/"below" cannot be expressed — CSS has no way to compare the target's page with the current one, so the reference reads "(page 13)" whether the target is behind or ahead; a target on the *same* page is still numbered; and only targets inside the PDF get a number — a link to a page the print document excludes (`toc="no"`) stays a link to the website, which the Design System's print rules already annotate with its address. Browsers, which do not implement `target-counter`, treat the whole `content` declaration as invalid and print nothing extra, so the rule can live in the core's `print.css` from option A onwards without affecting the browser route; the companion adds its own richer rules in `pdf.css`. The open-source formatter used to prove option A documents exactly this pattern (`target-counter`, `target-text`, `leader()`); the pure-Java engine implements `target-text` and gained `target-counter` in 2026, to be confirmed in the spike.
+
 ## 4. Options
 
 | | Option | Where the engine runs | Gives | Costs |
@@ -42,7 +56,7 @@ A CSS Paged Media engine that implements, over the existing print document: `tar
 
 ## 6. Recommendation
 
-1. **Now, in the core (1.0.x): option A.** `govuk.pdf.command` — a command template with placeholders for input, output and paper parameters, run after `govuk.print`, `no` by default, failures reported as a warning with the tool's output attached (the site is still complete without the PDF). CI installs an open-source formatter (Python, `pip`, pinned — a CI dependency, not a publisher one) and asserts that the resulting PDF has page numbers in the contents and more pages than the browser smoke, which also proves the print document paginates correctly under a full CSS Paged Media implementation before any engine is chosen. Manual: one section in *Printing and PDF* with a generic command example.
+1. **Now, in the core (1.0.x): option A.** `govuk.pdf.command` — a command template with placeholders for input, output and paper parameters, run after `govuk.print`, `no` by default, failures reported as a warning with the tool's output attached (the site is still complete without the PDF). CI installs an open-source formatter (Python, `pip`, pinned — a CI dependency, not a publisher one) and asserts that the resulting PDF has page numbers in the contents and more pages than the browser smoke, which also proves the print document paginates correctly under a full CSS Paged Media implementation before any engine is chosen. The core's `print.css` gains the page-reference rules of Section 3a and the fix-up pass stamps the localised label. Manual: one section in *Printing and PDF* with a generic command example and what page references look like.
 2. **1.1: option D for the engine.** Amend D-20: the engine, fonts and PDF/UA validation ship in `org.istanduk.gov-uk.pdf`, built from the same repository (a second plugin directory), released by the same tag-triggered workflow as a second asset, listed in the registry with `deps: org.istanduk.gov-uk >= <core minor>`. Its transtype `govuk-pdf` extends `govuk`, so `--format=govuk-pdf` produces site and PDF in one build; the engine runs in a forked JVM with the companion's own classpath, never on the toolkit's. The design-10 spike applies unchanged, with three criteria added: coexistence with PDFBox 3.0.5 on the host toolkit (forked); the interface contract below; a byte-identical double build across both products.
 3. **Option B only on request** — a publisher who wants page numbers in a browser print today and accepts the cost — and never as a default.
 
