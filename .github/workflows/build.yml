@@ -6,6 +6,12 @@ name: build
 permissions:
   contents: read
 
+# A newer push to the same pull request supersedes the run in progress; pushes
+# to the long-lived branches always run to completion.
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 # Gitflow (D-22): pushes to the long-lived and release-line branches, and every
 # pull request. Feature branches are exercised through their pull request.
 on:
@@ -16,9 +22,45 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Documentation-only changes (the design record, repository policy files,
+  # templates) skip the build; the manual under docs/manual/ is built and
+  # tested, so it is not documentation in this sense. `ci` still reports, so
+  # the branch rules are satisfied either way.
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    outputs:
+      docs-only: ${{ steps.classify.outputs.docs-only }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: classify
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          # No usable base (a new branch, a tag, a manual run): build everything.
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
+             || [ "$GITHUB_REF_TYPE" = "tag" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] \
+             || ! git cat-file -e "$BASE" 2>/dev/null; then
+            echo "docs-only=false" >> "$GITHUB_OUTPUT"; echo "full run: no base to compare against"; exit 0
+          fi
+          files=$(git diff --name-only "$(git merge-base "$BASE" "$HEAD")" "$HEAD")
+          printf 'changed:\n%s\n' "$files"
+          docs='^(design/|docs/RELEASING\.md$|README\.md$|CONTRIBUTING\.md$|SECURITY\.md$|LICENSE|\.github/(ISSUE_TEMPLATE/|pull_request_template\.md$|CODEOWNERS$|dependabot\.yml$))'
+          other=$(printf '%s\n' "$files" | grep -Ev "$docs" || true)
+          if [ -n "$files" ] && [ -z "$other" ]; then
+            echo "docs-only=true" >> "$GITHUB_OUTPUT"; echo "documentation-only change: the build is skipped"
+          else
+            echo "docs-only=false" >> "$GITHUB_OUTPUT"; echo "full run"
+          fi
+
   build:
     runs-on: ubuntu-latest
     name: build (DITA-OT ${{ matrix.dita-ot.version }})
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
     # DITA-OT version matrix (NFR-M1): add 4.x releases here as they appear,
     # each with the SHA-256 of its distribution zip (shasum -a 256).
     strategy:
@@ -730,10 +772,14 @@ jobs:
   # matrix leg of `build` passed (add DITA-OT versions to the matrix freely).
   ci:
     name: ci
-    needs: build
+    needs: [changes, build]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - run: |
+          test "${{ needs.changes.result }}" = "success" || { echo "change classification failed: ${{ needs.changes.result }}"; exit 1; }
+          if [ "${{ needs.changes.outputs.docs-only }}" = "true" ] && [ "${{ needs.build.result }}" = "skipped" ]; then
+            echo "documentation-only change: build skipped by design"; exit 0
+          fi
           test "${{ needs.build.result }}" = "success" || { echo "build result: ${{ needs.build.result }}"; exit 1; }
           echo "all build legs passed"
