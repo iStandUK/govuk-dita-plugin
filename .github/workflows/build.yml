@@ -356,6 +356,15 @@ jobs:
           absent -q 'Content-Security-Policy' out/manual/index.html
           if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-sitemap -Dgovuk.sitemap=yes; then echo "govuk.sitemap=yes without a URL should fail"; exit 1; fi
           if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-csp -Dgovuk.csp=bogus; then echo "govuk.csp=bogus should fail"; exit 1; fi
+          # Every branding mode is same-origin only, so 'self' policies hold in all of them:
+          # logos are inline SVG or copied assets, fonts and the (suppressed) crest are
+          # root-relative paths the publisher hosts; nothing is fetched from gov.uk or nhs.uk
+          for site in out/manual out/manual-istanduk out/manual-nhs out/manual-official; do
+            absent -Eroh 'src="(https?:)?//' "$site" --include='*.html'
+            absent -Eroh '<link[^>]*href="(https?:)?//' "$site" --include='*.html'
+            absent -Eroh 'url\(["'"'"']?(https?:)?//' "$site/govuk" --include='*.css'
+            absent -Eroh '@import' "$site/govuk" --include='*.css'
+          done
 
       # The brand-recoloured CSS is a vendored artifact (#47): guard against it
       # drifting from its Sass source. Rebuild it and fail on any diff.
