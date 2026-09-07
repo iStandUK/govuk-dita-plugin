@@ -13,17 +13,21 @@ licence (#49); the hardening a first live trial on a 10,000-topic data dictionar
 a build warning for navigation keys the toolkit leaves unresolved (#51), a Troubleshooting topic
 for two DITA-OT 4.4 behaviours (#52), **search relevance driven by the DITA itself** (#54); and
 **printing** — a print stylesheet on every page and, with `govuk.print=yes`, the whole
-publication as one file to print or save as PDF (#63, D-20). Its listing in the
-[DITA-OT plugin registry](https://www.dita-ot.org/plugins) is submitted with this release
-(#21); 1.1 adds the bundled PDF step. Coverage of bookmaps, keys, chunking, and the SVG domain is verified against real
+publication as one file to print or save as PDF (#63, D-20). It is listed in the
+[DITA-OT plugin registry](https://www.dita-ot.org/plugins), so `dita install org.istanduk.gov-uk`
+installs it by name (#21); 1.1 adds the bundled PDF step. Coverage of bookmaps, keys, chunking, and the SVG domain is verified against real
 corpora ([ORUK](design/07-gap-analysis-oruk.md), [DITA 1.3](design/08-gap-analysis-dita13.md)).
 
 ## Try it
 
 ```bash
-dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.0.0/org.istanduk.gov-uk-1.0.0.zip
+dita install org.istanduk.gov-uk
 dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
+
+(The first command resolves the name through the DITA-OT plugin registry; a release zip URL —
+`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.0.0/org.istanduk.gov-uk-1.0.0.zip`
+— works in the same place for an offline or pinned install.)
 
 Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. Optionally,
 [Pagefind](https://pagefind.app/) on the build machine enables site search — the plugin does
@@ -67,6 +71,14 @@ issue first, a `feature/*` branch from `dev`, a small linked pull request; relea
 `main` through a `release/*` branch. See [CONTRIBUTING.md](CONTRIBUTING.md) and
 [docs/RELEASING.md](docs/RELEASING.md). Report vulnerabilities privately as described in
 [SECURITY.md](SECURITY.md).
+
+Generated sites are static and same-origin in every branding mode, with one inline script
+(the Design System's own). Content that would run or fetch in a reader's browser — scripts in
+diagrams, remote images, script-scheme links, embeds — is sanitised or reported under the
+publisher's control, always as build warnings, never as a failed build; `govuk.csp` emits a
+strict Content-Security-Policy. The review behind this and the requirements it added are in
+[design/11-security.md](design/11-security.md); the manual's *Securing a published site*
+topic gives the hosting headers.
 
 The design is documented in [design/](design/):
 

@@ -23,5 +23,18 @@
     <object data="../images/dot.svg" type="image/svg+xml" height="40" width="40">
       <desc>An embedded SVG object, with a text fallback.</desc>
     </object>
+    <section>
+      <title>Content the policy reports</title>
+      <p>A diagram carrying active content, inlined with a doctype
+        (<codeph>govuk.svg.sanitize</codeph>, issue 59):</p>
+      <fig>
+        <title>Diagram with script, handlers and a remote image</title>
+        <svg-container><svgref href="../images/unsafe.svg"/></svg-container>
+      </fig>
+      <p>An image fetched from another origin
+        <image href="https://example.org/remote.png" scope="external"><alt>a remote image</alt></image>
+        and a link whose scheme runs code:
+        <xref href="javascript:alert('xref')" scope="external" format="html">run script</xref>.</p>
+    </section>
   </body>
 </topic>

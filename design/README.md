@@ -20,6 +20,7 @@ commercial help-output tooling.
 | [08-gap-analysis-dita13.md](08-gap-analysis-dita13.md) | Gap analysis of the full DITA 1.3 specification against the plugin, with the verified 1.0 gap list |
 | [09-nhs-branding.md](09-nhs-branding.md) | NHS branding gap analysis and the recoloured-GDS approach for the NHS and crown official variants (#47) |
 | [10-pdf-css.md](10-pdf-css.md) | PDF output through CSS Paged Media on UK, European and international paper sizes: options, scale, and the agreed two-step plan (D-20) |
+| [11-security.md](11-security.md) | Security review: threat model, findings by category and their dispositions, the publisher-choice/warnings principle, what CI proves, residual risks (NFR-S1–S4) |
 
 ## Summary of agreed direction
 
@@ -58,7 +59,8 @@ See [05-decision-log.md](05-decision-log.md) for the reasoning behind each of th
 | [**v0.9.2**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v0.9.2) | Trial follow-ups: `GOVK001W` warning for unresolved navigation keys (#51), the manual's Troubleshooting topic (#52), search relevance following the DITA (#54, D-18): `govuk.search.ranking` presets, `shortdesc` weighting, `search-ignore` / `search-demote` and `importance`, prolog keywords as searchable metadata, `searchtitle`, category/audience filters — measured on the trial corpus; and the licensing-caveat documentation sweep (#57). |
 
 | **Print output** (D-20, [10](10-pdf-css.md)) | The 1.0 half of the PDF design ([#63](https://github.com/iStandUK/govuk-dita-plugin/issues/63)): a print stylesheet on every page (A4 by default, `govuk.pdf.paper` / `govuk.pdf.orientation`) and, with `govuk.print=yes`, the whole publication as one self-contained file — cover, contents, every topic in reading order, glossary and index — with a topic ceiling, no search indexing, and a Chromium print smoke in CI. The bundled CSS PDF engine (FR-P3) is the 1.1 epic. |
-| [**v1.0.0**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.0) | **The 1.0 release** (D-21): v0.9.2 plus the print stylesheet and print document (#63); the first live trial complete; submitted to the DITA-OT plugin registry ([#21](https://github.com/iStandUK/govuk-dita-plugin/issues/21)) so `dita install org.istanduk.gov-uk` works by name; closes the v1 epic ([#15](https://github.com/iStandUK/govuk-dita-plugin/issues/15)). |
+| **Security review** ([11](11-security.md), Sept 2026) | Four epics: supply chain and CI ([#65](https://github.com/iStandUK/govuk-dita-plugin/issues/65)), governance per the hello-world exemplar ([#71](https://github.com/iStandUK/govuk-dita-plugin/issues/71), D-22), content reaching readers under publisher control with warnings not errors ([#77](https://github.com/iStandUK/govuk-dita-plugin/issues/77): SVG sanitising, inline scope, content policy, CSP, sitemap, dates), documentation ([#83](https://github.com/iStandUK/govuk-dita-plugin/issues/83)). |
+| [**v1.0.0**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.0) | **The 1.0 release** (D-21): v0.9.2 plus the print stylesheet and print document (#63); the first live trial complete; **listed in the DITA-OT plugin registry** on 2026-09-07 ([#21](https://github.com/iStandUK/govuk-dita-plugin/issues/21), [dita-ot/registry#176](https://github.com/dita-ot/registry/pull/176)) so `dita install org.istanduk.gov-uk` works by name; closes the v1 epic ([#15](https://github.com/iStandUK/govuk-dita-plugin/issues/15)). |
 
 Per-requirement status lives in the **Status column of
 [02-requirements.md](02-requirements.md)**. v0.9.0 closed the P1–P3 gap list in

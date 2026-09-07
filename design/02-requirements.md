@@ -17,7 +17,7 @@ Remaining ⬜/🔶 items are the v1-release backlog (see
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
 | FR-B1 | The plugin registers a transtype **`govuk`** that extends `html5`, so `dita --input=<map> --format=govuk` performs a complete build | M | ✅ |
-| FR-B2 | The plugin installs with `dita install <zip-or-url>` and, once published, by name from the DITA-OT plugin registry | M | 🔶 zip/URL install verified from every release; registry entry for v1.0.0 submitted as [dita-ot/registry#176](https://github.com/dita-ot/registry/pull/176) (D-15, D-21) — ✅ when merged |
+| FR-B2 | The plugin installs with `dita install <zip-or-url>` and, once published, by name from the DITA-OT plugin registry | M | ✅ listed in the registry from v1.0.0 ([dita-ot/registry#176](https://github.com/dita-ot/registry/pull/176), merged 2026-09-07); `dita install org.istanduk.gov-uk` verified in a clean toolkit (D-15, D-21) |
 | FR-B3 | All behaviour described below is controlled by documented build parameters (`govuk.*`), settable on the command line, in `.ditaotproject`/project files, or via Ant properties | M | ✅ every behaviour has a documented `govuk.*` parameter (branding; service name/URL; phase and feedback URL; favicon; footer links/licence; layout/depth; search, Pagefind command, ranking; pagination; SVG inlining) — see the manual's parameters table |
 | FR-B4 | The core build requires only DITA-OT (4.4.1 or later) and its bundled Java — no Node.js, no network access | M | ✅ verified |
 | FR-B5 | The build works with standard DITA 1.3 maps and bookmaps, including keys/keyscopes, conref, chunking, and DITAVAL filtering (all inherited from `html5` preprocessing and must not be broken by overrides) | M | ✅ verified against the ORUK corpus (design/07) |
@@ -113,6 +113,15 @@ requirements govern its behaviour.
 | NFR-M1 | The plugin uses **only documented DITA-OT extension points** — no copied/patched toolkit internals — and CI builds a fixture publication against each supported DITA-OT minor release | M | ✅ CI runs a DITA-OT version matrix (#35), currently `[4.4.1]` — the only supported minor; new 4.x releases are a one-line addition |
 | NFR-M2 | The vendored govuk-frontend release is pinned and recorded; upgrades are deliberate changes validated by visual regression snapshots | M | ✅ CI captures full-page snapshots of the neutral and iStandUK sites as an artifact for review on a govuk-frontend bump (#35); pin, NOTICE and upgrade process already in place |
 | NFR-L1 | Licence Apache-2.0; vendored govuk-frontend (MIT) retained with its licence and attribution; release versioning is semver | M | ✅ v0.1.0 released |
+
+### Security (NFR-S) — [11](11-security.md)
+
+| ID | Requirement | Priority | Status |
+|---|---|---|---|
+| NFR-S1 | No content authored in DITA reaches readers as executable or third-party-fetched content without a publisher's explicit choice; every such finding is reported as a build warning, never a failed build | M | ✅ (#77) `govuk.svg.sanitize`, `govuk.inline.scope`, `govuk.content.warnings`/`policy`; `GOVK004W`–`GOVK006W`; kitchen and inline-scope fixtures in CI |
+| NFR-S2 | The build and release chain is least-privilege, pinned and verified: read-only workflow token, actions pinned by commit, checksummed downloads, release asset built and attested in CI, vendored assets integrity-checked | M | ✅ (#65) |
+| NFR-S3 | Generated sites can carry a strict Content-Security-Policy in every branding mode, with the plugin emitting it on request and the manual giving the header set for hosts | S | ✅ (#77) `govuk.csp`; CSP check in CI; *Securing a published site* topic |
+| NFR-S4 | A private disclosure route, a supported-versions policy and a written process for branches, reviews and releases exist and are followed | M | ✅ (#71, D-22) `SECURITY.md`, rulesets, `CONTRIBUTING.md`, `docs/RELEASING.md` |
 
 ## Deferred (roadmap)
 

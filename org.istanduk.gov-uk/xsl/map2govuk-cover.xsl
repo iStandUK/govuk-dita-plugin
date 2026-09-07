@@ -24,6 +24,9 @@ map transformation with the plugin's values.
               doctype-system="about:legacy-compat"
               omit-xml-declaration="yes"/>
 
+  <!-- sitemap.xml is plain XML: no doctype, its own declaration -->
+  <xsl:output name="govuk-sitemap" method="xml" encoding="UTF-8" indent="yes" omit-xml-declaration="no"/>
+
   <xsl:param name="GOVUK-HOMEPAGE-LAYOUT" select="'auto'"/>
   <xsl:param name="GOVUK-HOMEPAGE-DEPTH" select="'2'"/>
 
@@ -45,6 +48,11 @@ map transformation with the plugin's values.
   <xsl:param name="GOVUK-FOOTER-LICENCE" select="''"/>
   <xsl:param name="GOVUK-PRINT" select="'no'"/>
   <xsl:param name="GOVUK-PRINT-MAX-TOPICS" select="'500'"/>
+  <!-- sitemap.xml (#60): yes when the Ant build resolved govuk.sitemap and a
+       base URL is known -->
+  <xsl:param name="GOVUK-SITEMAP" select="'no'"/>
+  <xsl:param name="GOVUK-SITE-URL" select="''"/>
+  <xsl:param name="GOVUK-DATES" select="'no'"/>
 
   <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
 
@@ -148,9 +156,54 @@ map transformation with the plugin's values.
     <xsl:call-template name="govuk-index-page"/>
     <xsl:call-template name="govuk-figurelist-page"/>
     <xsl:call-template name="govuk-tablelist-page"/>
+    <xsl:call-template name="govuk-sitemap"/>
+  </xsl:template>
+
+  <!-- ===== sitemap.xml (#60) =====
+       Every published page the navigation reaches — the cover, each navigable
+       topic page once, and the generated glossary, index and list pages — as
+       absolute URLs under govuk.site.url. The search page and the print
+       document stay out (the print document also carries noindex). lastmod
+       comes from a topic's critdates only when govuk.dates shows them, since a
+       date is only as good as its source (#61). -->
+  <xsl:template name="govuk-sitemap">
+    <xsl:if test="$GOVUK-SITEMAP = 'yes' and normalize-space($GOVUK-SITE-URL) ne ''">
+      <xsl:variable name="base" as="xs:string"
+                    select="if (ends-with(normalize-space($GOVUK-SITE-URL), '/')) then normalize-space($GOVUK-SITE-URL)
+                            else concat(normalize-space($GOVUK-SITE-URL), '/')"/>
+      <xsl:result-document href="sitemap.xml" format="govuk-sitemap">
+        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+          <url><loc><xsl:value-of select="concat($base, 'index', $OUTEXT)"/></loc></url>
+          <xsl:for-each-group select="govuk:print-topicrefs($govuk-norm-map[1])"
+                              group-by="govuk:print-page(govuk:print-file(.))">
+            <url>
+              <loc><xsl:value-of select="concat($base, current-grouping-key())"/></loc>
+              <xsl:if test="$GOVUK-DATES ne 'no'">
+                <xsl:variable name="uri" select="resolve-uri(govuk:print-file(.), $govuk-map-base)"/>
+                <xsl:if test="doc-available($uri)">
+                  <xsl:variable name="modified" as="xs:string"
+                                select="normalize-space(string(((doc($uri)//*[contains(@class, ' topic/topic ')])[1]
+                                                                 /*[contains(@class, ' topic/prolog ')]
+                                                                 /*[contains(@class, ' topic/critdates ')]
+                                                                 /*[contains(@class, ' topic/revised ')]/@modified)[last()]))"/>
+                  <xsl:if test="substring($modified, 1, 10) castable as xs:date">
+                    <lastmod><xsl:value-of select="substring($modified, 1, 10)"/></lastmod>
+                  </xsl:if>
+                </xsl:if>
+              </xsl:if>
+            </url>
+          </xsl:for-each-group>
+          <xsl:if test="exists($govuk-gloss)"><url><loc><xsl:value-of select="concat($base, 'glossary.html')"/></loc></url></xsl:if>
+          <xsl:if test="exists($govuk-ix)"><url><loc><xsl:value-of select="concat($base, 'index-page.html')"/></loc></url></xsl:if>
+          <xsl:if test="exists($govuk-figs)"><url><loc><xsl:value-of select="concat($base, 'figurelist.html')"/></loc></url></xsl:if>
+          <xsl:if test="exists($govuk-tables)"><url><loc><xsl:value-of select="concat($base, 'tablelist.html')"/></loc></url></xsl:if>
+        </urlset>
+      </xsl:result-document>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template name="gen-user-head">
+    <xsl:call-template name="govuk-csp-meta"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <xsl:apply-templates select="." mode="gen-user-head"/>
   </xsl:template>
@@ -299,7 +352,7 @@ map transformation with the plugin's values.
     </xsl:variable>
     <body class="govuk-template__body">
       <script>
-        <xsl:text>document.body.className += ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</xsl:text>
+        <xsl:text>document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</xsl:text>
       </script>
       <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">
         <xsl:call-template name="getVariable">
@@ -446,11 +499,7 @@ map transformation with the plugin's values.
         <xsl:with-param name="footer-licence" select="$GOVUK-FOOTER-LICENCE"/>
         <xsl:with-param name="print" select="$govuk-print-available"/>
       </xsl:call-template>
-      <script type="module">
-        <xsl:text>import { initAll } from './govuk/govuk-frontend-</xsl:text>
-        <xsl:value-of select="$govuk-frontend-version"/>
-        <xsl:text>.min.js'; initAll();</xsl:text>
-      </script>
+      <script type="module" src="govuk/init.js"></script>
     </body>
   </xsl:template>
 
@@ -511,6 +560,7 @@ map transformation with the plugin's values.
       <html class="govuk-template" lang="en">
         <head>
           <meta charset="UTF-8"/>
+          <xsl:call-template name="govuk-csp-meta"/>
           <meta name="viewport" content="width=device-width, initial-scale=1"/>
           <title><xsl:value-of select="concat($search-label, ' — ', $govuk-cover-title)"/></title>
           <xsl:call-template name="generateCssLinks"/>
@@ -537,7 +587,19 @@ map transformation with the plugin's values.
               <div class="govuk-grid-row">
                 <div class="govuk-grid-column-two-thirds">
                   <h1 class="govuk-heading-xl"><xsl:value-of select="$search-label"/></h1>
-                  <div id="app-search" class="app-search"></div>
+                  <!-- Ranking options and fallback text travel as data attributes
+                       (serializer-escaped); govuk/search.js reads them, so the page
+                       has no variable inline script (#79) -->
+                  <div id="app-search" class="app-search">
+                    <xsl:attribute name="data-unavailable">
+                      <xsl:call-template name="getVariable">
+                        <xsl:with-param name="id" select="'govuk-dita.search-unavailable'"/>
+                      </xsl:call-template>
+                    </xsl:attribute>
+                    <xsl:if test="$govuk-search-ranking-json != ''">
+                      <xsl:attribute name="data-ranking" select="$govuk-search-ranking-json"/>
+                    </xsl:if>
+                  </div>
                 </div>
               </div>
             </main>
@@ -554,29 +616,7 @@ map transformation with the plugin's values.
             <xsl:with-param name="print" select="$govuk-print-available"/>
           </xsl:call-template>
           <script src="pagefind/pagefind-ui.js"></script>
-          <script>
-            <xsl:text>window.addEventListener('DOMContentLoaded', function () {
-  if (window.PagefindUI) {
-    new PagefindUI({ element: '#app-search', showSubResults: true</xsl:text><xsl:if test="$govuk-search-ranking-json != ''"><xsl:text>, ranking: </xsl:text><xsl:value-of select="$govuk-search-ranking-json"/></xsl:if><xsl:text> });
-    var q = new URLSearchParams(window.location.search).get('q');
-    if (q) {
-      window.requestAnimationFrame(function () {
-        var input = document.querySelector('#app-search input');
-        if (input) {
-          input.value = q;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      });
-    }
-  } else {
-    document.getElementById('app-search').textContent = '</xsl:text>
-            <xsl:call-template name="getVariable">
-              <xsl:with-param name="id" select="'govuk-dita.search-unavailable'"/>
-            </xsl:call-template>
-            <xsl:text>';
-  }
-});</xsl:text>
-          </script>
+          <script src="govuk/search.js"></script>
         </body>
       </html>
     </xsl:result-document>

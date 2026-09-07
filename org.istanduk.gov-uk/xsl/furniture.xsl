@@ -14,6 +14,49 @@ template, the cover, and the generated utility pages.
                 version="3.0"
                 exclude-result-prefixes="xs govuk">
 
+  <!-- ===== Content-Security-Policy (#82) =====
+       Generated sites load nothing from other origins and carry one constant
+       inline script (govuk-frontend's body-class snippet), so a strict policy
+       is possible. govuk.csp = no (default) | meta (a policy the plugin knows
+       its pages satisfy, as a <meta http-equiv>) | any literal policy. -->
+  <xsl:param name="GOVUK-CSP" select="'no'"/>
+
+  <!-- SHA-256 of the body-class snippet emitted by template.xsl and the cover.
+       The snippet is byte-for-byte govuk-frontend's own (template.njk), so this
+       is the hash the Design System publishes for it; CI checks it against the
+       built pages. -->
+  <xsl:variable name="govuk-inline-script-hash" as="xs:string"
+                select="'sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw='"/>
+
+  <xsl:variable name="govuk-csp-value" as="xs:string">
+    <xsl:variable name="v" select="normalize-space($GOVUK-CSP)"/>
+    <xsl:choose>
+      <xsl:when test="$v = ('', 'no')">
+        <xsl:sequence select="''"/>
+      </xsl:when>
+      <xsl:when test="$v = 'meta'">
+        <!-- Pagefind runs its index as WebAssembly, which needs wasm-unsafe-eval;
+             style attributes come from DITA @style, DITAVAL flags and inlined SVG -->
+        <xsl:sequence select="concat(
+          'default-src ''self''; ',
+          'script-src ''self'' ''', $govuk-inline-script-hash, '''',
+          (if ($GOVUK-SEARCH = 'yes') then ' ''wasm-unsafe-eval''' else ''), '; ',
+          'style-src ''self'' ''unsafe-inline''; ',
+          'img-src ''self'' data:; font-src ''self''; connect-src ''self''; ',
+          'object-src ''self''; base-uri ''self''; form-action ''self''')"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:sequence select="$v"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+
+  <xsl:template name="govuk-csp-meta">
+    <xsl:if test="$govuk-csp-value ne ''">
+      <meta http-equiv="Content-Security-Policy" content="{$govuk-csp-value}"/>
+    </xsl:if>
+  </xsl:template>
+
   <!-- ===== Print document helpers (FR-P2, D-20) =====
        Shared by the topic template, the cover and the print transform, so every
        page agrees on whether print.html exists: it does when govuk.print=yes
