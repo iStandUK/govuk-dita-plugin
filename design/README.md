@@ -21,6 +21,7 @@ commercial help-output tooling.
 | [09-nhs-branding.md](09-nhs-branding.md) | NHS branding gap analysis and the recoloured-GDS approach for the NHS and crown official variants (#47) |
 | [10-pdf-css.md](10-pdf-css.md) | PDF output through CSS Paged Media on UK, European and international paper sizes: options, scale, and the agreed two-step plan (D-20) |
 | [11-security.md](11-security.md) | Security review: threat model, findings by category and their dispositions, the publisher-choice/warnings principle, what CI proves, residual risks (NFR-S1–S4) |
+| [12-structured-data.md](12-structured-data.md) | Structured data and machine-readable metadata from DITA: what GOV.UK and NHS emit, what consumers still act on in 2026, the DITA → schema.org / Open Graph mapping, a DCAT catalogue record for data-standard publications, risks, and a proposed `govuk.metadata` / `govuk.dcat` shape (OQ-13) |
 
 ## Summary of agreed direction
 

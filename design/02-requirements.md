@@ -135,3 +135,4 @@ requirements govern its behaviour.
 | R6 | Feedback pattern | GOV.UK "Is this page useful?" — needs a backend, so out of static scope for now |
 | R7 | Additional UI locales | Welsh (cy) first, per GOV.UK practice |
 | R8 | Guide-pattern layout | Alternative breadcrumbs+contents linear layout, selectable per map |
+| R9 | Structured data and social metadata | Open Graph and social cards, canonical/prev/next, Dublin Core, and schema.org JSON-LD (`WebSite`, `TechArticle`, `BreadcrumbList`, `Organization`, `HowTo`, `DefinedTermSet`, opt-in `Dataset`) derived from map, bookmeta and prolog — proposed in [12](12-structured-data.md) as `govuk.metadata` basic\|full\|no; a DCAT 3 catalogue record (`dcat.jsonld`/`dcat.ttl`, typed as standard, dataset, data service or catalogue) for data-standard publications, harvestable by data.gov.uk and departmental catalogues; `llms.txt` an adjacent option; decisions in OQ-13 |
