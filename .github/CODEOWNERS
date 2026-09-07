@@ -1,0 +1,7 @@
+# Review requests are raised automatically for these paths (CONTRIBUTING.md).
+# The plugin, the build pipeline and the design record need a maintainer's eyes.
+/org.istanduk.gov-uk/   @oughnic
+/.github/               @oughnic
+/design/                @oughnic
+/docs/RELEASING.md      @oughnic
+/SECURITY.md            @oughnic

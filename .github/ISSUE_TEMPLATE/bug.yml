@@ -1,0 +1,35 @@
+name: Bug report
+description: Something the plugin renders, builds or reports incorrectly
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: dita
+    attributes:
+      label: Minimal DITA that shows it
+      description: The smallest map and topic that reproduce the problem, or a pointer to a fixture. Please do not paste content you cannot publish.
+      render: xml
+  - type: input
+    id: versions
+    attributes:
+      label: Plugin and DITA-OT versions
+      placeholder: e.g. org.istanduk.gov-uk 1.0.0, DITA-OT 4.4.1, Java 17
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Build command and parameters
+      render: shell
+  - type: textarea
+    id: log
+    attributes:
+      label: Relevant build log lines
+      description: Warnings and errors, including any `GOVK` or `DOTX` codes.
+      render: text

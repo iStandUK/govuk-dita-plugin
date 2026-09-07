@@ -3,25 +3,71 @@
 <concept id="development" xml:lang="en-GB">
   <title>Development and contributing</title>
   <shortdesc>The plugin is open source under Apache-2.0; design decisions, requirements, and
-    the gap analysis live alongside the code.</shortdesc>
+    the gap analyses live alongside the code, and contributions follow the iStandUK exemplar
+    for Git and GitHub practice.</shortdesc>
   <conbody>
-    <p>Everything is at <xref keyref="plugin-repo"/>:</p>
+    <p><indexterm>contributing</indexterm><indexterm>releases</indexterm>Everything is at
+      <xref keyref="plugin-repo"/>:</p>
     <ul>
       <li><filepath>org.istanduk.gov-uk/</filepath> — the plugin itself: transtype
         declaration, Ant glue, XSLT overrides, and vendored govuk-frontend assets</li>
       <li><filepath>design/</filepath> — the full design record: context, requirements with
-        per-item status, architecture, component inventory, decision log, and the Open
-        Referral UK gap analysis</li>
+        per-item status, architecture, component inventory, decision log, and the gap
+        analyses against real corpora</li>
       <li><filepath>docs/manual/</filepath> — this manual's DITA source</li>
-      <li><filepath>fixtures/</filepath> — the regression fixture exercising bookmaps, keys,
-        chunking, and the SVG domain</li>
+      <li><filepath>fixtures/</filepath> — the regression fixtures exercising bookmaps, keys,
+        chunking, the SVG domain, search semantics, and unresolved keys</li>
+      <li><filepath>tools/</filepath> — the checks continuous integration runs: link checker,
+        page-weight budget, accessibility and print smoke scripts</li>
     </ul>
-    <p>Continuous integration builds this manual and the fixture on every push, validates
-      the HTML with the Nu validator, and asserts the neutral-branding guarantees — no
-      fonts, no crown imagery, no external asset requests in the output.</p>
     <p>The architecture in one sentence: a standard DITA-OT plugin whose
       <codeph>govuk</codeph> transformation extends <codeph>html5</codeph>, overriding only
       the rendering while inheriting all of the toolkit's DITA processing.</p>
+    <section>
+      <title>How work flows</title>
+      <p>The repository follows the branching model in the iStandUK
+        <xref href="https://github.com/iStandUK/hello-world" scope="external"
+          format="html">hello-world</xref> exemplar. <codeph>main</codeph> holds released
+        code only; <codeph>dev</codeph> is the integration branch and the default; a change
+        starts from an issue, lives on a <codeph>feature/</codeph> branch from
+        <codeph>dev</codeph>, and returns through a small pull request that links the issue.
+        Releases go from <codeph>dev</codeph> to <codeph>main</codeph> on a
+        <codeph>release/</codeph> branch and are tagged there; urgent fixes take a
+        <codeph>hotfix/</codeph> branch from <codeph>main</codeph>. Both long-lived branches are
+        protected: a pull request and a green build are required, and history is never
+        rewritten. The repository's <filepath>CONTRIBUTING.md</filepath> has the details,
+        including the ground rules — vendor-neutral wording, no restricted brand assets,
+        Node-free builds, and publisher choice with warnings rather than errors for anything
+        that touches content risk.</p>
+    </section>
+    <section>
+      <title>What continuous integration checks</title>
+      <p>Every pull request and every push to the long-lived branches builds this manual and
+        the fixtures across the supported DITA-OT versions, validates the HTML with the Nu
+        validator, checks every internal link and anchor, measures page weight against the
+        budget, runs axe-core at WCAG 2.2 AA, builds twice to prove the output is
+        byte-identical, prints the print document to PDF in a browser, and asserts the
+        neutral-branding guarantees — no fonts, no crown imagery, no external requests. The
+        same checks can be run locally before opening a pull request; the commands are in
+        <filepath>CONTRIBUTING.md</filepath>.</p>
+    </section>
+    <section>
+      <title>Releases</title>
+      <p>A release is cut from a <codeph>release/</codeph> branch: the version is bumped in
+        the plugin and in this manual's install topic, the branch is merged into
+        <codeph>main</codeph> and tagged, the plugin zip is published as the release asset
+        with its checksum, the install is verified from the public URL, and a new version
+        entry is submitted to the DITA-OT plugin registry so that
+        <codeph>dita install org.istanduk.gov-uk</codeph> resolves to it. The checklist is
+        <filepath>docs/RELEASING.md</filepath> in the repository.</p>
+    </section>
+    <section>
+      <title>Reporting a security problem</title>
+      <p>Please report vulnerabilities privately through the repository's security advisory
+        form rather than as a public issue; <filepath>SECURITY.md</filepath> gives the route,
+        the response you can expect, and what belongs to the plugin as opposed to the toolkit,
+        govuk-frontend or Pagefind.</p>
+    </section>
     <note>Issues and pull requests are welcome. Check the design folder's open questions
       and the issue tracker before proposing large changes — many decisions are already
       recorded with their rationale.</note>

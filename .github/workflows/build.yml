@@ -1,7 +1,11 @@
 name: build
 
+# Gitflow (D-22): pushes to the long-lived and release-line branches, and every
+# pull request. Feature branches are exercised through their pull request.
 on:
   push:
+    branches: [main, dev, 'release/**', 'hotfix/**']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -580,3 +584,15 @@ jobs:
         with:
           name: manual-site-${{ matrix.dita-ot-version }}
           path: out/manual
+
+  # One stable status for branch protection to require: passes only when every
+  # matrix leg of `build` passed (add DITA-OT versions to the matrix freely).
+  ci:
+    name: ci
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          test "${{ needs.build.result }}" = "success" || { echo "build result: ${{ needs.build.result }}"; exit 1; }
+          echo "all build legs passed"
