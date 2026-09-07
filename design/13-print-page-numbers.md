@@ -1,6 +1,6 @@
 # 13 — Page numbers in print: the options, and a two-product shape
 
-**Status:** decided 2026-09-07 as **D-23** — option A first, then option G; the generator's name, repository and code licence still to choose (no code yet) · **Question:** how do the print outputs get page numbers in the contents, index and cross-references — and footnotes at the page foot, running heads, a tagged PDF — and should that capability ship inside the plugin or as a second product on a common core? · **Feeds:** FR-P3 in [02](02-requirements.md); an amendment to [D-20](05-decision-log.md); the release process (D-22).
+**Status:** decided 2026-09-07 as **D-23** — option A first, then option G as **DesignSystemPDF** (Apache-2.0 code; one repository, two products, independent versions; auto-detected; option B not offered). No code yet. · **Question:** how do the print outputs get page numbers in the contents, index and cross-references — and footnotes at the page foot, running heads, a tagged PDF — and should that capability ship inside the plugin or as a second product on a common core? · **Feeds:** FR-P3 in [02](02-requirements.md); an amendment to [D-20](05-decision-log.md); the release process (D-22).
 
 ## 1. Answer in brief
 
@@ -43,7 +43,7 @@ Three limits are the vocabulary's, not the plugin's: "above"/"below" cannot be e
 ## 5. Comparison
 
 | Criterion | A external | B reader-side | C bundled in core | D companion product | G separate generator |
-|---|---|---|---|---|
+|---|---|---|---|---|---|
 | Page numbers in contents, index, cross-references | yes (tool) | yes, at print time | yes | yes | yes |
 | Footnotes at the page foot, running heads | yes (tool) | partly | yes | yes | yes |
 | PDF/UA, validated | tool-dependent | no (browser's PDF) | yes, veraPDF in CI | yes, veraPDF in the companion's CI | yes, veraPDF in the generator's CI |
@@ -65,7 +65,7 @@ Why D over C: the core's publishers include very large corpora that will never p
 
 ## 6a. Option G in detail: a separately licensed generator, joined by the command mechanism
 
-**Shape.** A second product — working name to be chosen; not a DITA-OT plugin — in its own repository under the organisation, with its own licence, `SECURITY.md`, Gitflow, tag-triggered release with attestation, and its own CI (the fork's weekly releases, veraPDF for PDF/UA, a byte-identical double run). Its release is a zip: `bin/` launcher scripts, `lib/` with the engine and its dependencies as **separate, unmodified jars** (the LGPL replaceability clause satisfied by construction), the OFL font family, `THIRD-PARTY-NOTICES`, the LGPL and OFL texts, and the engine's source jars attached to the same release. Java is the only runtime, and DITA-OT already requires it. The generator is useful on its own for any paged XHTML, not only the plugin's.
+**Shape.** A second product, **DesignSystemPDF** — not a DITA-OT plugin — kept in this repository beside the plugin as a second product directory, released and versioned independently of it (its own tags, its own changelog and lifecycle), its own code under Apache-2.0, `SECURITY.md`, Gitflow, tag-triggered release with attestation, and its own CI (the fork's weekly releases, veraPDF for PDF/UA, a byte-identical double run). Its release is a zip: `bin/` launcher scripts, `lib/` with the engine and its dependencies as **separate, unmodified jars** (the LGPL replaceability clause satisfied by construction), the OFL font family, `THIRD-PARTY-NOTICES`, the LGPL and OFL texts, and the engine's source jars attached to the same release. Java is the only runtime, and DITA-OT already requires it. The generator is useful on its own for any paged XHTML, not only the plugin's.
 
 **Join.** The plugin gains what option A gives it and nothing more: `govuk.pdf` = `auto` (default: produce a PDF when the generator is found on the PATH or at `govuk.pdf.cmd`, otherwise build the site without one and say so in the log) | `yes` (fail early if it is missing, as `govuk.search=yes` does for Pagefind) | `no`; `govuk.pdf.command` for any other formatter. The plugin passes `print.html`, the output path and the paper parameters; the generator checks the `govuk-print-contract` marker and refuses a document it does not understand, naming the plugin version to install. Neither product carries the other's code, fonts or licences.
 
@@ -91,7 +91,7 @@ The companion depends only on what the core already publishes:
 3. One repository with two plugin directories (recommended) or a second repository.
 4. Version lockstep (same number for both) or independent numbers with a `deps` range.
 5. Whether option B is offered at all.
-6. For G: the generator's name, its repository and its licence (Apache-2.0 code with LGPL/OFL notices, or LGPL-2.1 throughout); whether `govuk.pdf=auto` detects it like Pagefind.
+6. For G — decided: **DesignSystemPDF**; one repository, two products, not bundled; independent versions and lifecycles; Apache-2.0 for its own code with the LGPL and OFL notices alongside; `govuk.pdf=auto` detects it like Pagefind.
 
 ## 9. Sources checked (September 2026)
 
