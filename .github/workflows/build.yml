@@ -324,11 +324,13 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/inline-scope/scope.ditamap \
             --format govuk --output out/inline-scope 2>&1 | tee inline-scope.log
           grep -q "\[GOVK005W\].*linked.svg.*not inlined" inline-scope.log
-          absent -q '<svg' "$(find out/inline-scope -name outside.html)"
+          # the diagram's own <title> text proves inlining; the page chrome has SVG icons of its own
+          absent -q 'Clickable diagram' "$(find out/inline-scope -name outside.html)"
+          grep -q 'svgref' "$(find out/inline-scope -name outside.html)"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/inline-scope/scope.ditamap \
             --format govuk --output out/inline-scope-any -Dgovuk.inline.scope=any 2>&1 | tee inline-scope-any.log
           grep -q "\[GOVK005W\].*linked.svg.*inlined (govuk.inline.scope=any)" inline-scope-any.log
-          grep -q '<svg' "$(find out/inline-scope-any -name outside.html)"
+          grep -q 'Clickable diagram' "$(find out/inline-scope-any -name outside.html)"
           # #60 + #82 + #61 on the manual: sitemap and robots, a CSP meta on every page
           # whose hash matches the one inline script, dates on (no manual topic has any)
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
