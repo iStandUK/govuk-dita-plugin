@@ -191,7 +191,8 @@
               <entry><codeph>no</codeph> (default), <codeph>meta</codeph>, or a policy</entry>
               <entry>A Content-Security-Policy on every page. <codeph>meta</codeph> emits
                 one the plugin's pages satisfy — same-origin resources only, the single
-                constant inline script by hash, WebAssembly for search — as a
+                constant inline script by hash (the Design System's own body-class snippet,
+                so the hash is the one it publishes), WebAssembly for search — as a
                 <codeph>meta</codeph> element, for hosts without header control; a literal
                 value is emitted as given. Content the policy would block is reported
                 (<codeph>GOVK007W</codeph>). Hosts that can set headers should prefer a

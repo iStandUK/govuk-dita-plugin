@@ -221,7 +221,7 @@ element-level typography.
       <xsl:apply-templates select="." mode="addAttributesToHtmlBodyElement"/>
       <xsl:attribute name="class">govuk-template__body</xsl:attribute>
       <script>
-        <xsl:text>document.body.className += ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</xsl:text>
+        <xsl:text>document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</xsl:text>
       </script>
       <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">
         <xsl:call-template name="getVariable">

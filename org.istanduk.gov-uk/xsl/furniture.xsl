@@ -21,10 +21,12 @@ template, the cover, and the generated utility pages.
        its pages satisfy, as a <meta http-equiv>) | any literal policy. -->
   <xsl:param name="GOVUK-CSP" select="'no'"/>
 
-  <!-- SHA-256 of the body-class snippet emitted by template.xsl and the cover;
-       CI checks it against the built pages -->
+  <!-- SHA-256 of the body-class snippet emitted by template.xsl and the cover.
+       The snippet is byte-for-byte govuk-frontend's own (template.njk), so this
+       is the hash the Design System publishes for it; CI checks it against the
+       built pages. -->
   <xsl:variable name="govuk-inline-script-hash" as="xs:string"
-                select="'sha256-tAN8yF6oGaO04GVqamxRzEH5M/cDPeqj6fugehlgo8M='"/>
+                select="'sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw='"/>
 
   <xsl:variable name="govuk-csp-value" as="xs:string">
     <xsl:variable name="v" select="normalize-space($GOVUK-CSP)"/>

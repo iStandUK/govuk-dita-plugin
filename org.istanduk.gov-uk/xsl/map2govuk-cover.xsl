@@ -352,7 +352,7 @@ map transformation with the plugin's values.
     </xsl:variable>
     <body class="govuk-template__body">
       <script>
-        <xsl:text>document.body.className += ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</xsl:text>
+        <xsl:text>document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</xsl:text>
       </script>
       <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">
         <xsl:call-template name="getVariable">
