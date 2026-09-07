@@ -390,7 +390,7 @@ standing offer rather than a blocker.
 
 ## D-20 · PDF output: CSS Paged Media, in two steps — A4, PDF/UA and an open font by default
 
-**Date:** 2026-09-06. **Implemented (1.0 half):** FR-P1 and FR-P2 in
+**Date:** 2026-09-06. **Amended by D-23 (2026-09-07):** the engine ships as a separate generator product joined by the command mechanism, not inside the plugin. **Implemented (1.0 half):** FR-P1 and FR-P2 in
 [#63](https://github.com/iStandUK/govuk-dita-plugin/issues/63); one departure from
 [10](10-pdf-css.md) §9a — the over-ceiling notice is a **warning** (`GOVK003W`), not an info
 message, because the toolkit's default build log shows no info-level messages and a
@@ -495,3 +495,20 @@ exemplar (which has none yet): a listed plugin needs it, and the exemplar's own 
 two merges; the CI workflow gains a `ci` summary status so the required check survives
 matrix changes; the release recipe is a checklist rather than memory; when a second
 maintainer joins, the `dev` ruleset can require a review without any other change.
+
+## D-23 · Print PDFs: an external-formatter hook first, then a separately licensed generator joined by it (amends D-20)
+
+**Date:** 2026-09-07. From [13-print-page-numbers.md](13-print-page-numbers.md); sponsor's decision on OQ-14.
+
+**Options:** the CSS engine bundled inside the plugin (D-20 as written); a companion DITA-OT plugin on the common core; a separately licensed generator product that the plugin only calls; reader-side pagination; XSL-FO; download on demand.
+
+**Decision:**
+1. **`govuk.pdf.command` ships in the core first**, in a 1.0.x release: a command template the build runs after the print document, `no` by default, failures reported as a warning with the tool's output; `print.css` gains the page-reference rules (`target-counter` on in-document cross-references, contents and index) with the label stamped from the string registry, which browsers ignore; CI proves the join with an open-source formatter installed in CI only.
+2. **The engine, the OFL font family and PDF/UA validation ship as a separate generator product** — its own repository under the organisation, its own licence, its own releases with attestation and veraPDF in its CI; **not a DITA-OT plugin**. The core detects it as it detects Pagefind: `govuk.pdf = auto` (default; produce a PDF when the generator is on the PATH or at `govuk.pdf.cmd`, otherwise build without one and say so) | `yes` | `no`. The generator checks the `govuk-print-contract` marker in `print.html` and refuses a document it does not understand. The engine's LGPL library never enters any DITA-OT plugin distribution or registry entry; the engine runs as its own process, so the toolkit's PDFBox is never on its classpath.
+3. Not chosen: the engine inside the core; a companion plugin (which may follow later as a thin installer for the generator); reader-side pagination (on request only); download on demand; XSL-FO.
+
+**Settled the same day (OQ-14):** the generator is **DesignSystemPDF**; its own code is **Apache-2.0**, with the third-party notices alongside (LGPL-2.1 engine, Apache-2.0 PDF and SVG libraries, OFL-1.1 fonts), the engine kept as separate unmodified jars with its source jars attached to each release; **one repository, two products** — the plugin and DesignSystemPDF as sibling directories in this repository, **not bundled**, each with its **own version number and release lifecycle** (distinct tag prefixes drive two release workflows); **auto-detection** (`govuk.pdf=auto`) is the default join; **reader-side pagination (option B) is not offered** — judged low value.
+
+**Rationale:** the plugin's publishers include very large corpora that will never produce a PDF and organisations whose policy excludes GPL-family components; the option-A hook gives page-numbered PDFs to anyone with a formatter this quarter and validates the print document under a real paginator before the generator exists; the generator on its own channel tracks an engine that releases weekly without touching the plugin, needs none of the companion plugin's toolkit plumbing, and is useful beyond DITA.
+
+**Consequences:** FR-P3 is delivered by two products; the print document, `print.css` and the contract marker become a versioned interface; the plugin's CI fetches the generator's release by checksum; the manual documents `govuk.pdf` beside `govuk.search`; NFR-L1 records no new licence in the plugin. In the repository: a `designsystempdf/` product directory with its own build, `THIRD-PARTY-NOTICES`, README and release checklist; the release workflow gains a second trigger (`pdf-v*` tags) producing the generator's zip, its attestation and its source jars, independent of the plugin's `v*` releases; `docs/RELEASING.md` gains the generator's steps; the registry lists only the plugin.
