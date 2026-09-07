@@ -1,0 +1,22 @@
+# Dependency updates (#67) arrive as pull requests against dev (Gitflow, D-22):
+# the pinned action SHAs, and the two npm tool trees that only CI uses.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: dev
+    labels: [dependencies]
+  - package-ecosystem: npm
+    directory: /tools/a11y
+    schedule:
+      interval: weekly
+    target-branch: dev
+    labels: [dependencies]
+  - package-ecosystem: npm
+    directory: /tools/branding
+    schedule:
+      interval: weekly
+    target-branch: dev
+    labels: [dependencies]

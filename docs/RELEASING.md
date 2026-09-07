@@ -32,23 +32,23 @@ release pull request.
 - [ ] Merge the release pull request with a **merge commit** (not squash)
 - [ ] Tag the merge commit and push the tag:
       `git switch main && git pull && git tag -a vx.y.z -m "vx.y.z" && git push origin vx.y.z`
-- [ ] Release asset. Until the CI release build lands (#69), build it from the tagged
-      tree and record its checksum:
-      ```bash
-      git switch --detach vx.y.z
-      (cd org.istanduk.gov-uk && zip -qr ../org.istanduk.gov-uk-x.y.z.zip . -x '.DS_Store' '*/.DS_Store')
-      shasum -a 256 org.istanduk.gov-uk-x.y.z.zip
-      ```
-      `plugin.xml` must sit at the root of the zip.
-- [ ] `gh release create vx.y.z org.istanduk.gov-uk-x.y.z.zip --title vx.y.z --notes-file notes.md --latest`
+- [ ] The tag push runs the **`release` workflow**: it builds `org.istanduk.gov-uk-x.y.z.zip`
+      from the tagged tree, checks that `plugin.xml`'s version matches the tag and sits at the
+      zip root, installs it into DITA-OT and builds a fixture, publishes a build-provenance
+      attestation, and attaches the zip and `org.istanduk.gov-uk-x.y.z.zip.sha256` to the
+      GitHub release — creating the release as a **draft** if it does not exist yet. Wait for
+      it (Actions → release). Nothing is built by hand.
+- [ ] Open the draft release, paste the release notes, set it as the latest release, publish
 - [ ] Verify from the public URL in a clean toolkit: `dita install <asset URL>`, build a
-      fixture, and confirm the downloaded asset's SHA-256 matches the recorded value
+      fixture, and confirm the downloaded asset's SHA-256 matches the `.sha256` file and
+      `gh attestation verify org.istanduk.gov-uk-x.y.z.zip --repo iStandUK/govuk-dita-plugin`
+      succeeds
 
 ## Registry
 
 - [ ] In a fork of [dita-ot/registry](https://github.com/dita-ot/registry), **append** an
       entry to `org.istanduk.gov-uk.json` (the file is an array — one entry per version):
-      `name`, `vers`, `url` (the asset), `cksum` (the SHA-256), `deps` (`org.dita.base >=4.4.1`),
+      `name`, `vers`, `url` (the asset), `cksum` (the SHA-256 from the `.sha256` file), `deps` (`org.dita.base >=4.4.1`),
       `description`, `keywords`, `homepage`, `license`
 - [ ] Commit with `git commit -s` (the registry requires a sign-off) and open one pull
       request per version against `master`
@@ -65,3 +65,9 @@ release pull request.
 
 Branch `hotfix/x.y.z` from `main`, make the minimal fix with its test, bump the version as
 above, pull request to `main`, then the same publish, registry and back-merge steps.
+
+## Trying the release build without releasing
+
+Run the `release` workflow by hand from `dev` with **dry-run** ticked (Actions → release →
+Run workflow): it builds and verifies the asset and keeps it as a run artifact, but attests
+and publishes nothing.
