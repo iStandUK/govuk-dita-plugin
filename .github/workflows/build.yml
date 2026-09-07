@@ -1,5 +1,11 @@
 name: build
 
+# Least privilege (#66): nothing here writes to the repository. Actions are
+# pinned to commit SHAs (#67, Dependabot keeps the comments current); every
+# download is checksum-verified before use (#68).
+permissions:
+  contents: read
+
 # Gitflow (D-22): pushes to the long-lived and release-line branches, and every
 # pull request. Feature branches are exercised through their pull request.
 on:
@@ -12,22 +18,31 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # DITA-OT version matrix (NFR-M1): add 4.x releases here as they appear.
+    name: build (DITA-OT ${{ matrix.dita-ot.version }})
+    # DITA-OT version matrix (NFR-M1): add 4.x releases here as they appear,
+    # each with the SHA-256 of its distribution zip (shasum -a 256).
     strategy:
       fail-fast: false
       matrix:
-        dita-ot-version: ["4.4.1"]
+        dita-ot:
+          - version: "4.4.1"
+            sha256: "154414c1debb548e923bf77e9a09019e249a8887680ff4bfbd8e137de9e8e250"
     env:
-      DITA_OT_VERSION: ${{ matrix.dita-ot-version }}
+      DITA_OT_VERSION: ${{ matrix.dita-ot.version }}
+      DITA_OT_SHA256: ${{ matrix.dita-ot.sha256 }}
+      # Nu HTML checker 20.6.30 release zip
+      VNU_SHA256: "f6dc1464229756f582bdd6c083df11ec13e0d7389dd50b56e63133aa8b0dd200"
+      # govuk-frontend GitHub release zip for the vendored version (VERSION.txt)
+      GOVUK_FRONTEND_SHA256: "3dd21a694a8164d5ce0555a4d91313683a240d9e991269792224cc83e97f5018"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "20"
           cache: npm
@@ -35,7 +50,7 @@ jobs:
 
       - name: Cache DITA-OT
         id: cache-dita-ot
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: dita-ot-${{ env.DITA_OT_VERSION }}
           key: dita-ot-${{ env.DITA_OT_VERSION }}
@@ -44,6 +59,7 @@ jobs:
         if: steps.cache-dita-ot.outputs.cache-hit != 'true'
         run: |
           curl -sSL -o dita-ot.zip "https://github.com/dita-ot/dita-ot/releases/download/${DITA_OT_VERSION}/dita-ot-${DITA_OT_VERSION}.zip"
+          echo "${DITA_OT_SHA256}  dita-ot.zip" | sha256sum -c -
           unzip -q dita-ot.zip
           rm dita-ot.zip
 
@@ -64,7 +80,7 @@ jobs:
             --output out/oruk-mini
 
       - name: Install Pagefind
-        run: npm install -g pagefind@1
+        run: npm install -g pagefind@1.5.2
 
       # Built with Pagefind on the PATH: search auto-enables (FR-S1)
       - name: Build manual
@@ -265,9 +281,24 @@ jobs:
           fi
           echo "vendored brand CSS matches its Sass source"
 
+      # The stock govuk-frontend files are vendored (#70): they must be byte-for-byte
+      # the files in the GitHub release named in VERSION.txt, and that release zip
+      # must match its recorded checksum. Bumping the version means updating
+      # VERSION.txt, the four files, and GOVUK_FRONTEND_SHA256 above.
+      - name: Vendored govuk-frontend matches its release
+        run: |
+          v=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
+          curl -sSL -o gf-release.zip "https://github.com/alphagov/govuk-frontend/releases/download/v${v}/release-v${v}.zip"
+          echo "${GOVUK_FRONTEND_SHA256}  gf-release.zip" | sha256sum -c -
+          unzip -q gf-release.zip -d gf-release
+          for f in govuk-frontend-${v}.min.css govuk-frontend-${v}.min.js govuk-frontend-${v}.min.css.map govuk-frontend-${v}.min.js.map; do
+            cmp "gf-release/$f" "org.istanduk.gov-uk/resource/govuk-frontend/$f" || { echo "vendored $f differs from release v${v}"; exit 1; }
+          done
+          echo "vendored govuk-frontend ${v} matches its release"
+
       - name: Cache Nu validator
         id: cache-vnu
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: vnu
           key: vnu-20.6.30
@@ -276,6 +307,7 @@ jobs:
         if: steps.cache-vnu.outputs.cache-hit != 'true'
         run: |
           curl -sSL -o vnu.zip "https://github.com/validator/validator/releases/download/20.6.30/vnu.jar_20.6.30.zip"
+          echo "${VNU_SHA256}  vnu.zip" | sha256sum -c -
           unzip -q vnu.zip -d vnu-tmp
           mkdir -p vnu && mv vnu-tmp/dist/vnu.jar vnu/
           rm -rf vnu-tmp vnu.zip
@@ -574,15 +606,15 @@ jobs:
           node tools/a11y/snapshot.mjs out/manual-istanduk out/snapshots/istanduk
 
       - name: Upload visual snapshots
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: visual-snapshots-${{ matrix.dita-ot-version }}
+          name: visual-snapshots-${{ env.DITA_OT_VERSION }}
           path: out/snapshots
 
       - name: Upload site artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: manual-site-${{ matrix.dita-ot-version }}
+          name: manual-site-${{ env.DITA_OT_VERSION }}
           path: out/manual
 
   # One stable status for branch protection to require: passes only when every

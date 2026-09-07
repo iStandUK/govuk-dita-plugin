@@ -1,0 +1,96 @@
+name: release
+
+# Release asset with provenance (#69, D-22): on a version tag, build the plugin
+# zip from the tagged tree, check its layout and that it installs and builds on
+# the supported DITA-OT, publish an attestation, and put the zip and its SHA-256
+# on the GitHub release (created as a draft if the maintainer has not made it
+# yet). The checksum is the value the DITA-OT registry entry carries.
+# Run by hand with dry-run to build and verify without publishing anything.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Build and verify only; publish nothing
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  DITA_OT_VERSION: "4.4.1"
+  DITA_OT_SHA256: "154414c1debb548e923bf77e9a09019e249a8887680ff4bfbd8e137de9e8e250"
+
+jobs:
+  asset:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # upload the asset to the release
+      id-token: write      # sign the provenance attestation
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Version in plugin.xml must match the tag
+        run: |
+          version=$(sed -n 's/.*<plugin id="org.istanduk.gov-uk" version="\([^"]*\)".*/\1/p' org.istanduk.gov-uk/plugin.xml)
+          test -n "$version" || { echo "no version in plugin.xml"; exit 1; }
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "plugin.xml says $version but the tag is $GITHUB_REF_NAME"; exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "ASSET=org.istanduk.gov-uk-$version.zip" >> "$GITHUB_ENV"
+
+      - name: Build the asset and its checksum
+        run: |
+          (cd org.istanduk.gov-uk && zip -qr "../$ASSET" . -x '.DS_Store' '*/.DS_Store')
+          unzip -l "$ASSET" | grep -q ' plugin.xml$' || { echo "plugin.xml must sit at the zip root"; exit 1; }
+          sha256sum "$ASSET" > "$ASSET.sha256"
+          cat "$ASSET.sha256"
+
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: The asset installs and builds on the supported DITA-OT
+        run: |
+          curl -sSL -o dita-ot.zip "https://github.com/dita-ot/dita-ot/releases/download/${DITA_OT_VERSION}/dita-ot-${DITA_OT_VERSION}.zip"
+          echo "${DITA_OT_SHA256}  dita-ot.zip" | sha256sum -c -
+          unzip -q dita-ot.zip
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/$ASSET"
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" transtypes | grep -qx govuk
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/smoke -Dgovuk.print=yes
+          test -f out/smoke/index.html && test -f out/smoke/print.html
+          grep -q "version=\"$VERSION\"" "dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/plugin.xml"
+          echo "installed and built $ASSET on DITA-OT $DITA_OT_VERSION"
+
+      - name: Keep the built asset with the run
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.ASSET }}
+          path: |
+            ${{ env.ASSET }}
+            ${{ env.ASSET }}.sha256
+
+      - name: Attest build provenance
+        if: github.event_name == 'push'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: ${{ env.ASSET }}
+
+      - name: Publish the asset on the release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$ASSET" "$ASSET.sha256" --clobber
+            echo "uploaded to the existing release $GITHUB_REF_NAME"
+          else
+            gh release create "$GITHUB_REF_NAME" "$ASSET" "$ASSET.sha256" --draft --title "$GITHUB_REF_NAME" \
+              --notes "Draft created by the release workflow. Add the release notes (docs/RELEASING.md), then publish."
+            echo "created draft release $GITHUB_REF_NAME"
+          fi

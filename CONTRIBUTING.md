@@ -16,7 +16,7 @@ request, and reaches `main` only as a release. Decision **D-22** in
 | `release/x.y.z` | Version bump and release notes for one release | `dev` | `main` **and** `dev` |
 | `hotfix/x.y.z` | An urgent fix to the released code | `main` | `main` **and** `dev` |
 
-Nobody commits directly to `main` or `dev` — both are protected: a pull request and a
+Dependabot's update pull requests also target `dev`. Nobody commits directly to `main` or `dev` — both are protected: a pull request and a
 green `ci` status are required, and history is never rewritten. Use descriptive branch
 names (`feature/print-document`, `hotfix/1.0.1`).
 
