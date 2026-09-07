@@ -75,6 +75,61 @@ Not proposed: `FAQPage` (no DITA construct, no consumer), `SiteNavigationElement
 
 **Effort.** **S–M**: two to four days — one stylesheet writing the two files and the head link, a fixture (the ORUK mini bookmap with `data` properties and its schema files as distributions), the checker, a manual section. It shares the organisation, licence and URL parameters with the schema.org work, and the schema.org `Dataset` (Section 5) and the DCAT record map one-to-one, so a publisher who opts into one gets the other from the same values.
 
+## 5b. Worked examples: a data dictionary, reference data, master data — and all three at once
+
+Three kinds of thing get published through the plugin, and they need three vocabularies that fit together. Section 5a's DCAT record describes the *publication and its assets*; two more W3C vocabularies describe what is inside them: **ADMS** (the Asset Description Metadata Schema, a DCAT profile for "semantic assets" — data models, schemas, code lists, taxonomies) for the things a standard is made of, and **SKOS** for terms, codes and taxonomies. Entities — organisations, places — take the **Organization Ontology** (`org:`) or `schema:Organization`. None of this is invented for the plugin; it is what UK and EU catalogues already expect.
+
+### The NHS Data Model and Dictionary: one specification, two kinds of asset, no data
+
+The Dictionary is one publication (one bookmap, one `dcat:Catalog`, NHS England as `dct:publisher`, OGL as `dct:license`, its release as `dcat:version` with `dcat:previousVersion` from the change history). Inside it are two kinds of asset, and neither is a dataset:
+
+| Part of the Dictionary | Catalogue class | What the record carries | The definitions inside |
+|---|---|---|---|
+| The common logical model — classes, attributes, data elements | one `adms:Asset` (a `dct:Standard`), `dct:type` *domain model* | title, description, version, status, `dcat:distribution`s: the model's pages, and any machine-readable export (schema, model interchange file) the publisher ships | every class, attribute and data element is a **`skos:Concept`** in one of three `skos:ConceptScheme`s (classes, attributes, data elements): `skos:prefLabel` from the title, `skos:definition` from the short description, `skos:altLabel` from `searchtitle`/abbreviations, `skos:notation` from any code, `skos:related`/`dct:isPartOf` between an attribute and its class, and **`adms:status` retired** for the items marked retired (the same signal that demotes them in search, D-18) |
+| Each data set specification (a maternity data set, a mental-health data set…) | one `adms:Asset` per specification, `dct:type` *data set specification*, `dct:conformsTo` the logical model | title, description, version, status, `dct:references` the data elements it uses, `dcat:distribution`s: the specification pages and any technical output specification or schema files | the elements it lists are the concepts above, referenced, not redefined |
+
+What the Dictionary never publishes is a `dcat:Dataset`, because it never publishes the data: the collections themselves are catalogued elsewhere by the bodies that hold them, and *their* records say `dct:conformsTo <the specification's URI>`. That is the structural point — the Dictionary publishes the targets that other catalogues point at, so its specification URIs must be stable (the site URL plus the topic path, or an identifier the generator supplies through `resourceid`).
+
+### Reference data: code lists and vocabularies
+
+A controlled list — the Local Government Association's standards lists that Open Referral UK already uses for service and circumstance taxonomies, or any code list — is a `skos:ConceptScheme`: one `skos:Concept` per entry with `skos:notation` (the code), `skos:prefLabel`, `skos:definition`, `skos:broader`/`skos:narrower` for hierarchies, and `skos:exactMatch`/`skos:closeMatch` where one list is mapped to another. In the catalogue it is an `adms:Asset` of type *code list* or *taxonomy*, with `dcat:distribution`s in CSV, JSON and RDF and the site as `dcat:landingPage`.
+
+### Master data: a register of organisations
+
+A list of organisations is the one case that *is* data: a `dcat:Dataset` with `dcat:distribution`s (CSV, JSON) and the site as its landing page, and each entry an `org:Organization` (or `schema:Organization`) with `org:identifier`s from the identifier systems that matter (an ODS code, a company number, a URI in a national register), `org:subOrganizationOf`, sites and addresses. For a register of any size the source of truth is the machine-readable file, the DITA pages are generated from it, and the plugin's job is to link the register as the distribution and type the pages — not to reconstruct rows from prose.
+
+### Open Referral UK: the three together
+
+Open Referral UK is a standard (a logical model of services, organisations and locations, with JSON schemas and an API specification), uses reference data (taxonomies for service type, eligibility and circumstance — the LGA lists), and needs master data (the register of organisations publishing conformant feeds, which its dashboard already lists). One site, one `dcat:Catalog`, three kinds of member:
+
+- the **standard** — an `adms:Asset`/`dct:Standard` per major version (`dcat:hasVersion`), its classes and attributes as SKOS concepts, its JSON schemas and API specification as `dcat:distribution`s;
+- the **taxonomies** — `skos:ConceptScheme`s of its own with `skos:exactMatch` to the LGA lists, catalogued as code-list assets;
+- the **feeds** — the register as a `dcat:Dataset`, and each live feed a **`dcat:DataService`** with `dcat:endpointURL`, `dct:conformsTo` the standard's URI and its `dct:publisher` organisation.
+
+That last part is the payoff: a harvestable catalogue of conformant services that aggregators, the LGA and data.gov.uk can read, generated from the same source as the documentation.
+
+### Which DITA constructs carry this
+
+Existing constructs, with a small documented convention, before any specialisation:
+
+| Need | DITA construct | Why it is the right one |
+|---|---|---|
+| publication-level catalogue properties (type, identifier, theme, spatial, temporal, frequency, status) | bookmap `bookmeta` with `data name="dct:…"`/`"dcat:…"`/`"adms:…"` | `data` is DITA's typed-metadata extension point; generators write it trivially; no DTD change |
+| what kind of thing a topic describes (class, attribute, data element, data set specification, code list, organisation) | `prolog/metadata/category`, as the Dictionary's generator already emits for search filters (D-18) | one value drives search filters and the catalogue type |
+| a term with a definition, a code with a label | `glossentry` (`glossterm` → prefLabel, `glossdef` → definition, `glossAlt`/`glossAbbreviation`/`glossAcronym` → altLabel and notation), grouped by `glossgroup` per scheme | already harvested for the A–Z glossary (FR-G1); SKOS falls out of the same harvest |
+| a hierarchy or classification scheme | a `subjectScheme` map (`subjectdef` nesting → `skos:broader`/`narrower`; `navtitle` → prefLabel; `enumerationdef` binding to attribute values) | DITA 1.3's own controlled-vocabulary construct, designed for exactly this |
+| an entity's typed fields (an organisation's identifiers, addresses) or a specification's element list | a `reference` topic with a `properties` table (`proptype`/`propvalue`/`propdesc`) or a `simpletable`, with the machine-readable register keyed from the map | tables stay readable on the page; the register is the distribution |
+| identifiers in other systems, stable URIs | `resourceid` (`appid`, `appname`) | the DITA element for "this thing's identifier elsewhere" |
+| relationships (attribute ↔ class, data set → elements, standard → taxonomy) | `related-links`, `reltable`, `xref` with `@type`/`@role` | become `dct:references`, `dct:isPartOf`, `skos:related` |
+| dates, versions, status | `critdates`, bookmeta `vrm`/`bookchangehistory`, `importance="obsolete"`/outputclass `retired` | already used for the dates line and search demotion |
+| the files that are the distributions | resource-only `keydef`s with `format="json"`, `"csv"`, `"ttl"` | copied to the output, linked as `dcat:downloadURL` |
+
+A DITA **specialisation** (a `dcat`/`adms` metadata domain with named elements instead of `data`) would be cleaner to author and validate, and can follow if the convention proves itself; it costs every generator and author a DTD dependency, so it should not come first. Lightweight DITA (MDITA) cannot carry most of this and is out of scope for these use cases.
+
+### What the plugin would emit for them
+
+Beyond Section 5a's `dcat.jsonld`/`dcat.ttl`: one SKOS file per concept scheme (`vocab/<scheme>.ttl` and `.jsonld`) harvested the way the glossary already is; `schema:DefinedTermSet` JSON-LD in the glossary page and `schema:DefinedTerm` per definition page for web search; `org:Organization` records in the register's JSON-LD; `<link rel="alternate">` from each page to the RDF that describes it. A static site cannot negotiate content, but stable file paths and alternate links are enough for harvesters and for people. Estimated effort on top of 5a: SKOS from glossary and subjectScheme **S**; ADMS typing from categories **S**; register and `DataService` catalogue **M** — each a separate, opt-in step once the DCAT record exists.
+
 ## 6. Serialisation and constraints
 
 - **JSON-LD in `<head>`**, one block per page, matching GOV.UK and NHS practice and Google's recommendation; it leaves the visible markup untouched and survives the print document's merging (which does not carry it).
@@ -129,7 +184,8 @@ The html5 base's metadata stylesheet (the `DC`-flavoured metas above); a registr
 4. How a publication declares itself a `Dataset` (bookmeta `data`, an outputclass on the map, or a parameter).
 5. Whether `llms.txt` joins this work or follows separately.
 6. DCAT (Section 5a): its own switch typed by the publisher (recommended) or part of `govuk.metadata=full`; which target profile's mandatory set the checker enforces (data.gov.uk's list, the Cross-Government Metadata Exchange Model, or both); whether SHACL validation runs in CI.
+7. Section 5b: adopt the convention (`data`, `category`, `glossentry`, `subjectScheme`, `resourceid`) first and specialise later, or specialise now; which concept schemes the Dictionary's generator should mark; whether the Open Referral UK feed register becomes a `DataService` catalogue in the first step.
 
 ## 11. Sources checked (September 2026)
 
-GOV.UK guidance and NHS condition pages (head metadata observed directly); GOV.UK Publishing Components guide — *machine readable metadata* and *meta tags* components; Google Search Central — structured data introduction (JSON-LD recommendation), Article, Breadcrumb, Dataset and Organization documentation, and the search updates log (HowTo deprecation, FAQ restriction and deprecation, sitelinks search box withdrawal); schema.org type pages for `TechArticle`, `DefinedTermSet`, `DefinedTerm`, `HowTo`, `BreadcrumbList`, `Dataset`, `GovernmentOrganization`; the Open Graph protocol; the DITA-OT registry entries for the Open Graph and `llms.txt` plugins; the html5 base `get-meta.xsl`; this plugin's built output; W3C DCAT 3 (Recommendation, 22 August 2024); data.gov.uk guidance — *Accepted DCAT and data.json fields*; the Cabinet Office Cross-Government Metadata Exchange Model repository (LinkML model, SHACL and JSON Schema outputs); Google Dataset Search documentation (DCAT accepted alongside schema.org).
+GOV.UK guidance and NHS condition pages (head metadata observed directly); GOV.UK Publishing Components guide — *machine readable metadata* and *meta tags* components; Google Search Central — structured data introduction (JSON-LD recommendation), Article, Breadcrumb, Dataset and Organization documentation, and the search updates log (HowTo deprecation, FAQ restriction and deprecation, sitelinks search box withdrawal); schema.org type pages for `TechArticle`, `DefinedTermSet`, `DefinedTerm`, `HowTo`, `BreadcrumbList`, `Dataset`, `GovernmentOrganization`; the Open Graph protocol; the DITA-OT registry entries for the Open Graph and `llms.txt` plugins; the html5 base `get-meta.xsl`; this plugin's built output; W3C DCAT 3 (Recommendation, 22 August 2024); data.gov.uk guidance — *Accepted DCAT and data.json fields*; the Cabinet Office Cross-Government Metadata Exchange Model repository (LinkML model, SHACL and JSON Schema outputs); Google Dataset Search documentation (DCAT accepted alongside schema.org); W3C ADMS (Asset Description Metadata Schema) and its DCAT-AP profile; W3C SKOS Reference and the Organization Ontology; the DITA 1.3 specification (`subjectScheme`, `data`, `resourceid`, `glossentry`, `properties`).
