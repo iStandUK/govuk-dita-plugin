@@ -114,6 +114,15 @@ requirements govern its behaviour.
 | NFR-M2 | The vendored govuk-frontend release is pinned and recorded; upgrades are deliberate changes validated by visual regression snapshots | M | ✅ CI captures full-page snapshots of the neutral and iStandUK sites as an artifact for review on a govuk-frontend bump (#35); pin, NOTICE and upgrade process already in place |
 | NFR-L1 | Licence Apache-2.0; vendored govuk-frontend (MIT) retained with its licence and attribution; release versioning is semver | M | ✅ v0.1.0 released |
 
+### Security (NFR-S) — [11](11-security.md)
+
+| ID | Requirement | Priority | Status |
+|---|---|---|---|
+| NFR-S1 | No content authored in DITA reaches readers as executable or third-party-fetched content without a publisher's explicit choice; every such finding is reported as a build warning, never a failed build | M | ✅ (#77) `govuk.svg.sanitize`, `govuk.inline.scope`, `govuk.content.warnings`/`policy`; `GOVK004W`–`GOVK006W`; kitchen and inline-scope fixtures in CI |
+| NFR-S2 | The build and release chain is least-privilege, pinned and verified: read-only workflow token, actions pinned by commit, checksummed downloads, release asset built and attested in CI, vendored assets integrity-checked | M | ✅ (#65) |
+| NFR-S3 | Generated sites can carry a strict Content-Security-Policy in every branding mode, with the plugin emitting it on request and the manual giving the header set for hosts | S | ✅ (#77) `govuk.csp`; CSP check in CI; *Securing a published site* topic |
+| NFR-S4 | A private disclosure route, a supported-versions policy and a written process for branches, reviews and releases exist and are followed | M | ✅ (#71, D-22) `SECURITY.md`, rulesets, `CONTRIBUTING.md`, `docs/RELEASING.md` |
+
 ## Deferred (roadmap)
 
 | ID | Item | Notes |

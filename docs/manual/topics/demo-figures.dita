@@ -40,7 +40,9 @@
         whose scheme runs code anywhere in a topic: each is reported
         (<codeph>GOVK006W</codeph>), rendered as authored under
         <codeph>govuk.content.policy=warn</codeph>, or replaced by a marked placeholder under
-        <codeph>strip</codeph>. Nothing here ever fails a build.</p>
+        <codeph>strip</codeph>. Nothing here ever fails a build. The guidance for authors and
+        the hosting headers that complete the picture are in <xref keyref="security"/>; every
+        code is listed in <xref keyref="messages"/>.</p>
     </section>
 </conbody>
 </concept>

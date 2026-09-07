@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="security" xml:lang="en-GB">
+  <title>Securing a published site</title>
+  <shortdesc>Generated sites are static and self-contained. This topic says what the plugin
+    guarantees, which headers to set on the host, what authors can introduce and how the
+    build reports it, and where responsibility sits.</shortdesc>
+  <conbody>
+    <p><indexterm>security<indexterm>Content-Security-Policy</indexterm><indexterm>hosting
+      headers</indexterm></indexterm>A site built with the plugin is a folder of HTML, CSS,
+      JavaScript and images. There is no server-side code, no login, no cookie, no analytics,
+      and nothing that talks to another origin while a reader is on the page. That makes the
+      security work small and mostly the host's: serve the folder over HTTPS with a handful
+      of headers, and keep an eye on what authors put in diagrams, embeds and links.</p>
+    <section id="guarantees">
+      <title>What the plugin guarantees</title>
+      <ul>
+        <li><b>Same origin only, in every branding mode.</b> Logos are inline SVG or files
+          copied into the site; the fonts that official and NHS modes name are root-relative
+          paths served by the host; the crown crest is suppressed rather than fetched.
+          Continuous integration asserts that no page or stylesheet in any mode references
+          another origin.</li>
+        <li><b>One inline script.</b> The only script written into a page is the Design
+          System's own body-class snippet, byte for byte, so its published hash applies;
+          everything else — navigation, search, govuk-frontend initialisation — is a file
+          under <filepath>govuk/</filepath>.</li>
+        <li><b>No cookies, no third-party requests, no restricted assets bundled.</b></li>
+        <li><b>Valid, accessible output</b>, checked on every build with the Nu HTML checker
+          and axe-core at WCAG 2.2 AA.</li>
+      </ul>
+    </section>
+    <section id="headers">
+      <title>Headers to set on the host</title>
+      <p>Where you control response headers, set these. The values below are the ones the
+        plugin's pages are known to satisfy; they are also what
+        <codeph>govuk.csp=meta</codeph> writes into each page for hosts that cannot set
+        headers (see <xref keyref="parameters"/>), except that
+        <codeph>frame-ancestors</codeph> only works as a header.</p>
+      <table frame="all" id="header-table">
+        <title>Recommended response headers</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colwidth="1.2*"/>
+          <colspec colname="c2" colwidth="3*"/>
+          <thead>
+            <row><entry>Header</entry><entry>Value</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry><codeph>Content-Security-Policy</codeph></entry>
+              <entry><codeblock>default-src 'self';
+script-src 'self' 'sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw=' 'wasm-unsafe-eval';
+style-src 'self' 'unsafe-inline';
+img-src 'self' data:;
+font-src 'self';
+connect-src 'self';
+object-src 'self';
+base-uri 'self';
+form-action 'self';
+frame-ancestors 'none'</codeblock>
+                <p>The hash is the Design System's published value for its body-class
+                  snippet. <codeph>'wasm-unsafe-eval'</codeph> is needed only when search is
+                  enabled (Pagefind runs its index as WebAssembly); drop it otherwise.
+                  <codeph>style-src 'unsafe-inline'</codeph> covers the style attributes DITA
+                  <codeph>@style</codeph>, DITAVAL flags and inlined SVG produce. If you serve
+                  GDS Transport or another font from a different origin, add that origin to
+                  <codeph>font-src</codeph>; do the same for images hosted elsewhere in
+                  <codeph>img-src</codeph>, or better, host them with the site.</p></entry>
+            </row>
+            <row>
+              <entry><codeph>Strict-Transport-Security</codeph></entry>
+              <entry><codeph>max-age=31536000; includeSubDomains</codeph> — once the whole
+                host is on HTTPS.</entry>
+            </row>
+            <row>
+              <entry><codeph>X-Content-Type-Options</codeph></entry>
+              <entry><codeph>nosniff</codeph></entry>
+            </row>
+            <row>
+              <entry><codeph>Referrer-Policy</codeph></entry>
+              <entry><codeph>strict-origin-when-cross-origin</codeph></entry>
+            </row>
+            <row>
+              <entry><codeph>Permissions-Policy</codeph></entry>
+              <entry><codeph>camera=(), microphone=(), geolocation=()</codeph> — the site
+                uses none of these.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <p>Check the result in a browser's developer tools: with the policy in force there should
+        be no violation reports on any page, including a search. The plugin's repository runs
+        that check on every build against the policy it emits.</p>
+    </section>
+    <section id="content">
+      <title>What authors can introduce, and how the build reports it</title>
+      <p>DITA content can carry things a static site should not: scripts and event handlers
+        inside an SVG diagram, links whose scheme runs code, images or objects fetched from
+        another origin (which breaks the same-origin guarantee and reveals readers' addresses
+        to a third party), and embeds of arbitrary types. The toolkit renders them as authored;
+        the plugin makes them visible and gives the publisher the choice. Every finding is a
+        <b>build warning</b>, never an error — a publisher's build always completes.</p>
+      <ul>
+        <li>Inlined SVG diagrams are sanitised by default (<codeph>govuk.svg.sanitize</codeph>;
+          <codeph>GOVK004W</codeph> names what was found and whether it was removed).</li>
+        <li>Diagrams and MathML are inlined only from under the input directory
+          (<codeph>govuk.inline.scope</codeph>; <codeph>GOVK005W</codeph>).</li>
+        <li>Remote images and SVG references, object embeds and script-scheme links are
+          reported per occurrence (<codeph>GOVK006W</codeph>) and rendered as authored under
+          <codeph>govuk.content.policy=warn</codeph>, or replaced by a marked placeholder under
+          <codeph>strip</codeph>; <codeph>govuk.content.warnings=no</codeph> silences the
+          report.</li>
+        <li>With a Content-Security-Policy in force, content it would block is reported
+          (<codeph>GOVK007W</codeph>) so it can be fixed before readers see a broken image.</li>
+      </ul>
+      <p>Every code is explained in <xref keyref="messages"/>; the parameters are in
+        <xref keyref="parameters"/>.</p>
+    </section>
+    <section id="authors">
+      <title>Guidance for authors</title>
+      <ul>
+        <li><b>Keep diagrams static.</b> No <codeph>script</codeph>, no event-handler
+          attributes, no <codeph>foreignObject</codeph>; link with ordinary
+          <codeph>https:</codeph> or relative targets; reference only files that travel with the
+          publication. See <xref keyref="demo-figures"/> for what inlining preserves.</li>
+        <li><b>Host what you show.</b> Images, objects and fonts belong in the publication, not
+          on another server. A remote image is reported on every build and blocked by the
+          recommended policy.</li>
+        <li><b>Links point at pages, not code.</b> A <codeph>javascript:</codeph> target is
+          reported and may be stripped. External links open in a new tab with
+          <codeph>rel="noopener"</codeph>, as the toolkit renders them.</li>
+        <li><b>Embeds are a last resort.</b> An <codeph>object</codeph> is reported whenever it
+          appears; prefer an image, a figure or a link.</li>
+      </ul>
+    </section>
+    <section id="scope">
+      <title>Where responsibility sits</title>
+      <p>The plugin answers for its stylesheets, build logic, CSS and JavaScript, and for the
+        sites and print documents they produce. It does not answer for DITA-OT's XML parsing,
+        DTD and catalog resolution or key and chunk processing, for govuk-frontend, for
+        Pagefind, or for the host's configuration. To report a vulnerability in the plugin,
+        use the repository's private reporting form — see <xref keyref="security-policy"/> —
+        rather than a public issue.</p>
+    </section>
+  </conbody>
+</concept>

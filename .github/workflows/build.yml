@@ -350,6 +350,16 @@ jobs:
           snippet=$(grep -o '<script>[^<]*</script>' out/manual-csp/topics/install.html | head -1 | sed 's/^<script>//; s/<\/script>$//')
           hash=$(printf '%s' "$snippet" | openssl dgst -sha256 -binary | base64)
           grep -q "'sha256-$hash'" out/manual-csp/topics/install.html || { echo "CSP hash does not match the inline snippet"; exit 1; }
+          # #87: the manual documents every message the plugin can emit, and the security
+          # and build-messages topics are built and linked
+          for code in $(grep -o 'id="GOVK[0-9]*[IWEF]"' org.istanduk.gov-uk/messages.xml | cut -d'"' -f2); do
+            grep -q "$code" docs/manual/topics/messages.dita || { echo "$code is not in the manual's build-messages topic"; exit 1; }
+          done
+          test -f out/manual/topics/security.html
+          test -f out/manual/topics/messages.html
+          grep -q "sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw=" out/manual/topics/security.html
+          grep -q 'GOVK007W' out/manual/topics/messages.html
+          grep -q 'topics/security.html' out/manual/topics/demo-figures.html
           # the default build: no sitemap, no robots, no CSP; bad values fail the build
           test ! -f out/manual/sitemap.xml
           test ! -f out/manual/robots.txt
