@@ -1,12 +1,12 @@
 # 12 — Structured data and machine-readable metadata from DITA
 
-**Status:** proposed 2026-09-07 (no code; decisions in [OQ-13](06-open-questions.md)) · **Question:** what schema.org structured data and other machine-readable tags — Open Graph, social cards, Dublin Core, canonical and pagination links — can the plugin generate from DITA for its static GOV.UK Design System sites, what is worth generating in 2026, and how should it be controlled? · **Feeds:** roadmap item R9 in [02](02-requirements.md); a future FR-D requirement group; the manual.
+**Status:** proposed 2026-09-07 (no code; decisions in [OQ-13](06-open-questions.md)) · **Question:** what schema.org structured data and other machine-readable tags — Open Graph, social cards, Dublin Core, DCAT catalogue records, canonical and pagination links — can the plugin generate from DITA for its static GOV.UK Design System sites, what is worth generating in 2026, and how should it be controlled? · **Feeds:** roadmap item R9 in [02](02-requirements.md); a future FR-D requirement group; the manual.
 
 ## 1. Answer in brief
 
 Yes, and most of it is already in the DITA. A map or bookmap carries a title, an abstract, an author, an organisation, copyright and dates; every topic has a title, a short description, a type (concept, task, reference, troubleshooting, glossary entry), a place in the map, and optionally keywords, audience, category and its own dates. That is enough for a complete set of **Open Graph and social-card tags**, a **canonical URL**, and **schema.org JSON-LD** for the site, each page, its breadcrumb trail, the publisher and the glossary — without asking authors for anything new.
 
-What has changed since structured data was fashionable is the payoff. In 2026 the search-engine rich results that once rewarded `HowTo` and `FAQPage` markup are gone (Sections 4 and 8), so the case rests on three durable things: **link previews** wherever a page is shared (that is Open Graph, the single most visible gain for a government publisher), **discoverability and attribution** (Article dates and publisher, breadcrumbs, `Dataset` for data-dictionary publications, and a licence statement machines can read), and **honest ingestion by search and AI crawlers** that read JSON-LD and, increasingly, `llms.txt`. The recommendation (Section 9) is a `govuk.metadata` parameter with a `basic` default that emits the Open Graph and canonical set, a `full` level that adds JSON-LD by page type, and the same rule as the rest of the plugin: derived from the source, publisher-controlled, never inventing a date or a person, and validated in CI. Effort is small for `basic` and medium for `full`.
+What has changed since structured data was fashionable is the payoff. In 2026 the search-engine rich results that once rewarded `HowTo` and `FAQPage` markup are gone (Sections 4 and 8), so the case rests on three durable things: **link previews** wherever a page is shared (that is Open Graph, the single most visible gain for a government publisher), **discoverability and attribution** (Article dates and publisher, breadcrumbs, `Dataset` for data-dictionary publications, and a licence statement machines can read), and **honest ingestion by search and AI crawlers** that read JSON-LD and, increasingly, `llms.txt`. For the publications this plugin was built for — a data dictionary, a data standard — there is a fourth: a **DCAT record** (Section 5a), the vocabulary UK government catalogues harvest, generated from the same bookmap so the catalogue entry and the documentation never disagree. The recommendation (Section 9) is a `govuk.metadata` parameter with a `basic` default that emits the Open Graph and canonical set, a `full` level that adds JSON-LD by page type, and the same rule as the rest of the plugin: derived from the source, publisher-controlled, never inventing a date or a person, and validated in CI. Effort is small for `basic` and medium for `full`.
 
 ## 2. What a page carries today
 
@@ -44,6 +44,37 @@ Both therefore treat Open Graph plus JSON-LD as the baseline, with the JSON-LD t
 
 Not proposed: `FAQPage` (no DITA construct, no consumer), `SiteNavigationElement` (no consumer), `SearchAction` (withdrawn), `Person` for authors by default (Section 8), and the `govuk:*` platform tags.
 
+## 5a. DCAT — the record UK government catalogues harvest
+
+**What it is.** The W3C Data Catalog Vocabulary (DCAT 3, Recommendation of 22 August 2024) is the RDF vocabulary for describing catalogues, datasets, data services and their distributions, built on Dublin Core Terms, FOAF and vCard. It is what data portals exchange: data.gov.uk harvests DCAT feeds (its documented field list covers `dct:title`, `dct:description`, `dct:identifier`, `dct:publisher`, `dct:license`, `dct:issued`/`dct:modified`, `dct:language`, `dcat:keyword`, `dcat:theme`, `dcat:landingPage`, `dct:conformsTo`, `dct:spatial`/`dct:temporal`, `dct:accrualPeriodicity`, `dcat:distribution` with `dcat:downloadURL`/`dcat:accessURL`/`dcat:mediaType`, and a `foaf:Organization` publisher — with title, description, a stable identifier and a licence mandatory); the Cabinet Office's **Cross-Government Metadata Exchange Model** (2024–26, LinkML with generated JSON Schema and SHACL) is a DCAT-based profile for describing data assets between departments; and Google's Dataset Search accepts DCAT in a page alongside schema.org `Dataset`.
+
+**Why it belongs here.** Two of the corpora the plugin was built against *are* data: the NHS Data Dictionary (definitions of data sets, elements and classes) and Open Referral UK (a data standard with JSON schemas and an API specification). Their sites are the authoritative documentation of data assets; the catalogue entry for those assets lives elsewhere and is typed by hand. Generating the DCAT record from the same bookmap that builds the site makes the two agree by construction and gives data.gov.uk or a departmental catalogue something to harvest.
+
+**Modelling honestly.** A documentation site describes data; it is not the data. DCAT 3 provides for that: a data standard or dictionary is a **`dct:Standard`** (the thing datasets `dct:conformsTo`), an API is a **`dcat:DataService`**, and only a publication that documents a real dataset and links its files is a **`dcat:Dataset`** with `dcat:Distribution`s. A publication that documents many data sets — the data dictionary — can be a **`dcat:Catalog`** whose members are the standards it defines, one per data-set topic, on request. The type is the publisher's declaration, never inferred.
+
+**Where the values come from** (the plugin's usual order — parameter, then bookmeta, then the map; nothing invented):
+
+| DCAT / DCTERMS | Source |
+|---|---|
+| `dct:title`, `dct:description` | `mainbooktitle`, `booktitlealt` or map title and abstract |
+| `dct:publisher` (`foaf:Organization` — `foaf:name`, `foaf:homepage`) | bookmeta `organization`, else `govuk.organisation` and `govuk.organisation.url` |
+| `dct:identifier` | a stable URI: `govuk.site.url` by default, or bookmeta `bookid` / a `data name="dct:identifier"` |
+| `dct:issued`, `dct:modified`, `dcat:version`, `dcat:previousVersion` | bookmeta `critdates`, `vrm` and `bookchangehistory` — publication-level dates only, never topic stamps |
+| `dct:license` | OGL v3 URI for `govuk.branding=official`; otherwise `govuk.licence.url` (a URI, as harvesters require) |
+| `dct:language`, `dcat:keyword` | `@xml:lang`; bookmeta `keywords` |
+| `dcat:landingPage` | `govuk.site.url` |
+| `dcat:theme`, `dct:spatial`, `dct:temporal`, `dct:accrualPeriodicity`, `dct:conformsTo` | bookmeta `data` elements with those names — DITA's own extension point — carrying the URIs the target catalogue expects (for example a UK statistical geography for `dct:spatial`) |
+| `dcat:contactPoint` (`vcard:Kind` with `vcard:hasEmail`) | `govuk.contact.email`, an organisational mailbox — never a person by default |
+| `dcat:distribution` (`dcat:downloadURL`, `dcat:mediaType`, `dct:format`, `dct:title`) | the map's resource-only references to schema, CSV, JSON and OpenAPI files that ship with the site (Open Referral's specifications are exactly this) |
+
+**Serialisation.** One record per publication as `dcat.jsonld` at the site root (JSON-LD with the DCAT context), the same block embedded in the cover page's head (so Dataset Search sees it), and `<link rel="alternate" type="application/ld+json" href="dcat.jsonld">` on the cover; Turtle (`dcat.ttl`) as a second serialisation for harvesters that prefer RDF — both are plain text a stylesheet writes deterministically. The record is excluded when `govuk.site.url` is absent, since every property that matters is a URI.
+
+**Validation.** The mandatory-field set of the target harvester (data.gov.uk's list; the exchange model's required properties) as a checker in `tools/`, warning per missing field; optionally SHACL validation with the exchange model's published shapes through a Python SHACL library in CI — offline, pinned, and no addition to the publisher's build.
+
+**Parameters.** `govuk.dcat` = `no` (default) | `standard` | `dataset` | `dataservice` | `catalog` — the type is the switch; `govuk.contact.email`; the existing `govuk.site.url`, `govuk.organisation*`, `govuk.licence.url`; bookmeta `data` for the catalogue-specific properties. A missing mandatory field is a warning naming it (the record is still written; the harvester will say the same thing), never a failed build.
+
+**Effort.** **S–M**: two to four days — one stylesheet writing the two files and the head link, a fixture (the ORUK mini bookmap with `data` properties and its schema files as distributions), the checker, a manual section. It shares the organisation, licence and URL parameters with the schema.org work, and the schema.org `Dataset` (Section 5) and the DCAT record map one-to-one, so a publisher who opts into one gets the other from the same values.
+
 ## 6. Serialisation and constraints
 
 - **JSON-LD in `<head>`**, one block per page, matching GOV.UK and NHS practice and Google's recommendation; it leaves the visible markup untouched and survives the print document's merging (which does not carry it).
@@ -80,6 +111,7 @@ The html5 base's metadata stylesheet (the `DC`-flavoured metas above); a registr
 | `govuk.metadata.persons` | `no` (default) \| `yes` | allow prolog authors as `Person` |
 | `govuk.site.url` (existing) | URL | absolute URLs; without it, URL-bearing tags are omitted and the rest still emitted |
 | `govuk.dates` (existing) | | gates every date |
+| `govuk.dcat`, `govuk.contact.email` | `no` (default) \| `standard` \| `dataset` \| `dataservice` \| `catalog`; an organisational mailbox | the DCAT catalogue record of Section 5a, as `dcat.jsonld` + `dcat.ttl` and in the cover's head; bookmeta `data` supplies theme, spatial, temporal, frequency, identifier |
 
 **By page** as in Section 5; `TechArticle` for every topic type, `HowTo` for tasks, `DefinedTermSet` for the glossary, `WebSite`+`Organization` on the cover, `BreadcrumbList` everywhere below the cover, `Dataset` on opt-in.
 
@@ -96,7 +128,8 @@ The html5 base's metadata stylesheet (the `DC`-flavoured metas above); a registr
 3. Whether to emit `HowTo` and `DefinedTermSet` at all now that no search feature rewards them (recommended: yes — cheap, valid, and read by other consumers; skip `FAQPage`).
 4. How a publication declares itself a `Dataset` (bookmeta `data`, an outputclass on the map, or a parameter).
 5. Whether `llms.txt` joins this work or follows separately.
+6. DCAT (Section 5a): its own switch typed by the publisher (recommended) or part of `govuk.metadata=full`; which target profile's mandatory set the checker enforces (data.gov.uk's list, the Cross-Government Metadata Exchange Model, or both); whether SHACL validation runs in CI.
 
 ## 11. Sources checked (September 2026)
 
-GOV.UK guidance and NHS condition pages (head metadata observed directly); GOV.UK Publishing Components guide — *machine readable metadata* and *meta tags* components; Google Search Central — structured data introduction (JSON-LD recommendation), Article, Breadcrumb, Dataset and Organization documentation, and the search updates log (HowTo deprecation, FAQ restriction and deprecation, sitelinks search box withdrawal); schema.org type pages for `TechArticle`, `DefinedTermSet`, `DefinedTerm`, `HowTo`, `BreadcrumbList`, `Dataset`, `GovernmentOrganization`; the Open Graph protocol; the DITA-OT registry entries for the Open Graph and `llms.txt` plugins; the html5 base `get-meta.xsl`; this plugin's built output.
+GOV.UK guidance and NHS condition pages (head metadata observed directly); GOV.UK Publishing Components guide — *machine readable metadata* and *meta tags* components; Google Search Central — structured data introduction (JSON-LD recommendation), Article, Breadcrumb, Dataset and Organization documentation, and the search updates log (HowTo deprecation, FAQ restriction and deprecation, sitelinks search box withdrawal); schema.org type pages for `TechArticle`, `DefinedTermSet`, `DefinedTerm`, `HowTo`, `BreadcrumbList`, `Dataset`, `GovernmentOrganization`; the Open Graph protocol; the DITA-OT registry entries for the Open Graph and `llms.txt` plugins; the html5 base `get-meta.xsl`; this plugin's built output; W3C DCAT 3 (Recommendation, 22 August 2024); data.gov.uk guidance — *Accepted DCAT and data.json fields*; the Cabinet Office Cross-Government Metadata Exchange Model repository (LinkML model, SHACL and JSON Schema outputs); Google Dataset Search documentation (DCAT accepted alongside schema.org).
