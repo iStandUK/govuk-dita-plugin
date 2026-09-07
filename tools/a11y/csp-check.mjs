@@ -65,10 +65,15 @@ for (const p of pages) {
   const policy = await page.$eval('meta[http-equiv="Content-Security-Policy"]', (m) => m.content).catch(() => null);
   if (policy) withPolicy++;
   if (p === "search.html") {
+    // Pagefind must be able to load its WebAssembly and fetch its index under
+    // the policy: after a query it renders either results or its own
+    // "no results" message; neither means it was blocked.
     const input = await page.$("#app-search input");
     if (input) { await input.fill(query); await page.waitForTimeout(1500); }
     const results = await page.$$(".pagefind-ui__result");
-    if (input && results.length === 0) violations.push("search.html: no results under the policy (Pagefind blocked?)");
+    const message = await page.$(".pagefind-ui__message");
+    if (input && results.length === 0 && !message) violations.push(`search.html: Pagefind rendered nothing for "${query}" under the policy (blocked?)`);
+    else if (input && results.length === 0) console.log(`  search.html: Pagefind ran under the policy (no results for "${query}" in this site)`);
   }
   checked++;
   if (violations.length > before) console.log(`✗ ${p}`);
