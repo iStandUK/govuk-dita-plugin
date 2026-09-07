@@ -20,6 +20,7 @@ commercial help-output tooling.
 | [08-gap-analysis-dita13.md](08-gap-analysis-dita13.md) | Gap analysis of the full DITA 1.3 specification against the plugin, with the verified 1.0 gap list |
 | [09-nhs-branding.md](09-nhs-branding.md) | NHS branding gap analysis and the recoloured-GDS approach for the NHS and crown official variants (#47) |
 | [10-pdf-css.md](10-pdf-css.md) | PDF output through CSS Paged Media on UK, European and international paper sizes: options, scale, and the agreed two-step plan (D-20) |
+| [12-structured-data.md](12-structured-data.md) | Structured data and machine-readable metadata from DITA: what GOV.UK and NHS emit, what consumers still act on in 2026, the DITA → schema.org / Open Graph mapping, risks, and a proposed `govuk.metadata` shape (OQ-13) |
 
 ## Summary of agreed direction
 
