@@ -11,6 +11,22 @@ DITA-OT convention: four letters, three digits, severity (I/W/E/F).
     <reason>Print document skipped: the publication has %1 topic files, above govuk.print.max-topics=%2.</reason>
     <response>Raise govuk.print.max-topics, or build print documents per part from submaps. Very large publications are not one printable document.</response>
   </message>
+  <message id="GOVK004W" type="WARN">
+    <reason>Inlined SVG '%1' carries active or remote content (%2): %3.</reason>
+    <response>Diagrams should be static: no script, foreignObject, event-handler attributes, script-scheme links or references to other origins. govuk.svg.sanitize=yes (the default) removes them; govuk.svg.sanitize=no keeps the file as authored.</response>
+  </message>
+  <message id="GOVK005W" type="WARN">
+    <reason>Inline reference '%1' points outside the input directory: %2.</reason>
+    <response>The plugin inlines SVG and MathML only from under the input directory (govuk.inline.scope=input). Move the file into the publication, or set govuk.inline.scope=any to inline from anywhere on the build machine.</response>
+  </message>
+  <message id="GOVK006W" type="WARN">
+    <reason>Content policy: %1 '%2' — %3.</reason>
+    <response>Script-scheme links, images and objects fetched from another origin, and object embeds are rendered as authored under govuk.content.policy=warn; govuk.content.policy=strip replaces them with a placeholder. govuk.content.warnings=no silences this report.</response>
+  </message>
+  <message id="GOVK007W" type="WARN">
+    <reason>The Content-Security-Policy in force will block %1 '%2' in the browser.</reason>
+    <response>govuk.csp allows only same-origin resources. Host the resource with the publication, strip it (govuk.content.policy=strip), or set govuk.csp to a policy that permits it.</response>
+  </message>
   <message id="GOVK002E" type="ERROR">
     <reason>govuk.search.ranking must be 'default', 'reference' or a JSON object of Pagefind ranking options; got '%1'.</reason>
     <response>Fix the parameter value. See the manual's search topic for the options.</response>

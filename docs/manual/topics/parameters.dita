@@ -157,6 +157,75 @@
                 width then height.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.svg.sanitize</codeph></entry>
+              <entry><codeph>yes</codeph> (default), <codeph>no</codeph></entry>
+              <entry>Remove active content — script, <codeph>foreignObject</codeph>,
+                event-handler attributes, script-scheme links, references to other
+                origins — from inlined SVG diagrams; <codeph>no</codeph> inlines the file
+                as authored. Findings are reported either way
+                (<codeph>GOVK004W</codeph>); see <xref keyref="demo-figures"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.inline.scope</codeph></entry>
+              <entry><codeph>input</codeph> (default), <codeph>any</codeph></entry>
+              <entry>Where inlined SVG and MathML may come from: only under the input
+                directory, or anywhere the reference points. A reference outside the
+                input directory is reported (<codeph>GOVK005W</codeph>).</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.content.warnings</codeph></entry>
+              <entry><codeph>yes</codeph> (default), <codeph>no</codeph></entry>
+              <entry>Report script-scheme links, images and objects fetched from another
+                origin, and object embeds as build warnings
+                (<codeph>GOVK006W</codeph>). The build never fails on content.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.content.policy</codeph></entry>
+              <entry><codeph>warn</codeph> (default), <codeph>strip</codeph></entry>
+              <entry>What happens to the content the warnings report: rendered as
+                authored, or replaced with a marked placeholder carrying its alt text or
+                description.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.csp</codeph></entry>
+              <entry><codeph>no</codeph> (default), <codeph>meta</codeph>, or a policy</entry>
+              <entry>A Content-Security-Policy on every page. <codeph>meta</codeph> emits
+                one the plugin's pages satisfy — same-origin resources only, the single
+                constant inline script by hash, WebAssembly for search — as a
+                <codeph>meta</codeph> element, for hosts without header control; a literal
+                value is emitted as given. Content the policy would block is reported
+                (<codeph>GOVK007W</codeph>). Hosts that can set headers should prefer a
+                header, which can also carry <codeph>frame-ancestors</codeph>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.site.url</codeph></entry>
+              <entry>URL</entry>
+              <entry>The published base URL, for example
+                <codeph>https://example.org/manual/</codeph>. Needed for
+                <filepath>sitemap.xml</filepath>, whose entries must be absolute.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.sitemap</codeph></entry>
+              <entry><codeph>auto</codeph> (default), <codeph>yes</codeph>,
+                <codeph>no</codeph></entry>
+              <entry>Write <filepath>sitemap.xml</filepath> — the cover, every navigable
+                topic page, the glossary, index and list pages; not the search page or the
+                print document — and a <filepath>robots.txt</filepath> pointing at it unless
+                one already exists. <codeph>auto</codeph> writes it when
+                <codeph>govuk.site.url</codeph> is set.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.dates</codeph></entry>
+              <entry><codeph>no</codeph> (default), <codeph>updated</codeph>,
+                <codeph>both</codeph></entry>
+              <entry>Show a topic's <codeph>critdates</codeph> as a metadata line beneath
+                its summary: the last <codeph>revised</codeph> date (or the
+                <codeph>created</codeph> date when there is none), or both. The date shown
+                is only as good as its source — publications whose dates are batch-stamped
+                by tooling should leave this off. When on, revised dates also become
+                <codeph>lastmod</codeph> in the sitemap.</entry>
+            </row>
+            <row>
               <entry namest="c1" nameend="c3">Further parameters — phase banner, footer
                 links, favicon — arrive with their features; each is listed here when it
                 lands.</entry>

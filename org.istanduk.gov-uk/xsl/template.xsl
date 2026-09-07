@@ -152,6 +152,7 @@ element-level typography.
 
   <!-- Responsive viewport (html5 base emits none) -->
   <xsl:template name="gen-user-head">
+    <xsl:call-template name="govuk-csp-meta"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <xsl:apply-templates select="." mode="gen-user-head"/>
   </xsl:template>
@@ -274,13 +275,10 @@ element-level typography.
         <xsl:with-param name="print" select="$govuk-print-available"/>
       </xsl:call-template>
       <script src="{concat($govuk-root, 'govuk/plugin.js')}"></script>
-      <script type="module">
-        <xsl:text>import { initAll } from '</xsl:text>
-        <xsl:value-of select="if (string-length($govuk-root) gt 0) then $govuk-root else './'"/>
-        <xsl:text>govuk/govuk-frontend-</xsl:text>
-        <xsl:value-of select="$govuk-frontend-version"/>
-        <xsl:text>.min.js'; initAll();</xsl:text>
-      </script>
+      <!-- govuk-frontend initialisation lives in a file (init.js imports the
+           versioned bundle beside it) so no page needs a variable inline
+           script (#79, #82) -->
+      <script type="module" src="{concat($govuk-root, 'govuk/init.js')}"></script>
     </body>
   </xsl:template>
 

@@ -23,6 +23,9 @@
     <p>The architecture in one sentence: a standard DITA-OT plugin whose
       <codeph>govuk</codeph> transformation extends <codeph>html5</codeph>, overriding only
       the rendering while inheriting all of the toolkit's DITA processing.</p>
+    <note>Issues and pull requests are welcome. Check the design folder's open questions
+      and the issue tracker before proposing large changes — many decisions are already
+      recorded with their rationale.</note>
     <section>
       <title>How work flows</title>
       <p>The repository follows the branching model in the iStandUK
@@ -68,8 +71,5 @@
         the response you can expect, and what belongs to the plugin as opposed to the toolkit,
         govuk-frontend or Pagefind.</p>
     </section>
-    <note>Issues and pull requests are welcome. Check the design folder's open questions
-      and the issue tracker before proposing large changes — many decisions are already
-      recorded with their rationale.</note>
   </conbody>
 </concept>

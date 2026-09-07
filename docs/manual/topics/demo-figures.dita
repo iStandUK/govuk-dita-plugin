@@ -21,5 +21,26 @@
       accessible name derived from the figure title, the caption is numbered automatically,
       and the diagram never overflows the content column. Set
       <codeph>govuk.svg.inline=no</codeph> to keep the plain image rendering instead.</p>
-  </conbody>
+      <section>
+      <title>Diagrams and the content policy</title>
+      <p>An inlined diagram becomes part of the page, so it is treated as code, not as an
+        image. By default the build removes anything in an SVG file that would run or fetch in
+        the reader's browser — <codeph>script</codeph>, <codeph>foreignObject</codeph>,
+        event-handler attributes, links whose scheme runs code, and images or fragments
+        fetched from another origin — and reports what it found and removed
+        (<codeph>GOVK004W</codeph>). Ordinary links to other websites inside a diagram are
+        kept. A publisher who wants the file exactly as authored sets
+        <codeph>govuk.svg.sanitize=no</codeph>; the report still appears. Diagrams are inlined
+        only from under the input directory (<codeph>govuk.inline.scope</codeph>); a
+        reference that points elsewhere on the build machine is reported and rendered as an
+        image instead. Attributes that arrive only as SVG 1.1 doctype defaults
+        (<codeph>contentScriptType</codeph>, <codeph>zoomAndPan</codeph> and their kin) are
+        dropped, so tool-generated diagrams validate.</p>
+      <p>The same policy covers images and objects fetched from another origin and links
+        whose scheme runs code anywhere in a topic: each is reported
+        (<codeph>GOVK006W</codeph>), rendered as authored under
+        <codeph>govuk.content.policy=warn</codeph>, or replaced by a marked placeholder under
+        <codeph>strip</codeph>. Nothing here ever fails a build.</p>
+    </section>
+</conbody>
 </concept>

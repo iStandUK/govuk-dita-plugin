@@ -3,7 +3,7 @@
 This file is part of the govuk-dita-plugin project.
 Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
 -->
-<project name="org.istanduk.gov-uk" xmlns:if="ant:if">
+<project name="org.istanduk.gov-uk" xmlns:if="ant:if" xmlns:unless="ant:unless">
 
   <target name="dita2govuk.init">
     <!-- Route topic rendering through this plugin's stylesheet (scoped to the
@@ -208,6 +208,106 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
                value="${govuk.pdf.paper} ${govuk.pdf.orientation}" else="${govuk.pdf.paper}">
       <matches pattern="^[A-Za-z]" string="${govuk.pdf.paper}"/>
     </condition>
+    <!-- Content reaching readers (epic #77): every behaviour is the publisher's
+         choice and every finding is a warning, never a failed build. -->
+    <property name="govuk.svg.sanitize" value="yes"/>
+    <fail message="govuk.svg.sanitize must be 'yes' or 'no', was: ${govuk.svg.sanitize}">
+      <condition><not><or>
+        <equals arg1="${govuk.svg.sanitize}" arg2="yes"/>
+        <equals arg1="${govuk.svg.sanitize}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <property name="govuk.inline.scope" value="input"/>
+    <fail message="govuk.inline.scope must be 'input' or 'any', was: ${govuk.inline.scope}">
+      <condition><not><or>
+        <equals arg1="${govuk.inline.scope}" arg2="input"/>
+        <equals arg1="${govuk.inline.scope}" arg2="any"/>
+      </or></not></condition>
+    </fail>
+    <!-- the input directory as a URL, for the scope check -->
+    <makeurl property="govuk.input.dir.url" file="${govuk.input.dir}"/>
+    <property name="govuk.content.warnings" value="yes"/>
+    <fail message="govuk.content.warnings must be 'yes' or 'no', was: ${govuk.content.warnings}">
+      <condition><not><or>
+        <equals arg1="${govuk.content.warnings}" arg2="yes"/>
+        <equals arg1="${govuk.content.warnings}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <property name="govuk.content.policy" value="warn"/>
+    <fail message="govuk.content.policy must be 'warn' or 'strip', was: ${govuk.content.policy}">
+      <condition><not><or>
+        <equals arg1="${govuk.content.policy}" arg2="warn"/>
+        <equals arg1="${govuk.content.policy}" arg2="strip"/>
+      </or></not></condition>
+    </fail>
+    <!-- Content-Security-Policy: no | meta | a literal policy (directive list) -->
+    <property name="govuk.csp" value="no"/>
+    <fail message="govuk.csp must be 'no', 'meta' or a Content-Security-Policy directive list such as &quot;default-src 'self'&quot;, was: ${govuk.csp}">
+      <condition><not><or>
+        <equals arg1="${govuk.csp}" arg2="no"/>
+        <equals arg1="${govuk.csp}" arg2="meta"/>
+        <matches pattern="^\s*[a-z-]+-src\s" string="${govuk.csp}"/>
+        <matches pattern="^\s*(default-src|base-uri|form-action|sandbox|upgrade-insecure-requests|require-trusted-types-for|trusted-types|report-to)\b" string="${govuk.csp}"/>
+      </or></not></condition>
+    </fail>
+    <!-- Topic dates: no | updated | both -->
+    <property name="govuk.dates" value="no"/>
+    <fail message="govuk.dates must be 'no', 'updated' or 'both', was: ${govuk.dates}">
+      <condition><not><or>
+        <equals arg1="${govuk.dates}" arg2="no"/>
+        <equals arg1="${govuk.dates}" arg2="updated"/>
+        <equals arg1="${govuk.dates}" arg2="both"/>
+      </or></not></condition>
+    </fail>
+    <!-- sitemap.xml: auto writes it when the site's base URL is known -->
+    <property name="govuk.sitemap" value="auto"/>
+    <fail message="govuk.sitemap must be 'auto', 'yes' or 'no', was: ${govuk.sitemap}">
+      <condition><not><or>
+        <equals arg1="${govuk.sitemap}" arg2="auto"/>
+        <equals arg1="${govuk.sitemap}" arg2="yes"/>
+        <equals arg1="${govuk.sitemap}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <condition property="govuk.site.url.set">
+      <and>
+        <isset property="govuk.site.url"/>
+        <not><equals arg1="${govuk.site.url}" arg2=""/></not>
+      </and>
+    </condition>
+    <condition property="govuk.site.url.bad">
+      <and>
+        <isset property="govuk.site.url.set"/>
+        <not><matches pattern="^https?://[^\s]+$" string="${govuk.site.url}"/></not>
+      </and>
+    </condition>
+    <fail if="govuk.site.url.bad" message="govuk.site.url must be an absolute http(s) URL, was: ${govuk.site.url}"/>
+    <fail message="govuk.sitemap=yes needs govuk.site.url (the published base URL) for absolute sitemap entries">
+      <condition>
+        <and>
+          <equals arg1="${govuk.sitemap}" arg2="yes"/>
+          <not><isset property="govuk.site.url.set"/></not>
+        </and>
+      </condition>
+    </fail>
+    <condition property="govuk.sitemap.enabled" value="yes" else="no">
+      <and>
+        <not><equals arg1="${govuk.sitemap}" arg2="no"/></not>
+        <isset property="govuk.site.url.set"/>
+      </and>
+    </condition>
+    <condition property="govuk.sitemap.on">
+      <equals arg1="${govuk.sitemap.enabled}" arg2="yes"/>
+    </condition>
+    <condition property="govuk.site.url.slash" value="${govuk.site.url}" else="${govuk.site.url}/">
+      <matches pattern="/$" string="${govuk.site.url}"/>
+    </condition>
+    <echo level="info" unless:set="govuk.sitemap.on"
+          message="govuk: sitemap.xml not written (govuk.sitemap=${govuk.sitemap}; set govuk.site.url to the published base URL to generate one)"/>
+    <!-- the vendored govuk-frontend version, for init.js -->
+    <loadfile property="govuk.frontend.version"
+              srcfile="${dita.plugin.org.istanduk.gov-uk.dir}/resource/govuk-frontend/VERSION.txt">
+      <filterchain><striplinebreaks/></filterchain>
+    </loadfile>
   </target>
 
   <target name="dita2govuk"
@@ -230,7 +330,19 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-FOOTER-LICENCE" expression="${govuk.footer.licence}" if:set="govuk.footer.licence"/>
       <param name="GOVUK-PRINT" expression="${govuk.print}"/>
       <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}"/>
+      <param name="GOVUK-CSP" expression="${govuk.csp}"/>
+      <param name="GOVUK-SITEMAP" expression="${govuk.sitemap.enabled}"/>
+      <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
+      <param name="GOVUK-DATES" expression="${govuk.dates}"/>
     </html5.map>
+    <!-- robots.txt beside the sitemap, unless the publisher ships one (#60) -->
+    <local name="govuk.robots.exists"/>
+    <available property="govuk.robots.exists" file="${dita.output.dir}/robots.txt"/>
+    <echo if:set="govuk.sitemap.on" unless:set="govuk.robots.exists"
+          file="${dita.output.dir}/robots.txt">User-agent: *
+Allow: /
+Sitemap: ${govuk.site.url.slash}sitemap.xml
+</echo>
   </target>
 
   <!-- The same map transformation as the cover, with the topic-rendering
@@ -258,6 +370,13 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <param name="GOVUK-PRINT" expression="${govuk.print}"/>
         <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}"/>
         <param name="GOVUK-PRINT-TOC-DEPTH" expression="${govuk.print.toc.depth}"/>
+        <param name="GOVUK-SVG-SANITIZE" expression="${govuk.svg.sanitize}"/>
+        <param name="GOVUK-INLINE-SCOPE" expression="${govuk.inline.scope}"/>
+        <param name="GOVUK-INPUT-DIR" expression="${govuk.input.dir.url}"/>
+        <param name="GOVUK-CONTENT-WARNINGS" expression="${govuk.content.warnings}"/>
+        <param name="GOVUK-CONTENT-POLICY" expression="${govuk.content.policy}"/>
+        <param name="GOVUK-CSP" expression="${govuk.csp}"/>
+        <param name="GOVUK-DATES" expression="${govuk.dates}"/>
         <mapper type="merge" to="print.html"/>
         <xmlcatalog refid="dita.catalog"/>
       </xslt>
@@ -287,7 +406,15 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       </fileset>
       <fileset dir="${dita.plugin.org.istanduk.gov-uk.dir}/resource/js">
         <include name="*.js"/>
+        <exclude name="init.js"/>
       </fileset>
+    </copy>
+    <!-- govuk-frontend initialiser: the bundle's version is filled in (#79) -->
+    <copy file="${dita.plugin.org.istanduk.gov-uk.dir}/resource/js/init.js"
+          todir="${dita.output.dir}/govuk" overwrite="true">
+      <filterset>
+        <filter token="GOVUK_FRONTEND_VERSION" value="${govuk.frontend.version}"/>
+      </filterset>
     </copy>
     <!-- Print stylesheet (FR-P1): the page size is filled in from the paper
          parameters at copy time -->
