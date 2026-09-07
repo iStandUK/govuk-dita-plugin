@@ -1,0 +1,31 @@
+name: Trial finding
+description: Something learned from building a real publication with the plugin
+labels: [enhancement]
+body:
+  - type: input
+    id: corpus
+    attributes:
+      label: Publication
+      placeholder: e.g. a data dictionary, ~10,000 topics, generated DITA
+    validations:
+      required: true
+  - type: textarea
+    id: symptom
+    attributes:
+      label: What was observed
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where the behaviour seems to come from
+      options: [The plugin, DITA-OT itself, The DITA source, Not sure]
+  - type: textarea
+    id: log
+    attributes:
+      label: Build log and toolkit configuration
+      render: text
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround, if any

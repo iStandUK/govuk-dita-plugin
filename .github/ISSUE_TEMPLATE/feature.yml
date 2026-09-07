@@ -1,0 +1,26 @@
+name: Feature request
+description: A change to what the plugin does or how its output looks
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem or need
+      description: Who needs this and what they cannot do today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should change. Parameters should have safe defaults; content risks are reported as warnings, not build errors.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Rendering, Navigation and layouts, Search, Glossary and index, Branding and furniture, Print and PDF, Build and CI, Documentation, Other]
+  - type: textarea
+    id: design
+    attributes:
+      label: Design record
+      description: Which requirement (design/02) or decision (design/05) this touches, if you know.

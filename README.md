@@ -60,6 +60,14 @@ DITA-OT + Java at build time, Apache-2.0 licensed, installable with `dita instal
 
 ## Design
 
+## Contributing and security
+
+Work follows the iStandUK [hello-world](https://github.com/iStandUK/hello-world) exemplar —
+issue first, a `feature/*` branch from `dev`, a small linked pull request; releases reach
+`main` through a `release/*` branch. See [CONTRIBUTING.md](CONTRIBUTING.md) and
+[docs/RELEASING.md](docs/RELEASING.md). Report vulnerabilities privately as described in
+[SECURITY.md](SECURITY.md).
+
 The design is documented in [design/](design/):
 
 | Document | Contents |

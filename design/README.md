@@ -4,7 +4,7 @@ A design for an open-source **DITA Open Toolkit (DITA-OT) plugin** that publishe
 directly as a static website using the **GOV.UK Design System** (GDS), with no dependency on
 commercial help-output tooling.
 
-**Status:** Implemented through **v1.0.0** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude)
+**Status:** Implemented through **v1.0.0** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude) · **How the repository is run:** [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURITY.md](../SECURITY.md), [docs/RELEASING.md](../docs/RELEASING.md) (D-22)
 
 ## How to read this folder
 

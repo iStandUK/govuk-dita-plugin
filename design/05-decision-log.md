@@ -458,3 +458,40 @@ schedule.
 **Consequences:** the v1 epic (#15) closes; FR-B2 becomes ✅ when the registry pull request is
 merged; 1.1 is the PDF engine epic (FR-P3) plus #59–#61; further trial findings are 1.0.x point
 releases, each re-submitted to the registry as a new version entry.
+
+## D-22 · Repository governance: Gitflow, protected branches, a written release process
+
+**Date:** 2026-09-07. Security review follow-up, epic #71, guided by the organisation's
+exemplar [iStandUK/hello-world](https://github.com/iStandUK/hello-world).
+
+**Options:** (a) keep trunk-based development — feature branches squash-merged into `main`,
+releases committed and tagged on `main` by hand; (b) the exemplar's Gitflow — `main` for
+released code only, `dev` as the default integration branch, `feature/*`, `release/*` and
+`hotfix/*` branches, with `main` and `dev` protected; (c) Gitflow without protection, as the
+exemplar itself currently runs.
+
+**Decision:** (b). `dev` is created from `main` and becomes the default branch; feature work
+branches from `dev` and returns by squash-merged pull request; a release is a `release/x.y.z`
+branch from `dev` carrying the version bump, merged into `main` with a merge commit, tagged
+there, and merged back into `dev`; hotfixes branch from `main` and merge into both. Both
+long-lived branches take a ruleset: pull request required, the `ci` status required and up to
+date, no force-push or deletion, review threads resolved; `main` additionally requires one
+approval, which repository administrators may bypass on a pull request (the bypass is
+recorded) so a single maintainer can release. Contribution scaffolding (`CONTRIBUTING.md`,
+`SECURITY.md`, `CODEOWNERS`, pull-request and issue templates) and the release checklist
+(`docs/RELEASING.md`) live in the repository. Private vulnerability reporting, secret scanning
+with push protection and Dependabot security updates are switched on. The existing v1.0.0
+release and `main` are not changed by this decision; the next release is the first to follow
+the release-branch path.
+
+**Rationale:** the exemplar is the organisation's stated practice, and a public, registry-listed
+plugin should be run the way its organisation says repositories are run. Trunk-based work
+served one maintainer well, but it left `main` unprotected and releases hand-built on a
+laptop — two findings of the security review. Protection is the one departure from the
+exemplar (which has none yet): a listed plugin needs it, and the exemplar's own text says
+`main` should never be committed to directly.
+
+**Consequences:** pull requests target `dev` by default; every release costs one branch and
+two merges; the CI workflow gains a `ci` summary status so the required check survives
+matrix changes; the release recipe is a checklist rather than memory; when a second
+maintainer joins, the `dev` ruleset can require a review without any other change.
