@@ -458,7 +458,8 @@ jobs:
           test -f out/manual/pagefind/pagefind-ui.js
           grep -q 'search.html' out/manual/topics/introduction.html
           grep -q 'data-pagefind-body' out/manual/topics/introduction.html
-          grep -q 'PagefindUI' out/manual/search.html
+          grep -q '<script src="govuk/search.js">' out/manual/search.html
+          grep -q 'PagefindUI' out/manual/govuk/search.js
           ! grep -q 'search.html' out/oruk-mini/item.html
           test ! -d out/oruk-mini/pagefind
           # Landing-page layouts (#14 / D-13)
