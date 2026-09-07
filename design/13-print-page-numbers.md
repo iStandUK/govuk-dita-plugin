@@ -1,6 +1,6 @@
 # 13 — Page numbers in print: the options, and a two-product shape
 
-**Status:** proposed 2026-09-07 (no code; decisions in [OQ-14](06-open-questions.md)) · **Question:** how do the print outputs get page numbers in the contents, index and cross-references — and footnotes at the page foot, running heads, a tagged PDF — and should that capability ship inside the plugin or as a second product on a common core? · **Feeds:** FR-P3 in [02](02-requirements.md); an amendment to [D-20](05-decision-log.md); the release process (D-22).
+**Status:** decided 2026-09-07 as **D-23** — option A first, then option G; the generator's name, repository and code licence still to choose (no code yet) · **Question:** how do the print outputs get page numbers in the contents, index and cross-references — and footnotes at the page foot, running heads, a tagged PDF — and should that capability ship inside the plugin or as a second product on a common core? · **Feeds:** FR-P3 in [02](02-requirements.md); an amendment to [D-20](05-decision-log.md); the release process (D-22).
 
 ## 1. Answer in brief
 
