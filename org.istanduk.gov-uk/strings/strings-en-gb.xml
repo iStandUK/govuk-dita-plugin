@@ -27,6 +27,9 @@ collisions with toolkit variables.
   <variable id="govuk-dita.print-version">Whole publication (print version)</variable>
   <variable id="govuk-dita.print-page">Print version</variable>
   <variable id="govuk-dita.print-website">Website version</variable>
+  <variable id="govuk-dita.published">Published</variable>
+  <variable id="govuk-dita.updated">Last updated</variable>
+  <variable id="govuk-dita.content-removed">Content removed by the publisher's content policy</variable>
   <variable id="govuk-dita.copyright">©</variable>
   <variable id="govuk-dita.published-by">Published by</variable>
   <variable id="govuk-dita.authored-by">By</variable>

@@ -14,6 +14,8 @@ run so builds without govuk.print load no topics twice.
   <xsl:import href="map2govuk-cover.xsl"/>
   <xsl:import href="blocks.xsl"/>
   <xsl:import href="foreign.xsl"/>
+  <xsl:import href="content-policy.xsl"/>
+  <xsl:import href="dates.xsl"/>
   <xsl:import href="print-document.xsl"/>
 
   <xsl:output method="xhtml"

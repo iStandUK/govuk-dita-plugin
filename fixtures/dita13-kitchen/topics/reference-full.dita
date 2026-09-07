@@ -3,6 +3,13 @@
 <reference id="reference-full" xml:lang="en-GB">
   <title>A full reference</title>
   <shortdesc>Syntax section, properties table, and reference body division.</shortdesc>
+  <prolog>
+    <critdates>
+      <created date="2026-01-14"/>
+      <revised modified="2026-06-30"/>
+      <revised modified="2026-09-07T10:15:00Z"/>
+    </critdates>
+  </prolog>
   <refbody>
     <refsyn>
       <synph><kwd>dita</kwd> <var>options</var></synph>

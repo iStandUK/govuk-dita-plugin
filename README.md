@@ -68,6 +68,14 @@ issue first, a `feature/*` branch from `dev`, a small linked pull request; relea
 [docs/RELEASING.md](docs/RELEASING.md). Report vulnerabilities privately as described in
 [SECURITY.md](SECURITY.md).
 
+Generated sites are static and same-origin in every branding mode, with one inline script
+(the Design System's own). Content that would run or fetch in a reader's browser — scripts in
+diagrams, remote images, script-scheme links, embeds — is sanitised or reported under the
+publisher's control, always as build warnings, never as a failed build; `govuk.csp` emits a
+strict Content-Security-Policy. The review behind this and the requirements it added are in
+[design/11-security.md](design/11-security.md); the manual's *Securing a published site*
+topic gives the hosting headers.
+
 The design is documented in [design/](design/):
 
 | Document | Contents |

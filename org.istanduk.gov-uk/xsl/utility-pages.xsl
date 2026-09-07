@@ -176,6 +176,7 @@ indexterm markup. Imported by map2govuk-cover.xsl.
       <html class="govuk-template" lang="en">
         <head>
           <meta charset="UTF-8"/>
+          <xsl:call-template name="govuk-csp-meta"/>
           <meta name="viewport" content="width=device-width, initial-scale=1"/>
           <title><xsl:value-of select="concat($page-title, ' — ', $govuk-cover-title)"/></title>
           <xsl:call-template name="generateCssLinks"/>

@@ -195,7 +195,10 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
             <xsl:copy-of select="/*/@dir"/>
             <head>
               <meta charset="UTF-8"/>
+              <xsl:call-template name="govuk-csp-meta"/>
               <meta name="viewport" content="width=device-width, initial-scale=1"/>
+              <!-- the whole publication in one file: not for search engines (#60) -->
+              <meta name="robots" content="noindex"/>
               <title><xsl:value-of select="concat($govuk-cover-title, ' — ', $print-label)"/></title>
               <xsl:call-template name="generateCssLinks"/>
             </head>

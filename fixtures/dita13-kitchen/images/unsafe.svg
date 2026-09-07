@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 60" width="200" height="60" onload="alert('svg loaded')">
+  <title>Diagram with active content</title>
+  <script>alert('script inside svg');</script>
+  <rect x="5" y="5" width="90" height="50" fill="#1d70b8" onclick="alert('rect')"/>
+  <a xlink:href="javascript:alert('link')"><text x="50" y="35" fill="#fff" text-anchor="middle" font-size="12">Run</text></a>
+  <a xlink:href="https://example.org/"><text x="150" y="35" fill="#0b0c0c" text-anchor="middle" font-size="12">External link</text></a>
+  <image xlink:href="https://example.org/tracker.png" x="105" y="5" width="90" height="50"/>
+  <foreignObject x="0" y="0" width="10" height="10"><div xmlns="http://www.w3.org/1999/xhtml">html inside svg</div></foreignObject>
+</svg>

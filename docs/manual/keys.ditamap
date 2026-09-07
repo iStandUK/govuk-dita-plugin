@@ -38,6 +38,11 @@
   <keydef keys="troubleshooting" href="topics/troubleshooting.dita" format="dita" scope="local"/>
   <keydef keys="accessibility" href="topics/accessibility.dita" format="dita" scope="local"/>
   <keydef keys="print" href="topics/print.dita" format="dita" scope="local"/>
+  <keydef keys="security" href="topics/security.dita" format="dita" scope="local"/>
+  <keydef keys="messages" href="topics/messages.dita" format="dita" scope="local"/>
+  <keydef keys="security-policy" href="https://github.com/iStandUK/govuk-dita-plugin/security/policy" format="html" scope="external">
+    <topicmeta><linktext>the plugin's security policy</linktext></topicmeta>
+  </keydef>
   <keydef keys="a11y-regulations" href="https://www.gov.uk/guidance/accessibility-requirements-for-public-sector-websites-and-apps" format="html" scope="external">
     <topicmeta><linktext>accessibility requirements for public sector websites and apps</linktext></topicmeta>
   </keydef>
