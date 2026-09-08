@@ -340,7 +340,10 @@ jobs:
           grep -q 'data-page-label="page"' out/manual-print/print.html
           # #106: a real CSS Paged Media formatter resolves the page references
           sudo apt-get update -qq && sudo apt-get install -y -qq libpango-1.0-0 libpangoft2-1.0-0
-          pip install --quiet weasyprint==69.0 pypdf==6.1.1
+          # 70.0 carries the fix for Kozea/WeasyPrint#2833 — 69.0 and earlier crash
+          # resolving govuk-frontend's max(1px, .0625rem) underline thickness — and is
+          # also a security release (CVE-2026-55073)
+          pip install --quiet weasyprint==70.0 pypdf==6.1.1
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-pdf -Dgovuk.print=yes \
             "-Dgovuk.pdf.command=weasyprint --quiet" 2>&1 | tee pdf.log

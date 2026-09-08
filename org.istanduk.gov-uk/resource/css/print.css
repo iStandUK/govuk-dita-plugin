@@ -118,20 +118,6 @@ svg {
   page-break-before: always;
 }
 
-/* Formatter compatibility. govuk-frontend expresses link underline thickness
- * as max(1px, .0625rem) — a screen affordance that resolves rem inside max().
- * Some CSS Paged Media formatters cannot resolve that while drawing text
- * (WeasyPrint 69 raises AttributeError: 'AnonymousStyle' object has no
- * attribute 'root_style'), and on paper the exact thickness carries no
- * meaning, so print with a plain value. a[class] outranks the single-class
- * selectors it overrides; screen rendering is untouched, this file being
- * print-only. */
-a[class],
-a[class]:hover {
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.1em;
-}
-
 /* Page references (#107). A link that resolves inside the print document is
  * followed by the page it points at — "Installing the plugin (page 13)" — and
  * the contents and index carry page numbers instead of being bare links. The
