@@ -425,6 +425,7 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
           description="Render print.html as PDF with an external formatter (govuk.pdf.command)">
     <local name="govuk.pdf.in"/><local name="govuk.pdf.out"/>
     <local name="govuk.pdf.rc"/><local name="govuk.pdf.missing"/>
+    <local name="govuk.pdf.log"/><local name="govuk.pdf.err"/>
     <property name="govuk.pdf.in" location="${dita.output.dir}/print.html"/>
     <property name="govuk.pdf.out" location="${dita.output.dir}/${govuk.pdf.name}.pdf"/>
     <available property="govuk.pdf.missing" file="${govuk.pdf.in}" type="file"/>
@@ -433,7 +434,8 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
     <sequential if:set="govuk.pdf.missing">
       <echo level="info" message="govuk: rendering ${govuk.pdf.in} with: ${govuk.pdf.command}"/>
       <exec executable="${govuk.pdf.shell}" resultproperty="govuk.pdf.rc" failonerror="false"
-            dir="${dita.output.dir}">
+            dir="${dita.output.dir}"
+            outputproperty="govuk.pdf.log" errorproperty="govuk.pdf.err">
         <arg value="${govuk.pdf.shell.flag}"/>
         <arg value="${govuk.pdf.command} &quot;${govuk.pdf.in}&quot; &quot;${govuk.pdf.out}&quot;"/>
       </exec>
@@ -441,7 +443,7 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
         <not><equals arg1="${govuk.pdf.rc}" arg2="0"/></not>
       </condition>
       <echo if:set="govuk.pdf.failed" level="warning"
-            message="[GOVK008W]: the PDF command exited ${govuk.pdf.rc}; the site is complete but no PDF was produced. Command: ${govuk.pdf.command}"/>
+            message="[GOVK008W]: the PDF command exited ${govuk.pdf.rc}; the site is complete but no PDF was produced. Command: ${govuk.pdf.command}${line.separator}${govuk.pdf.err}${govuk.pdf.log}"/>
       <echo unless:set="govuk.pdf.failed" level="info"
             message="govuk: PDF written to ${govuk.pdf.out}"/>
     </sequential>
