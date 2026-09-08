@@ -1,6 +1,6 @@
 # 12 — Structured data and machine-readable metadata from DITA
 
-**Status:** proposed 2026-09-07 (no code; decisions in [OQ-13](06-open-questions.md)) · **Question:** what schema.org structured data and other machine-readable tags — Open Graph, social cards, Dublin Core, DCAT catalogue records, canonical and pagination links — can the plugin generate from DITA for its static GOV.UK Design System sites, what is worth generating in 2026, and how should it be controlled? · **Feeds:** roadmap item R9 in [02](02-requirements.md); a future FR-D requirement group; the manual.
+**Status:** proposed 2026-09-07; defaults and scope decided 2026-09-08 as **D-24**, with one question open — how a publication declares its data assets, at map level ([OQ-13](06-open-questions.md)); no code · **Question:** what schema.org structured data and other machine-readable tags — Open Graph, social cards, Dublin Core, DCAT catalogue records, canonical and pagination links — can the plugin generate from DITA for its static GOV.UK Design System sites, what is worth generating in 2026, and how should it be controlled? · **Feeds:** roadmap item R9 in [02](02-requirements.md); a future FR-D requirement group; the manual.
 
 ## 1. Answer in brief
 
@@ -50,7 +50,9 @@ Not proposed: `FAQPage` (no DITA construct, no consumer), `SiteNavigationElement
 
 **Why it belongs here.** Two of the corpora the plugin was built against *are* data: the NHS Data Dictionary (definitions of data sets, elements and classes) and Open Referral UK (a data standard with JSON schemas and an API specification). Their sites are the authoritative documentation of data assets; the catalogue entry for those assets lives elsewhere and is typed by hand. Generating the DCAT record from the same bookmap that builds the site makes the two agree by construction and gives data.gov.uk or a departmental catalogue something to harvest.
 
-**Modelling honestly.** A documentation site describes data; it is not the data. DCAT 3 provides for that: a data standard or dictionary is a **`dct:Standard`** (the thing datasets `dct:conformsTo`), an API is a **`dcat:DataService`**, and only a publication that documents a real dataset and links its files is a **`dcat:Dataset`** with `dcat:Distribution`s. A publication that documents many data sets — the data dictionary — can be a **`dcat:Catalog`** whose members are the standards it defines, one per data-set topic, on request. The type is the publisher's declaration, never inferred.
+**Modelling honestly.** A documentation site describes data; it is not the data. DCAT 3 provides for that: a data standard or dictionary is a **`dct:Standard`** (the thing datasets `dct:conformsTo`), an API is a **`dcat:DataService`**, and only a publication that documents a real dataset and links its files is a **`dcat:Dataset`** with `dcat:Distribution`s. A publication that documents many data sets — the data dictionary — is a **`dcat:Catalog`** whose members are the standards it defines. The type is the publisher's declaration, never inferred.
+
+**Declared in the maps, not the book (D-24).** One publication commonly holds several assets: the Dictionary's data set specifications, or Open Referral UK's standard, its taxonomies and its feed register. A declaration is therefore a property of a **branch of the map** — a submap, or the topicref heading a section — not of the publication. Each declared branch becomes a member of the publication's catalogue with its own type, title, description, identifier, landing page (the branch's first page) and distributions; `bookmeta` supplies the publication-wide properties (publisher, licence, version, contact) that members inherit unless they override them. A publication that declares exactly one asset is that asset, with no catalogue wrapper. The mechanism — `data` in a map's or topicref's `topicmeta`, an `outputclass` token, a `subjectScheme` binding, or a manifest map — is the open half of OQ-13.
 
 **Where the values come from** (the plugin's usual order — parameter, then bookmeta, then the map; nothing invented):
 
@@ -67,11 +69,11 @@ Not proposed: `FAQPage` (no DITA construct, no consumer), `SiteNavigationElement
 | `dcat:contactPoint` (`vcard:Kind` with `vcard:hasEmail`) | `govuk.contact.email`, an organisational mailbox — never a person by default |
 | `dcat:distribution` (`dcat:downloadURL`, `dcat:mediaType`, `dct:format`, `dct:title`) | the map's resource-only references to schema, CSV, JSON and OpenAPI files that ship with the site (Open Referral's specifications are exactly this) |
 
-**Serialisation.** One record per publication as `dcat.jsonld` at the site root (JSON-LD with the DCAT context), the same block embedded in the cover page's head (so Dataset Search sees it), and `<link rel="alternate" type="application/ld+json" href="dcat.jsonld">` on the cover; Turtle (`dcat.ttl`) as a second serialisation for harvesters that prefer RDF — both are plain text a stylesheet writes deterministically. The record is excluded when `govuk.site.url` is absent, since every property that matters is a URI.
+**Serialisation.** One record per publication — a catalogue with its members, or a single asset — as `dcat.jsonld` at the site root (JSON-LD with the DCAT context), the same block embedded in the cover page's head (so Dataset Search sees it), and `<link rel="alternate" type="application/ld+json" href="dcat.jsonld">` on the cover; Turtle (`dcat.ttl`) as a second serialisation for harvesters that prefer RDF — both are plain text a stylesheet writes deterministically. The record is excluded when `govuk.site.url` is absent, since every property that matters is a URI.
 
 **Validation.** The mandatory-field set of the target harvester (data.gov.uk's list; the exchange model's required properties) as a checker in `tools/`, warning per missing field; optionally SHACL validation with the exchange model's published shapes through a Python SHACL library in CI — offline, pinned, and no addition to the publisher's build.
 
-**Parameters.** `govuk.dcat` = `no` (default) | `standard` | `dataset` | `dataservice` | `catalog` — the type is the switch; `govuk.contact.email`; the existing `govuk.site.url`, `govuk.organisation*`, `govuk.licence.url`; bookmeta `data` for the catalogue-specific properties. A missing mandatory field is a warning naming it (the record is still written; the harvester will say the same thing), never a failed build.
+**Parameters.** `govuk.dcat` = `no` (default) | `yes` — build the record from the declarations the maps carry (D-24: the type belongs in the DITA, not in a build parameter; the switch's final shape follows the open half of OQ-13); `govuk.contact.email`; the existing `govuk.site.url`, `govuk.organisation*`, `govuk.licence.url`; bookmeta `data` for the catalogue-specific properties. A missing mandatory field is a warning naming it (the record is still written; the harvester will say the same thing), never a failed build.
 
 **Effort.** **S–M**: two to four days — one stylesheet writing the two files and the head link, a fixture (the ORUK mini bookmap with `data` properties and its schema files as distributions), the checker, a manual section. It shares the organisation, licence and URL parameters with the schema.org work, and the schema.org `Dataset` (Section 5) and the DCAT record map one-to-one, so a publisher who opts into one gets the other from the same values.
 
@@ -166,7 +168,7 @@ The html5 base's metadata stylesheet (the `DC`-flavoured metas above); a registr
 | `govuk.metadata.persons` | `no` (default) \| `yes` | allow prolog authors as `Person` |
 | `govuk.site.url` (existing) | URL | absolute URLs; without it, URL-bearing tags are omitted and the rest still emitted |
 | `govuk.dates` (existing) | | gates every date |
-| `govuk.dcat`, `govuk.contact.email` | `no` (default) \| `standard` \| `dataset` \| `dataservice` \| `catalog`; an organisational mailbox | the DCAT catalogue record of Section 5a, as `dcat.jsonld` + `dcat.ttl` and in the cover's head; bookmeta `data` supplies theme, spatial, temporal, frequency, identifier |
+| `govuk.dcat`, `govuk.contact.email` | `no` (default) \| `yes`; an organisational mailbox | the DCAT catalogue record of Section 5a, as `dcat.jsonld` + `dcat.ttl` and in the cover's head; the assets and their types are declared in the maps (D-24), with `bookmeta` and map `data` supplying theme, spatial, temporal, frequency and identifier |
 
 **By page** as in Section 5; `TechArticle` for every topic type, `HowTo` for tasks, `DefinedTermSet` for the glossary, `WebSite`+`Organization` on the cover, `BreadcrumbList` everywhere below the cover, `Dataset` on opt-in.
 
@@ -176,15 +178,15 @@ The html5 base's metadata stylesheet (the `DC`-flavoured metas above); a registr
 
 **Effort.** `basic`: **S** (two to three days including fixture, checker, manual). `full`: **M** (one to two weeks: JSON-LD builders per type, breadcrumbs from the map, glossary set, dataset opt-in, checker rules). Suggested order: `basic` first — the largest visible benefit at the smallest risk — then `TechArticle` + `BreadcrumbList` + `Organization`, then `HowTo`, `DefinedTermSet` and `Dataset`. `llms.txt` is a separate small item if wanted (R9 notes).
 
-## 10. Decisions needed (OQ-13)
+## 10. Decisions (OQ-13 → D-24, 2026-09-08)
 
-1. Default level: `basic` on by default (recommended — it changes no visible page and only adds tags derived from existing content), or off until asked.
-2. Whether personal authors may ever appear (recommended: only under `govuk.metadata.persons=yes`).
-3. Whether to emit `HowTo` and `DefinedTermSet` at all now that no search feature rewards them (recommended: yes — cheap, valid, and read by other consumers; skip `FAQPage`).
-4. How a publication declares itself a `Dataset` (bookmeta `data`, an outputclass on the map, or a parameter).
-5. Whether `llms.txt` joins this work or follows separately.
-6. DCAT (Section 5a): its own switch typed by the publisher (recommended) or part of `govuk.metadata=full`; which target profile's mandatory set the checker enforces (data.gov.uk's list, the Cross-Government Metadata Exchange Model, or both); whether SHACL validation runs in CI.
-7. Section 5b: adopt the convention (`data`, `category`, `glossentry`, `subjectScheme`, `resourceid`) first and specialise later, or specialise now; which concept schemes the Dictionary's generator should mark; whether the Open Referral UK feed register becomes a `DataService` catalogue in the first step.
+1. ✅ **`basic` on by default.**
+2. ✅ **No personal authors by default** — only under `govuk.metadata.persons=yes`.
+3. ✅ **`HowTo` and `DefinedTermSet` emitted; `FAQPage` not.**
+4. ⬜ **Open: how a publication declares its data assets.** Because one publication may hold several datasets, standards, services or code lists, the declaration must work **at map level** — a submap, or the topicref heading a branch — not at book level. Options: `data name="dcat:type"` in `topicmeta` (the natural companion to decision 7), an `outputclass` token, a `subjectScheme` binding, or a manifest map. Blocks the DCAT work and the `Dataset` and ADMS halves of the typing and vocabulary work.
+5. ✅ **`llms.txt` follows separately**, as epic [#116](https://github.com/iStandUK/govuk-dita-plugin/issues/116).
+6. ✅ **DCAT keeps its own switch** (not part of `full`); the checker enforces **data.gov.uk's mandatory set** by default, with the Cross-Government Metadata Exchange Model's SHACL shapes as an optional **CI-only** validation.
+7. ✅ **Conventions first, specialisation later** (`data`, `category`, `glossentry`, `subjectScheme`, `resourceid`, `properties`, `related-links`). Which concept schemes the Dictionary's generator marks, and whether the Open Referral UK feed register is a `DataService` catalogue in the first step, are sequencing choices for the epic rather than design decisions.
 
 ## 11. Sources checked (September 2026)
 
