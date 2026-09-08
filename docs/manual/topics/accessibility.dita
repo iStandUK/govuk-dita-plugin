@@ -6,7 +6,8 @@
     author, and how to publish your own accessibility statement.</shortdesc>
   <conbody>
     <p><indexterm>accessibility<indexterm>WCAG</indexterm></indexterm>The plugin is built so
-      that its output meets <xref keyref="wcag22"/> at level AA. Every build is checked with
+      that its output meets <xref keyref="wcag22"/> at level AA (its security posture is the
+      subject of <xref keyref="security"/>). Every build is checked with
       the <xref href="https://github.com/dequelabs/axe-core" scope="external"
       format="html">axe-core</xref> accessibility engine in continuous integration, and the
       checks must pass before a change is released.</p>

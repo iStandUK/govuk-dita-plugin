@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="messages" xml:lang="en-GB">
+  <title>Build messages</title>
+  <shortdesc>Every message the plugin itself can write to the build log — what it means, what
+    the build did, and what to do about it.</shortdesc>
+  <refbody>
+    <section>
+      <p><indexterm>build messages</indexterm><indexterm>GOVK codes</indexterm>The plugin's
+        messages carry codes of the form <codeph>GOVK</codeph><i>nnn</i> followed by
+        <codeph>W</codeph> (warning) or <codeph>E</codeph> (error), in the toolkit's format,
+        with the source file and line where one applies. Warnings never fail a build; the two
+        things that stop a build are invalid parameter values, refused before any processing,
+        and the toolkit's own fatal conditions. Messages from the toolkit itself have
+        <codeph>DOTX</codeph>, <codeph>DOTJ</codeph> and <codeph>DOTA</codeph> codes; the ones
+        met in practice are discussed in <xref keyref="troubleshooting"/>.</p>
+    </section>
+    <table frame="all" id="govk-table">
+      <title>Plugin build messages</title>
+      <tgroup cols="3">
+        <colspec colname="c1" colwidth="1*"/>
+        <colspec colname="c2" colwidth="2.5*"/>
+        <colspec colname="c3" colwidth="2.5*"/>
+        <thead>
+          <row><entry>Code</entry><entry>When, and what the build did</entry><entry>What to do</entry></row>
+        </thead>
+        <tbody>
+          <row>
+            <entry><codeph>GOVK001W</codeph></entry>
+            <entry>A navigation entry has a <codeph>keyref</codeph> the toolkit did not
+              resolve — DITA-OT resolves no key inside a submap that is itself included with
+              <codeph>&lt;mapref keyref&gt;</codeph>. The entry is rendered without a link and
+              without children; reported once per affected branch.</entry>
+            <entry>Include that submap with <codeph>&lt;mapref href&gt;</codeph>, or check
+              that the key is defined. See <xref keyref="troubleshooting"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK002E</codeph></entry>
+            <entry><codeph>govuk.search.ranking</codeph> is neither a preset nor a JSON
+              object Pagefind can read. Pagefind's default scoring applies; values that are
+              plainly wrong are refused earlier by the build.</entry>
+            <entry>Use <codeph>default</codeph>, <codeph>reference</codeph>, or a JSON object
+              of ranking options. See <xref keyref="search"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK003W</codeph></entry>
+            <entry><codeph>govuk.print=yes</codeph>, but the publication has more topic files
+              than <codeph>govuk.print.max-topics</codeph>. No print document is written and
+              no page links to one.</entry>
+            <entry>Raise the ceiling, or build print documents per part from submaps. Very
+              large publications are not one printable document. See
+              <xref keyref="print"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK004W</codeph></entry>
+            <entry>An inlined SVG diagram carries active or remote content — script,
+              <codeph>foreignObject</codeph>, event-handler attributes, script-scheme links or
+              references to other origins. Removed under <codeph>govuk.svg.sanitize=yes</codeph>
+              (the default); kept under <codeph>no</codeph>. Reported once per reference.</entry>
+            <entry>Keep diagrams static, or accept the removal. See
+              <xref keyref="security"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK005W</codeph></entry>
+            <entry>An SVG or MathML reference points outside the input directory. Under
+              <codeph>govuk.inline.scope=input</codeph> (the default) the file is not read and
+              the reference renders as an image; under <codeph>any</codeph> it is
+              inlined.</entry>
+            <entry>Move the file into the publication, or set
+              <codeph>govuk.inline.scope=any</codeph> when inlining from elsewhere on the build
+              machine is intended.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK006W</codeph></entry>
+            <entry>The content policy found a remote image or SVG reference, an object embed
+              or a script-scheme link; the message names the kind, the value and whether it was
+              kept (<codeph>govuk.content.policy=warn</codeph>) or replaced by a placeholder
+              (<codeph>strip</codeph>).</entry>
+            <entry>Host the resource with the publication, change the link, or choose
+              <codeph>strip</codeph>. <codeph>govuk.content.warnings=no</codeph> silences the
+              report. See <xref keyref="security"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK008W</codeph></entry>
+            <entry>The PDF command (<codeph>govuk.pdf.command</codeph>) failed, or was set
+              without <codeph>govuk.print=yes</codeph>, or there was no print document to
+              render. The site is complete; no PDF was produced. Reported by the build step
+              rather than the transformation, so it carries no file and line.</entry>
+            <entry>Check the command runs by hand on
+              <filepath>print.html</filepath>, and that <codeph>govuk.print=yes</codeph>. See
+              <xref keyref="print"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK007W</codeph></entry>
+            <entry>A Content-Security-Policy is in force (<codeph>govuk.csp</codeph>) and
+              content that was kept — a remote image or object — will be blocked by it in the
+              browser.</entry>
+            <entry>Host the resource with the publication, strip it, or set
+              <codeph>govuk.csp</codeph> to a policy that allows its origin.</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <section>
+      <title>Messages from the toolkit</title>
+      <p>Two DITA-OT behaviours produce messages that look like plugin faults but are not:
+        the 4.4 chunk compatibility mode (<codeph>Failed to move chunk</codeph> and the
+        <codeph>DOTX</codeph> cascade that follows) and unresolved keys inside keyref'd
+        maprefs. Both, with their remedies, are in <xref keyref="troubleshooting"/>. An
+        <codeph>Error: Failed to read image … metadata</codeph> line appears when the toolkit
+        cannot open an image to measure it — for example a remote image, which the content
+        policy also reports; it does not stop the build.</p>
+    </section>
+  </refbody>
+</reference>

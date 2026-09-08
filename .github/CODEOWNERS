@@ -1,0 +1,7 @@
+# Review requests are raised automatically for these paths (CONTRIBUTING.md).
+# The plugin, the build pipeline and the design record need a maintainer's eyes.
+/org.istanduk.gov-uk/   @iStandUK/technical-team
+/.github/               @iStandUK/technical-team
+/design/                @iStandUK/technical-team
+/docs/RELEASING.md      @iStandUK/technical-team
+/SECURITY.md            @iStandUK/technical-team

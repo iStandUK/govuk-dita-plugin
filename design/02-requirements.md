@@ -17,7 +17,7 @@ Remaining ⬜/🔶 items are the v1-release backlog (see
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
 | FR-B1 | The plugin registers a transtype **`govuk`** that extends `html5`, so `dita --input=<map> --format=govuk` performs a complete build | M | ✅ |
-| FR-B2 | The plugin installs with `dita install <zip-or-url>` and, once published, by name from the DITA-OT plugin registry | M | 🔶 zip/URL install verified from every release; registry entry for v1.0.0 submitted as [dita-ot/registry#176](https://github.com/dita-ot/registry/pull/176) (D-15, D-21) — ✅ when merged |
+| FR-B2 | The plugin installs with `dita install <zip-or-url>` and, once published, by name from the DITA-OT plugin registry | M | ✅ listed in the registry from v1.0.0 ([dita-ot/registry#176](https://github.com/dita-ot/registry/pull/176), merged 2026-09-07); `dita install org.istanduk.gov-uk` verified in a clean toolkit (D-15, D-21) |
 | FR-B3 | All behaviour described below is controlled by documented build parameters (`govuk.*`), settable on the command line, in `.ditaotproject`/project files, or via Ant properties | M | ✅ every behaviour has a documented `govuk.*` parameter (branding; service name/URL; phase and feedback URL; favicon; footer links/licence; layout/depth; search, Pagefind command, ranking; pagination; SVG inlining) — see the manual's parameters table |
 | FR-B4 | The core build requires only DITA-OT (4.4.1 or later) and its bundled Java — no Node.js, no network access | M | ✅ verified |
 | FR-B5 | The build works with standard DITA 1.3 maps and bookmaps, including keys/keyscopes, conref, chunking, and DITAVAL filtering (all inherited from `html5` preprocessing and must not be broken by overrides) | M | ✅ verified against the ORUK corpus (design/07) |
@@ -94,9 +94,18 @@ requirements govern its behaviour.
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| FR-P1 | A print stylesheet: every page prints, or saves as PDF from a browser, on A4 (default) or Letter with page numbers in the page margins, the site chrome hidden and breaks controlled at headings, tables and figures | M (1.0) | ✅ (#63) `print.css` on every page; `govuk.pdf.paper` / `govuk.pdf.orientation` filled in at build time; Chromium prints a topic page to a tagged, outlined PDF in CI; closes roadmap R3 |
-| FR-P2 | A print document: one self-contained XHTML file per publication (`govuk.print`, off by default) with cover, hyperlinked contents, every navigable topic in reading order, glossary and index, all site ids preserved; excluded from search and sitemap; a topic ceiling (`govuk.print.max-topics`, 500) guards very large publications | M (1.0) | ✅ (#63) `print.html` from `map2govuk-print.xsl`: headings demoted by map depth (ARIA headings past h6), per-file endnotes, generated ids scoped and copy-to/chunk duplicates prefixed (CI asserts no duplicate id), links inside inlined SVG re-based, `GOVK003W` above the ceiling; Nu, axe, link check, determinism and the Chromium print smoke cover it in CI |
-| FR-P3 | Build-time PDF from the print document through a CSS Paged Media engine (pure Java, LGPL, bundled): `govuk.pdf.paper` (A4 default; A5, A3, B4, B5, JIS-B4/B5, Letter, Legal, Ledger or lengths), orientation, margins and mirrored sides; contents, index and cross-references with page numbers; footnotes; repeated table heads; bookmarks; tagged PDF/UA on by default with a documented opt-out; bundled OFL TrueType family, publisher-supplied fonts for official and NHS; commercial formatters via `govuk.pdf.command` | S (1.1) | ⬜ enters through the spike in [10](10-pdf-css.md) §9 |
+| FR-P1 | A print stylesheet: every page prints, or saves as PDF from a browser, on A4 (default) or Letter with page numbers in the page margins, the site chrome hidden and breaks controlled at headings, tables and figures | M (1.0) | ✅ (#63; page references for a formatter added in 1.0.1, #107) `print.css` on every page; `govuk.pdf.paper` / `govuk.pdf.orientation` filled in at build time; Chromium prints a topic page to a tagged, outlined PDF in CI; closes roadmap R3 |
+| FR-P2 | A print document: one self-contained XHTML file per publication (`govuk.print`, off by default) with cover, hyperlinked contents, every navigable topic in reading order, glossary and index, all site ids preserved; excluded from search and sitemap; a topic ceiling (`govuk.print.max-topics`, 500) guards very large publications | M (1.0) | ✅ (#63; 1.0.1 fixed colliding ids from repeated nested topic ids, #121, and added the contract marker, #108) `print.html` from `map2govuk-print.xsl`: headings demoted by map depth (ARIA headings past h6), per-file endnotes, generated ids scoped and copy-to/chunk duplicates prefixed (CI asserts no duplicate id), links inside inlined SVG re-based, `GOVK003W` above the ceiling; Nu, axe, link check, determinism and the Chromium print smoke cover it in CI |
+| FR-P3 | Build-time PDF from the print document through a CSS Paged Media engine (pure Java, LGPL, bundled): `govuk.pdf.paper` (A4 default; A5, A3, B4, B5, JIS-B4/B5, Letter, Legal, Ledger or lengths), orientation, margins and mirrored sides; contents, index and cross-references with page numbers; footnotes; repeated table heads; bookmarks; tagged PDF/UA on by default with a documented opt-out; bundled OFL TrueType family, publisher-supplied fonts for official and NHS; commercial formatters via `govuk.pdf.command` | S (1.1) | ⬜ enters through the spike in [10](10-pdf-css.md) §9; delivered by two products per D-23: 🔶 `govuk.pdf.command` shipped in 1.0.1 (#106), so any CSS Paged Media formatter produces a page-numbered PDF today; then **DesignSystemPDF** (a separately versioned Apache-2.0 generator in this repository) that the core detects like Pagefind ([13](13-print-page-numbers.md)) |
+
+### Structured data and machine-readable metadata (FR-D) — D-24
+
+| ID | Requirement | Priority | Status |
+|---|---|---|---|
+| FR-D1 | Every page carries the metadata a shared link and a search engine expect — canonical link, Open Graph, social card, `prev`/`next`, Dublin Core — derived from map, bookmeta and prolog, with absolute URLs only when `govuk.site.url` is set; `govuk.metadata` = `basic` (default) \| `full` \| `no` | S (1.x) | ⬜ [12](12-structured-data.md) §5, epic [#97](https://github.com/iStandUK/govuk-dita-plugin/issues/97) |
+| FR-D2 | `govuk.metadata=full` adds schema.org JSON-LD typed by page: `WebSite` + `Organization` on the cover, `TechArticle` per topic, `BreadcrumbList` below it, `HowTo` for tasks, `DefinedTermSet` for the glossary; no personal authors without `govuk.metadata.persons=yes`; dates only when `govuk.dates` is on; validated by a checker in CI | S (1.x) | ⬜ [12](12-structured-data.md) §5 |
+| FR-D3 | `govuk.dcat` writes a DCAT 3 catalogue record (`dcat.jsonld`, `dcat.ttl`, a block in the cover's head) for publications that declare data assets **in their maps** — a catalogue of members where a publication holds several, a single asset where it holds one — checked against data.gov.uk's mandatory set | S (1.x) | ⬜ [12](12-structured-data.md) §5a; blocked by the open half of OQ-13 |
+| FR-D4 | Vocabularies from the same source: SKOS concept schemes from `glossgroup` and `subjectScheme` maps, ADMS typing of publication parts from `category`, `org:Organization` records for registers, published beside the pages they describe | C (1.x) | ⬜ [12](12-structured-data.md) §5b; ADMS half blocked by the open half of OQ-13 |
 
 ## Non-functional requirements
 
@@ -114,6 +123,15 @@ requirements govern its behaviour.
 | NFR-M2 | The vendored govuk-frontend release is pinned and recorded; upgrades are deliberate changes validated by visual regression snapshots | M | ✅ CI captures full-page snapshots of the neutral and iStandUK sites as an artifact for review on a govuk-frontend bump (#35); pin, NOTICE and upgrade process already in place |
 | NFR-L1 | Licence Apache-2.0; vendored govuk-frontend (MIT) retained with its licence and attribution; release versioning is semver | M | ✅ v0.1.0 released |
 
+### Security (NFR-S) — [11](11-security.md)
+
+| ID | Requirement | Priority | Status |
+|---|---|---|---|
+| NFR-S1 | No content authored in DITA reaches readers as executable or third-party-fetched content without a publisher's explicit choice; every such finding is reported as a build warning, never a failed build | M | ✅ (#77) `govuk.svg.sanitize`, `govuk.inline.scope`, `govuk.content.warnings`/`policy`; `GOVK004W`–`GOVK006W`; kitchen and inline-scope fixtures in CI |
+| NFR-S2 | The build and release chain is least-privilege, pinned and verified: read-only workflow token, actions pinned by commit, checksummed downloads, release asset built and attested in CI, vendored assets integrity-checked | M | ✅ (#65) |
+| NFR-S3 | Generated sites can carry a strict Content-Security-Policy in every branding mode, with the plugin emitting it on request and the manual giving the header set for hosts | S | ✅ (#77) `govuk.csp`; CSP check in CI; *Securing a published site* topic |
+| NFR-S4 | A private disclosure route, a supported-versions policy and a written process for branches, reviews and releases exist and are followed | M | ✅ (#71, D-22) `SECURITY.md`, rulesets, `CONTRIBUTING.md`, `docs/RELEASING.md` |
+
 ## Deferred (roadmap)
 
 | ID | Item | Notes |
@@ -126,3 +144,4 @@ requirements govern its behaviour.
 | R6 | Feedback pattern | GOV.UK "Is this page useful?" — needs a backend, so out of static scope for now |
 | R7 | Additional UI locales | Welsh (cy) first, per GOV.UK practice |
 | R8 | Guide-pattern layout | Alternative breadcrumbs+contents linear layout, selectable per map |
+| R9 | Structured data and social metadata | Open Graph and social cards, canonical/prev/next, Dublin Core, and schema.org JSON-LD (`WebSite`, `TechArticle`, `BreadcrumbList`, `Organization`, `HowTo`, `DefinedTermSet`, opt-in `Dataset`) derived from map, bookmeta and prolog — proposed in [12](12-structured-data.md) as `govuk.metadata` basic\|full\|no; a DCAT 3 catalogue record (`dcat.jsonld`/`dcat.ttl`, typed as standard, dataset, data service or catalogue) for data-standard publications, harvestable by data.gov.uk and departmental catalogues; `llms.txt` an adjacent option; decisions in OQ-13 |

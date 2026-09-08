@@ -11,11 +11,18 @@
     </prereq>
     <steps>
       <step>
-        <cmd>Install the plugin from the latest release.</cmd>
+        <cmd>Install the plugin by name from the DITA-OT plugin registry.</cmd>
         <info>
-          <codeblock>dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.0.0/org.istanduk.gov-uk-1.0.0.zip</codeblock>
-          <p>Once the plugin's entry in the DITA-OT plugin registry is published, the same
-            release installs by name: <codeph>dita install org.istanduk.gov-uk</codeph>.</p>
+          <codeblock>dita install org.istanduk.gov-uk</codeblock>
+          <p>The toolkit looks the name up in the registry, downloads the current release and
+            checks it against the registry's checksum. To install a particular release, or on a
+            machine without access to the registry, give the release asset's URL or a downloaded
+            zip instead:</p>
+          <codeblock>dita install https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.0.1/org.istanduk.gov-uk-1.0.1.zip</codeblock>
+          <note>Run the command from a directory that does not contain a folder called
+            <filepath>org.istanduk.gov-uk</filepath> — for example, not from a checkout of the
+            plugin's source — because the toolkit treats a matching local path as the thing
+            to install rather than as a registry name.</note>
         </info>
       </step>
       <step>

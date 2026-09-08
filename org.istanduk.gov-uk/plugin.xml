@@ -3,7 +3,7 @@
 This file is part of the govuk-dita-plugin project.
 Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
 -->
-<plugin id="org.istanduk.gov-uk" version="1.0.0">
+<plugin id="org.istanduk.gov-uk" version="1.0.1">
   <require plugin="org.dita.html5"/>
   <transtype name="govuk" extends="html5" desc="GOV.UK Design System HTML5">
     <param name="govuk.branding"
@@ -74,6 +74,50 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val default="true">yes</val>
       <val>no</val>
     </param>
+    <param name="govuk.svg.sanitize"
+           desc="Remove active content from inlined SVG diagrams — script, foreignObject, event-handler attributes, script-scheme links and references to other origins. 'yes' (default) removes them; 'no' inlines the file as authored. Findings are reported either way (GOVK004W)."
+           type="enum">
+      <val default="true">yes</val>
+      <val>no</val>
+    </param>
+    <param name="govuk.inline.scope"
+           desc="Where inlined SVG and MathML may come from. 'input' (default): only files under the input directory; 'any': wherever the reference points on the build machine. A reference outside the input directory is reported (GOVK005W)."
+           type="enum">
+      <val default="true">input</val>
+      <val>any</val>
+    </param>
+    <param name="govuk.content.warnings"
+           desc="Report content the toolkit passes through that a static site should not carry — script-scheme links, images and objects fetched from another origin, object embeds — as build warnings (GOVK006W). 'yes' (default) or 'no'. Never fails the build."
+           type="enum">
+      <val default="true">yes</val>
+      <val>no</val>
+    </param>
+    <param name="govuk.content.policy"
+           desc="What to do with content the warnings report. 'warn' (default) renders it as authored; 'strip' replaces it with a marked placeholder carrying the alt text or description."
+           type="enum">
+      <val default="true">warn</val>
+      <val>strip</val>
+    </param>
+    <param name="govuk.csp"
+           desc="Content-Security-Policy on every page. 'no' (default) emits none; 'meta' emits a policy the plugin's pages satisfy (same-origin only, the one constant inline script by hash, WebAssembly for search) as a meta tag, for hosts without header control; any other value is emitted as given. Content the policy would block is reported (GOVK007W)."
+           type="string"/>
+    <param name="govuk.site.url"
+           desc="The published base URL of the site (for example https://example.org/manual/). Needed for sitemap.xml, whose entries must be absolute; the plugin has no other way to know its own address."
+           type="string"/>
+    <param name="govuk.sitemap"
+           desc="Write sitemap.xml (and a robots.txt pointing at it, unless one exists) from the map's navigable pages. 'auto' (default) writes it when govuk.site.url is set; 'yes' requires the URL; 'no' never writes it. The search page and the print document are excluded."
+           type="enum">
+      <val default="true">auto</val>
+      <val>yes</val>
+      <val>no</val>
+    </param>
+    <param name="govuk.dates"
+           desc="Show a topic's critdates as a metadata line beneath its summary. 'no' (default); 'updated' shows the last revised date (or the created date when there is none); 'both' shows published and last updated. The date shown is only as good as the source."
+           type="enum">
+      <val default="true">no</val>
+      <val>updated</val>
+      <val>both</val>
+    </param>
     <param name="govuk.print"
            desc="Also write the whole publication as one self-contained file, print.html, for printing or saving as PDF from a browser: cover, contents, every topic in reading order, glossary and index. 'no' (default) or 'yes'. Linked from the cover and the footer."
            type="enum">
@@ -88,6 +132,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
            type="string"/>
     <param name="govuk.pdf.paper"
            desc="Paper size for printing: a CSS page-size keyword (A5, A4, A3, B5, B4, JIS-B5, JIS-B4, Letter, Legal, Ledger) or a width and height as CSS lengths such as '210mm 297mm'. Default A4. Applies to the print stylesheet now and to the PDF engine planned for 1.1."
+           type="string"/>
+    <param name="govuk.pdf.command"
+           desc="Command that renders the print document as PDF, run after the site is built when govuk.print=yes. The print document's path and the output PDF's path are appended as the last two arguments, so 'weasyprint' becomes 'weasyprint &lt;print.html&gt; &lt;publication.pdf&gt;'. Empty (default) runs nothing. A CSS Paged Media formatter resolves the page references the print stylesheet generates — page numbers in the contents, the index and cross-references — which browsers cannot. The plugin bundles no formatter and downloads nothing; a failure is reported as a warning and the site is still complete."
+           type="string"/>
+    <param name="govuk.pdf.name"
+           desc="File name for the generated PDF, without the extension. Defaults to the input map's name."
            type="string"/>
     <param name="govuk.pdf.orientation"
            desc="Page orientation for printing with a named paper size: 'portrait' (default) or 'landscape'."

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "bookmap.dtd">
+<bookmap id="mdmini" xml:lang="en-GB">
+  <booktitle>
+    <mainbooktitle>Markdown mini</mainbooktitle>
+    <booktitlealt>Markdown topics whose headings become nested topics, repeating ids across
+      files — the shape a converted website has.</booktitlealt>
+  </booktitle>
+  <bookmeta>
+    <author>iStandUK</author>
+    <bookrights><bookowner><organization>iStandUK</organization></bookowner></bookrights>
+  </bookmeta>
+  <chapter href="intro.md" format="markdown">
+    <topicmeta><navtitle>Introduction</navtitle></topicmeta>
+    <topicref href="case-a.md" format="markdown"><topicmeta><navtitle>First case study</navtitle></topicmeta></topicref>
+    <topicref href="case-b.md" format="markdown"><topicmeta><navtitle>Second case study</navtitle></topicmeta></topicref>
+  </chapter>
+</bookmap>

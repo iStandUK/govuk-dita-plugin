@@ -67,13 +67,35 @@
         per-page stylesheet.</p>
     </section>
     <section>
+      <title>Page numbers, with a formatter</title>
+      <p><indexterm>PDF<indexterm>page numbers</indexterm></indexterm>Browsers cannot number
+        the pages a link points at, so on the browser route the contents list, the index and
+        cross-references stay links. A <term>CSS Paged Media formatter</term> can, and the
+        print stylesheet already carries the rules: set <codeph>govuk.pdf.command</codeph> to a
+        formatter you have installed and the build renders the print document after the site,
+        appending the input and output paths to your command:</p>
+      <codeblock>dita --input=publication.ditamap --format=govuk --output=out \
+     -Dgovuk.print=yes "-Dgovuk.pdf.command=weasyprint --quiet"</codeblock>
+      <p>The PDF is written beside <filepath>print.html</filepath>, named after the map unless
+        <codeph>govuk.pdf.name</codeph> says otherwise. In it, a cross-reference reads
+        <q>Installing the plugin (page 13)</q>, the contents list carries page numbers with
+        leader dots, and index entries cite pages. Two limits are the vocabulary's rather than
+        the plugin's: CSS cannot say <q>above</q> or <q>below</q>, so a reference reads the same
+        whichever way the target lies; and a link to a page the print document excludes stays a
+        link to the website.</p>
+      <p>The plugin bundles no formatter and downloads nothing — you install one, and any
+        formatter that implements CSS Paged Media will do. Several are open source and several
+        are commercial; those that also produce tagged PDF/UA are the ones to prefer for a
+        government publication. If the command fails, the build says so
+        (<codeph>GOVK008W</codeph>) and finishes: the site is complete without the PDF.</p>
+    </section>
+    <section>
       <title>What a browser cannot do yet</title>
-      <p>Browsers implement the paged parts of CSS unevenly, so at this release the contents
-        list and index carry links rather than page numbers, footnotes appear as endnotes,
-        and the accessibility tagging of a saved PDF is the browser's own. All three become
-        page-numbered, footnoted and tagged to PDF/UA from the same file under the 1.1 PDF
-        step, which adds a pure-Java CSS engine to the build with no other software to
-        install. The design is recorded in the project's design folder as decision D-20.</p>
+      <p>Printing from a browser, without a formatter, the contents list and index carry links
+        rather than page numbers, footnotes appear as endnotes, and the accessibility tagging of
+        a saved PDF is the browser's own. All three become page-numbered, footnoted and tagged
+        to PDF/UA from the same file with a formatter, and the project's design folder records
+        (D-23) a companion product that will bundle one so that Java is the only requirement.</p>
     </section>
   </conbody>
 </concept>

@@ -14,8 +14,9 @@ sections) follow at the end.
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns:table="http://dita-ot.sourceforge.net/ns/201007/dita-ot/table"
                 xmlns:ditamsg="http://dita-ot.sourceforge.net/ns/200704/ditamsg"
+                xmlns:dita2html="http://dita-ot.sourceforge.net/ns/200801/dita2html"
                 version="3.0"
-                exclude-result-prefixes="xs table ditamsg">
+                exclude-result-prefixes="xs table ditamsg dita2html">
 
   <!-- ===== Headings ===== -->
 
@@ -84,6 +85,32 @@ sections) follow at the end.
     <xsl:next-match>
       <xsl:with-param name="default" select="normalize-space(concat($default, ' govuk-link'))"/>
     </xsl:next-match>
+  </xsl:template>
+
+  <!-- ===== Syntax diagrams (pr-d): titles follow the page outline =====
+       The base emits a fixed h3 for a diagram title and h4 for a fragment
+       title, which skips a level straight under a topic's h1 (the Nu checker's
+       heading-order rule). Take the level from the diagram's place instead. -->
+  <xsl:template match="*[contains(@class, ' pr-d/syntaxdiagram ') or contains(@class, ' syntaxdiagram-d/syntaxdiagram ')]
+                       /*[contains(@class, ' topic/title ')]"
+                mode="process-syntaxdiagram">
+    <xsl:variable name="level" as="xs:integer"
+                  select="min((6, dita2html:get-heading-level(parent::*) + 1))"/>
+    <xsl:element name="h{$level}">
+      <xsl:attribute name="class" select="'govuk-heading-s app-syntax-title'"/>
+      <xsl:value-of select="."/>
+    </xsl:element>
+  </xsl:template>
+
+  <xsl:template match="*[contains(@class, ' pr-d/fragment ') or contains(@class, ' syntaxdiagram-d/fragment ')]
+                       /*[contains(@class, ' topic/title ')]"
+                mode="process-syntaxdiagram">
+    <xsl:variable name="level" as="xs:integer"
+                  select="min((6, dita2html:get-heading-level(ancestor::*[contains(@class, ' pr-d/syntaxdiagram ') or contains(@class, ' syntaxdiagram-d/syntaxdiagram ')][1]) + 2))"/>
+    <xsl:element name="h{$level}">
+      <xsl:attribute name="class" select="'govuk-heading-s app-syntax-title'"/>
+      <xsl:apply-templates mode="#current"/>
+    </xsl:element>
   </xsl:template>
 
   <!-- ===== Tables (CALS and simpletable) ===== -->

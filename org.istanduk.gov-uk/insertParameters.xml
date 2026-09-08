@@ -25,5 +25,12 @@ unaffected.
   <param name="GOVUK-TABLELIST" expression="${govuk.tablelist.present}" if:set="govuk.tablelist.present"/>
   <param name="GOVUK-SVG-INLINE" expression="${govuk.svg.inline}" if:set="govuk.svg.inline"/>
   <param name="GOVUK-PRINT" expression="${govuk.print}" if:set="govuk.print"/>
+  <param name="GOVUK-SVG-SANITIZE" expression="${govuk.svg.sanitize}" if:set="govuk.svg.sanitize"/>
+  <param name="GOVUK-INLINE-SCOPE" expression="${govuk.inline.scope}" if:set="govuk.inline.scope"/>
+  <param name="GOVUK-INPUT-DIR" expression="${govuk.input.dir.url}" if:set="govuk.input.dir.url"/>
+  <param name="GOVUK-CONTENT-WARNINGS" expression="${govuk.content.warnings}" if:set="govuk.content.warnings"/>
+  <param name="GOVUK-CONTENT-POLICY" expression="${govuk.content.policy}" if:set="govuk.content.policy"/>
+  <param name="GOVUK-CSP" expression="${govuk.csp}" if:set="govuk.csp"/>
+  <param name="GOVUK-DATES" expression="${govuk.dates}" if:set="govuk.dates"/>
   <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}" if:set="govuk.print.max-topics"/>
 </params>

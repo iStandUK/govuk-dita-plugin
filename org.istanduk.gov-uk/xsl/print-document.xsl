@@ -33,6 +33,18 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
                 select="if ($GOVUK-PRINT-TOC-DEPTH castable as xs:integer)
                         then max((1, xs:integer($GOVUK-PRINT-TOC-DEPTH)))
                         else 3"/>
+  <!-- "page", for the page references print.css generates from
+       data-page-label and target-counter (#107). Localised like every other
+       label; a renderer without target-counter drops the whole declaration,
+       so browsers show nothing extra. -->
+  <xsl:variable name="govuk-print-page-label" as="xs:string">
+    <xsl:for-each select="/*">
+      <xsl:call-template name="getVariable">
+        <xsl:with-param name="id" select="'govuk-dita.page'"/>
+      </xsl:call-template>
+    </xsl:for-each>
+  </xsl:variable>
+
   <xsl:variable name="govuk-print-max" as="xs:integer"
                 select="if ($GOVUK-PRINT-MAX-TOPICS castable as xs:integer)
                         then xs:integer($GOVUK-PRINT-MAX-TOPICS)
@@ -63,19 +75,27 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
           <govuk:entry ref="{generate-id(.)}" file="{$file}" uri="{$uri}"
                        page="{govuk:print-page($file)}"
                        dir="{if (contains($file, '/')) then replace($file, '/[^/]*$', '/') else ''}"
-                       root="{string((doc($uri)//*[contains(@class, ' topic/topic ')])[1]/@id)}"/>
+                       root="{string((doc($uri)//*[contains(@class, ' topic/topic ')])[1]/@id)}"
+                       ids="{string-join(doc($uri)//*[contains(@class, ' topic/topic ')]/@id, ' ')}"/>
         </xsl:if>
       </xsl:for-each>
     </xsl:variable>
     <!-- Second pass: the generated-id scope for every file, and a prefix for
-         every id of a file whose root topic id is already taken (copy-to
-         variants of one topic, chunked copies), so the merged document has no
-         duplicate ids. Links into such a file from elsewhere resolve to its
-         first instance. -->
+         every id of a file that would otherwise collide with one already
+         placed (#121). Topic ids need only be unique within their own file:
+         copy-to and chunk repeat root ids, and nested topics repeat ids across
+         files whenever two topics share a heading — Markdown headings become
+         nested topics named after the heading, so "About" and "Benefits" recur
+         across a corpus. Element ids inside a topic are already prefixed with
+         their topic's id by the html5 base, so the topic ids are the whole of
+         the problem. Links into a prefixed file are rewritten to match. -->
     <xsl:for-each select="$loaded">
       <xsl:variable name="n" select="position()"/>
+      <xsl:variable name="mine" as="xs:string*" select="tokenize(@ids, ' ')[. ne '']"/>
+      <xsl:variable name="placed" as="xs:string*"
+                    select="for $e in $loaded[position() lt $n] return tokenize($e/@ids, ' ')[. ne '']"/>
       <xsl:variable name="dup" as="xs:string"
-                    select="if (@root = '' or exists($loaded[position() lt $n][@root = current()/@root]))
+                    select="if (@root = '' or (some $i in $mine satisfies $i = $placed))
                             then concat('p', $n, '-') else ''"/>
       <xsl:copy>
         <xsl:copy-of select="@*"/>
@@ -195,7 +215,15 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
             <xsl:copy-of select="/*/@dir"/>
             <head>
               <meta charset="UTF-8"/>
+              <xsl:call-template name="govuk-csp-meta"/>
               <meta name="viewport" content="width=device-width, initial-scale=1"/>
+              <!-- the whole publication in one file: not for search engines (#60) -->
+              <meta name="robots" content="noindex"/>
+              <!-- The structure a paged renderer relies on (#108): the
+                   app-print-* wrappers, stable ids, stylesheet order and the
+                   page-reference labels. It changes only when that structure
+                   changes, independently of the plugin's own version. -->
+              <meta name="govuk-print-contract" content="1"/>
               <title><xsl:value-of select="concat($govuk-cover-title, ' — ', $print-label)"/></title>
               <xsl:call-template name="generateCssLinks"/>
             </head>
@@ -319,6 +347,9 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
       <xsl:otherwise>
         <li>
           <a class="govuk-link" href="{$target}">
+            <xsl:if test="starts-with($target, '#')">
+              <xsl:attribute name="data-page-label" select="$govuk-print-page-label"/>
+            </xsl:if>
             <xsl:apply-templates select="." mode="get-navtitle"/>
           </a>
           <xsl:call-template name="govuk-print-toc-list">
@@ -472,6 +503,20 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
   <xsl:template match="@* | node()" mode="govuk-print-fix">
     <xsl:copy>
       <xsl:apply-templates select="@* | node()" mode="govuk-print-fix"/>
+    </xsl:copy>
+  </xsl:template>
+
+  <!-- A link that resolves inside the document can carry a page number in
+       print (#107); print.css generates it, and a renderer without
+       target-counter simply drops the rule -->
+  <xsl:template match="a[@href]" mode="govuk-print-fix">
+    <xsl:param name="entry" as="element(govuk:entry)?" tunnel="yes"/>
+    <xsl:copy>
+      <xsl:apply-templates select="@*" mode="#current"/>
+      <xsl:if test="starts-with(govuk:print-link(string(@href), $entry), '#')">
+        <xsl:attribute name="data-page-label" select="$govuk-print-page-label"/>
+      </xsl:if>
+      <xsl:apply-templates select="node()" mode="#current"/>
     </xsl:copy>
   </xsl:template>
 

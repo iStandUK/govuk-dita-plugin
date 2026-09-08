@@ -686,3 +686,25 @@ kbd {
 .app-print .app-print-link {
   margin-top: 15px;
 }
+
+/* ===== Content policy placeholders (#81) and topic dates (#61) ===== */
+.app-content-stripped {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px dashed #505a5f;
+  color: #505a5f;
+  font-size: 1rem;
+}
+
+div.app-content-stripped {
+  display: block;
+  margin: 0 0 20px;
+}
+
+.app-page-dates {
+  color: #505a5f;
+}
+
+.app-page-dates__item + .app-page-dates__item::before {
+  content: " · ";
+}

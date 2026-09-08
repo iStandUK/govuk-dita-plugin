@@ -1,29 +1,88 @@
 name: build
 
+# Least privilege (#66): nothing here writes to the repository. Actions are
+# pinned to commit SHAs (#67, Dependabot keeps the comments current); every
+# download is checksum-verified before use (#68).
+permissions:
+  contents: read
+
+# A newer push to the same pull request supersedes the run in progress; pushes
+# to the long-lived branches always run to completion.
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Gitflow (D-22): pushes to the long-lived and release-line branches, and every
+# pull request. Feature branches are exercised through their pull request.
 on:
   push:
+    branches: [main, dev, 'release/**', 'hotfix/**']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
 jobs:
+  # Documentation-only changes (the design record, repository policy files,
+  # templates) skip the build; the manual under docs/manual/ is built and
+  # tested, so it is not documentation in this sense. `ci` still reports, so
+  # the branch rules are satisfied either way.
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    outputs:
+      docs-only: ${{ steps.classify.outputs.docs-only }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: classify
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          # No usable base (a new branch, a tag, a manual run): build everything.
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
+             || [ "$GITHUB_REF_TYPE" = "tag" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] \
+             || ! git cat-file -e "$BASE" 2>/dev/null; then
+            echo "docs-only=false" >> "$GITHUB_OUTPUT"; echo "full run: no base to compare against"; exit 0
+          fi
+          files=$(git diff --name-only "$(git merge-base "$BASE" "$HEAD")" "$HEAD")
+          printf 'changed:\n%s\n' "$files"
+          docs='^(design/|docs/RELEASING\.md$|README\.md$|CONTRIBUTING\.md$|SECURITY\.md$|LICENSE|\.github/(ISSUE_TEMPLATE/|pull_request_template\.md$|CODEOWNERS$|dependabot\.yml$))'
+          other=$(printf '%s\n' "$files" | grep -Ev "$docs" || true)
+          if [ -n "$files" ] && [ -z "$other" ]; then
+            echo "docs-only=true" >> "$GITHUB_OUTPUT"; echo "documentation-only change: the build is skipped"
+          else
+            echo "docs-only=false" >> "$GITHUB_OUTPUT"; echo "full run"
+          fi
+
   build:
     runs-on: ubuntu-latest
-    # DITA-OT version matrix (NFR-M1): add 4.x releases here as they appear.
+    name: build (DITA-OT ${{ matrix.dita-ot.version }})
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
+    # DITA-OT version matrix (NFR-M1): add 4.x releases here as they appear,
+    # each with the SHA-256 of its distribution zip (shasum -a 256).
     strategy:
       fail-fast: false
       matrix:
-        dita-ot-version: ["4.4.1"]
+        dita-ot:
+          - version: "4.4.1"
+            sha256: "154414c1debb548e923bf77e9a09019e249a8887680ff4bfbd8e137de9e8e250"
     env:
-      DITA_OT_VERSION: ${{ matrix.dita-ot-version }}
+      DITA_OT_VERSION: ${{ matrix.dita-ot.version }}
+      DITA_OT_SHA256: ${{ matrix.dita-ot.sha256 }}
+      # govuk-frontend GitHub release zip for the vendored version (VERSION.txt)
+      GOVUK_FRONTEND_SHA256: "3dd21a694a8164d5ce0555a4d91313683a240d9e991269792224cc83e97f5018"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "20"
           cache: npm
@@ -31,7 +90,7 @@ jobs:
 
       - name: Cache DITA-OT
         id: cache-dita-ot
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: dita-ot-${{ env.DITA_OT_VERSION }}
           key: dita-ot-${{ env.DITA_OT_VERSION }}
@@ -40,6 +99,7 @@ jobs:
         if: steps.cache-dita-ot.outputs.cache-hit != 'true'
         run: |
           curl -sSL -o dita-ot.zip "https://github.com/dita-ot/dita-ot/releases/download/${DITA_OT_VERSION}/dita-ot-${DITA_OT_VERSION}.zip"
+          echo "${DITA_OT_SHA256}  dita-ot.zip" | sha256sum -c -
           unzip -q dita-ot.zip
           rm dita-ot.zip
 
@@ -60,7 +120,7 @@ jobs:
             --output out/oruk-mini
 
       - name: Install Pagefind
-        run: npm install -g pagefind@1
+        run: npm install -g pagefind@1.5.2
 
       # Built with Pagefind on the PATH: search auto-enables (FR-S1)
       - name: Build manual
@@ -88,8 +148,9 @@ jobs:
       # Spec-coverage fixture (design/08) - fully Nu-validated
       - name: Build DITA 1.3 kitchen sink
         run: |
+          set -o pipefail
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
-            --format govuk --output out/kitchen
+            --format govuk --output out/kitchen 2>&1 | tee kitchen.log
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen-flag --filter fixtures/dita13-kitchen/flags.ditaval
           # spot-checks of verified processing behaviour
@@ -169,16 +230,20 @@ jobs:
             grep -Eq '<div [^>]*class="body[^"]*"[^>]*data-pagefind-weight="0.3"' out/search-semantics/$t.html
             grep -Eq '<p [^>]*class="[^"]*shortdesc[^"]*"[^>]*data-pagefind-weight="1"' out/search-semantics/$t.html
           done
-          # ranking: preset, JSON pass-through, and an invalid value must fail the build
-          grep -q 'ranking: { "termFrequency": 0.0, "pageLength": 0.0 }' out/search-semantics/search.html
+          # ranking: preset, JSON pass-through, and an invalid value must fail the build;
+          # it travels as a data attribute read by govuk/search.js (#79), so the page
+          # has no variable inline script
+          grep -q 'data-ranking="{ &#34;termFrequency&#34;: 0.0, &#34;pageLength&#34;: 0.0 }"' out/search-semantics/search.html
+          grep -q '<script src="govuk/search.js">' out/search-semantics/search.html
+          test -f out/search-semantics/govuk/search.js
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
             --format govuk --output out/search-semantics-json '-Dgovuk.search.ranking={termFrequency:0.5,metaWeights:{keywords:3}}'
-          grep -q 'ranking: {"termFrequency":0.5,"metaWeights":{"keywords":3}}' out/search-semantics-json/search.html
+          grep -q 'data-ranking="{&#34;termFrequency&#34;:0.5,&#34;metaWeights&#34;:{&#34;keywords&#34;:3}}"' out/search-semantics-json/search.html
           ! "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
             --format govuk --output out/search-semantics-bad -Dgovuk.search.ranking=fastest
           # the manual: shortdesc weighting applies everywhere, ranking stays Pagefind's default
           grep -q 'data-pagefind-weight="4"' out/manual/topics/introduction.html
-          ! grep -q 'ranking:' out/manual/search.html
+          if grep -q 'data-ranking' out/manual/search.html; then echo "manual search page should carry no ranking"; exit 1; fi
 
       # Print stylesheet and print document (#63 / FR-P1, FR-P2, D-20). Built to
       # its own directory so the page-weight budget keeps measuring topic pages.
@@ -195,7 +260,7 @@ jobs:
           # cover block, contents, chapter groups, topics with demoted headings, glossary and index parts
           grep -q '<h1 class="govuk-heading-xl">GOV.UK DITA plugin manual</h1>' out/manual-print/print.html
           grep -q 'app-print-contents__list' out/manual-print/print.html
-          grep -q 'href="#introduction">About the plugin</a>' out/manual-print/print.html
+          grep -Eq 'href="#introduction"[^>]*>About the plugin</a>' out/manual-print/print.html
           grep -q '<section class="app-print-group app-print-chapter" id="app-print-group-' out/manual-print/print.html
           grep -Eq '<h3 [^>]*id="t[0-9]+-ariaid-title1"[^>]*>Installing the plugin</h3>' out/manual-print/print.html
           grep -q 'id="app-print-glossary"' out/manual-print/print.html
@@ -249,6 +314,162 @@ jobs:
           absent -q 'href="print.html"' out/manual-print-ceiling/index.html
           absent -q 'href="../print.html"' out/manual-print-ceiling/topics/install.html
 
+      # Print page references, the formatter hook, the contract marker and the
+      # duplicate-id fix (#106, #107, #108, #121). The Markdown fixture is the
+      # shape a converted website has: headings become nested topics, so ids
+      # repeat across files.
+      - name: Print page numbers and the external formatter (#106–#108, #121)
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-mini -Dgovuk.print=yes
+          md=out/markdown-mini/print.html
+          # #121: ids repeat across the Markdown topics; the merged document must not
+          test -z "$(grep -o ' id="[^"]*"' "$md" | sort | uniq -d)"
+          grep -q 'id="about"' "$md"                     # the first file keeps the site's ids
+          grep -Eq 'id="p[23]-about"' "$md"              # later files that would collide are prefixed
+          grep -q 'href="#p2-first-case-study"' "$md"    # and links into them follow
+          # #108 contract marker, #107 page-reference labels
+          grep -q '<meta name="govuk-print-contract" content="1"' "$md"
+          grep -q 'data-page-label="page"' "$md"
+          grep -q 'target-counter(attr(href url), page)' out/markdown-mini/govuk/print.css
+          # a publication whose ids do not collide is untouched
+          absent -Eq ' id="p[0-9]+-' out/manual-print/print.html
+          grep -q '<meta name="govuk-print-contract" content="1"' out/manual-print/print.html
+          grep -q 'data-page-label="page"' out/manual-print/print.html
+          # #106: a real CSS Paged Media formatter resolves the page references
+          sudo apt-get update -qq && sudo apt-get install -y -qq libpango-1.0-0 libpangoft2-1.0-0
+          # 70.0 carries the fix for Kozea/WeasyPrint#2833 — 69.0 and earlier crash
+          # resolving govuk-frontend's max(1px, .0625rem) underline thickness — and is
+          # also a security release (CVE-2026-55073)
+          pip install --quiet weasyprint==70.0 pypdf==6.1.1
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-pdf -Dgovuk.print=yes \
+            "-Dgovuk.pdf.command=weasyprint --quiet" 2>&1 | tee pdf.log
+          test -f out/markdown-pdf/mdmini.pdf
+          absent -q 'GOVK008W' pdf.log
+          python - <<'PY'
+          from pypdf import PdfReader
+          text = "\n".join(p.extract_text() or "" for p in PdfReader("out/markdown-pdf/mdmini.pdf").pages)
+          assert "First case study" in text, "the publication did not render"
+          assert "(page " in text, "cross-references carry no page number — did target-counter resolve?"
+          print("page references resolved in the PDF")
+          PY
+          # a failing command is a warning, not a failed build; and the command needs the print document
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-pdf-fail -Dgovuk.print=yes \
+            "-Dgovuk.pdf.command=exit 3;" 2>&1 | tee pdf-fail.log
+          grep -q '\[GOVK008W\]: the PDF command exited 3' pdf-fail.log
+          test -f out/markdown-pdf-fail/index.html
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-noprint "-Dgovuk.pdf.command=weasyprint" 2>&1 | tee pdf-noprint.log
+          grep -q '\[GOVK008W\]: govuk.pdf.command is set but govuk.print is not' pdf-noprint.log
+
+      # Content reaching readers (epic #77: #78 #79 #80 #81 #82 #59 #60 #61). Every
+      # behaviour is a publisher parameter; every finding is a warning, never an error.
+      - name: Content policy, SVG sanitising, dates, sitemap and CSP (#77)
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          media=out/kitchen/topics/media.html
+          # #78 + #59: the unsafe diagram is inlined without its active content or DTD
+          # default attributes; its ordinary external link stays; findings warned once
+          grep -q 'Diagram with active content' "$media"
+          absent -Eq "alert\('(script inside svg|svg loaded|rect|link)'\)" "$media"
+          absent -Eq 'onload=|onclick=|foreignObject|tracker.png' "$media"
+          absent -Eq 'contentScriptType|contentStyleType|zoomAndPan|baseProfile|xlink:type|xlink:show|xlink:actuate' "$media"
+          grep -q 'href="https://example.org/"' "$media"
+          grep -q "\[GOVK004W\].*unsafe.svg.*script, foreignObject, event-handler attributes, script-scheme links, remote references.*removed" kitchen.log
+          # #81 default policy: warned, rendered as authored
+          grep -q 'src="https://example.org/remote.png"' "$media"
+          grep -q "href=\"javascript:alert('xref')\"" "$media"
+          grep -q '<object' "$media"
+          grep -q "\[GOVK006W\].*remote image 'https://example.org/remote.png' — kept" kitchen.log
+          grep -q "\[GOVK006W\].*script-scheme link .* — kept" kitchen.log
+          grep -q "\[GOVK006W\].*object embed .* — kept" kitchen.log
+          # #61 default: no dates line; #79: no inline module script, init.js instead
+          absent -q 'app-page-dates' out/kitchen/topics/reference-full.html
+          absent -q 'type="module">import' "$media"
+          grep -q 'type="module" src="../govuk/init.js"' "$media"
+          grep -q "govuk-frontend-6.5.0.min.js" out/kitchen/govuk/init.js
+          # govuk.svg.sanitize=no keeps the file as authored and still warns
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+            --format govuk --output out/kitchen-raw -Dgovuk.svg.sanitize=no 2>&1 | tee kitchen-raw.log
+          grep -q "alert('script inside svg')" out/kitchen-raw/topics/media.html
+          grep -q 'onload=' out/kitchen-raw/topics/media.html
+          grep -q "\[GOVK004W\].*kept (govuk.svg.sanitize=no)" kitchen-raw.log
+          # govuk.content.policy=strip replaces the findings with placeholders; govuk.dates=both
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+            --format govuk --output out/kitchen-strip -Dgovuk.content.policy=strip -Dgovuk.dates=both 2>&1 | tee kitchen-strip.log
+          absent -Eq 'src="https://example.org/remote.png"|javascript:|<object' out/kitchen-strip/topics/media.html
+          test "$(grep -o 'app-content-stripped' out/kitchen-strip/topics/media.html | wc -l)" -ge 3
+          grep -q "\[GOVK006W\].*remote image .* — removed" kitchen-strip.log
+          grep -q '<span class="app-page-dates__item">Published <time datetime="2026-01-14">14 January 2026</time></span>' out/kitchen-strip/topics/reference-full.html
+          grep -q '<span class="app-page-dates__item">Last updated <time datetime="2026-09-07">7 September 2026</time></span>' out/kitchen-strip/topics/reference-full.html
+          # govuk.content.warnings=no is silent; govuk.dates=updated shows the last revision only
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+            --format govuk --output out/kitchen-quiet -Dgovuk.content.warnings=no -Dgovuk.dates=updated 2>&1 | tee kitchen-quiet.log
+          absent -q 'GOVK006W' kitchen-quiet.log
+          grep -q 'Last updated <time datetime="2026-09-07">7 September 2026</time>' out/kitchen-quiet/topics/reference-full.html
+          absent -q 'Published' out/kitchen-quiet/topics/reference-full.html
+          # #80: a reference outside the input directory is not inlined by default (warned),
+          # inlined with govuk.inline.scope=any (still warned)
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/inline-scope/scope.ditamap \
+            --format govuk --output out/inline-scope 2>&1 | tee inline-scope.log
+          grep -q "\[GOVK005W\].*linked.svg.*not inlined" inline-scope.log
+          # the diagram's own <title> text proves inlining; the page chrome has SVG icons of its own
+          absent -q 'Clickable diagram' "$(find out/inline-scope -name outside.html)"
+          grep -q 'svgref' "$(find out/inline-scope -name outside.html)"
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/inline-scope/scope.ditamap \
+            --format govuk --output out/inline-scope-any -Dgovuk.inline.scope=any 2>&1 | tee inline-scope-any.log
+          grep -q "\[GOVK005W\].*linked.svg.*inlined (govuk.inline.scope=any)" inline-scope-any.log
+          grep -q 'Clickable diagram' "$(find out/inline-scope-any -name outside.html)"
+          # #60 + #82 + #61 on the manual: sitemap and robots, a CSP meta on every page
+          # whose hash matches the one inline script, dates on (no manual topic has any)
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-csp -Dgovuk.site.url=https://example.org/manual \
+            -Dgovuk.csp=meta -Dgovuk.dates=both -Dgovuk.print=yes
+          python3 -c "import xml.dom.minidom; xml.dom.minidom.parse('out/manual-csp/sitemap.xml')"
+          absent -q '<!DOCTYPE' out/manual-csp/sitemap.xml
+          grep -q '<loc>https://example.org/manual/index.html</loc>' out/manual-csp/sitemap.xml
+          grep -q '<loc>https://example.org/manual/topics/install.html</loc>' out/manual-csp/sitemap.xml
+          grep -q '<loc>https://example.org/manual/glossary.html</loc>' out/manual-csp/sitemap.xml
+          absent -Eq '<loc>https://example.org/manual/(search|print).html</loc>' out/manual-csp/sitemap.xml
+          grep -q 'Sitemap: https://example.org/manual/sitemap.xml' out/manual-csp/robots.txt
+          grep -q '<meta name="robots" content="noindex"' out/manual-csp/print.html
+          for f in out/manual-csp/index.html out/manual-csp/search.html out/manual-csp/glossary.html out/manual-csp/topics/install.html out/manual-csp/print.html; do
+            grep -q "Content-Security-Policy\" content=\"default-src 'self'; script-src 'self' 'sha256-" "$f" || { echo "no CSP meta in $f"; exit 1; }
+          done
+          snippet=$(grep -o '<script>[^<]*</script>' out/manual-csp/topics/install.html | head -1 | sed 's/^<script>//; s/<\/script>$//')
+          hash=$(printf '%s' "$snippet" | openssl dgst -sha256 -binary | base64)
+          grep -q "'sha256-$hash'" out/manual-csp/topics/install.html || { echo "CSP hash does not match the inline snippet"; exit 1; }
+          # #87: the manual documents every message the plugin can emit, and the security
+          # and build-messages topics are built and linked
+          for code in $(grep -o 'id="GOVK[0-9]*[IWEF]"' org.istanduk.gov-uk/messages.xml | cut -d'"' -f2); do
+            grep -q "$code" docs/manual/topics/messages.dita || { echo "$code is not in the manual's build-messages topic"; exit 1; }
+          done
+          test -f out/manual/topics/security.html
+          test -f out/manual/topics/messages.html
+          grep -q "sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw=" out/manual/topics/security.html
+          grep -q 'GOVK007W' out/manual/topics/messages.html
+          grep -q 'topics/security.html' out/manual/topics/demo-figures.html
+          # the default build: no sitemap, no robots, no CSP; bad values fail the build
+          test ! -f out/manual/sitemap.xml
+          test ! -f out/manual/robots.txt
+          absent -q 'Content-Security-Policy' out/manual/index.html
+          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-sitemap -Dgovuk.sitemap=yes; then echo "govuk.sitemap=yes without a URL should fail"; exit 1; fi
+          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-csp -Dgovuk.csp=bogus; then echo "govuk.csp=bogus should fail"; exit 1; fi
+          # Every branding mode is same-origin only, so 'self' policies hold in all of them:
+          # logos are inline SVG or copied assets, fonts and the (suppressed) crest are
+          # root-relative paths the publisher hosts; nothing is fetched from gov.uk or nhs.uk
+          for site in out/manual out/manual-istanduk out/manual-nhs out/manual-official; do
+            absent -Eroh 'src="(https?:)?//' "$site" --include='*.html'
+            absent -Eroh '<link[^>]*href="(https?:)?//' "$site" --include='*.html'
+            absent -Eroh 'url\(["'"'"']?(https?:)?//' "$site/govuk" --include='*.css'
+            absent -Eroh '@import' "$site/govuk" --include='*.css'
+          done
+
       # The brand-recoloured CSS is a vendored artifact (#47): guard against it
       # drifting from its Sass source. Rebuild it and fail on any diff.
       - name: Branding CSS is current
@@ -261,25 +482,35 @@ jobs:
           fi
           echo "vendored brand CSS matches its Sass source"
 
-      - name: Cache Nu validator
-        id: cache-vnu
-        uses: actions/cache@v4
-        with:
-          path: vnu
-          key: vnu-20.6.30
-
-      - name: Download Nu validator
-        if: steps.cache-vnu.outputs.cache-hit != 'true'
+      # The stock govuk-frontend files are vendored (#70): they must be byte-for-byte
+      # the files in the GitHub release named in VERSION.txt, and that release zip
+      # must match its recorded checksum. Bumping the version means updating
+      # VERSION.txt, the four files, and GOVUK_FRONTEND_SHA256 above.
+      - name: Vendored govuk-frontend matches its release
         run: |
-          curl -sSL -o vnu.zip "https://github.com/validator/validator/releases/download/20.6.30/vnu.jar_20.6.30.zip"
-          unzip -q vnu.zip -d vnu-tmp
-          mkdir -p vnu && mv vnu-tmp/dist/vnu.jar vnu/
-          rm -rf vnu-tmp vnu.zip
+          v=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
+          curl -sSL -o gf-release.zip "https://github.com/alphagov/govuk-frontend/releases/download/v${v}/release-v${v}.zip"
+          echo "${GOVUK_FRONTEND_SHA256}  gf-release.zip" | sha256sum -c -
+          unzip -q gf-release.zip -d gf-release
+          for f in govuk-frontend-${v}.min.css govuk-frontend-${v}.min.js govuk-frontend-${v}.min.css.map govuk-frontend-${v}.min.js.map; do
+            cmp "gf-release/$f" "org.istanduk.gov-uk/resource/govuk-frontend/$f" || { echo "vendored $f differs from release v${v}"; exit 1; }
+          done
+          echo "vendored govuk-frontend ${v} matches its release"
+
+      # The Nu HTML checker from its npm package: an exact version whose tarball
+      # npm verifies against the registry's published integrity hash (#68). The
+      # tagged GitHub releases stop in 2020 and predate CSP3 keywords such as
+      # 'wasm-unsafe-eval' (#82); the rolling "latest" release cannot be pinned.
+      - name: Install Nu validator
+        run: |
+          npm install -g vnu-jar@26.9.7
+          mkdir -p vnu && cp "$(npm root -g)/vnu-jar/build/dist/vnu.jar" vnu/vnu.jar
+          java -jar vnu/vnu.jar --version
 
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/search-semantics out/search-semantics-json
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -340,7 +571,8 @@ jobs:
           test -f out/manual/pagefind/pagefind-ui.js
           grep -q 'search.html' out/manual/topics/introduction.html
           grep -q 'data-pagefind-body' out/manual/topics/introduction.html
-          grep -q 'PagefindUI' out/manual/search.html
+          grep -q '<script src="govuk/search.js">' out/manual/search.html
+          grep -q 'PagefindUI' out/manual/govuk/search.js
           ! grep -q 'search.html' out/oruk-mini/item.html
           test ! -d out/oruk-mini/pagefind
           # Landing-page layouts (#14 / D-13)
@@ -535,7 +767,8 @@ jobs:
             out/manual out/oruk-mini out/kitchen out/kitchen-flag \
             out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 \
             out/keyref-nest out/keyref-nest-href out/search-semantics out/search-semantics-json \
-            out/manual-print out/oruk-print out/kitchen-print out/manual-print-ceiling
+            out/manual-print out/oruk-print out/kitchen-print out/manual-print-ceiling \
+            out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/manual-csp out/markdown-mini
 
       - name: Page-weight budget (NFR-P2)
         run: python3 tools/page_weight.py --report --budget-kb 300 out/manual out/kitchen out/oruk-mini
@@ -554,7 +787,13 @@ jobs:
           (cd tools/a11y && npx playwright install --with-deps chromium)
 
       - name: Accessibility checks — axe-core WCAG 2.2 AA (NFR-A1)
-        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 out/manual-print/print.html out/kitchen-print/print.html out/oruk-print/print.html
+        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 out/manual-print/print.html out/kitchen-print/print.html out/oruk-print/print.html out/markdown-mini/print.html out/kitchen-strip/topics/media.html out/kitchen-strip/topics/reference-full.html out/manual-csp/search.html
+
+      # #82: the policy the plugin emits must not block anything on its own pages —
+      # served over HTTP (a policy's 'self' is an origin), every page loaded, and a
+      # search run so Pagefind's WebAssembly and fetches are exercised under it
+      - name: Content-Security-Policy check (#82)
+        run: node tools/a11y/csp-check.mjs out/manual-csp --query plugin
 
       # FR-P1/FR-P2 evidence (#63): the print document and a topic page print to
       # tagged, outlined, multi-page A4 PDFs in Chromium. CI-only; not a build
@@ -570,13 +809,29 @@ jobs:
           node tools/a11y/snapshot.mjs out/manual-istanduk out/snapshots/istanduk
 
       - name: Upload visual snapshots
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: visual-snapshots-${{ matrix.dita-ot-version }}
+          name: visual-snapshots-${{ env.DITA_OT_VERSION }}
           path: out/snapshots
 
       - name: Upload site artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: manual-site-${{ matrix.dita-ot-version }}
+          name: manual-site-${{ env.DITA_OT_VERSION }}
           path: out/manual
+
+  # One stable status for branch protection to require: passes only when every
+  # matrix leg of `build` passed (add DITA-OT versions to the matrix freely).
+  ci:
+    name: ci
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          test "${{ needs.changes.result }}" = "success" || { echo "change classification failed: ${{ needs.changes.result }}"; exit 1; }
+          if [ "${{ needs.changes.outputs.docs-only }}" = "true" ] && [ "${{ needs.build.result }}" = "skipped" ]; then
+            echo "documentation-only change: build skipped by design"; exit 0
+          fi
+          test "${{ needs.build.result }}" = "success" || { echo "build result: ${{ needs.build.result }}"; exit 1; }
+          echo "all build legs passed"

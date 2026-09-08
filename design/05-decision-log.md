@@ -390,7 +390,7 @@ standing offer rather than a blocker.
 
 ## D-20 · PDF output: CSS Paged Media, in two steps — A4, PDF/UA and an open font by default
 
-**Date:** 2026-09-06. **Implemented (1.0 half):** FR-P1 and FR-P2 in
+**Date:** 2026-09-06. **Amended by D-23 (2026-09-07):** the engine ships as a separate generator product joined by the command mechanism, not inside the plugin. **Implemented (1.0 half):** FR-P1 and FR-P2 in
 [#63](https://github.com/iStandUK/govuk-dita-plugin/issues/63); one departure from
 [10](10-pdf-css.md) §9a — the over-ceiling notice is a **warning** (`GOVK003W`), not an info
 message, because the toolkit's default build log shows no info-level messages and a
@@ -458,3 +458,79 @@ schedule.
 **Consequences:** the v1 epic (#15) closes; FR-B2 becomes ✅ when the registry pull request is
 merged; 1.1 is the PDF engine epic (FR-P3) plus #59–#61; further trial findings are 1.0.x point
 releases, each re-submitted to the registry as a new version entry.
+
+## D-22 · Repository governance: Gitflow, protected branches, a written release process
+
+**Date:** 2026-09-07. Security review follow-up, epic #71, guided by the organisation's
+exemplar [iStandUK/hello-world](https://github.com/iStandUK/hello-world).
+
+**Options:** (a) keep trunk-based development — feature branches squash-merged into `main`,
+releases committed and tagged on `main` by hand; (b) the exemplar's Gitflow — `main` for
+released code only, `dev` as the default integration branch, `feature/*`, `release/*` and
+`hotfix/*` branches, with `main` and `dev` protected; (c) Gitflow without protection, as the
+exemplar itself currently runs.
+
+**Decision:** (b). `dev` is created from `main` and becomes the default branch; feature work
+branches from `dev` and returns by squash-merged pull request; a release is a `release/x.y.z`
+branch from `dev` carrying the version bump, merged into `main` with a merge commit, tagged
+there, and merged back into `dev`; hotfixes branch from `main` and merge into both. Both
+long-lived branches take a ruleset: pull request required, the `ci` status required and up to
+date, no force-push or deletion, review threads resolved; `main` additionally requires one
+approval, which repository administrators may bypass on a pull request (the bypass is
+recorded) so a single maintainer can release. Contribution scaffolding (`CONTRIBUTING.md`,
+`SECURITY.md`, `CODEOWNERS`, pull-request and issue templates) and the release checklist
+(`docs/RELEASING.md`) live in the repository. Private vulnerability reporting, secret scanning
+with push protection and Dependabot security updates are switched on. The existing v1.0.0
+release and `main` are not changed by this decision; the next release is the first to follow
+the release-branch path.
+
+**Rationale:** the exemplar is the organisation's stated practice, and a public, registry-listed
+plugin should be run the way its organisation says repositories are run. Trunk-based work
+served one maintainer well, but it left `main` unprotected and releases hand-built on a
+laptop — two findings of the security review. Protection is the one departure from the
+exemplar (which has none yet): a listed plugin needs it, and the exemplar's own text says
+`main` should never be committed to directly.
+
+**Consequences:** pull requests target `dev` by default; every release costs one branch and
+two merges; the CI workflow gains a `ci` summary status so the required check survives
+matrix changes; the release recipe is a checklist rather than memory; when a second
+maintainer joins, the `dev` ruleset can require a review without any other change.
+
+## D-23 · Print PDFs: an external-formatter hook first, then a separately licensed generator joined by it (amends D-20)
+
+**Date:** 2026-09-07. From [13-print-page-numbers.md](13-print-page-numbers.md); sponsor's decision on OQ-14.
+
+**Options:** the CSS engine bundled inside the plugin (D-20 as written); a companion DITA-OT plugin on the common core; a separately licensed generator product that the plugin only calls; reader-side pagination; XSL-FO; download on demand.
+
+**Decision:**
+1. **`govuk.pdf.command` ships in the core first**, in a 1.0.x release: a command template the build runs after the print document, `no` by default, failures reported as a warning with the tool's output; `print.css` gains the page-reference rules (`target-counter` on in-document cross-references, contents and index) with the label stamped from the string registry, which browsers ignore; CI proves the join with an open-source formatter installed in CI only.
+2. **The engine, the OFL font family and PDF/UA validation ship as a separate generator product** — its own repository under the organisation, its own licence, its own releases with attestation and veraPDF in its CI; **not a DITA-OT plugin**. The core detects it as it detects Pagefind: `govuk.pdf = auto` (default; produce a PDF when the generator is on the PATH or at `govuk.pdf.cmd`, otherwise build without one and say so) | `yes` | `no`. The generator checks the `govuk-print-contract` marker in `print.html` and refuses a document it does not understand. The engine's LGPL library never enters any DITA-OT plugin distribution or registry entry; the engine runs as its own process, so the toolkit's PDFBox is never on its classpath.
+3. Not chosen: the engine inside the core; a companion plugin (which may follow later as a thin installer for the generator); reader-side pagination (on request only); download on demand; XSL-FO.
+
+**Delivered so far:** step 1 shipped in **v1.0.1** (2026-09-08) — `govuk.pdf.command`, the page-reference rules in `print.css` with a localised label, and the `govuk-print-contract` marker (#106–#108), alongside the duplicate-id fix the Open Referral UK demo exposed (#121). Step 2, DesignSystemPDF, is epic #105's remainder.
+
+**Settled the same day (OQ-14):** the generator is **DesignSystemPDF**; its own code is **Apache-2.0**, with the third-party notices alongside (LGPL-2.1 engine, Apache-2.0 PDF and SVG libraries, OFL-1.1 fonts), the engine kept as separate unmodified jars with its source jars attached to each release; **one repository, two products** — the plugin and DesignSystemPDF as sibling directories in this repository, **not bundled**, each with its **own version number and release lifecycle** (distinct tag prefixes drive two release workflows); **auto-detection** (`govuk.pdf=auto`) is the default join; **reader-side pagination (option B) is not offered** — judged low value.
+
+**Rationale:** the plugin's publishers include very large corpora that will never produce a PDF and organisations whose policy excludes GPL-family components; the option-A hook gives page-numbered PDFs to anyone with a formatter this quarter and validates the print document under a real paginator before the generator exists; the generator on its own channel tracks an engine that releases weekly without touching the plugin, needs none of the companion plugin's toolkit plumbing, and is useful beyond DITA.
+
+**Consequences:** FR-P3 is delivered by two products; the print document, `print.css` and the contract marker become a versioned interface; the plugin's CI fetches the generator's release by checksum; the manual documents `govuk.pdf` beside `govuk.search`; NFR-L1 records no new licence in the plugin. In the repository: a `designsystempdf/` product directory with its own build, `THIRD-PARTY-NOTICES`, README and release checklist; the release workflow gains a second trigger (`pdf-v*` tags) producing the generator's zip, its attestation and its source jars, independent of the plugin's `v*` releases; `docs/RELEASING.md` gains the generator's steps; the registry lists only the plugin.
+
+## D-24 · Structured data: defaults settled; asset declarations belong to the maps, not the book
+
+**Date:** 2026-09-08. From [12-structured-data.md](12-structured-data.md); sponsor's decisions on OQ-13. Epic [#97](https://github.com/iStandUK/govuk-dita-plugin/issues/97).
+
+**Decisions taken:**
+
+1. **`govuk.metadata=basic` is on by default** — canonical link, Open Graph, social card, `prev`/`next` and Dublin Core on every page. It changes no visible page and adds only tags derived from content that already exists, so a publisher gets working link previews without asking. `full` adds the schema.org JSON-LD; `no` emits nothing.
+2. **Personal authors never appear by default.** `author` and `publisher` are the organisation (bookmeta `organization`, else `govuk.organisation`, else the service name); prolog authors become `Person` only under `govuk.metadata.persons=yes`.
+3. **`HowTo` (tasks) and `DefinedTermSet` (glossary) are emitted**, although no search feature currently rewards them: the vocabularies are valid, cheap to derive and read by consumers other than search engines. **`FAQPage` is not emitted** — no DITA construct maps to it and the rich result has been withdrawn.
+4. **Open — but constrained (see below).** How a publication declares a dataset, standard, data service or code list.
+5. **`llms.txt` follows separately**, as its own epic ([#116](https://github.com/iStandUK/govuk-dita-plugin/issues/116)), not part of the structured-data epic.
+6. **DCAT keeps its own switch** rather than riding on `govuk.metadata=full`: a catalogue record is a publishing act with legal and stewardship weight, and a publisher should turn it on deliberately. The checker enforces **data.gov.uk's mandatory set by default** (the harvester most UK publishers will meet first), with the Cross-Government Metadata Exchange Model's shapes available as an **optional SHACL validation in CI only** — never in a publisher's build. The switch's *values* depend on decision 4.
+7. **Conventions first, specialisation later.** `data` elements in map `topicmeta`, `prolog/metadata/category`, `glossentry`/`glossgroup`, `subjectScheme` maps, `properties` tables, `resourceid` and `related-links` carry the semantics; a `dcat`/`adms` DITA specialisation may follow once the convention has proved itself, because a specialisation costs every generator and author a DTD dependency.
+
+**The constraint that reopens decision 4.** A publication may contain **more than one dataset**, so the declaration cannot be a property of the book: the NHS Data Model and Dictionary is one publication containing many data set specifications; Open Referral UK is one publication containing a standard, its taxonomies and a register of feeds. The declaration therefore belongs **at map level** — a submap, or a topicref that heads a branch — and the publication as a whole becomes a `dcat:Catalog` whose members are the declared branches, each with its own type, title, description, identifier, landing page and distributions. `bookmeta` remains the source of publication-wide properties (publisher, licence, version, contact) that members inherit unless they override them.
+
+**Options for the mechanism, to decide:** (a) `<data name="dcat:type" value="dataset"/>` in the `topicmeta` of a submap's `<map>` element or of the topicref that heads the branch — no DTD change, and it is where the other catalogue properties already sit; (b) an `outputclass` token on the topicref, read the way `search-demote` is; (c) a `subjectScheme` binding that types branches by subject; (d) a separate manifest map listing the assets. (a) is the natural companion to decision 7 and to the existing bookmeta convention; (b) is terser but carries no properties; (c) and (d) add a construct for authors to learn.
+
+**Consequences:** decision 4 blocks the DCAT sub-issue ([#102](https://github.com/iStandUK/govuk-dita-plugin/issues/102)), the `Dataset` half of the schema.org typing sub-issue ([#101](https://github.com/iStandUK/govuk-dita-plugin/issues/101)) and the ADMS half of the vocabularies sub-issue ([#103](https://github.com/iStandUK/govuk-dita-plugin/issues/103)); the metadata sub-issues that do not depend on it ([#99](https://github.com/iStandUK/govuk-dita-plugin/issues/99), [#100](https://github.com/iStandUK/govuk-dita-plugin/issues/100)) proceed. Requirements **FR-D1–FR-D4** are added to [02](02-requirements.md); `govuk.dcat` is no longer a type list but an on/off switch over declarations the DITA carries, with its final shape settled by decision 4.
