@@ -260,7 +260,7 @@ jobs:
           # cover block, contents, chapter groups, topics with demoted headings, glossary and index parts
           grep -q '<h1 class="govuk-heading-xl">GOV.UK DITA plugin manual</h1>' out/manual-print/print.html
           grep -q 'app-print-contents__list' out/manual-print/print.html
-          grep -q 'href="#introduction">About the plugin</a>' out/manual-print/print.html
+          grep -Eq 'href="#introduction"[^>]*>About the plugin</a>' out/manual-print/print.html
           grep -q '<section class="app-print-group app-print-chapter" id="app-print-group-' out/manual-print/print.html
           grep -Eq '<h3 [^>]*id="t[0-9]+-ariaid-title1"[^>]*>Installing the plugin</h3>' out/manual-print/print.html
           grep -q 'id="app-print-glossary"' out/manual-print/print.html
