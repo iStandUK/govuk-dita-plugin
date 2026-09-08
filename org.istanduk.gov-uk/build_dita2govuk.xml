@@ -202,6 +202,34 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         </or></not>
       </condition>
     </fail>
+    <!-- An external CSS Paged Media formatter for the print document (#106).
+         The plugin bundles none and downloads nothing: the publisher names a
+         command they have installed. -->
+    <property name="govuk.pdf.command" value=""/>
+    <!-- the shell that runs it, so a publisher's command may carry its own
+         arguments and quoting -->
+    <condition property="govuk.pdf.shell" value="cmd.exe" else="/bin/sh">
+      <os family="windows"/>
+    </condition>
+    <condition property="govuk.pdf.shell.flag" value="/c" else="-c">
+      <os family="windows"/>
+    </condition>
+    <condition property="govuk.pdf.on">
+      <and>
+        <not><equals arg1="${govuk.pdf.command}" arg2=""/></not>
+        <equals arg1="${govuk.print}" arg2="yes"/>
+      </and>
+    </condition>
+    <condition property="govuk.pdf.without.print">
+      <and>
+        <not><equals arg1="${govuk.pdf.command}" arg2=""/></not>
+        <not><equals arg1="${govuk.print}" arg2="yes"/></not>
+      </and>
+    </condition>
+    <echo if:set="govuk.pdf.without.print" level="warning"
+          message="[GOVK008W]: govuk.pdf.command is set but govuk.print is not 'yes', so there is no print document to render. Set govuk.print=yes."/>
+    <basename property="govuk.pdf.default.name" file="${args.input}" suffix=".ditamap"/>
+    <property name="govuk.pdf.name" value="${govuk.pdf.default.name}"/>
     <!-- CSS takes the orientation keyword only with a named size; explicit
          lengths are already width then height -->
     <condition property="govuk.print.page-size"
@@ -311,7 +339,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
   </target>
 
   <target name="dita2govuk"
-          depends="dita2govuk.init, dita2html5, govuk.cover, govuk.print, govuk.copy-assets, govuk.search-index"/>
+          depends="dita2govuk.init, dita2html5, govuk.cover, govuk.print, govuk.copy-assets, govuk.search-index, govuk.pdf"/>
 
   <target name="govuk.cover"
           description="Generate the GOV.UK home page and search page from the map">
@@ -387,6 +415,36 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
         <size value="0" when="equal"/>
       </fileset>
     </delete>
+  </target>
+
+  <!-- Render the print document with the publisher's own CSS Paged Media
+       formatter (#106, D-23 option A). Runs after the assets are in place, so
+       the formatter sees the stylesheets; failure is a warning, never a failed
+       build — the site is complete without the PDF. -->
+  <target name="govuk.pdf" if="govuk.pdf.on" depends="govuk.copy-assets"
+          description="Render print.html as PDF with an external formatter (govuk.pdf.command)">
+    <local name="govuk.pdf.in"/><local name="govuk.pdf.out"/>
+    <local name="govuk.pdf.rc"/><local name="govuk.pdf.missing"/>
+    <property name="govuk.pdf.in" location="${dita.output.dir}/print.html"/>
+    <property name="govuk.pdf.out" location="${dita.output.dir}/${govuk.pdf.name}.pdf"/>
+    <available property="govuk.pdf.missing" file="${govuk.pdf.in}" type="file"/>
+    <echo unless:set="govuk.pdf.missing" level="warning"
+          message="[GOVK008W]: no print document to render at ${govuk.pdf.in} (govuk.print.max-topics may have skipped it); govuk.pdf.command not run."/>
+    <sequential if:set="govuk.pdf.missing">
+      <echo level="info" message="govuk: rendering ${govuk.pdf.in} with: ${govuk.pdf.command}"/>
+      <exec executable="${govuk.pdf.shell}" resultproperty="govuk.pdf.rc" failonerror="false"
+            dir="${dita.output.dir}">
+        <arg value="${govuk.pdf.shell.flag}"/>
+        <arg value="${govuk.pdf.command} &quot;${govuk.pdf.in}&quot; &quot;${govuk.pdf.out}&quot;"/>
+      </exec>
+      <condition property="govuk.pdf.failed">
+        <not><equals arg1="${govuk.pdf.rc}" arg2="0"/></not>
+      </condition>
+      <echo if:set="govuk.pdf.failed" level="warning"
+            message="[GOVK008W]: the PDF command exited ${govuk.pdf.rc}; the site is complete but no PDF was produced. Command: ${govuk.pdf.command}"/>
+      <echo unless:set="govuk.pdf.failed" level="info"
+            message="govuk: PDF written to ${govuk.pdf.out}"/>
+    </sequential>
   </target>
 
   <target name="govuk.copy-assets"
