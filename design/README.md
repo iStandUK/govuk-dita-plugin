@@ -4,7 +4,7 @@ A design for an open-source **DITA Open Toolkit (DITA-OT) plugin** that publishe
 directly as a static website using the **GOV.UK Design System** (GDS), with no dependency on
 commercial help-output tooling.
 
-**Status:** Implemented through **v1.0.0** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude) · **How the repository is run:** [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURITY.md](../SECURITY.md), [docs/RELEASING.md](../docs/RELEASING.md) (D-22)
+**Status:** Implemented through **v1.0.1** (living document) · **Started:** 2026-09-01 · **Author:** Nicholas Oughtibridge (with Claude) · **How the repository is run:** [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURITY.md](../SECURITY.md), [docs/RELEASING.md](../docs/RELEASING.md) (D-22)
 
 ## How to read this folder
 
@@ -62,6 +62,7 @@ See [05-decision-log.md](05-decision-log.md) for the reasoning behind each of th
 
 | **Print output** (D-20, [10](10-pdf-css.md)) | The 1.0 half of the PDF design ([#63](https://github.com/iStandUK/govuk-dita-plugin/issues/63)): a print stylesheet on every page (A4 by default, `govuk.pdf.paper` / `govuk.pdf.orientation`) and, with `govuk.print=yes`, the whole publication as one self-contained file — cover, contents, every topic in reading order, glossary and index — with a topic ceiling, no search indexing, and a Chromium print smoke in CI. The bundled CSS PDF engine (FR-P3) is the 1.1 epic. |
 | **Security review** ([11](11-security.md), Sept 2026) | Four epics: supply chain and CI ([#65](https://github.com/iStandUK/govuk-dita-plugin/issues/65)), governance per the hello-world exemplar ([#71](https://github.com/iStandUK/govuk-dita-plugin/issues/71), D-22), content reaching readers under publisher control with warnings not errors ([#77](https://github.com/iStandUK/govuk-dita-plugin/issues/77): SVG sanitising, inline scope, content policy, CSP, sitemap, dates), documentation ([#83](https://github.com/iStandUK/govuk-dita-plugin/issues/83)). |
+| [**v1.0.1**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.1) | Print page references through a formatter of the publisher's choosing (`govuk.pdf.command`, `target-counter` rules in `print.css`, the `govuk-print-contract` marker — D-23 step 1, [#106](https://github.com/iStandUK/govuk-dita-plugin/issues/106)–[#108](https://github.com/iStandUK/govuk-dita-plugin/issues/108)), and colliding ids fixed in the print document where nested topic ids repeat across files, as Markdown headings guarantee ([#121](https://github.com/iStandUK/govuk-dita-plugin/issues/121), found by the Open Referral UK migration demo). First Markdown-sourced fixture in CI. |
 | [**v1.0.0**](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.0) | **The 1.0 release** (D-21): v0.9.2 plus the print stylesheet and print document (#63); the first live trial complete; **listed in the DITA-OT plugin registry** on 2026-09-07 ([#21](https://github.com/iStandUK/govuk-dita-plugin/issues/21), [dita-ot/registry#176](https://github.com/dita-ot/registry/pull/176)) so `dita install org.istanduk.gov-uk` works by name; closes the v1 epic ([#15](https://github.com/iStandUK/govuk-dita-plugin/issues/15)). |
 
 Per-requirement status lives in the **Status column of

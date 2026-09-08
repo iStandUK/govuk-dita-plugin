@@ -3,8 +3,12 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: v1.0.0 — released** —
-[v1.0.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.0) is the first
+**Status: v1.0.1 — released** —
+[v1.0.1](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.1) adds page
+references for PDF (a formatter of your choosing renders the print document with page numbers
+in the contents, the index and cross-references) and fixes colliding ids in the print document
+of publications converted from Markdown. It builds on
+[v1.0.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.0), the first
 release the DITA community can rely on: full DITA 1.3 spec coverage on a GOV.UK Design System
 frontend with a CI safety net (WCAG 2.2 AA via axe-core, valid HTML, internal-link and
 page-weight checks, build determinism); **NHS and official GOV.UK branding** (#47);
@@ -26,7 +30,7 @@ dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 
 (The first command resolves the name through the DITA-OT plugin registry; a release zip URL —
-`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.0.0/org.istanduk.gov-uk-1.0.0.zip`
+`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.0.1/org.istanduk.gov-uk-1.0.1.zip`
 — works in the same place for an offline or pinned install.)
 
 Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. Optionally,
