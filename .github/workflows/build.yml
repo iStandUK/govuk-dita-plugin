@@ -260,7 +260,7 @@ jobs:
           # cover block, contents, chapter groups, topics with demoted headings, glossary and index parts
           grep -q '<h1 class="govuk-heading-xl">GOV.UK DITA plugin manual</h1>' out/manual-print/print.html
           grep -q 'app-print-contents__list' out/manual-print/print.html
-          grep -q 'href="#introduction">About the plugin</a>' out/manual-print/print.html
+          grep -Eq 'href="#introduction"[^>]*>About the plugin</a>' out/manual-print/print.html
           grep -q '<section class="app-print-group app-print-chapter" id="app-print-group-' out/manual-print/print.html
           grep -Eq '<h3 [^>]*id="t[0-9]+-ariaid-title1"[^>]*>Installing the plugin</h3>' out/manual-print/print.html
           grep -q 'id="app-print-glossary"' out/manual-print/print.html
@@ -313,6 +313,58 @@ jobs:
           test ! -f out/manual-print-ceiling/print.html
           absent -q 'href="print.html"' out/manual-print-ceiling/index.html
           absent -q 'href="../print.html"' out/manual-print-ceiling/topics/install.html
+
+      # Print page references, the formatter hook, the contract marker and the
+      # duplicate-id fix (#106, #107, #108, #121). The Markdown fixture is the
+      # shape a converted website has: headings become nested topics, so ids
+      # repeat across files.
+      - name: Print page numbers and the external formatter (#106–#108, #121)
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-mini -Dgovuk.print=yes
+          md=out/markdown-mini/print.html
+          # #121: ids repeat across the Markdown topics; the merged document must not
+          test -z "$(grep -o ' id="[^"]*"' "$md" | sort | uniq -d)"
+          grep -q 'id="about"' "$md"                     # the first file keeps the site's ids
+          grep -Eq 'id="p[23]-about"' "$md"              # later files that would collide are prefixed
+          grep -q 'href="#p2-first-case-study"' "$md"    # and links into them follow
+          # #108 contract marker, #107 page-reference labels
+          grep -q '<meta name="govuk-print-contract" content="1"' "$md"
+          grep -q 'data-page-label="page"' "$md"
+          grep -q 'target-counter(attr(href url), page)' out/markdown-mini/govuk/print.css
+          # a publication whose ids do not collide is untouched
+          absent -Eq ' id="p[0-9]+-' out/manual-print/print.html
+          grep -q '<meta name="govuk-print-contract" content="1"' out/manual-print/print.html
+          grep -q 'data-page-label="page"' out/manual-print/print.html
+          # #106: a real CSS Paged Media formatter resolves the page references
+          sudo apt-get update -qq && sudo apt-get install -y -qq libpango-1.0-0 libpangoft2-1.0-0
+          # 70.0 carries the fix for Kozea/WeasyPrint#2833 — 69.0 and earlier crash
+          # resolving govuk-frontend's max(1px, .0625rem) underline thickness — and is
+          # also a security release (CVE-2026-55073)
+          pip install --quiet weasyprint==70.0 pypdf==6.1.1
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-pdf -Dgovuk.print=yes \
+            "-Dgovuk.pdf.command=weasyprint --quiet" 2>&1 | tee pdf.log
+          test -f out/markdown-pdf/mdmini.pdf
+          absent -q 'GOVK008W' pdf.log
+          python - <<'PY'
+          from pypdf import PdfReader
+          text = "\n".join(p.extract_text() or "" for p in PdfReader("out/markdown-pdf/mdmini.pdf").pages)
+          assert "First case study" in text, "the publication did not render"
+          assert "(page " in text, "cross-references carry no page number — did target-counter resolve?"
+          print("page references resolved in the PDF")
+          PY
+          # a failing command is a warning, not a failed build; and the command needs the print document
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-pdf-fail -Dgovuk.print=yes \
+            "-Dgovuk.pdf.command=exit 3;" 2>&1 | tee pdf-fail.log
+          grep -q '\[GOVK008W\]: the PDF command exited 3' pdf-fail.log
+          test -f out/markdown-pdf-fail/index.html
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-noprint "-Dgovuk.pdf.command=weasyprint" 2>&1 | tee pdf-noprint.log
+          grep -q '\[GOVK008W\]: govuk.pdf.command is set but govuk.print is not' pdf-noprint.log
 
       # Content reaching readers (epic #77: #78 #79 #80 #81 #82 #59 #60 #61). Every
       # behaviour is a publisher parameter; every finding is a warning, never an error.
@@ -458,7 +510,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/search-semantics out/search-semantics-json
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -716,7 +768,7 @@ jobs:
             out/manual-grid out/manual-accordion out/manual-depth1 out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 \
             out/keyref-nest out/keyref-nest-href out/search-semantics out/search-semantics-json \
             out/manual-print out/oruk-print out/kitchen-print out/manual-print-ceiling \
-            out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/manual-csp
+            out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/manual-csp out/markdown-mini
 
       - name: Page-weight budget (NFR-P2)
         run: python3 tools/page_weight.py --report --budget-kb 300 out/manual out/kitchen out/oruk-mini
@@ -735,7 +787,7 @@ jobs:
           (cd tools/a11y && npx playwright install --with-deps chromium)
 
       - name: Accessibility checks — axe-core WCAG 2.2 AA (NFR-A1)
-        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 out/manual-print/print.html out/kitchen-print/print.html out/oruk-print/print.html out/kitchen-strip/topics/media.html out/kitchen-strip/topics/reference-full.html out/manual-csp/search.html
+        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 out/manual-print/print.html out/kitchen-print/print.html out/oruk-print/print.html out/markdown-mini/print.html out/kitchen-strip/topics/media.html out/kitchen-strip/topics/reference-full.html out/manual-csp/search.html
 
       # #82: the policy the plugin emits must not block anything on its own pages —
       # served over HTTP (a policy's 'self' is an origin), every page loaded, and a

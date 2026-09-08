@@ -81,6 +81,16 @@
               report. See <xref keyref="security"/>.</entry>
           </row>
           <row>
+            <entry><codeph>GOVK008W</codeph></entry>
+            <entry>The PDF command (<codeph>govuk.pdf.command</codeph>) failed, or was set
+              without <codeph>govuk.print=yes</codeph>, or there was no print document to
+              render. The site is complete; no PDF was produced. Reported by the build step
+              rather than the transformation, so it carries no file and line.</entry>
+            <entry>Check the command runs by hand on
+              <filepath>print.html</filepath>, and that <codeph>govuk.print=yes</codeph>. See
+              <xref keyref="print"/>.</entry>
+          </row>
+          <row>
             <entry><codeph>GOVK007W</codeph></entry>
             <entry>A Content-Security-Policy is in force (<codeph>govuk.csp</codeph>) and
               content that was kept — a remote image or object — will be blocked by it in the

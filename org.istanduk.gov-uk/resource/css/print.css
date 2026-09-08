@@ -117,3 +117,23 @@ svg {
   break-before: page;
   page-break-before: always;
 }
+
+/* Page references (#107). A link that resolves inside the print document is
+ * followed by the page it points at — "Installing the plugin (page 13)" — and
+ * the contents and index carry page numbers instead of being bare links. The
+ * label travels in data-page-label so it stays localisable. target-counter()
+ * is CSS Generated Content for Paged Media: browsers do not implement it and
+ * drop these declarations whole, so printing from a browser is unchanged;
+ * a CSS Paged Media formatter (govuk.pdf.command) resolves them. */
+.app-print a.xref[data-page-label]::after {
+  content: " (" attr(data-page-label) " " target-counter(attr(href url), page) ")";
+}
+
+.app-print .app-print-contents__list a[data-page-label]::after {
+  content: " " leader('.') " " target-counter(attr(href url), page);
+}
+
+.app-print .app-index-list a[data-page-label]::after,
+.app-print .app-itemlist a[data-page-label]::after {
+  content: " " target-counter(attr(href url), page);
+}
