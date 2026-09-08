@@ -3,7 +3,7 @@
 This file is part of the govuk-dita-plugin project.
 Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
 -->
-<plugin id="org.istanduk.gov-uk" version="1.0.0">
+<plugin id="org.istanduk.gov-uk" version="1.0.1">
   <require plugin="org.dita.html5"/>
   <transtype name="govuk" extends="html5" desc="GOV.UK Design System HTML5">
     <param name="govuk.branding"
@@ -132,6 +132,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
            type="string"/>
     <param name="govuk.pdf.paper"
            desc="Paper size for printing: a CSS page-size keyword (A5, A4, A3, B5, B4, JIS-B5, JIS-B4, Letter, Legal, Ledger) or a width and height as CSS lengths such as '210mm 297mm'. Default A4. Applies to the print stylesheet now and to the PDF engine planned for 1.1."
+           type="string"/>
+    <param name="govuk.pdf.command"
+           desc="Command that renders the print document as PDF, run after the site is built when govuk.print=yes. The print document's path and the output PDF's path are appended as the last two arguments, so 'weasyprint' becomes 'weasyprint &lt;print.html&gt; &lt;publication.pdf&gt;'. Empty (default) runs nothing. A CSS Paged Media formatter resolves the page references the print stylesheet generates — page numbers in the contents, the index and cross-references — which browsers cannot. The plugin bundles no formatter and downloads nothing; a failure is reported as a warning and the site is still complete."
+           type="string"/>
+    <param name="govuk.pdf.name"
+           desc="File name for the generated PDF, without the extension. Defaults to the input map's name."
            type="string"/>
     <param name="govuk.pdf.orientation"
            desc="Page orientation for printing with a named paper size: 'portrait' (default) or 'landscape'."

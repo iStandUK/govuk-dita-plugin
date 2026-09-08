@@ -151,6 +151,21 @@
                 size).</entry>
             </row>
             <row>
+              <entry><codeph>govuk.pdf.command</codeph></entry>
+              <entry>a command; empty by default</entry>
+              <entry>Render the print document as PDF with a CSS Paged Media formatter you have
+                installed. The print document's path and the output path are appended as the
+                last two arguments. A formatter resolves the page references browsers cannot —
+                page numbers in the contents, the index and cross-references. Failure is
+                reported (<codeph>GOVK008W</codeph>) and the site is still complete; see
+                <xref keyref="print"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.pdf.name</codeph></entry>
+              <entry>file name; default the map's name</entry>
+              <entry>Name for the generated PDF, without the extension.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.pdf.orientation</codeph></entry>
               <entry><codeph>portrait</codeph> (default), <codeph>landscape</codeph></entry>
               <entry>Page orientation with a named paper size; explicit lengths are already
