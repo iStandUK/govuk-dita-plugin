@@ -6,4 +6,11 @@ DesignSystemPDF is versioned on its own line, independently of the GOV.UK DITA p
 
 The first release. Design: [13 — page numbers in print](https://github.com/iStandUK/govuk-dita-plugin/blob/dev/design/13-print-page-numbers.md); decisions D-23 and D-25.
 
-- The product scaffold: a Maven build producing the distribution zip — launcher scripts for Unix and Windows, the engine (Open HTML to PDF 1.1.87 with Apache PDFBox 3.0.7) as separate unmodified jars, Noto Sans and Noto Sans Mono, and the licence and notice files.
+- Renders the plugin's print document (print contract 1) as a paged PDF: page numbers in the contents, in the index and on cross-references; footnotes at the foot of the page; running heads; repeated table headers; landscape pages for tables and figures marked `outputclass="landscape"`; an outline from the headings.
+- Tagged PDF/UA-1 by default, validated with veraPDF in CI; `--no-pdf-ua` writes an untagged file.
+- Paper, orientation, margins and mirrored sides from the command line; A4 by default through the document's own stylesheet.
+- Bundled Noto Sans and Noto Sans Mono; publisher fonts with `--fonts`.
+- The same input gives the same bytes: a date is written only when `--fixed-date` or `SOURCE_DATE_EPOCH` gives one.
+- No network request: resources on another origin are reported and left out.
+- Refuses a print document whose contract it does not understand, with exit code 3.
+- Engine: Open HTML to PDF 1.1.87 with Apache PDFBox 3.0.7, shipped as separate unmodified jars with their source attached to the release.
