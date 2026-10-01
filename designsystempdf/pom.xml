@@ -42,7 +42,7 @@ licence texts.
     <!-- The engine: Open HTML to PDF (LGPL-2.1-or-later), shipped unmodified in lib/ -->
     <openhtmltopdf.version>1.1.87</openhtmltopdf.version>
     <!-- One Batik version throughout: the MathML drawer would otherwise bring an older batik-svg-dom -->
-    <batik.version>1.17</batik.version>
+    <batik.version>1.19</batik.version>
 
     <!-- Test only; never in the distribution -->
     <junit.version>5.14.4</junit.version>
