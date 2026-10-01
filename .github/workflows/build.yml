@@ -842,6 +842,9 @@ jobs:
     env:
       # the commit of notofonts/notofonts.github.io the bundled fonts were taken from (fonts/README.md)
       NOTO_FONTS_COMMIT: "1eb09fb315562c7e07d738691870e52c39b45b39"
+      # the toolkit that builds the print documents to render; as in the build job's matrix
+      DITA_OT_VERSION: "4.4.1"
+      DITA_OT_SHA256: "154414c1debb548e923bf77e9a09019e249a8887680ff4bfbd8e137de9e8e250"
     defaults:
       run:
         working-directory: designsystempdf
@@ -871,8 +874,44 @@ jobs:
           if ls fonts | grep -Ei 'transport|frutiger'; then echo "a restricted typeface is in fonts/"; exit 1; fi
           echo "bundled fonts match their checksums and upstream"
 
-      - name: Build and test
-        run: mvn -B -ntp --strict-checksums verify
+      # The documents the generator exists for: the print documents the plugin in
+      # this tree builds from its manual and fixtures (the supported toolkit,
+      # checksum-verified as in the build job).
+      - name: Cache DITA-OT
+        id: cache-dita-ot
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: dita-ot-${{ env.DITA_OT_VERSION }}
+          key: dita-ot-${{ env.DITA_OT_VERSION }}
+
+      - name: Download DITA-OT
+        if: steps.cache-dita-ot.outputs.cache-hit != 'true'
+        working-directory: .
+        run: |
+          curl -sSL -o dita-ot.zip "https://github.com/dita-ot/dita-ot/releases/download/${DITA_OT_VERSION}/dita-ot-${DITA_OT_VERSION}.zip"
+          echo "${DITA_OT_SHA256}  dita-ot.zip" | sha256sum -c -
+          unzip -q dita-ot.zip
+          rm dita-ot.zip
+
+      - name: Build the print documents with the plugin in this tree
+        working-directory: .
+        run: |
+          (cd org.istanduk.gov-uk && zip -qr ../org.istanduk.gov-uk.zip .)
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" uninstall org.istanduk.gov-uk || true
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
+          for f in "docs/manual/manual.ditamap manual" "fixtures/dita13-kitchen/kitchen.ditamap kitchen" "fixtures/oruk-mini/oruk.ditamap oruk-mini"; do
+            set -- $f
+            "dita-ot-${DITA_OT_VERSION}/bin/dita" --input "$1" --format govuk --output "out/pdf/$2" -Dgovuk.print=yes -Dgovuk.search=no
+            grep -q '<meta name="govuk-print-contract" content="1"' "out/pdf/$2/print.html"
+          done
+
+      # Unit tests, then the integration tests: the sample and each print document
+      # rendered twice (byte-identical), with an outline, and valid PDF/UA-1 by
+      # veraPDF — a pinned test dependency, never shipped.
+      - name: Build, test, render and validate with veraPDF
+        run: |
+          docs="$GITHUB_WORKSPACE/out/pdf/manual/print.html:$GITHUB_WORKSPACE/out/pdf/kitchen/print.html:$GITHUB_WORKSPACE/out/pdf/oruk-mini/print.html"
+          mvn -B -ntp --strict-checksums verify "-Ddesignsystempdf.it.documents=$docs"
 
       - name: The distribution is complete and the engine is unmodified
         run: |
@@ -916,6 +955,28 @@ jobs:
           grep -q "^DesignSystemPDF ${version}$" /tmp/version.txt
           echo "distribution verified: $(du -h "$zip" | cut -f1)"
 
+      # The unpacked distribution, through its launcher, as a publisher runs it:
+      # the manual comes out page-numbered, and is the same file, byte for byte,
+      # that the integration tests made and veraPDF passed.
+      - name: The launcher renders the manual
+        run: |
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' pom.xml | head -1)
+          dspdf="/tmp/dist/designsystempdf-${version}/bin/designsystempdf"
+          "$dspdf" --in "$GITHUB_WORKSPACE/out/pdf/manual/print.html" --out /tmp/manual.pdf 2>&1 | tee /tmp/manual.log
+          absent -q 'DSPDF' /tmp/manual.log
+          grep -q 'tagged PDF/UA-1' /tmp/manual.log
+          pages=$(sed -n 's/.* written, \([0-9]*\) pages.*/\1/p' /tmp/manual.log)
+          test "${pages:-0}" -ge 40 || { echo "the manual should run to 40 pages or more, was: ${pages:-none}"; exit 1; }
+          cmp /tmp/manual.pdf target/it/manual-print.html.pdf
+          # a contract this release does not know is refused, and nothing is written
+          sed 's/govuk-print-contract" content="1"/govuk-print-contract" content="2"/' "$GITHUB_WORKSPACE/out/pdf/manual/print.html" > /tmp/future.html
+          rc=0; "$dspdf" --in /tmp/future.html --out /tmp/future.pdf 2> /tmp/future.log || rc=$?
+          test "$rc" = 3 || { echo "expected exit code 3 for an unknown contract, was $rc"; exit 1; }
+          grep -q '^\[DSPDF002E\]' /tmp/future.log
+          test ! -e /tmp/future.pdf
+          echo "the launcher rendered the manual: $pages pages"
+
       - name: Upload the distribution
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -923,6 +984,13 @@ jobs:
           path: |
             designsystempdf/target/designsystempdf-*.zip
             designsystempdf/target/engine-sources/*.jar
+
+      - name: Upload the rendered PDFs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: designsystempdf-pdfs
+          path: designsystempdf/target/it/*.pdf
 
   # One stable status for branch protection to require: passes only when every
   # job the change called for passed — each matrix leg of `build` (add DITA-OT
