@@ -7,25 +7,22 @@ package org.istanduk.designsystempdf;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 /**
- * The command line. This is the product scaffold: the launcher, the build and
- * the distribution are in place, and the entry point answers --version and
- * --help. Rendering follows.
+ * The command line: {@code designsystempdf --in print.html --out publication.pdf}.
+ * Exit codes: 0 the PDF was written; 1 rendering failed; 2 the command line
+ * is wrong; 3 the print document is not one this version understands.
  */
 public final class Main {
 
   static final int OK = 0;
+  static final int FAILED = 1;
   static final int USAGE = 2;
-
-  private static final String USAGE_TEXT = String.join(System.lineSeparator(),
-      "Usage: designsystempdf --in print.html --out publication.pdf [options]",
-      "",
-      "Renders an XHTML print document as a paged, tagged PDF.",
-      "",
-      "  --version            print the version",
-      "  --help               print this text");
+  static final int REFUSED = 3;
 
   private Main() {
   }
@@ -35,18 +32,51 @@ public final class Main {
   }
 
   static int run(String[] args, PrintStream out, PrintStream err) {
-    if (args.length == 1 && args[0].equals("--version")) {
-      out.println("DesignSystemPDF " + version());
+    String version = version();
+    Options options;
+    try {
+      options = Options.parse(args);
+    } catch (UsageException e) {
+      new Log(err, false).error(Log.USAGE, e.getMessage());
+      err.println();
+      err.println(Options.USAGE);
+      return USAGE;
+    }
+    if (options.help) {
+      out.println(Options.USAGE);
       return OK;
     }
-    if (args.length == 1 && (args[0].equals("--help") || args[0].equals("-h"))) {
-      out.println(USAGE_TEXT);
+    if (options.version) {
+      out.println("DesignSystemPDF " + version);
+      out.println("print contracts understood: " + String.join(", ", PrintContract.UNDERSTOOD));
       return OK;
     }
-    err.println("[DSPDF001E]: this build of DesignSystemPDF " + version() + " does not render yet; it answers --version and --help.");
-    err.println();
-    err.println(USAGE_TEXT);
-    return USAGE;
+    Log log = new Log(err, options.verbose);
+    try {
+      long started = System.nanoTime();
+      int pages = new Renderer(options, log, home().resolve("fonts"), version).render();
+      out.println("DesignSystemPDF " + version + ": " + options.out + " written, " + pages + " page"
+          + (pages == 1 ? "" : "s") + (options.pdfUa ? ", tagged PDF/UA-1" : ", untagged")
+          + (log.warnings() > 0 ? ", " + log.warnings() + " warning" + (log.warnings() == 1 ? "" : "s") : ""));
+      log.info(String.format("rendered in %.1f s", (System.nanoTime() - started) / 1e9));
+      return OK;
+    } catch (Renderer.ContractException e) {
+      log.error(Log.CONTRACT, e.getMessage());
+      return REFUSED;
+    } catch (Renderer.InputException e) {
+      log.error(Log.INPUT, e.getMessage());
+      return FAILED;
+    } catch (IOException | RuntimeException e) {
+      log.error(Log.RENDER, "no PDF was written: " + (e.getMessage() == null ? e.toString() : e.getMessage()));
+      if (options.verbose) {
+        e.printStackTrace(err);
+      }
+      return FAILED;
+    } catch (OutOfMemoryError e) {
+      log.error(Log.RENDER, "no PDF was written: the document needs more memory than Java was given. Raise the limit,"
+          + " for example DESIGNSYSTEMPDF_OPTS=-Xmx2g, and run again.");
+      return FAILED;
+    }
   }
 
   static String version() {
@@ -58,6 +88,25 @@ public final class Main {
       return p.getProperty("version", "unknown");
     } catch (IOException e) {
       return "unknown";
+    }
+  }
+
+  /**
+   * The installation directory, which holds fonts/ beside lib/: the launcher
+   * scripts pass it as designsystempdf.home; otherwise it is the parent of the
+   * directory this jar sits in.
+   */
+  static Path home() {
+    String home = System.getProperty("designsystempdf.home");
+    if (home != null && !home.isBlank()) {
+      return Paths.get(home);
+    }
+    try {
+      Path jar = Paths.get(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+      Path parent = jar.getParent();
+      return parent == null || parent.getParent() == null ? Paths.get(".") : parent.getParent();
+    } catch (URISyntaxException | RuntimeException e) {
+      return Paths.get(".");
     }
   }
 }
