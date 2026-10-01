@@ -22,15 +22,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Documentation-only changes (the design record, repository policy files,
-  # templates) skip the build; the manual under docs/manual/ is built and
-  # tested, so it is not documentation in this sense. `ci` still reports, so
-  # the branch rules are satisfied either way.
+  # The repository holds two products (D-23): the plugin and DesignSystemPDF.
+  # Each change runs the jobs of the product it touches. Documentation-only
+  # changes (the design record, repository policy files, templates) run
+  # neither; the manual under docs/manual/ is built and tested, so it is not
+  # documentation in this sense. A change to the workflows runs both. `ci`
+  # still reports, so the branch rules are satisfied either way.
   changes:
     name: changes
     runs-on: ubuntu-latest
     outputs:
-      docs-only: ${{ steps.classify.outputs.docs-only }}
+      plugin: ${{ steps.classify.outputs.plugin }}
+      pdf: ${{ steps.classify.outputs.pdf }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -44,23 +47,29 @@ jobs:
           if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
              || [ "$GITHUB_REF_TYPE" = "tag" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] \
              || ! git cat-file -e "$BASE" 2>/dev/null; then
-            echo "docs-only=false" >> "$GITHUB_OUTPUT"; echo "full run: no base to compare against"; exit 0
+            { echo "plugin=true"; echo "pdf=true"; } >> "$GITHUB_OUTPUT"; echo "full run: no base to compare against"; exit 0
           fi
           files=$(git diff --name-only "$(git merge-base "$BASE" "$HEAD")" "$HEAD")
           printf 'changed:\n%s\n' "$files"
-          docs='^(design/|docs/RELEASING\.md$|README\.md$|CONTRIBUTING\.md$|SECURITY\.md$|LICENSE|\.github/(ISSUE_TEMPLATE/|pull_request_template\.md$|CODEOWNERS$|dependabot\.yml$))'
-          other=$(printf '%s\n' "$files" | grep -Ev "$docs" || true)
-          if [ -n "$files" ] && [ -z "$other" ]; then
-            echo "docs-only=true" >> "$GITHUB_OUTPUT"; echo "documentation-only change: the build is skipped"
-          else
-            echo "docs-only=false" >> "$GITHUB_OUTPUT"; echo "full run"
+          docs='^(design/|docs/RELEASING\.md$|README\.md$|CONTRIBUTING\.md$|SECURITY\.md$|LICENSE|\.gitignore$|\.github/(ISSUE_TEMPLATE/|pull_request_template\.md$|CODEOWNERS$|dependabot\.yml$))'
+          rest=$(printf '%s\n' "$files" | grep -Ev "$docs" || true)
+          # an empty diff is treated as a full run, as before
+          if [ -z "$files" ]; then
+            { echo "plugin=true"; echo "pdf=true"; } >> "$GITHUB_OUTPUT"; echo "full run: nothing to classify"; exit 0
           fi
+          workflows=$(printf '%s\n' "$rest" | grep -E '^\.github/workflows/' || true)
+          pdf=$(printf '%s\n' "$rest" | grep -E '^designsystempdf/' || true)
+          plugin=$(printf '%s\n' "$rest" | grep -Ev '^designsystempdf/' || true)
+          if [ -n "$plugin" ]; then echo "plugin=true"; else echo "plugin=false"; fi >> "$GITHUB_OUTPUT"
+          if [ -n "$pdf" ] || [ -n "$workflows" ]; then echo "pdf=true"; else echo "pdf=false"; fi >> "$GITHUB_OUTPUT"
+          if [ -z "$rest" ]; then echo "documentation-only change: nothing is built"; fi
+          cat "$GITHUB_OUTPUT"
 
   build:
     runs-on: ubuntu-latest
     name: build (DITA-OT ${{ matrix.dita-ot.version }})
     needs: changes
-    if: needs.changes.outputs.docs-only != 'true'
+    if: needs.changes.outputs.plugin == 'true'
     # DITA-OT version matrix (NFR-M1): add 4.x releases here as they appear,
     # each with the SHA-256 of its distribution zip (shasum -a 256).
     strategy:
@@ -820,18 +829,120 @@ jobs:
           name: manual-site-${{ env.DITA_OT_VERSION }}
           path: out/manual
 
+  # DesignSystemPDF (epic #105, D-23, D-25): the second product, built and
+  # tested on its own. Its distribution carries an LGPL engine and open fonts
+  # that never enter the plugin, so the checks here are about provenance as
+  # much as behaviour: the fonts and the engine jars are the bytes their
+  # projects published, and none of the engine is copied into the tree.
+  designsystempdf:
+    name: designsystempdf
+    needs: changes
+    if: needs.changes.outputs.pdf == 'true'
+    runs-on: ubuntu-latest
+    env:
+      # the commit of notofonts/notofonts.github.io the bundled fonts were taken from (fonts/README.md)
+      NOTO_FONTS_COMMIT: "1eb09fb315562c7e07d738691870e52c39b45b39"
+    defaults:
+      run:
+        working-directory: designsystempdf
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+          cache-dependency-path: designsystempdf/pom.xml
+
+      # The fonts are vendored: they must be the files recorded in SHA256SUMS,
+      # and those must be the files the Noto project serves at the recorded commit.
+      - name: Bundled fonts match their checksums and their upstream
+        run: |
+          (cd fonts && sha256sum -c SHA256SUMS)
+          test "$(ls fonts/*.ttf | wc -l)" = "$(grep -c '\.ttf$' fonts/SHA256SUMS)" || { echo "a font is not listed in SHA256SUMS"; exit 1; }
+          grep -q "$NOTO_FONTS_COMMIT" fonts/README.md || { echo "fonts/README.md does not name commit $NOTO_FONTS_COMMIT"; exit 1; }
+          for f in fonts/*.ttf; do
+            n=$(basename "$f"); family=${n%%-*}
+            curl -sSfL -o "/tmp/$n" "https://raw.githubusercontent.com/notofonts/notofonts.github.io/${NOTO_FONTS_COMMIT}/fonts/${family}/hinted/ttf/${n}"
+            cmp "$f" "/tmp/$n" || { echo "vendored $n differs from its upstream at $NOTO_FONTS_COMMIT"; exit 1; }
+          done
+          # no restricted typeface, ever
+          if ls fonts | grep -Ei 'transport|frutiger'; then echo "a restricted typeface is in fonts/"; exit 1; fi
+          echo "bundled fonts match their checksums and upstream"
+
+      - name: Build and test
+        run: mvn -B -ntp --strict-checksums verify
+
+      - name: The distribution is complete and the engine is unmodified
+        run: |
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' pom.xml | head -1)
+          zip="target/designsystempdf-${version}.zip"
+          test -f "$zip"
+          rm -rf /tmp/dist && mkdir /tmp/dist && unzip -q "$zip" -d /tmp/dist
+          root="/tmp/dist/designsystempdf-${version}"
+          for f in bin/designsystempdf bin/designsystempdf.bat "lib/designsystempdf-${version}.jar" \
+                   LICENSE THIRD-PARTY-NOTICES licenses/LGPL-2.1.txt fonts/OFL.txt fonts/README.md fonts/SHA256SUMS \
+                   README.md CHANGELOG.md; do
+            test -f "$root/$f" || { echo "missing from the distribution: $f"; exit 1; }
+          done
+          test -x "$root/bin/designsystempdf"
+          (cd "$root/fonts" && sha256sum -c SHA256SUMS)
+          # LGPL: the engine ships as the jars its project published — each must match Maven Central's checksum
+          count=0
+          for jar in "$root"/lib/openhtmltopdf-*.jar; do
+            n=$(basename "$jar" .jar); artifact=${n%-*}; v=${n##*-}
+            want=$(curl -sSfL "https://repo1.maven.org/maven2/io/github/openhtmltopdf/${artifact}/${v}/${n}.jar.sha1" | cut -c1-40)
+            have=$(sha1sum "$jar" | cut -c1-40)
+            test "$want" = "$have" || { echo "$n.jar is not the published jar ($have, expected $want)"; exit 1; }
+            # and its source goes out with every release
+            test -f "target/engine-sources/${n}-sources.jar" || { echo "no source jar for $n"; exit 1; }
+            count=$((count + 1))
+          done
+          test "$count" = 4 || { echo "expected the four engine jars, found $count"; exit 1; }
+          # this product's own jar holds only its own code, and none of the engine's source is in the tree
+          if unzip -Z1 "$root/lib/designsystempdf-${version}.jar" | grep -E '\.class$' | grep -v '^org/istanduk/designsystempdf/'; then
+            echo "foreign classes in the product jar"; exit 1
+          fi
+          if grep -rIl --include='*.java' -E '^package (com\.openhtmltopdf|org\.apache)' src; then echo "third-party source in the tree"; exit 1; fi
+          # every shipped jar is accounted for in the notices
+          for jar in "$root"/lib/*.jar; do
+            n=$(basename "$jar"); stem=$(printf '%s' "$n" | sed -E 's/-[0-9][0-9A-Za-z.]*\.jar$//')
+            case "$stem" in batik-*) stem=batik ;; esac
+            grep -q "lib/${stem}-" THIRD-PARTY-NOTICES || [ "$stem" = designsystempdf ] || { echo "$n is not named in THIRD-PARTY-NOTICES"; exit 1; }
+          done
+          # the launcher runs with only its own lib/ on the class path
+          "$root/bin/designsystempdf" --version | tee /tmp/version.txt
+          grep -q "^DesignSystemPDF ${version}$" /tmp/version.txt
+          echo "distribution verified: $(du -h "$zip" | cut -f1)"
+
+      - name: Upload the distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: designsystempdf
+          path: |
+            designsystempdf/target/designsystempdf-*.zip
+            designsystempdf/target/engine-sources/*.jar
+
   # One stable status for branch protection to require: passes only when every
-  # matrix leg of `build` passed (add DITA-OT versions to the matrix freely).
+  # job the change called for passed — each matrix leg of `build` (add DITA-OT
+  # versions to the matrix freely) and `designsystempdf`.
   ci:
     name: ci
-    needs: [changes, build]
+    needs: [changes, build, designsystempdf]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - run: |
           test "${{ needs.changes.result }}" = "success" || { echo "change classification failed: ${{ needs.changes.result }}"; exit 1; }
-          if [ "${{ needs.changes.outputs.docs-only }}" = "true" ] && [ "${{ needs.build.result }}" = "skipped" ]; then
-            echo "documentation-only change: build skipped by design"; exit 0
-          fi
-          test "${{ needs.build.result }}" = "success" || { echo "build result: ${{ needs.build.result }}"; exit 1; }
-          echo "all build legs passed"
+          check() { # job, wanted, result
+            if [ "$2" = "true" ]; then
+              test "$3" = "success" || { echo "$1 result: $3"; exit 1; }
+              echo "$1 passed"
+            else
+              test "$3" = "skipped" || { echo "$1 was not wanted for this change but ended: $3"; exit 1; }
+              echo "$1 skipped by design"
+            fi
+          }
+          check build "${{ needs.changes.outputs.plugin }}" "${{ needs.build.result }}"
+          check designsystempdf "${{ needs.changes.outputs.pdf }}" "${{ needs.designsystempdf.result }}"

@@ -1,0 +1,5 @@
+# One set of line endings on every platform, so a build is the same bytes
+# wherever it is made. Fonts are binary and must never be converted.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.ttf binary

@@ -1,5 +1,6 @@
 # Dependency updates (#67) arrive as pull requests against dev (Gitflow, D-22):
-# the pinned action SHAs, and the two npm tool trees that only CI uses.
+# the pinned action SHAs, the two npm tool trees that only CI uses, and the
+# libraries DesignSystemPDF builds on (designsystempdf/pom.xml).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -16,6 +17,12 @@ updates:
     labels: [dependencies]
   - package-ecosystem: npm
     directory: /tools/branding
+    schedule:
+      interval: weekly
+    target-branch: dev
+    labels: [dependencies]
+  - package-ecosystem: maven
+    directory: /designsystempdf
     schedule:
       interval: weekly
     target-branch: dev
