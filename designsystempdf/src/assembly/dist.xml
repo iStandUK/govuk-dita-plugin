@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of DesignSystemPDF, in the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+The distribution zip. lib/ holds this product's jar and the third-party jars
+as they were published, unmodified and replaceable (LGPL-2.1, section 6).
+-->
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 https://maven.apache.org/xsd/assembly-2.2.0.xsd">
+  <id>dist</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <baseDirectory>designsystempdf-${project.version}</baseDirectory>
+
+  <fileSets>
+    <fileSet>
+      <directory>src/dist/bin</directory>
+      <outputDirectory>bin</outputDirectory>
+      <includes>
+        <include>designsystempdf</include>
+      </includes>
+      <fileMode>0755</fileMode>
+      <lineEnding>unix</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>src/dist/bin</directory>
+      <outputDirectory>bin</outputDirectory>
+      <includes>
+        <include>designsystempdf.bat</include>
+      </includes>
+      <fileMode>0644</fileMode>
+      <lineEnding>dos</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>${project.build.directory}/dist/lib</directory>
+      <outputDirectory>lib</outputDirectory>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <directory>fonts</directory>
+      <outputDirectory>fonts</outputDirectory>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <directory>licenses</directory>
+      <outputDirectory>licenses</outputDirectory>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <directory>.</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>LICENSE</include>
+        <include>THIRD-PARTY-NOTICES</include>
+        <include>README.md</include>
+        <include>CHANGELOG.md</include>
+      </includes>
+      <fileMode>0644</fileMode>
+    </fileSet>
+  </fileSets>
+
+  <files>
+    <file>
+      <source>${project.build.directory}/${project.build.finalName}.jar</source>
+      <outputDirectory>lib</outputDirectory>
+      <fileMode>0644</fileMode>
+    </file>
+  </files>
+</assembly>

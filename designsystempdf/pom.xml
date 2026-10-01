@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of DesignSystemPDF, in the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+DesignSystemPDF is the second product in this repository (D-23): a
+command-line generator that renders the plugin's print document as a paged,
+tagged PDF. It is versioned and released independently of the plugin
+(pdf-v* tags) and is not a DITA-OT plugin. `mvn -B verify` builds
+target/designsystempdf-<version>.zip: launcher scripts, this product's own jar,
+the engine and its dependencies as separate unmodified jars, the fonts and the
+licence texts.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.istanduk</groupId>
+  <artifactId>designsystempdf</artifactId>
+  <version>0.1.0</version>
+  <packaging>jar</packaging>
+
+  <name>DesignSystemPDF</name>
+  <description>Renders an XHTML print document as a paged, tagged PDF: page numbers on cross-references, in the contents and in the index, footnotes at the page foot, running heads, PDF/UA.</description>
+  <url>https://github.com/iStandUK/govuk-dita-plugin/tree/dev/designsystempdf</url>
+  <inceptionYear>2026</inceptionYear>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
+
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <!-- Reproducible build: the same tree gives the same jar and zip, byte for byte -->
+    <project.build.outputTimestamp>2026-10-01T00:00:00Z</project.build.outputTimestamp>
+
+    <!-- The engine: Open HTML to PDF (LGPL-2.1-or-later), shipped unmodified in lib/ -->
+    <openhtmltopdf.version>1.1.87</openhtmltopdf.version>
+    <!-- One Batik version throughout: the MathML drawer would otherwise bring an older batik-svg-dom -->
+    <batik.version>1.17</batik.version>
+
+    <!-- Test only; never in the distribution -->
+    <junit.version>5.14.4</junit.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.xmlgraphics</groupId>
+        <artifactId>batik-svg-dom</artifactId>
+        <version>${batik.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.openhtmltopdf</groupId>
+      <artifactId>openhtmltopdf-pdfbox</artifactId>
+      <version>${openhtmltopdf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.openhtmltopdf</groupId>
+      <artifactId>openhtmltopdf-svg-support</artifactId>
+      <version>${openhtmltopdf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.openhtmltopdf</groupId>
+      <artifactId>openhtmltopdf-mathml-support</artifactId>
+      <version>${openhtmltopdf.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>designsystempdf-${project.version}</finalName>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/version.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>**/version.properties</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
+    <pluginManagement>
+      <plugins>
+        <plugin><artifactId>maven-clean-plugin</artifactId><version>3.5.0</version></plugin>
+        <plugin><artifactId>maven-resources-plugin</artifactId><version>3.5.0</version></plugin>
+        <plugin><artifactId>maven-compiler-plugin</artifactId><version>3.16.0</version></plugin>
+        <plugin><artifactId>maven-surefire-plugin</artifactId><version>3.6.0</version></plugin>
+        <plugin><artifactId>maven-jar-plugin</artifactId><version>3.5.1</version></plugin>
+        <plugin><artifactId>maven-dependency-plugin</artifactId><version>3.11.0</version></plugin>
+        <plugin><artifactId>maven-assembly-plugin</artifactId><version>3.8.0</version></plugin>
+        <plugin><artifactId>maven-enforcer-plugin</artifactId><version>3.6.3</version></plugin>
+        <plugin><artifactId>maven-install-plugin</artifactId><version>3.2.0</version></plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>toolchain</id>
+            <goals><goal>enforce</goal></goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion><version>[3.9,)</version></requireMavenVersion>
+                <requireJavaVersion><version>[17,)</version></requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>org.istanduk.designsystempdf.Main</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <!-- lib/: the engine and its dependencies exactly as published -->
+          <execution>
+            <id>lib</id>
+            <phase>prepare-package</phase>
+            <goals><goal>copy-dependencies</goal></goals>
+            <configuration>
+              <includeScope>runtime</includeScope>
+              <outputDirectory>${project.build.directory}/dist/lib</outputDirectory>
+            </configuration>
+          </execution>
+          <!-- The engine's source, attached to every release beside the zip (LGPL) -->
+          <execution>
+            <id>engine-sources</id>
+            <phase>prepare-package</phase>
+            <goals><goal>copy-dependencies</goal></goals>
+            <configuration>
+              <includeGroupIds>io.github.openhtmltopdf</includeGroupIds>
+              <classifier>sources</classifier>
+              <outputDirectory>${project.build.directory}/engine-sources</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>dist</id>
+            <phase>package</phase>
+            <goals><goal>single</goal></goals>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/dist.xml</descriptor>
+              </descriptors>
+              <appendAssemblyId>false</appendAssemblyId>
+              <tarLongFileMode>posix</tarLongFileMode>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <designsystempdf.home>${project.basedir}</designsystempdf.home>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+</project>
