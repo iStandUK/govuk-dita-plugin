@@ -46,6 +46,7 @@ licence texts.
 
     <!-- Test only; never in the distribution -->
     <junit.version>5.14.4</junit.version>
+    <verapdf.version>1.30.2</verapdf.version>
   </properties>
 
   <dependencyManagement>
@@ -87,6 +88,13 @@ licence texts.
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- veraPDF validates the PDF/UA output in the integration tests (GPL-3.0-or-later / MPL-2.0; test scope only) -->
+    <dependency>
+      <groupId>org.verapdf</groupId>
+      <artifactId>validation-model</artifactId>
+      <version>${verapdf.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -114,6 +122,7 @@ licence texts.
         <plugin><artifactId>maven-resources-plugin</artifactId><version>3.5.0</version></plugin>
         <plugin><artifactId>maven-compiler-plugin</artifactId><version>3.16.0</version></plugin>
         <plugin><artifactId>maven-surefire-plugin</artifactId><version>3.6.0</version></plugin>
+        <plugin><artifactId>maven-failsafe-plugin</artifactId><version>3.6.0</version></plugin>
         <plugin><artifactId>maven-jar-plugin</artifactId><version>3.5.1</version></plugin>
         <plugin><artifactId>maven-dependency-plugin</artifactId><version>3.11.0</version></plugin>
         <plugin><artifactId>maven-assembly-plugin</artifactId><version>3.8.0</version></plugin>
@@ -214,6 +223,27 @@ licence texts.
         </configuration>
       </plugin>
 
+      <!-- Integration tests (*IT) run the built jar, in its own process with the
+           distribution's lib/, over whole documents and validate the PDFs with veraPDF -->
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <systemPropertyVariables>
+            <designsystempdf.home>${project.basedir}</designsystempdf.home>
+            <designsystempdf.it.output>${project.build.directory}/it</designsystempdf.it.output>
+            <designsystempdf.it.jar>${project.build.directory}/${project.build.finalName}.jar</designsystempdf.it.jar>
+            <designsystempdf.it.lib>${project.build.directory}/dist/lib</designsystempdf.it.lib>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
