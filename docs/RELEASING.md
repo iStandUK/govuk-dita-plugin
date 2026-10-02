@@ -19,6 +19,9 @@ release pull request.
 - [ ] Bump the version everywhere it appears — one commit, `Release vx.y.z: …`:
   - `org.istanduk.gov-uk/plugin.xml` (`version="x.y.z"`)
   - `docs/manual/topics/install.dita` (asset URL)
+  - `docs/manual/manual.ditamap` (`<edition>Version x.y.z</edition>`, and the
+    `<revised modified="…"/>` date set to the release date; CI fails if the edition and
+    `plugin.xml` disagree)
   - `README.md` (status paragraph, "Try it" URL)
   - `design/README.md` (status line, progress-table row)
   - `design/05-decision-log.md` if the release changes scope or process

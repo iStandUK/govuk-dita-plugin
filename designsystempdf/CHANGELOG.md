@@ -14,3 +14,5 @@ The first release. Design: [13 — page numbers in print](https://github.com/iSt
 - No network request: resources on another origin are reported and left out.
 - Refuses a print document whose contract it does not understand, with exit code 3.
 - Engine: Open HTML to PDF 1.1.87 with Apache PDFBox 3.0.7, shipped as separate unmodified jars with their source attached to the release.
+- A font supplied with `--fonts` also draws any character the font chosen for its text lacks, without the stylesheet naming it; the missing-glyph warning (`DSPDF004W`) is given when, and only when, a replacement mark is printed.
+- Known defect: text in a right-to-left script is not rendered correctly — replacement marks without a font for it, unjoined letters running from the left with one — and is reported with `DSPDF010W` ([#153](https://github.com/iStandUK/govuk-dita-plugin/issues/153)). Print the print document from a browser for such publications.

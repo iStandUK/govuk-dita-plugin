@@ -111,6 +111,7 @@ final class Renderer {
 
     new DocumentPreparer(doc, log).prepare(options.tocDepth, productCss() + "\n" + PageRules.css(options));
     reportMissingGlyphs(doc, fonts);
+    reportRightToLeft(doc);
 
     quietLibraries();
     XRLog.setLoggerImpl(new EngineLog());
@@ -279,7 +280,31 @@ final class Renderer {
       log.warn(Log.GLYPHS, missing.size() + " character(s) in the document have no glyph in the bundled fonts"
           + " or in --fonts and will print as a replacement mark: " + String.join(", ", missing.subList(0, shown))
           + (missing.size() > shown ? ", ..." : "")
-          + ". Supply a TrueType font that covers them with --fonts and name it in the publication's stylesheet.");
+          + ". Supply a TrueType font that covers them with --fonts.");
+    }
+  }
+
+  /**
+   * Text in a right-to-left script is drawn letter by letter from the left,
+   * unjoined: a font that has the letters makes the marks go and leaves the
+   * text unreadable. The publisher is told, whatever the fonts.
+   */
+  private void reportRightToLeft(Document doc) {
+    List<String> found = new ArrayList<>();
+    for (int cp : DocumentPreparer.codePoints(doc)) {
+      byte direction = Character.getDirectionality(cp);
+      if (direction == Character.DIRECTIONALITY_RIGHT_TO_LEFT
+          || direction == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC) {
+        String name = Character.getName(cp);
+        found.add(String.format("U+%04X", cp) + (name == null ? "" : " " + name));
+      }
+    }
+    if (!found.isEmpty()) {
+      int shown = Math.min(found.size(), 3);
+      log.warn(Log.RTL, "the document has text in a right-to-left script (" + found.size() + " different character(s): "
+          + String.join(", ", found.subList(0, shown)) + (found.size() > shown ? ", ..." : "")
+          + "). This version neither joins its letters nor sets it from the right, so it will not read correctly"
+          + " in the PDF, whatever fonts are supplied. Print the print document from a browser instead.");
     }
   }
 

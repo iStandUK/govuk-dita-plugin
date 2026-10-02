@@ -40,5 +40,10 @@
       <codeblock>dita uninstall org.istanduk.gov-uk
 dita install &lt;newer release URL&gt;</codeblock>
     </result>
+    <postreq>
+      <p>The plugin is all a website needs. To have the build make a page-numbered PDF of
+        the publication as well, install its companion, DesignSystemPDF, beside the toolkit:
+        see <xref keyref="pdf"/>.</p>
+    </postreq>
   </taskbody>
 </task>
