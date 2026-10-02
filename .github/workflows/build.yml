@@ -409,10 +409,20 @@ jobs:
           grep -q 'Published <time datetime="2026-03-01">1 March 2026</time>' "$c"
           absent -q 'Last updated' "$c"
           absent -Eq 'class="[^"]*app-print-imprint' "$c"
-          # no metadata, no block: the manual has rights but no details; a plain map has neither
-          absent -Eq 'class="[^"]*app-print-meta' out/manual-print/print.html
-          grep -q '<div class="app-print-imprint"><p class="govuk-body-s">© 2026 iStandUK</p></div>' out/manual-print/print.html
+          # no metadata, no block: a bookmap with rights but no dates or identifiers
+          # has an imprint and no details; a plain map has neither
+          absent -Eq 'class="[^"]*app-print-meta' out/oruk-print/print.html
+          grep -q '<div class="app-print-imprint"><p class="govuk-body-s">© The Open Referral Initiative</p></div>' out/oruk-print/print.html
           absent -Eq 'class="[^"]*app-print-(meta|imprint)' out/kitchen-print/print.html
+          # the manual's own cover: the edition is the plugin's version (they move
+          # together at a release, docs/RELEASING.md), with its dates and copyright
+          version=$(sed -n 's/.*<plugin id="org.istanduk.gov-uk" version="\([^"]*\)".*/\1/p' org.istanduk.gov-uk/plugin.xml)
+          test -n "$version"
+          grep -q "<li>Version ${version}</li>" out/manual-print/print.html \
+            || { echo "the edition in docs/manual/manual.ditamap is not plugin.xml's version, ${version}"; exit 1; }
+          grep -q 'Published <time datetime="2026-09-01">1 September 2026</time>' out/manual-print/print.html
+          grep -Eq 'Last updated <time datetime="[0-9]{4}-[0-9]{2}-[0-9]{2}">' out/manual-print/print.html
+          grep -q '<p class="govuk-body-s">© 2026 iStandUK</p>' out/manual-print/print.html
           for site in out/print-cover out/print-cover-official out/print-cover-published; do
             test -z "$(grep -o ' id="[^"]*"' "$site/print.html" | sort | uniq -d)"
           done
