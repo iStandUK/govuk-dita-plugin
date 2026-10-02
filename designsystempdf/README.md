@@ -105,7 +105,8 @@ The plugin writes `<meta name="govuk-print-contract" content="1">` into the prin
 
 ## Limits
 
-- Right-to-left and complex scripts are not shaped; text in a script the fonts lack prints as replacement marks, with a warning.
+- **Known defect: right-to-left scripts are not rendered** ([#153](https://github.com/iStandUK/govuk-dita-plugin/issues/153)). Right-to-left and complex scripts are not shaped or reordered, and a block's `dir="rtl"` is not honoured; the bundled fonts have no Arabic or Hebrew, so such text prints as replacement marks, with `DSPDF004W`. Supplying a font with `--fonts` does not cure it and can silence the warning. Until it is fixed, make the PDF of such a publication by printing the print document from a browser.
+- Text in any other script the fonts lack prints as replacement marks, with a warning; supply a font with `--fonts` and name its family first in the publication's stylesheet for that text.
 - MathML renders small and needs `alttext` to meet PDF/UA.
 - PDF/UA-1 is produced; PDF/A is not.
 - One paper size per publication, with landscape pages of the same paper.

@@ -153,8 +153,9 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
     <section id="problems">
       <title>When something is wrong</title>
       <p>DesignSystemPDF's messages have codes beginning <codeph>DSPDF</codeph>, and the
-        plugin passes them on with <codeph>GOVK008W</codeph> when the PDF is not made. The
-        ones a publisher is most likely to meet:</p>
+        build log shows them as they are: as warnings under the line <q>the PDF command
+        reported</q> when the PDF is made, and with <codeph>GOVK008W</codeph> when it is
+        not. The ones a publisher is most likely to meet:</p>
       <simpletable>
         <sthead>
           <stentry>Message</stentry>
@@ -169,7 +170,10 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
         <strow>
           <stentry><codeph>DSPDF004W</codeph></stentry>
           <stentry>Some characters have no glyph in the fonts and print as a replacement
-            mark. Supply a font that covers them with <codeph>--fonts</codeph>.</stentry>
+            mark. Supply a font that covers them with <codeph>--fonts</codeph>, and name
+            its family first in the <codeph>font-family</codeph> of your own stylesheet
+            for that text. For a right-to-left script, see the known defect
+            below.</stentry>
         </strow>
         <strow>
           <stentry><codeph>DSPDF008W</codeph></stentry>
@@ -183,9 +187,27 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
         </strow>
       </simpletable>
       <p>Warnings never stop the PDF being written. The full list, the exit codes and the
-        limits — right-to-left scripts are not shaped, one paper size per publication,
-        PDF/A is not produced — are in the <filepath>README.md</filepath> inside the
-        download.</p>
+        limits — one paper size per publication, PDF/A is not produced — are in the
+        <filepath>README.md</filepath> inside the download.</p>
+    </section>
+    <section id="rtl">
+      <title>Known defect: right-to-left scripts</title>
+      <p><indexterm>right-to-left text<indexterm>in PDF</indexterm></indexterm><indexterm>DesignSystemPDF<indexterm>known
+        defects</indexterm></indexterm>DesignSystemPDF 0.1 does not render text in a
+        right-to-left script, such as Arabic or Hebrew. The website and the print
+        document are right — the page is marked with its language and direction and the
+        text runs from the right — but in the PDF every such character prints as a
+        replacement mark and the topic is set from the left. The build log reports the
+        characters with <codeph>DSPDF004W</codeph>.</p>
+      <p>Supplying a font with <codeph>--fonts</codeph> does not cure it, and can hide it:
+        the marks remain, because the letters would still be neither joined nor put in
+        right-to-left order, and the warning may no longer be given.</p>
+      <p>Until this is fixed, make the PDF of a right-to-left publication, or of one with
+        right-to-left passages, from a browser: open <filepath>print.html</filepath> and
+        use the browser's print or save-as-PDF command. Browsers shape and order the text
+        correctly; the contents list and index then carry links instead of page numbers
+        (<xref keyref="print"/>). Leave <codeph>govuk.pdf.command</codeph> unset for such
+        a publication, so that the site does not link a PDF with unreadable passages.</p>
     </section>
     <section id="versions">
       <title>Which versions work together</title>

@@ -14,3 +14,4 @@ The first release. Design: [13 — page numbers in print](https://github.com/iSt
 - No network request: resources on another origin are reported and left out.
 - Refuses a print document whose contract it does not understand, with exit code 3.
 - Engine: Open HTML to PDF 1.1.87 with Apache PDFBox 3.0.7, shipped as separate unmodified jars with their source attached to the release.
+- Known defect: text in a right-to-left script is not rendered; it prints as replacement marks, with a warning ([#153](https://github.com/iStandUK/govuk-dita-plugin/issues/153)). Print the print document from a browser for such publications.

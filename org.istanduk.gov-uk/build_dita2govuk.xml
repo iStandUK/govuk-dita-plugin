@@ -441,6 +441,7 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
     <local name="govuk.pdf.failed"/><local name="govuk.pdf.written"/>
     <local name="govuk.pdf.empty"/><local name="govuk.pdf.bytes"/>
     <local name="govuk.pdf.size"/>
+    <local name="govuk.pdf.said.err"/><local name="govuk.pdf.said.out"/>
     <property name="govuk.pdf.in" location="${dita.output.dir}/print.html"/>
     <property name="govuk.pdf.out" location="${dita.output.dir}/${govuk.pdf.name}.pdf"/>
     <available property="govuk.pdf.missing" file="${govuk.pdf.in}" type="file"/>
@@ -475,6 +476,29 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
             message="[GOVK008W]: the PDF command exited 0 but wrote no file at ${govuk.pdf.out}; the site is complete but no PDF was produced. Command: ${govuk.pdf.command}${line.separator}${govuk.pdf.err}${govuk.pdf.log}"/>
       <echo if:set="govuk.pdf.written" level="info"
             message="govuk: PDF written to ${govuk.pdf.out}"/>
+      <!-- A formatter that made the PDF may still have something to say: what
+           it wrote to standard error is shown as it is, at warning level
+           (DesignSystemPDF's [DSPDF…W] messages arrive this way), and what it
+           wrote to standard output at info level. One that prints nothing adds
+           nothing (#152). -->
+      <condition property="govuk.pdf.said.err">
+        <and>
+          <isset property="govuk.pdf.written"/>
+          <isset property="govuk.pdf.err"/>
+          <length string="${govuk.pdf.err}" trim="true" when="greater" length="0"/>
+        </and>
+      </condition>
+      <condition property="govuk.pdf.said.out">
+        <and>
+          <isset property="govuk.pdf.written"/>
+          <isset property="govuk.pdf.log"/>
+          <length string="${govuk.pdf.log}" trim="true" when="greater" length="0"/>
+        </and>
+      </condition>
+      <echo if:set="govuk.pdf.said.err" level="warning"
+            message="govuk: the PDF was written, and the PDF command reported:${line.separator}${govuk.pdf.err}"/>
+      <echo if:set="govuk.pdf.said.out" level="info"
+            message="govuk: the PDF command printed:${line.separator}${govuk.pdf.log}"/>
     </sequential>
     <!-- The PDF exists: its size goes into the link text on every page -->
     <sequential if:set="govuk.pdf.written">

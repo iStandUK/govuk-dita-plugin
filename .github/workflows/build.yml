@@ -1128,6 +1128,19 @@ jobs:
           grep -qF "href=\"manual.pdf\">Whole publication (PDF, ${size})</a>" out/pdf/manual-site/glossary.html
           absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->' out/pdf/manual-site --include='*.html'
           echo "the build made $pdf and linked it as: PDF, ${size}"
+          # #152: what the generator warns about reaches the build log when the PDF is
+          # made — and a run with nothing to say (the manual, above) adds nothing. The
+          # kitchen-sink fixture has Arabic text the bundled fonts cannot draw (the known
+          # defect #153), so the generator warns; the PDF is still made and linked.
+          absent -q 'the PDF command reported' /tmp/manual-site.log
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap --format govuk \
+            --output out/pdf/kitchen-site -Dgovuk.print=yes -Dgovuk.search=no \
+            -Dgovuk.pdf.command=designsystempdf 2>&1 | tee /tmp/kitchen-site.log
+          grep -q 'govuk: the PDF was written, and the PDF command reported:' /tmp/kitchen-site.log
+          grep -q '\[DSPDF004W\]: .*ARABIC LETTER' /tmp/kitchen-site.log
+          absent -q 'GOVK008W' /tmp/kitchen-site.log
+          test -f out/pdf/kitchen-site/kitchen.pdf
+          grep -q 'href="kitchen.pdf">Whole publication (PDF, ' out/pdf/kitchen-site/index.html
 
       - name: Upload the distribution
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
