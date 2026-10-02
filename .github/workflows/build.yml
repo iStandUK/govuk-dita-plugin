@@ -306,8 +306,9 @@ jobs:
           grep -q 'href="#install"' out/manual-print/print.html
           grep -q 'src="images/' out/manual-print/print.html
           # nothing for search to index, no site chrome, no related-links block, no duplicate ids
+          # (class attributes, not text: the manual's own topics name these classes)
           absent -q 'data-pagefind' out/manual-print/print.html
-          absent -Eq 'app-masthead|app-sidebar|govuk-footer|related-links' out/manual-print/print.html
+          absent -Eq 'class="[^"]*(app-masthead|app-sidebar|govuk-footer|related-links)' out/manual-print/print.html
           test -z "$(grep -o ' id="[^"]*"' out/manual-print/print.html | sort | uniq -d)"
           # linked from the cover and every footer; print.css on every page with the A4 default
           grep -q 'href="print.html">Whole publication (print version)' out/manual-print/index.html
