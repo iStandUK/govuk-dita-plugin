@@ -343,7 +343,8 @@
         foot of the page, running heads, bookmarks and tagging are the formatter's own work:
         check what yours produces, and for a government publication prefer one that writes
         tagged PDF/UA. The plugin bundles no formatter and downloads nothing; you install the
-        one you name.</p>
+        one you name. Whatever the formatter writes to its error stream while it makes the
+        PDF appears in the build log as a warning, so its own warnings are not lost.</p>
       <p>Two limits are the vocabulary's rather than any formatter's: CSS cannot say
         <q>above</q> or <q>below</q>, so a page reference reads the same whichever way the
         target lies; and a link to a page the print document leaves out stays a link to the
