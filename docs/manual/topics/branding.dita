@@ -21,7 +21,9 @@
           drawn from the bookmap's <codeph>bookmeta</codeph> (see below)</li>
       </ul>
       <p>This makes neutral mode safe for standards bodies, local government partnerships,
-        and any publisher who wants the Design System's clarity without its insignia.</p>
+        and any publisher who wants the Design System's clarity without its insignia. To
+        put your own typeface, colours and logo on it, see
+        <xref keyref="custom-css"/>.</p>
     </section>
     <section>
       <title>The iStandUK theme</title>
