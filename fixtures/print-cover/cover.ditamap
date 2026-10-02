@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "bookmap.dtd">
+<bookmap id="print-cover" xml:lang="en-GB">
+  <booktitle>
+    <mainbooktitle>Cover metadata</mainbooktitle>
+    <booktitlealt>A bookmap that carries everything the print document's cover can
+      show.</booktitlealt>
+  </booktitle>
+  <bookmeta>
+    <author>Example Standards Body</author>
+    <critdates>
+      <created date="2026-03-01"/>
+      <revised modified="2026-06-15"/>
+      <revised modified="2026-09-30"/>
+    </critdates>
+    <bookid>
+      <edition>2.1</edition>
+      <isbn>978-0-00-000000-2</isbn>
+      <booknumber>ESB-2026-04</booknumber>
+    </bookid>
+    <bookrights>
+      <copyrfirst><year>2024</year></copyrfirst>
+      <copyrlast><year>2026</year></copyrlast>
+      <bookowner>
+        <organization>Example Standards Body</organization>
+      </bookowner>
+      <summary>Licensed under the Creative Commons Attribution 4.0 International
+        licence.</summary>
+    </bookrights>
+  </bookmeta>
+  <chapter href="topic.dita"/>
+</bookmap>

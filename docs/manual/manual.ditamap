@@ -10,6 +10,17 @@
   </booktitle>
   <bookmeta>
     <author>iStandUK</author>
+    <!-- The print document's cover shows these (#150). The edition is the plugin
+         release the manual describes and the revised date is that release's; both
+         move with the version bump (docs/RELEASING.md), and CI checks the edition
+         against plugin.xml. -->
+    <critdates>
+      <created date="2026-09-01"/>
+      <revised modified="2026-09-08"/>
+    </critdates>
+    <bookid>
+      <edition>Version 1.0.1</edition>
+    </bookid>
     <bookrights>
       <copyrfirst><year>2026</year></copyrfirst>
       <bookowner>

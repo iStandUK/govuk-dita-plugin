@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "bookmap.dtd">
+<bookmap id="print-cover-published" xml:lang="en-GB">
+  <booktitle>
+    <mainbooktitle>Cover metadata, the bookmap way</mainbooktitle>
+  </booktitle>
+  <bookmeta>
+    <publisherinformation>
+      <organization>Example Standards Body</organization>
+      <published>
+        <completed><year>2026</year><month>3</month><day>1</day></completed>
+      </published>
+    </publisherinformation>
+    <bookid>
+      <edition>Second edition</edition>
+    </bookid>
+  </bookmeta>
+  <chapter href="topic.dita"/>
+</bookmap>

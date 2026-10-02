@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="topic" xml:lang="en-GB">
+  <title>The only chapter</title>
+  <shortdesc>Something for the cover to stand in front of.</shortdesc>
+  <conbody>
+    <p>The cover's details and imprint come from the bookmap, not from this topic.</p>
+  </conbody>
+</concept>
