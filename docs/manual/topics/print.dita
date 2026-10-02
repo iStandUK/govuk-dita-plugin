@@ -140,6 +140,52 @@
         review circulation or archiving. Printed, or saved as PDF from a browser, it becomes
         the whole publication with running page numbers; Chromium-based browsers also produce
         a tagged PDF with a document outline from the headings.</p>
+      <p><indexterm>fonts<indexterm>sizes in print</indexterm></indexterm>In print, and so
+        in a PDF, the print document is set as a publication rather than as a web page on
+        paper. It takes the type sizes government practice gives for documents, in place of
+        the larger ones the Design System uses when a web page is printed:</p>
+      <simpletable>
+        <sthead>
+          <stentry>Text</stentry>
+          <stentry>Size</stentry>
+        </sthead>
+        <strow>
+          <stentry>The publication's title, on the cover</stentry>
+          <stentry>28 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>Section headings: chapters, parts, and topics at the top of the
+            map</stentry>
+          <stentry>20 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>Subheadings: topics inside a chapter, then the sections inside a
+            topic</stentry>
+          <stentry>16 pt, then 14 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>The lead paragraph: the cover's abstract and each topic's
+            summary</stentry>
+          <stentry>14 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>Body text, lists and tables</stentry>
+          <stentry>12 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>Captions of tables and figures</stentry>
+          <stentry>11 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>Code blocks; endnotes</stentry>
+          <stentry>10.5 pt; 10 pt</stentry>
+        </strow>
+      </simpletable>
+      <p>These are defaults. A stylesheet of your own, added with <codeph>args.css</codeph>
+        (<xref keyref="parameters"/>), is linked after the plugin's and can change any of
+        them: write the rule for print, on the class with <codeph>.app-print</codeph> in
+        front, as in <codeph>@media print { .app-print .govuk-body { font-size: 11pt } }</codeph>.
+        A single page printed from the site keeps the Design System's own print sizes.</p>
       <p>Very large publications are not one printable document. The build writes the file only
         when the publication has no more than <codeph>govuk.print.max-topics</codeph> topic
         files (<codeph>500</codeph> by default); above that it reports <codeph>GOVK003W</codeph>
