@@ -2,16 +2,18 @@
 <!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
 <concept id="troubleshooting" xml:lang="en-GB">
   <title>Troubleshooting</title>
-  <shortdesc>Toolkit behaviours that publishers of large, key-based publications meet on
-    DITA-OT 4.4, what they look like in the build log and on the page, and the remedy for
-    each.</shortdesc>
+  <shortdesc>Toolkit behaviours that publishers of large, key-based publications, and
+    publishers building on Windows, meet on DITA-OT 4.4: what they look like in the build
+    log and on the page, and the remedy for each.</shortdesc>
   <conbody>
     <p><indexterm>troubleshooting</indexterm><indexterm>DITA-OT<indexterm>known
-      limitations</indexterm></indexterm>Everything below was characterised on a real
-      publication of about ten thousand topics during the plugin's live trials. None of it
+      limitations</indexterm></indexterm>The first three sections were characterised on a
+      real publication of about ten thousand topics during the plugin's live trials; the
+      last was found building the plugin's own fixtures on Windows. None of it
       is caused by the plugin, and none of it can be fixed by the plugin, because it happens
-      in the toolkit's preprocessing before any rendering; a plain <codeph>html5</codeph>
-      build shows the same results. The plugin's part is to say so clearly.</p>
+      in the toolkit's start-up or preprocessing before any rendering; a plain
+      <codeph>html5</codeph> build shows the same results. The plugin's part is to say so
+      clearly.</p>
     <section id="chunk">
       <title>Merged pages fail on DITA-OT 4.4: "Failed to move chunk"</title>
       <p><indexterm>chunking<indexterm>DITA-OT 4.4</indexterm></indexterm>DITA-OT 4.4
@@ -71,6 +73,50 @@ with &lt;mapref href="..."&gt; instead, or check that the key is defined.</codeb
         to it reports <codeph>DOTX031E</codeph>. Key the merged parent instead, with a
         fragment for the child (<codeph>parent.dita#child-id</codeph>). The design records
         the full analysis against a real corpus.</p>
+    </section>
+    <section id="windows-shell">
+      <title>On Windows, Markdown topics are missing and the print document is almost
+        empty</title>
+      <p><indexterm>Windows</indexterm><indexterm>Markdown<indexterm>missing on
+        Windows</indexterm></indexterm><indexterm>DOTJ013E</indexterm>A publication with
+        Markdown topics, built on Windows from a Unix-style shell (such as the Bash shell
+        that comes with Git for Windows) with the toolkit's <filepath>bin/dita</filepath>
+        script, finishes without failing but has no topic pages: the
+        <filepath>.md</filepath> files are copied to the output unconverted, the home page
+        links to pages that were never written, and with <codeph>govuk.print=yes</codeph> the print document holds
+        only its cover and an empty contents list. The same publication builds correctly on
+        Linux. The cause is at the top of the build log, one message for each
+        Markdown file:</p>
+      <codeblock>Error: [DOTJ013E] Failed to parse the referenced resource 'file:/C:/docs/intro.md'.:
+java.lang.ClassNotFoundException: com.elovirta.dita.markdown.MarkdownReader</codeblock>
+      <p>The <filepath>bin/dita</filepath> script lists the Java libraries of the installed
+        plugins as a Unix-style path list. The shell converts such a list to its Windows
+        form when it starts Java, but not when the list begins with a colon, and it does
+        whenever the <codeph>CLASSPATH</codeph> environment variable is not set. Java then
+        receives a list it cannot read and loads no plugin's library. Transformations that
+        need only XSLT, this plugin's included, still run, so a publication written wholly
+        in DITA builds correctly; whatever needs a plugin's Java code, such as the reader
+        for Markdown topics, does not.</p>
+      <p>Run the toolkit's Windows launcher, <filepath>bin\dita.bat</filepath>, instead. It
+        works from Command Prompt and PowerShell, and from the Unix-style shell when called
+        by that name:</p>
+      <codeblock>dita.bat --input guide.ditamap --format govuk --output out -Dgovuk.print=yes</codeblock>
+      <p>If <filepath>dita.bat</filepath> itself stops with
+        <codeph>The input line is too long</codeph>, the toolkit is installed under a very
+        long path: the launcher repeats that path once for every plugin library and
+        overruns the command interpreter's limit. Move the toolkit to a short path such as
+        <filepath>C:\dita-ot</filepath>.</p>
+      <p><indexterm>temporary file names</indexterm>The warnings that follow the errors,
+        such as <codeph>DOTX023W</codeph> and <codeph>DOTX026W</codeph> for a target like
+        <filepath>ae0ee616f773eabb8d23ad552c33a6d8026e8d64.md</filepath>, are a consequence
+        and not a second fault. DITA-OT gives every file a hashed temporary name while it
+        preprocesses and restores the real names in its last step, so any message raised in
+        between names the hash. To find the file it stands for, build with
+        <codeph>--verbose</codeph> and search the log for the hash: the line that reads the
+        file pairs the two names. Such names appear on every platform. A key definition
+        for a topic that <codeph>chunk="to-content"</codeph> has merged into another page,
+        for example, reports <codeph>DOTX023W</codeph> and <codeph>DOTX027W</codeph> with a
+        hashed name, on Linux as on Windows.</p>
     </section>
   </conbody>
 </concept>

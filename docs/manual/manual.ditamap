@@ -38,10 +38,11 @@
   <chapter>
     <topicmeta>
       <navtitle>Reference</navtitle>
-      <shortdesc>Build parameters, branding and the legal position, navigation, search, printing, security, and the build's messages.</shortdesc>
+      <shortdesc>Build parameters, branding and the legal position, your own stylesheet, navigation, search, printing, security, and the build's messages.</shortdesc>
     </topicmeta>
     <topicref keyref="parameters"/>
     <topicref keyref="branding"/>
+    <topicref keyref="custom-css"/>
     <topicref keyref="navigation"/>
     <topicref keyref="layouts"/>
     <topicref keyref="search"/>
