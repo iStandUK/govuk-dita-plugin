@@ -264,8 +264,10 @@
         </sthead>
         <strow>
           <stentry><codeph>args.css</codeph>, <codeph>args.cssroot</codeph>,
-            <codeph>args.copycss</codeph></stentry>
-          <stentry>Append your own stylesheet after the plugin's, for per-site tweaks.</stentry>
+            <codeph>args.copycss</codeph>, <codeph>args.csspath</codeph></stentry>
+          <stentry>Append your own stylesheet after the plugin's, to change the typeface,
+            colours or logo; <xref keyref="custom-css"/> has the command and a sample
+            stylesheet.</stentry>
         </strow>
         <strow>
           <stentry><codeph>nav-toc</codeph></stentry>

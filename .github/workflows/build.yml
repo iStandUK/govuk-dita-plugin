@@ -198,6 +198,34 @@ jobs:
             "-Dgovuk.footer.links=Privacy|https://example.gov.uk/privacy;Contact|https://example.gov.uk/contact" \
             "-Dgovuk.footer.licence=© 2026 Example Service"
 
+      # FR-T4, #142: the publisher's stylesheet (args.css) is copied into the
+      # output and linked after the plugin's on every kind of page. The stylesheet is the
+      # sample the manual prints, so what publishers copy is what is tested —
+      # here, by the HTML validator and by the accessibility checks below.
+      - name: Build with a publisher stylesheet (FR-T4, #142)
+        run: |
+          last_css() { grep -o '<link rel="stylesheet"[^>]*>' "$1" | tail -1; }
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-custom -Dgovuk.print=yes \
+            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes
+          cmp docs/manual/samples/custom.css out/manual-custom/custom.css
+          for page in index.html glossary.html index-page.html figurelist.html tablelist.html print.html; do
+            last_css "out/manual-custom/$page" | grep -q 'href="custom.css"' || { echo "custom.css is not the last stylesheet on $page"; exit 1; }
+          done
+          last_css out/manual-custom/topics/install.html | grep -q 'href="../custom.css"'
+          # on the search page only the search component's own stylesheet follows it
+          grep -q 'href="custom.css"' out/manual-custom/search.html
+          # the manual prints the sample itself
+          grep -q -e '--brand-colour: #00594f' out/manual-custom/topics/custom-css.html
+          # a branding mode's overlay still comes first, and args.csspath moves the file
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
+            --format govuk --output out/oruk-custom -Dgovuk.branding=istanduk \
+            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes -Dargs.csspath=theme
+          test -f out/oruk-custom/theme/custom.css
+          grep -q 'overlay-istanduk.css' out/oruk-custom/item.html
+          last_css out/oruk-custom/item.html | grep -q 'href="theme/custom.css"'
+          last_css out/oruk-custom/index.html | grep -q 'href="theme/custom.css"'
+
       # Trial finding (#51): DITA-OT resolves no key inside a submap included with
       # <mapref keyref>; the plugin must warn (GOVK001W) and name the entry, and
       # stay silent for the same submap included with <mapref href> and for the manual.
@@ -278,8 +306,9 @@ jobs:
           grep -q 'href="#install"' out/manual-print/print.html
           grep -q 'src="images/' out/manual-print/print.html
           # nothing for search to index, no site chrome, no related-links block, no duplicate ids
+          # (class attributes, not text: the manual's own topics name these classes)
           absent -q 'data-pagefind' out/manual-print/print.html
-          absent -Eq 'app-masthead|app-sidebar|govuk-footer|related-links' out/manual-print/print.html
+          absent -Eq 'class="[^"]*(app-masthead|app-sidebar|govuk-footer|related-links)' out/manual-print/print.html
           test -z "$(grep -o ' id="[^"]*"' out/manual-print/print.html | sort | uniq -d)"
           # linked from the cover and every footer; print.css on every page with the A4 default
           grep -q 'href="print.html">Whole publication (print version)' out/manual-print/index.html
@@ -542,7 +571,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -819,7 +848,7 @@ jobs:
           (cd tools/a11y && npx playwright install --with-deps chromium)
 
       - name: Accessibility checks — axe-core WCAG 2.2 AA (NFR-A1)
-        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 out/manual-print/print.html out/kitchen-print/print.html out/oruk-print/print.html out/markdown-mini/print.html out/kitchen-strip/topics/media.html out/kitchen-strip/topics/reference-full.html out/manual-csp/search.html
+        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/manual-print/print.html out/kitchen-print/print.html out/oruk-print/print.html out/markdown-mini/print.html out/kitchen-strip/topics/media.html out/kitchen-strip/topics/reference-full.html out/manual-csp/search.html
 
       # #82: the policy the plugin emits must not block anything on its own pages —
       # served over HTTP (a policy's 'self' is an origin), every page loaded, and a
