@@ -48,6 +48,7 @@
     <topicref keyref="search"/>
     <topicref keyref="glossary-index"/>
     <topicref keyref="print"/>
+    <topicref keyref="pdf"/>
     <topicref keyref="security"/>
     <topicref keyref="accessibility"/>
     <topicref keyref="troubleshooting"/>

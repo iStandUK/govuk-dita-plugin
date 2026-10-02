@@ -394,15 +394,38 @@ jobs:
           assert "(page " in text, "cross-references carry no page number — did target-counter resolve?"
           print("page references resolved in the PDF")
           PY
+          # #146: the home page and every footer link the PDF beside the print version,
+          # with its size; no marker or token is left behind; the link resolves; and the
+          # search index is still built, now after the PDF step
+          size='Whole publication \(PDF, [0-9]+(\.[0-9])? (KB|MB)\)</a>'
+          grep -Eq "<a class=\"govuk-link\" type=\"application/pdf\" href=\"mdmini\.pdf\">$size" out/markdown-pdf/index.html
+          grep -Eq "<a class=\"govuk-footer__link\" type=\"application/pdf\" href=\"mdmini\.pdf\">$size" out/markdown-pdf/index.html
+          grep -Eq "<a class=\"govuk-footer__link\" type=\"application/pdf\" href=\"mdmini\.pdf\">$size" out/markdown-pdf/intro.html
+          grep -q 'href="print.html">Whole publication (print version)' out/markdown-pdf/index.html
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->' out/markdown-pdf --include='*.html'
+          absent -q 'application/pdf' out/markdown-pdf/print.html
+          python3 tools/check_links.py out/markdown-pdf
+          test -d out/markdown-pdf/pagefind
           # a failing command is a warning, not a failed build; and the command needs the print document
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-pdf-fail -Dgovuk.print=yes \
             "-Dgovuk.pdf.command=exit 3;" 2>&1 | tee pdf-fail.log
           grep -q '\[GOVK008W\]: the PDF command exited 3' pdf-fail.log
           test -f out/markdown-pdf-fail/index.html
+          # ... and so is a command that succeeds without writing the PDF
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-pdf-empty -Dgovuk.print=yes \
+            "-Dgovuk.pdf.command=true" 2>&1 | tee pdf-empty.log
+          grep -q '\[GOVK008W\]: the PDF command exited 0 but wrote no file' pdf-empty.log
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-noprint "-Dgovuk.pdf.command=weasyprint" 2>&1 | tee pdf-noprint.log
           grep -q '\[GOVK008W\]: govuk.pdf.command is set but govuk.print is not' pdf-noprint.log
+          # #146: without a PDF no page links one, and nothing of the link is left
+          for site in out/markdown-pdf-fail out/markdown-pdf-empty out/markdown-noprint; do
+            absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' "$site" --include='*.html'
+          done
+          # ... and a build that names no formatter is as it was
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/manual-print out/markdown-mini --include='*.html'
 
       # Content reaching readers (epic #77: #78 #79 #80 #81 #82 #59 #60 #61). Every
       # behaviour is a publisher parameter; every finding is a warning, never an error.
@@ -1005,6 +1028,30 @@ jobs:
           grep -q '^\[DSPDF002E\]' /tmp/future.log
           test ! -e /tmp/future.pdf
           echo "the launcher rendered the manual: $pages pages"
+
+      # The two products together, as the manual tells a publisher to use them:
+      # the distribution's launcher on the PATH, named in govuk.pdf.command. The
+      # build makes the PDF and every page links it with the file's real size (#146).
+      - name: The plugin runs the launcher and links the PDF (#146)
+        working-directory: .
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
+          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
+            --output out/pdf/manual-site -Dgovuk.print=yes -Dgovuk.search=no \
+            -Dgovuk.pdf.command=designsystempdf 2>&1 | tee /tmp/manual-site.log
+          absent -Eq 'GOVK008W|DSPDF' /tmp/manual-site.log
+          pdf=out/pdf/manual-site/manual.pdf
+          test -f "$pdf"
+          bytes=$(stat -c %s "$pdf")
+          size=$(awk -v b="$bytes" 'BEGIN { if (b >= 1048064) printf "%.1f MB", b / 1048576; else printf "%d KB", int(b / 1024 + 0.5) }')
+          grep -qF "href=\"manual.pdf\">Whole publication (PDF, ${size})</a>" out/pdf/manual-site/index.html
+          grep -qF "href=\"../manual.pdf\">Whole publication (PDF, ${size})</a>" out/pdf/manual-site/topics/install.html
+          grep -qF "href=\"manual.pdf\">Whole publication (PDF, ${size})</a>" out/pdf/manual-site/glossary.html
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->' out/pdf/manual-site --include='*.html'
+          echo "the build made $pdf and linked it as: PDF, ${size}"
 
       - name: Upload the distribution
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

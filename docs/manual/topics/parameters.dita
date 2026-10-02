@@ -125,8 +125,8 @@
               <entry><codeph>govuk.print</codeph></entry>
               <entry><codeph>no</codeph> (default), <codeph>yes</codeph></entry>
               <entry>Also write the whole publication as one file,
-                <filepath>print.html</filepath>, for printing or saving as PDF from a browser;
-                see <xref keyref="print"/>.</entry>
+                <filepath>print.html</filepath>, for printing or saving as PDF from a browser,
+                and for a formatter to render as PDF; see <xref keyref="print"/>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.print.max-topics</codeph></entry>
@@ -147,23 +147,26 @@
                 <codeph>JIS-B4</codeph>, <codeph>Letter</codeph>, <codeph>Legal</codeph>,
                 <codeph>Ledger</codeph>, or a width and height such as
                 <codeph>148mm 210mm</codeph></entry>
-              <entry>Paper size the print stylesheet asks for (and, from 1.1, the PDF page
-                size).</entry>
+              <entry>Paper size the print stylesheet asks for, in a browser and in a PDF made
+                by the build.</entry>
             </row>
             <row>
               <entry><codeph>govuk.pdf.command</codeph></entry>
               <entry>a command; empty by default</entry>
               <entry>Render the print document as PDF with a CSS Paged Media formatter you have
-                installed. The print document's path and the output path are appended as the
-                last two arguments. A formatter resolves the page references browsers cannot —
-                page numbers in the contents, the index and cross-references. Failure is
-                reported (<codeph>GOVK008W</codeph>) and the site is still complete; see
-                <xref keyref="print"/>.</entry>
+                installed: <codeph>designsystempdf</codeph> for the project's own
+                (<xref keyref="pdf"/>), or any other. The print document's path and the
+                output path are appended as the last two arguments. A formatter resolves the
+                page references browsers cannot — page numbers in the contents, the index and
+                cross-references. When the PDF is made, the home page and every footer link
+                it, with its size. Failure is reported (<codeph>GOVK008W</codeph>) and the
+                site is still complete; see <xref keyref="print"/>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.pdf.name</codeph></entry>
               <entry>file name; default the map's name</entry>
-              <entry>Name for the generated PDF, without the extension.</entry>
+              <entry>Name for the generated PDF, without the extension; it is also the name the
+                site links.</entry>
             </row>
             <row>
               <entry><codeph>govuk.pdf.orientation</codeph></entry>
