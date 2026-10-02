@@ -81,6 +81,12 @@ node tools/a11y/run.mjs out/manual
 node tools/a11y/print-smoke.mjs out/manual/print.html out/manual.pdf --paper A4
 ```
 
+On Windows, run the toolkit's `dita.bat` rather than the `dita` shell script, even from a
+Unix-style shell: started by the script, Java loads no plugin library, so the Markdown
+fixture builds without its topics (the manual's Troubleshooting topic has the detail).
+Where there is no `zip` command, `jar cMf ../org.istanduk.gov-uk.zip .` makes the same
+archive.
+
 The fixtures under `fixtures/` exercise bookmaps, keys, chunking, the SVG domain, search
 semantics and unresolved keys; `.github/workflows/build.yml` lists every assertion.
 
