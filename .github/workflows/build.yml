@@ -1138,6 +1138,8 @@ jobs:
             -Dgovuk.pdf.command=designsystempdf 2>&1 | tee /tmp/kitchen-site.log
           grep -q 'govuk: the PDF was written, and the PDF command reported:' /tmp/kitchen-site.log
           grep -q '\[DSPDF004W\]: .*ARABIC LETTER' /tmp/kitchen-site.log
+          # ... and the right-to-left text is reported for what it is (#153)
+          grep -q '\[DSPDF010W\]: the document has text in a right-to-left script' /tmp/kitchen-site.log
           absent -q 'GOVK008W' /tmp/kitchen-site.log
           test -f out/pdf/kitchen-site/kitchen.pdf
           grep -q 'href="kitchen.pdf">Whole publication (PDF, ' out/pdf/kitchen-site/index.html

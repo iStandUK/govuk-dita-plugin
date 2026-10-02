@@ -20,8 +20,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 
+import org.apache.fontbox.ttf.TTFParser;
+import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
@@ -224,12 +227,92 @@ class MainTest {
     assertTrue(messages.contains("[DSPDF005W]: --fonts "), messages);
     assertTrue(messages.contains("[DSPDF004W]: 5 character(s)"), messages);
     assertTrue(messages.contains("U+0645 ARABIC LETTER MEEM"), messages);
+    // right-to-left text is reported for what it is, not only for its missing glyphs
+    assertTrue(messages.contains("[DSPDF010W]: the document has text in a right-to-left script (5 different character(s)"), messages);
     assertTrue(messages.contains("[DSPDF008W]: a resource on another origin was not fetched"), messages);
     assertTrue(messages.contains("https://example.org/remote.png"), messages);
     assertTrue(messages.contains("[DSPDF006W]: "), messages);
     assertTrue(Files.size(pdf) > 0);
     assertTrue(out().contains("warnings"), out());
     assertFalse(Files.exists(dir.resolve("warnings.pdf.part")));
+  }
+
+  /**
+   * A font given with --fonts draws the characters the stylesheet's own fonts
+   * lack, although no stylesheet names it, and the missing-glyph warning is
+   * given exactly when a replacement mark is printed. The installation here
+   * bundles the sans family alone, and the publisher supplies the monospace
+   * one, which has characters the sans does not.
+   */
+  @Test
+  void aSuppliedFontFillsTheGapsAndTheWarningSaysWhatIsPrinted() throws IOException {
+    Path bundled = Path.of(System.getProperty("designsystempdf.home"), "fonts");
+    // under target/, not the temporary directory: the PDF library keeps a font
+    // file open for the life of the process, and Windows will not delete one
+    Path work = Files.createTempDirectory(Files.createDirectories(Path.of("target", "test-fonts")), "gaps");
+    Path home = Files.createDirectories(work.resolve("home"));
+    Path homeFonts = Files.createDirectories(home.resolve("fonts"));
+    Path supplied = Files.createDirectories(work.resolve("supplied"));
+    try (var files = Files.list(bundled)) {
+      for (Path f : (Iterable<Path>) files::iterator) {
+        String name = f.getFileName().toString();
+        if (name.startsWith("NotoSans-")) {
+          Files.copy(f, homeFonts.resolve(name));
+        } else if (name.equals("NotoSansMono-Regular.ttf")) {
+          Files.copy(f, supplied.resolve(name));
+        }
+      }
+    }
+    int only = onlyIn(supplied.resolve("NotoSansMono-Regular.ttf"), homeFonts.resolve("NotoSans-Regular.ttf"));
+    String character = new String(Character.toChars(only));
+    String code = String.format("U+%04X", only);
+    Path doc = write("gaps.html", "<html xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"en\"><head><title>Gaps</title>"
+        + "<meta name=\"description\" content=\"Gaps\"/><style>p { font-family: sans-serif }</style></head><body>"
+        + "<p>before " + character + " after</p></body></html>");
+
+    String previous = System.getProperty("designsystempdf.home");
+    System.setProperty("designsystempdf.home", home.toString());
+    try {
+      // nothing has the character: a replacement mark, and the warning
+      Path without = dir.resolve("without.pdf");
+      assertEquals(Main.OK, run("--in", doc.toString(), "--out", without.toString()));
+      assertTrue(err().contains("[DSPDF004W]: 1 character(s)"), err());
+      assertTrue(err().contains(code), err());
+      assertTrue(err().contains("Supply a TrueType font that covers them with --fonts."), err());
+      try (PDDocument pdf = Loader.loadPDF(without.toFile())) {
+        assertFalse(page(pdf, 1).contains(character), page(pdf, 1));
+      }
+
+      // the supplied font has it: the character itself, from that font, and no warning
+      Path with = dir.resolve("with.pdf");
+      assertEquals(Main.OK, run("--in", doc.toString(), "--out", with.toString(), "--fonts", supplied.toString()));
+      assertEquals("", err());
+      try (PDDocument pdf = Loader.loadPDF(with.toFile())) {
+        assertTrue(page(pdf, 1).contains("before " + character + " after"), page(pdf, 1));
+        boolean mono = false;
+        PDResources resources = pdf.getPage(0).getResources();
+        for (COSName name : resources.getFontNames()) {
+          assertTrue(resources.getFont(name).isEmbedded(), resources.getFont(name).getName());
+          mono |= resources.getFont(name).getName().contains("NotoSansMono");
+        }
+        assertTrue(mono, "the supplied font draws the character");
+      }
+    } finally {
+      System.setProperty("designsystempdf.home", previous);
+    }
+  }
+
+  /** The first symbol the one font has a glyph for and the other has not. */
+  private static int onlyIn(Path has, Path lacks) throws IOException {
+    try (TrueTypeFont a = new TTFParser().parse(new RandomAccessReadBufferedFile(has.toFile()));
+        TrueTypeFont b = new TTFParser().parse(new RandomAccessReadBufferedFile(lacks.toFile()))) {
+      for (int cp = 0x2190; cp <= 0x25FF; cp++) {
+        if (a.getUnicodeCmapLookup().getGlyphId(cp) != 0 && b.getUnicodeCmapLookup().getGlyphId(cp) == 0) {
+          return cp;
+        }
+      }
+    }
+    throw new IllegalStateException("the bundled monospace font no longer has a symbol the sans lacks");
   }
 
   private static String page(PDDocument doc, int number) throws IOException {

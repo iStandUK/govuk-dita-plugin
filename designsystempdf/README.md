@@ -45,7 +45,7 @@ Plugin releases after 1.0.1 also link the PDF from the site's home page and ever
 | `--orientation O` | `portrait` or `landscape`, with a named `--paper`. |
 | `--margins M` | `standard` (20 mm top, 18 mm sides, 22 mm bottom), `narrow`, `wide`, or one to four CSS lengths in the order of the CSS `margin` shorthand. |
 | `--sides S` | `single`, or `double` for mirrored margins with a wider inner margin for binding. |
-| `--fonts DIR` | A directory of TrueType fonts the publisher supplies. They are used where the document's stylesheets name their families. |
+| `--fonts DIR` | A directory of TrueType fonts the publisher supplies. They are used where the document's stylesheets name their families, and for characters the other fonts lack. |
 | `--no-pdf-ua` | Write an untagged PDF. The default is tagged PDF/UA-1. |
 | `--fixed-date ISO` | The document's date, such as `2026-10-01` or `2026-10-01T09:30:00Z`. Without it `SOURCE_DATE_EPOCH` is used if set; otherwise no date is written. |
 | `--toc-depth N` | Depth of the PDF outline (bookmarks), 1–6; default 3. |
@@ -72,7 +72,7 @@ Its own stylesheet, `pdf.css`, follows the document's: it adds the running heads
 
 A tagged PDF must embed every font it uses, and no restricted typeface is shipped. DesignSystemPDF bundles **Noto Sans** and **Noto Sans Mono** (SIL Open Font License 1.1). Where a stylesheet asks for a family the publisher has not supplied — `arial`, `"Helvetica Neue"`, `sans-serif`, a monospace — the bundled family is used, as a browser falls back to an installed font.
 
-To use other fonts, put their TrueType (`.ttf`) files in a directory and pass `--fonts DIR`: a stylesheet that names GDS Transport, Frutiger or Arial then gets exactly that, from the publisher's own licensed files. Fonts installed on the machine are never picked up on their own, so the same input gives the same PDF everywhere. OpenType fonts with CFF outlines cannot be embedded by the engine and are skipped with a warning.
+To use other fonts, put their TrueType (`.ttf`) files in a directory and pass `--fonts DIR`: a stylesheet that names GDS Transport, Frutiger or Arial then gets exactly that, from the publisher's own licensed files. A supplied font also fills gaps: a character that the font chosen for its text cannot draw is looked for in the bundled fonts and then in the supplied ones, so a script the bundled fonts lack needs only a font that has it, not a change to the stylesheet. Fonts installed on the machine are never picked up on their own, so the same input gives the same PDF everywhere. OpenType fonts with CFF outlines cannot be embedded by the engine and are skipped with a warning.
 
 ## Messages
 
@@ -83,12 +83,13 @@ Messages go to standard error in the form `[DSPDF004W]: …` — the style of th
 | `DSPDF001E` | The command line is wrong; the usage summary follows. Exit 2. |
 | `DSPDF002E` | The document's `govuk-print-contract` is not one this version understands. The message names the plugin versions that write an understood contract. Exit 3. |
 | `DSPDF003E` | The print document cannot be read, or is not well-formed XHTML. Exit 1. |
-| `DSPDF004W` | Characters with no glyph in the bundled fonts or in `--fonts`; they print as a replacement mark. Supply a font that covers them. |
+| `DSPDF004W` | Characters with no glyph in the bundled fonts or in `--fonts`; they print as a replacement mark. Supply a font that covers them with `--fonts`. The warning is given when, and only when, a replacement mark is printed. |
 | `DSPDF005W` | A font in `--fonts` was skipped: not TrueType, unreadable, or the directory is missing. |
 | `DSPDF006W` | A stylesheet, image or diagram the document names could not be loaded or drawn. |
 | `DSPDF007E` | Rendering failed; no PDF was written. `--verbose` adds the detail. Exit 1. |
 | `DSPDF008W` | A resource on another origin was not fetched. The generator makes no network request. |
 | `DSPDF009W` | An image, diagram or formula has no alternative text, so the PDF will not meet PDF/UA. Add it in the source. |
+| `DSPDF010W` | The document has text in a right-to-left script, which this version neither shapes nor orders (see Limits): it will not read correctly in the PDF, whatever fonts are supplied. Print the print document from a browser. |
 | `DSPDF000I` | Progress, with `--verbose`. |
 
 ## The same input gives the same bytes
@@ -105,8 +106,8 @@ The plugin writes `<meta name="govuk-print-contract" content="1">` into the prin
 
 ## Limits
 
-- **Known defect: right-to-left scripts are not rendered** ([#153](https://github.com/iStandUK/govuk-dita-plugin/issues/153)). Right-to-left and complex scripts are not shaped or reordered, and a block's `dir="rtl"` is not honoured; the bundled fonts have no Arabic or Hebrew, so such text prints as replacement marks, with `DSPDF004W`. Supplying a font with `--fonts` does not cure it and can silence the warning. Until it is fixed, make the PDF of such a publication by printing the print document from a browser.
-- Text in any other script the fonts lack prints as replacement marks, with a warning; supply a font with `--fonts` and name its family first in the publication's stylesheet for that text.
+- **Known defect: right-to-left scripts are not rendered** ([#153](https://github.com/iStandUK/govuk-dita-plugin/issues/153)). Right-to-left and complex scripts are not shaped or reordered, and a block's `dir="rtl"` is not honoured; the bundled fonts have no Arabic or Hebrew, so such text prints as replacement marks, with `DSPDF004W`. A font supplied with `--fonts` makes the letters appear, but unjoined and running from the left, so the text is still unreadable. `DSPDF010W` is given whenever a document has such text, with or without a font for it. Until it is fixed, make the PDF of such a publication by printing the print document from a browser.
+- Text in any other script the fonts lack prints as replacement marks, with a warning; supply a font that has it with `--fonts`.
 - MathML renders small and needs `alttext` to meet PDF/UA.
 - PDF/UA-1 is produced; PDF/A is not.
 - One paper size per publication, with landscape pages of the same paper.
