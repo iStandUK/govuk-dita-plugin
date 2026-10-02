@@ -1,0 +1,137 @@
+DesignSystemPDF — third-party notices
+======================================
+
+DesignSystemPDF's own code (the launcher scripts, lib/designsystempdf-*.jar and
+the pdf.css inside it) is Copyright 2026 iStandUK and licensed under the Apache
+License, Version 2.0 — see LICENSE.
+
+The distribution also carries the components below. Each is shipped exactly as
+its project published it: the jars in lib/ are unmodified, and the fonts in
+fonts/ are unmodified. Nothing here changes the terms of any of them.
+
+
+1. Open HTML to PDF — GNU Lesser General Public License, version 2.1 or later
+------------------------------------------------------------------------------
+
+  lib/openhtmltopdf-core-*.jar
+  lib/openhtmltopdf-pdfbox-*.jar
+  lib/openhtmltopdf-svg-support-*.jar
+  lib/openhtmltopdf-mathml-support-*.jar
+
+  Copyright (C) 2016 Patrick Wright and others
+  https://github.com/openhtmltopdf/openhtmltopdf
+
+  "All source code to OPEN HTML TO PDF itself is licensed under the GNU Lesser
+  General Public License (LGPL); you can redistribute it and/or modify it under
+  the terms of the GNU Lesser General Public License as published by the Free
+  Software Foundation, either version 2.1 of the License, or (at your option)
+  any later version."
+
+  The licence text is in licenses/LGPL-2.1.txt, and the project's own licence
+  comments are in licenses/openhtmltopdf-LICENSE.txt.
+
+  DesignSystemPDF uses this library; it does not contain or modify it. As the
+  licence provides:
+
+  * Source. The complete source of these four jars is published with every
+    DesignSystemPDF release, as openhtmltopdf-*-sources.jar beside the
+    distribution zip at
+    https://github.com/iStandUK/govuk-dita-plugin/releases, and by the project
+    at the address above.
+
+  * Replacing the library. The jars are separate files. To run DesignSystemPDF
+    with a modified or newer build of the library, replace the four
+    lib/openhtmltopdf-*.jar files with your own builds of the same modules; the
+    launcher puts every jar in lib/ on the class path and nothing else needs to
+    change. README.md says the same.
+
+
+2. Apache License, Version 2.0
+-------------------------------
+
+  The licence text is in LICENSE (the same licence as DesignSystemPDF's own
+  code). Each jar also carries its licence and notice in META-INF/.
+
+  Apache PDFBox, FontBox, PDFBox IO, XmpBox
+    lib/pdfbox-*.jar, lib/fontbox-*.jar, lib/pdfbox-io-*.jar, lib/xmpbox-*.jar
+    Copyright 2002-2026 The Apache Software Foundation
+    This product includes software developed at The Apache Software Foundation
+    (http://www.apache.org/). Based on source code contributed to the original
+    PDFBox project, Copyright (c) 2002-2007, www.pdfbox.org, and to the original
+    FontBox project, Copyright (c) 2006-2007, www.fontbox.org.
+    Includes the Adobe Glyph List, Copyright 1997, 1998, 2002, 2007, 2010 Adobe
+    Systems Incorporated. Includes the Zapf Dingbats Glyph List, Copyright 2002,
+    2010 Adobe Systems Incorporated. Includes the Bidi Mirroring Glyph Property
+    (BidiMirroring-8.0.0.txt), Copyright 1991-2015 Unicode, Inc. Includes the
+    Script Property (Scripts-10.0.0.txt), Copyright 2017 Unicode, Inc. Includes
+    parts of TwelveMonkeys ImageIO, Copyright 2008-2016 Harald Kuhr. Includes
+    the CMYK ICC profile CGATS001Compat-v2-micro.icc, released to the public
+    domain under CC0 by Clinton Ingram.
+
+  Apache Batik
+    lib/batik-*.jar
+    Copyright 1999-2023 The Apache Software Foundation
+    This product includes software developed at The Apache Software Foundation
+    (http://www.apache.org/). This software contains code from the World Wide
+    Web Consortium (W3C) for the Document Object Model API (DOM API) and SVG
+    Document Type Definition (DTD). This software contains code from the
+    International Organisation for Standardization for the definition of
+    character entities used in the software's documentation. This product
+    includes images from the Tango Desktop Project
+    (http://tango.freedesktop.org/) and from the Pasodoble Icon Theme
+    (http://www.jesusda.com/projects/pasodoble).
+
+  Apache XML Graphics Commons
+    lib/xmlgraphics-commons-*.jar
+    Copyright 2006-2023 The Apache Software Foundation
+
+  Apache Commons IO, Apache Commons Logging
+    lib/commons-io-*.jar, lib/commons-logging-*.jar
+    Copyright 2002-2021 and 2001-2025 The Apache Software Foundation
+
+  PDFBox Graphics2D
+    lib/graphics2d-*.jar
+    Copyright Emmeran Seehuber and contributors
+    https://github.com/rototor/pdfbox-graphics2d
+
+  JEuclid
+    lib/jeuclid-core-*.jar
+    Copyright 2002-2018 JEuclid and contributors
+    https://github.com/rototor/jeuclid
+    This product includes software developed by JEuclid
+    (http://www.sourceforge.net/projects/jeuclid/).
+    The jar carries its notice and licence at net/sourceforge/jeuclid/.
+
+  XML Commons External (xml-apis, xml-apis-ext)
+    lib/xml-apis-*.jar, lib/xml-apis-ext-*.jar
+    Copyright 2001-2009 The Apache Software Foundation
+    These jars also contain the W3C's DOM, SVG DOM and SAC interfaces under the
+    W3C Software Licence and the W3C Document Licence, and SAX, which is in the
+    public domain. The texts are inside each jar, in license/.
+
+
+3. Noto Sans and Noto Sans Mono — SIL Open Font License, Version 1.1
+---------------------------------------------------------------------
+
+  fonts/NotoSans-Regular.ttf, NotoSans-Bold.ttf, NotoSans-Italic.ttf,
+  fonts/NotoSans-BoldItalic.ttf, NotoSansMono-Regular.ttf, NotoSansMono-Bold.ttf
+
+  Copyright 2022 The Noto Project Authors
+  (https://github.com/notofonts/latin-greek-cyrillic)
+
+  This Font Software is licensed under the SIL Open Font License, Version 1.1.
+  The licence text is in fonts/OFL.txt. fonts/README.md records where each file
+  came from and its checksum. The fonts are embedded, as subsets, in the PDFs
+  DesignSystemPDF writes; the licence permits that and places no condition on
+  the documents.
+
+
+Not in the distribution
+-----------------------
+
+veraPDF (GPL-3.0-or-later / MPL-2.0) validates PDF/UA output in this project's
+tests. It is a build-time test dependency only and is not shipped.
+
+No restricted typeface or brand asset is shipped: no GDS Transport, no
+Frutiger, no crown or NHS artwork. A publisher entitled to a brand font
+supplies it at run time with --fonts.

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="pdf" xml:lang="en-GB">
+  <title>PDF with DesignSystemPDF</title>
+  <shortdesc>DesignSystemPDF is the plugin's companion: it renders the print document as a
+    page-numbered, tagged PDF, with Java as the only requirement. Install it beside the
+    toolkit, name it in the build, and the site links the PDF it makes.</shortdesc>
+  <conbody>
+    <p><indexterm>DesignSystemPDF</indexterm><indexterm>PDF<indexterm>DesignSystemPDF</indexterm></indexterm>The
+      plugin makes websites and stays small: it holds no PDF engine and no fonts.
+      DesignSystemPDF is a second product from the same project that does that one job. It
+      is released on its own, with its own version numbers; it is not a DITA-OT plugin and
+      is never installed into the toolkit. The two meet through one file, the print
+      document, so each can be upgraded without the other.</p>
+    <section id="value">
+      <title>What it adds</title>
+      <p>From the print document the build already writes
+        (<xref keyref="print"/>), unchanged:</p>
+      <ul>
+        <li>page numbers in the contents list, in the index and on every cross-reference;</li>
+        <li>footnotes at the foot of the page that calls them, with the author's own
+          marker;</li>
+        <li>running heads — the publication's title and the chapter's — on every page after
+          the cover;</li>
+        <li>an outline of bookmarks from the headings, and the title and author from the
+          cover in the PDF's own properties;</li>
+        <li>a tagged PDF that meets PDF/UA-1, the accessibility standard for PDF, with every
+          font embedded;</li>
+        <li>repeated table headers, and landscape pages for a table or figure marked
+          <codeph>outputclass="landscape"</codeph>;</li>
+        <li>the same bytes from the same input, and no network request: it suits a build
+          server as well as a desk.</li>
+      </ul>
+    </section>
+    <section id="install">
+      <title>Installing it</title>
+      <p><indexterm>DesignSystemPDF<indexterm>installing</indexterm></indexterm>You need
+        Java 17 or later, which the toolkit needs too, so a machine that builds the site
+        already has it.</p>
+      <ol>
+        <li>Download <filepath>designsystempdf-<varname>version</varname>.zip</filepath> from
+          the releases page of <xref keyref="plugin-repo"/>. DesignSystemPDF's releases are
+          the ones whose tags begin <codeph>pdf-v</codeph>; the plugin's begin
+          <codeph>v</codeph>.</li>
+        <li>Check the download against the checksum published beside it:
+          <codeblock>sha256sum -c designsystempdf-<varname>version</varname>.zip.sha256</codeblock>
+          On Windows, <codeph>Get-FileHash</codeph> in PowerShell gives the checksum to
+          compare with the one in that file.</li>
+        <li>Unzip it anywhere outside the toolkit, and put its <filepath>bin</filepath>
+          folder on the <codeph>PATH</codeph>.</li>
+        <li>Confirm it runs:
+          <codeblock>designsystempdf --version</codeblock>
+          It prints its version and the print contracts it understands.</li>
+      </ol>
+      <p>Nothing is installed into the toolkit and nothing is downloaded when it runs. To
+        upgrade, unzip the newer release in place of the old one.</p>
+    </section>
+    <section id="use">
+      <title>Using it with the plugin</title>
+      <p><indexterm>govuk.pdf.command</indexterm>Ask the build for the print document and
+        name DesignSystemPDF as the formatter:</p>
+      <codeblock>dita --input=publication.ditamap --format=govuk --output=out \
+     -Dgovuk.print=yes -Dgovuk.pdf.command=designsystempdf</codeblock>
+      <p>The build writes the site, then the print document, then runs DesignSystemPDF on
+        it. The result is in the output folder beside <filepath>print.html</filepath>:</p>
+      <ul>
+        <li><filepath>publication.pdf</filepath>, named after the map, or after
+          <codeph>govuk.pdf.name</codeph> if you set it;</li>
+        <li>a link to it on the home page and in every footer, beside the print version,
+          with its size: <q>Whole publication (PDF, 1.2 MB)</q>.</li>
+      </ul>
+      <p>The paper size and orientation come from <codeph>govuk.pdf.paper</codeph> and
+        <codeph>govuk.pdf.orientation</codeph>, the same parameters that set them for
+        printing from a browser, so the PDF and a browser's print agree.</p>
+      <p>If DesignSystemPDF is not on the <codeph>PATH</codeph>, give its full path in the
+        command. If it cannot be run, or fails, the build reports <codeph>GOVK008W</codeph>
+        with DesignSystemPDF's own messages and finishes: the site is complete, and no page
+        links a PDF that is not there.</p>
+    </section>
+    <section id="options">
+      <title>Options</title>
+      <p>Options go in the command, before the two file names the plugin adds; quote the
+        whole parameter so the spaces survive:</p>
+      <codeblock>dita --input=publication.ditamap --format=govuk --output=out \
+     -Dgovuk.print=yes \
+     "-Dgovuk.pdf.command=designsystempdf --sides double"</codeblock>
+      <simpletable>
+        <sthead>
+          <stentry>Option</stentry>
+          <stentry>Effect</stentry>
+        </sthead>
+        <strow>
+          <stentry><codeph>--margins</codeph></stentry>
+          <stentry><codeph>standard</codeph> (the default: 20 mm top, 18 mm sides, 22 mm
+            bottom), <codeph>narrow</codeph>, <codeph>wide</codeph>, or one to four CSS
+            lengths.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>--sides</codeph></stentry>
+          <stentry><codeph>single</codeph> (the default), or <codeph>double</codeph> for
+            mirrored margins with a wider inner margin for binding.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>--fonts</codeph></stentry>
+          <stentry>A folder of TrueType fonts of your own, used where the stylesheets name
+            their families.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>--toc-depth</codeph></stentry>
+          <stentry>Depth of the bookmarks, 1 to 6; 3 by default. The depth of the printed
+            contents list is the plugin's <codeph>govuk.print.toc.depth</codeph>.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>--fixed-date</codeph></stentry>
+          <stentry>The date written into the PDF, such as <codeph>2026-10-01</codeph>.
+            Without it no date is written, so the same input gives the same file.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>--no-pdf-ua</codeph></stentry>
+          <stentry>Write an untagged PDF. The default is tagged PDF/UA-1; keep it for
+            anything you publish.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>--paper</codeph>, <codeph>--orientation</codeph></stentry>
+          <stentry>Override the paper for the PDF alone. Prefer the plugin's
+            <codeph>govuk.pdf.paper</codeph> and <codeph>govuk.pdf.orientation</codeph>,
+            which set it for browsers as well.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>--verbose</codeph></stentry>
+          <stentry>Report progress and the engine's own diagnostics.</stentry>
+        </strow>
+      </simpletable>
+      <p>It also runs by hand on a print document already built, which is the quickest way
+        to try an option:</p>
+      <codeblock>cd out
+designsystempdf --sides double print.html publication.pdf</codeblock>
+      <p>A PDF made by hand is not linked from the site; the link is added by the build
+        that makes the PDF.</p>
+    </section>
+    <section id="fonts">
+      <title>Fonts</title>
+      <p><indexterm>fonts<indexterm>in PDF</indexterm></indexterm>A tagged PDF must embed
+        every font it uses, and a build should give the same result on every machine, so
+        DesignSystemPDF never uses the fonts installed on the computer. It carries Noto Sans
+        and Noto Sans Mono, which are free to redistribute, and uses them wherever the
+        stylesheets ask for a font it has not been given.</p>
+      <p>To use others, put their TrueType (<filepath>.ttf</filepath>) files in a folder
+        and pass <codeph>--fonts</codeph>. An organisation entitled to GDS Transport or
+        Frutiger supplies its own licensed files this way; neither is ever shipped
+        (<xref keyref="legal"/>). A supplied font is also used for any character the
+        other fonts cannot draw, so a publication with passages in a script the bundled
+        fonts lack needs only a font that has it.</p>
+    </section>
+    <section id="problems">
+      <title>When something is wrong</title>
+      <p>DesignSystemPDF's messages have codes beginning <codeph>DSPDF</codeph>, and the
+        build log shows them as they are: as warnings under the line <q>the PDF command
+        reported</q> when the PDF is made, and with <codeph>GOVK008W</codeph> when it is
+        not. The ones a publisher is most likely to meet:</p>
+      <simpletable>
+        <sthead>
+          <stentry>Message</stentry>
+          <stentry>Meaning and remedy</stentry>
+        </sthead>
+        <strow>
+          <stentry><codeph>DSPDF002E</codeph></stentry>
+          <stentry>The print document was written to a contract this release does not
+            understand, and no PDF is written. Upgrade DesignSystemPDF, or the plugin,
+            whichever is the older.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>DSPDF004W</codeph></stentry>
+          <stentry>Some characters have no glyph in the fonts and print as a replacement
+            mark. Supply a font that covers them with <codeph>--fonts</codeph>; it is
+            used for those characters without your stylesheet having to name
+            it.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>DSPDF010W</codeph></stentry>
+          <stentry>The publication has text in a right-to-left script, which will not
+            read correctly in the PDF whatever fonts are supplied. See the known defect
+            below.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>DSPDF008W</codeph></stentry>
+          <stentry>An image or stylesheet on another website was not fetched; nothing is
+            requested over the network. Keep the file with the publication.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>DSPDF009W</codeph></stentry>
+          <stentry>An image, diagram or formula has no alternative text, so the PDF does
+            not meet PDF/UA. Add the text in the DITA source.</stentry>
+        </strow>
+      </simpletable>
+      <p>Warnings never stop the PDF being written. The full list, the exit codes and the
+        limits — one paper size per publication, PDF/A is not produced — are in the
+        <filepath>README.md</filepath> inside the download.</p>
+    </section>
+    <section id="rtl">
+      <title>Known defect: right-to-left scripts</title>
+      <p><indexterm>right-to-left text<indexterm>in PDF</indexterm></indexterm><indexterm>DesignSystemPDF<indexterm>known
+        defects</indexterm></indexterm>DesignSystemPDF 0.1 does not render text in a
+        right-to-left script, such as Arabic or Hebrew. The website and the print
+        document are right — the page is marked with its language and direction and the
+        text runs from the right — but in the PDF every such character prints as a
+        replacement mark and the topic is set from the left. The build log says so with
+        <codeph>DSPDF010W</codeph>, and lists the characters that have no glyph with
+        <codeph>DSPDF004W</codeph>.</p>
+      <p>Supplying a font with <codeph>--fonts</codeph> does not cure it. The letters
+        then appear, but unjoined and running from the left, so the text is still
+        unreadable; <codeph>DSPDF010W</codeph> is given all the same.</p>
+      <p>Until this is fixed, make the PDF of a right-to-left publication, or of one with
+        right-to-left passages, from a browser: open <filepath>print.html</filepath> and
+        use the browser's print or save-as-PDF command. Browsers shape and order the text
+        correctly; the contents list and index then carry links instead of page numbers
+        (<xref keyref="print"/>). Leave <codeph>govuk.pdf.command</codeph> unset for such
+        a publication, so that the site does not link a PDF with unreadable passages.</p>
+    </section>
+    <section id="versions">
+      <title>Which versions work together</title>
+      <p><indexterm>print contract</indexterm>The print document carries a marker, the
+        <term>print contract</term>, that changes only when the structure a formatter relies
+        on changes. A release of DesignSystemPDF lists the contracts it understands, and
+        refuses a document with another instead of rendering it wrongly.</p>
+      <simpletable>
+        <sthead>
+          <stentry>DesignSystemPDF</stentry>
+          <stentry>Print contract</stentry>
+          <stentry>Written by the plugin</stentry>
+        </sthead>
+        <strow>
+          <stentry>0.1.x</stentry>
+          <stentry>1</stentry>
+          <stentry>1.0.1 and later 1.x</stentry>
+        </strow>
+      </simpletable>
+      <p>The link from the site to the PDF needs a plugin release later than 1.0.1; with
+        1.0.1 the PDF is made but nothing links it.</p>
+    </section>
+  </conbody>
+</concept>

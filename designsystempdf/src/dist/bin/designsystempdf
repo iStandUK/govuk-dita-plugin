@@ -1,0 +1,36 @@
+#!/bin/sh
+# This file is part of DesignSystemPDF, in the govuk-dita-plugin project.
+# Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+#
+# Launcher: runs the generator in its own Java process with only its own lib/
+# on the class path. Java 17 or later is the one requirement — taken from
+# JAVA_HOME when set, otherwise from the PATH.
+
+# resolve this script through any symbolic links, so the PATH may hold a link to it
+self=$0
+while [ -h "$self" ]; do
+  dir=$(cd -P "$(dirname "$self")" && pwd)
+  self=$(readlink "$self")
+  case $self in
+    /*) ;;
+    *) self=$dir/$self ;;
+  esac
+done
+DESIGNSYSTEMPDF_HOME=$(cd -P "$(dirname "$self")/.." && pwd)
+
+# a POSIX shell on Windows (Git Bash, Cygwin) starts a Windows Java, which needs Windows paths
+case $(uname -s) in
+  CYGWIN* | MINGW* | MSYS*) DESIGNSYSTEMPDF_HOME=$(cygpath -m "$DESIGNSYSTEMPDF_HOME") ;;
+esac
+
+if [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+  java=$JAVA_HOME/bin/java
+else
+  java=java
+fi
+
+exec "$java" $DESIGNSYSTEMPDF_OPTS \
+  -Djava.awt.headless=true \
+  "-Ddesignsystempdf.home=$DESIGNSYSTEMPDF_HOME" \
+  -cp "$DESIGNSYSTEMPDF_HOME/lib/*" \
+  org.istanduk.designsystempdf.Main "$@"
