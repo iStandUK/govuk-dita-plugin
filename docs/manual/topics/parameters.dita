@@ -41,7 +41,8 @@
               <entry>text</entry>
               <entry>Shows a GOV.UK phase banner above the content with this tag, for example
                 <codeph>alpha</codeph> or <codeph>beta</codeph>. Empty (default) shows no
-                banner. Works in every branding mode.</entry>
+                banner. Works in every branding mode. The print document's cover shows it as
+                the publication's status.</entry>
             </row>
             <row>
               <entry><codeph>govuk.feedback.url</codeph></entry>
@@ -75,7 +76,7 @@
               <entry>text</entry>
               <entry>Override the footer licence/credit line (neutral, iStandUK and NHS modes;
                 official always shows the Open Government Licence). Empty uses the bookmap's
-                copyright.</entry>
+                copyright. The print document's cover carries the same line.</entry>
             </row>
             <row>
               <entry><codeph>govuk.homepage.layout</codeph></entry>
@@ -125,8 +126,8 @@
               <entry><codeph>govuk.print</codeph></entry>
               <entry><codeph>no</codeph> (default), <codeph>yes</codeph></entry>
               <entry>Also write the whole publication as one file,
-                <filepath>print.html</filepath>, for printing or saving as PDF from a browser;
-                see <xref keyref="print"/>.</entry>
+                <filepath>print.html</filepath>, for printing or saving as PDF from a browser,
+                and for a formatter to render as PDF; see <xref keyref="print"/>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.print.max-topics</codeph></entry>
@@ -147,23 +148,26 @@
                 <codeph>JIS-B4</codeph>, <codeph>Letter</codeph>, <codeph>Legal</codeph>,
                 <codeph>Ledger</codeph>, or a width and height such as
                 <codeph>148mm 210mm</codeph></entry>
-              <entry>Paper size the print stylesheet asks for (and, from 1.1, the PDF page
-                size).</entry>
+              <entry>Paper size the print stylesheet asks for, in a browser and in a PDF made
+                by the build.</entry>
             </row>
             <row>
               <entry><codeph>govuk.pdf.command</codeph></entry>
               <entry>a command; empty by default</entry>
               <entry>Render the print document as PDF with a CSS Paged Media formatter you have
-                installed. The print document's path and the output path are appended as the
-                last two arguments. A formatter resolves the page references browsers cannot —
-                page numbers in the contents, the index and cross-references. Failure is
-                reported (<codeph>GOVK008W</codeph>) and the site is still complete; see
-                <xref keyref="print"/>.</entry>
+                installed: <codeph>designsystempdf</codeph> for the project's own
+                (<xref keyref="pdf"/>), or any other. The print document's path and the
+                output path are appended as the last two arguments. A formatter resolves the
+                page references browsers cannot — page numbers in the contents, the index and
+                cross-references. When the PDF is made, the home page and every footer link
+                it, with its size. Failure is reported (<codeph>GOVK008W</codeph>) and the
+                site is still complete; see <xref keyref="print"/>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.pdf.name</codeph></entry>
               <entry>file name; default the map's name</entry>
-              <entry>Name for the generated PDF, without the extension.</entry>
+              <entry>Name for the generated PDF, without the extension; it is also the name the
+                site links.</entry>
             </row>
             <row>
               <entry><codeph>govuk.pdf.orientation</codeph></entry>
@@ -218,7 +222,8 @@
               <entry>URL</entry>
               <entry>The published base URL, for example
                 <codeph>https://example.org/manual/</codeph>. Needed for
-                <filepath>sitemap.xml</filepath>, whose entries must be absolute.</entry>
+                <filepath>sitemap.xml</filepath>, whose entries must be absolute; the print
+                document's cover gives it as where the current version is.</entry>
             </row>
             <row>
               <entry><codeph>govuk.sitemap</codeph></entry>
@@ -261,8 +266,10 @@
         </sthead>
         <strow>
           <stentry><codeph>args.css</codeph>, <codeph>args.cssroot</codeph>,
-            <codeph>args.copycss</codeph></stentry>
-          <stentry>Append your own stylesheet after the plugin's, for per-site tweaks.</stentry>
+            <codeph>args.copycss</codeph>, <codeph>args.csspath</codeph></stentry>
+          <stentry>Append your own stylesheet after the plugin's, to change the typeface,
+            colours or logo; <xref keyref="custom-css"/> has the command and a sample
+            stylesheet.</stentry>
         </strow>
         <strow>
           <stentry><codeph>nav-toc</codeph></stentry>

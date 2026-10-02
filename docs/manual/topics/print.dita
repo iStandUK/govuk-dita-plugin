@@ -4,16 +4,98 @@
   <title>Printing and PDF</title>
   <shortdesc>Every page prints, or saves as PDF, from a browser on A4 by default; with
     <codeph>govuk.print=yes</codeph> the build also writes the whole publication as one file
-    for printing end to end.</shortdesc>
+    for printing end to end; and with a formatter such as DesignSystemPDF it turns that file
+    into a page-numbered, tagged PDF and links it from the site.</shortdesc>
   <conbody>
     <p><indexterm>printing<indexterm>print stylesheet</indexterm><indexterm>print
       document</indexterm></indexterm><indexterm>PDF</indexterm>Websites are the primary
       output, and GOV.UK guidance is to publish HTML first and PDF only as a last resort. The
-      plugin follows that: nothing is bundled to make PDFs, but every page carries a print
+      plugin follows that: the site is complete without a PDF, every page carries a print
       stylesheet, and a publication can be written as a single document that a browser prints
-      whole. Building PDFs inside the toolkit, with page-numbered contents and index, is
-      planned for release 1.1.</p>
-    <section>
+      whole. For the publications that do need a PDF — a standard to be cited by page, a
+      document to be filed, a manual to be read offline — the same single document goes
+      through a formatter, and the result reads as a book rather than a printed web
+      page.</p>
+    <section id="routes">
+      <title>Three ways to paper</title>
+      <p>Each builds on the one before, and none replaces it: a publication with a PDF still
+        prints page by page from a browser.</p>
+      <table>
+        <title>What each route gives</title>
+        <tgroup cols="4">
+          <colspec colname="c1" colwidth="3*"/>
+          <colspec colname="c2" colwidth="2*"/>
+          <colspec colname="c3" colwidth="2*"/>
+          <colspec colname="c4" colwidth="2*"/>
+          <thead>
+            <row>
+              <entry>What you get</entry>
+              <entry>A page, from a browser</entry>
+              <entry>The print document, from a browser</entry>
+              <entry>A PDF from the build</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>What it needs</entry>
+              <entry>Nothing</entry>
+              <entry><codeph>govuk.print=yes</codeph></entry>
+              <entry><codeph>govuk.print=yes</codeph> and a formatter:
+                <xref keyref="pdf">DesignSystemPDF</xref>, or another of your choosing</entry>
+            </row>
+            <row>
+              <entry>Who makes it</entry>
+              <entry>The reader</entry>
+              <entry>The reader</entry>
+              <entry>The publisher, once, for every reader</entry>
+            </row>
+            <row>
+              <entry>The whole publication in one file</entry>
+              <entry>No</entry>
+              <entry>Yes</entry>
+              <entry>Yes</entry>
+            </row>
+            <row>
+              <entry>Page numbers in the margin</entry>
+              <entry>Yes</entry>
+              <entry>Yes</entry>
+              <entry>Yes</entry>
+            </row>
+            <row>
+              <entry>Page numbers in the contents, the index and cross-references</entry>
+              <entry>No</entry>
+              <entry>No: they stay links</entry>
+              <entry>Yes</entry>
+            </row>
+            <row>
+              <entry>Footnotes</entry>
+              <entry>At the end of the topic</entry>
+              <entry>At the end of the topic</entry>
+              <entry>At the foot of the page, with DesignSystemPDF</entry>
+            </row>
+            <row>
+              <entry>Running heads and an outline of bookmarks</entry>
+              <entry>No</entry>
+              <entry>An outline, in some browsers</entry>
+              <entry>Yes, with DesignSystemPDF</entry>
+            </row>
+            <row>
+              <entry>Tagged for assistive technology</entry>
+              <entry>As the browser does it</entry>
+              <entry>As the browser does it</entry>
+              <entry>PDF/UA-1, with DesignSystemPDF; otherwise as the formatter does it</entry>
+            </row>
+            <row>
+              <entry>Linked from the site</entry>
+              <entry>—</entry>
+              <entry>Home page and every footer</entry>
+              <entry>Home page and every footer, with its size</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="page">
       <title>Printing a page</title>
       <p>Use the browser's print or save-as-PDF command on any page. The print stylesheet
         hides the masthead, sidebar, search, pagination and footer, lays the content out in
@@ -30,17 +112,18 @@
         and <codeph>govuk.pdf.orientation</codeph> (<codeph>portrait</codeph> by default, or
         <codeph>landscape</codeph>). Browsers offer their own paper choice in the print dialog
         as well; the build's setting is the default the page asks for. The same two parameters
-        will drive the 1.1 PDF step, so a publisher sets them once.</p>
+        set the page of a PDF made by the build, so a publisher sets them once.</p>
     </section>
-    <section>
+    <section id="document">
       <title>The print document</title>
       <p>Set <codeph>govuk.print=yes</codeph> and the build writes <filepath>print.html</filepath>
         beside <filepath>index.html</filepath>: the whole publication in one self-contained
         file, linked from the home page and from every footer as "Whole publication (print
         version)". It holds:</p>
       <ul>
-        <li>a cover block with the publication's title, abstract and authorship from the
-          bookmap or map;</li>
+        <li>a cover with the publication's title, abstract and authorship from the bookmap
+          or map, then its details and an imprint (see <q>What the cover shows</q>
+          below);</li>
         <li>a linked contents list, to <codeph>govuk.print.toc.depth</codeph> levels
           (<codeph>3</codeph> by default);</li>
         <li>every navigable topic in the map's reading order, rendered exactly as on its own
@@ -58,8 +141,53 @@
       <p>On screen it reads as one long single-column page — useful for offline reading,
         review circulation or archiving. Printed, or saved as PDF from a browser, it becomes
         the whole publication with running page numbers; Chromium-based browsers also produce
-        a tagged PDF with a document outline from the headings. A publisher with a CSS Paged
-        Media formatter can render the same file directly.</p>
+        a tagged PDF with a document outline from the headings.</p>
+      <p><indexterm>fonts<indexterm>sizes in print</indexterm></indexterm>In print, and so
+        in a PDF, the print document is set as a publication rather than as a web page on
+        paper. It takes the type sizes government practice gives for documents, in place of
+        the larger ones the Design System uses when a web page is printed:</p>
+      <simpletable>
+        <sthead>
+          <stentry>Text</stentry>
+          <stentry>Size</stentry>
+        </sthead>
+        <strow>
+          <stentry>The publication's title, on the cover</stentry>
+          <stentry>28 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>Section headings: chapters, parts, and topics at the top of the
+            map</stentry>
+          <stentry>20 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>Subheadings: topics inside a chapter, then the sections inside a
+            topic</stentry>
+          <stentry>16 pt, then 14 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>The lead paragraph: the cover's abstract and each topic's
+            summary</stentry>
+          <stentry>14 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>Body text, lists and tables</stentry>
+          <stentry>12 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>Captions of tables and figures</stentry>
+          <stentry>11 pt</stentry>
+        </strow>
+        <strow>
+          <stentry>Code blocks; endnotes</stentry>
+          <stentry>10.5 pt; 10 pt</stentry>
+        </strow>
+      </simpletable>
+      <p>These are defaults. A stylesheet of your own, added with <codeph>args.css</codeph>
+        (<xref keyref="parameters"/>), is linked after the plugin's and can change any of
+        them: write the rule for print, on the class with <codeph>.app-print</codeph> in
+        front, as in <codeph>@media print { .app-print .govuk-body { font-size: 11pt } }</codeph>.
+        A single page printed from the site keeps the Design System's own print sizes.</p>
       <p>Very large publications are not one printable document. The build writes the file only
         when the publication has no more than <codeph>govuk.print.max-topics</codeph> topic
         files (<codeph>500</codeph> by default); above that it reports <codeph>GOVK003W</codeph>
@@ -67,36 +195,161 @@
         print documents per part by building their submaps, or leave printing to the
         per-page stylesheet.</p>
     </section>
-    <section>
-      <title>Page numbers, with a formatter</title>
-      <p><indexterm>PDF<indexterm>page numbers</indexterm></indexterm>Browsers cannot number
-        the pages a link points at, so on the browser route the contents list, the index and
-        cross-references stay links. A <term>CSS Paged Media formatter</term> can, and the
-        print stylesheet already carries the rules: set <codeph>govuk.pdf.command</codeph> to a
-        formatter you have installed and the build renders the print document after the site,
-        appending the input and output paths to your command:</p>
+    <section id="cover">
+      <title>What the cover shows</title>
+      <p><indexterm>print document<indexterm>cover</indexterm></indexterm><indexterm>bookmeta</indexterm>A
+        printed publication, and a PDF above all, travels without the site around it: no
+        footer to state the copyright, no banner to say it is a draft, no address bar to
+        say where it came from. The cover therefore says what the site would. Under the
+        title, the abstract and the author or organisation it carries the publication's
+        details, then an imprint. Every line comes from the map's own metadata or from a
+        parameter you have set; nothing comes from the date of the build, and a line whose
+        source is absent is left out.</p>
+      <simpletable>
+        <sthead>
+          <stentry>On the cover</stentry>
+          <stentry>Comes from</stentry>
+        </sthead>
+        <strow>
+          <stentry>Status, such as <q>Status: Beta</q></stentry>
+          <stentry>The <codeph>govuk.phase</codeph> parameter, which the site shows as its
+            phase banner.</stentry>
+        </strow>
+        <strow>
+          <stentry>Edition</stentry>
+          <stentry><codeph>edition</codeph> in the bookmap's <codeph>bookid</codeph>. An
+            edition written in words (<q>Second edition</q>, <q>Version 2.1</q>) is shown
+            as written; a bare number is shown as <q>Edition 2.1</q>.</stentry>
+        </strow>
+        <strow>
+          <stentry>Published</stentry>
+          <stentry>The first <codeph>created</codeph> date in the map's
+            <codeph>critdates</codeph>; failing that, the bookmap's
+            <codeph>published</codeph> date (<codeph>completed</codeph>, with its year,
+            month and day).</stentry>
+        </strow>
+        <strow>
+          <stentry>Last updated</stentry>
+          <stentry>The last <codeph>revised</codeph> date in the map's
+            <codeph>critdates</codeph>.</stentry>
+        </strow>
+        <strow>
+          <stentry>ISBN; Reference</stentry>
+          <stentry><codeph>isbn</codeph> and <codeph>booknumber</codeph> in the bookmap's
+            <codeph>bookid</codeph>.</stentry>
+        </strow>
+        <strow>
+          <stentry>Copyright</stentry>
+          <stentry>As in the site's footer: <codeph>govuk.footer.licence</codeph> if set,
+            otherwise the years and owner in the bookmap's <codeph>bookrights</codeph>.
+            Official branding states Crown copyright and the Open Government Licence
+            instead.</stentry>
+        </strow>
+        <strow>
+          <stentry>Licence or other rights statement</stentry>
+          <stentry><codeph>summary</codeph> in the bookmap's <codeph>bookrights</codeph>,
+            in every branding mode but official.</stentry>
+        </strow>
+        <strow>
+          <stentry><q>This publication is available at …</q></stentry>
+          <stentry>The <codeph>govuk.site.url</codeph> parameter: where a reader holding
+            the PDF finds the current version.</stentry>
+        </strow>
+      </simpletable>
+      <p>A bookmap that gives the cover everything it can show:</p>
+      <codeblock>&lt;bookmeta&gt;
+  &lt;author&gt;Example Standards Body&lt;/author&gt;
+  &lt;critdates&gt;
+    &lt;created date="2026-03-01"/&gt;
+    &lt;revised modified="2026-09-30"/&gt;
+  &lt;/critdates&gt;
+  &lt;bookid&gt;
+    &lt;edition&gt;2.1&lt;/edition&gt;
+    &lt;isbn&gt;978-0-00-000000-2&lt;/isbn&gt;
+    &lt;booknumber&gt;ESB-2026-04&lt;/booknumber&gt;
+  &lt;/bookid&gt;
+  &lt;bookrights&gt;
+    &lt;copyrfirst&gt;&lt;year&gt;2024&lt;/year&gt;&lt;/copyrfirst&gt;
+    &lt;copyrlast&gt;&lt;year&gt;2026&lt;/year&gt;&lt;/copyrlast&gt;
+    &lt;bookowner&gt;
+      &lt;organization&gt;Example Standards Body&lt;/organization&gt;
+    &lt;/bookowner&gt;
+    &lt;summary&gt;Licensed under the Creative Commons Attribution 4.0
+      International licence.&lt;/summary&gt;
+  &lt;/bookrights&gt;
+&lt;/bookmeta&gt;</codeblock>
+      <p>Dates are shown as <q>1 March 2026</q> when written as
+        <codeph>2026-03-01</codeph>, and as written otherwise. Keep them in the map by
+        hand: a date stamped by tooling on every build says only when the build ran. A
+        map that is not a bookmap can carry <codeph>critdates</codeph> in its
+        <codeph>topicmeta</codeph>; the edition, identifiers and rights need a
+        bookmap.</p>
+    </section>
+    <section id="pdf">
+      <title>A PDF from the build</title>
+      <p><indexterm>PDF<indexterm>page numbers</indexterm></indexterm><indexterm>DesignSystemPDF</indexterm>Browsers
+        cannot number the pages a link points at, so on the browser routes the contents list,
+        the index and cross-references stay links, footnotes are endnotes, and every reader
+        makes their own copy with their own browser's pagination. A <term>CSS Paged Media
+        formatter</term> does what a browser cannot, and the print document already carries
+        the rules it needs. Name one in <codeph>govuk.pdf.command</codeph> and the build
+        renders the print document as PDF once the pages are written:</p>
+      <codeblock>dita --input=publication.ditamap --format=govuk --output=out \
+     -Dgovuk.print=yes -Dgovuk.pdf.command=designsystempdf</codeblock>
+      <p>That is the publication as a book, made once by the publisher and the same for
+        every reader:</p>
+      <ul>
+        <li>a cross-reference reads <q>Installing the plugin (page 13)</q>, the contents list
+          carries page numbers with leader dots, and index entries cite pages;</li>
+        <li>it can be cited by page, filed, sent and read offline, and it looks the same
+          whoever opens it;</li>
+        <li>with DesignSystemPDF, footnotes sit at the foot of their page, each page carries
+          the publication's and the chapter's title, the headings become bookmarks, and the
+          file is tagged to PDF/UA-1 for assistive technology.</li>
+      </ul>
+      <p>DesignSystemPDF is the project's own formatter, and the one to start with: it needs
+        only the Java the toolkit already runs on, it is free and open source, and it is
+        built and tested against the plugin's own print documents. <xref keyref="pdf"/>
+        explains how to install it and what its options do.</p>
+      <p>The PDF is written beside <filepath>print.html</filepath>, named after the map unless
+        <codeph>govuk.pdf.name</codeph> says otherwise. The plugin appends the print
+        document's path and the PDF's path to your command, so the command can carry options
+        of its own.</p>
+    </section>
+    <section id="link">
+      <title>The link to the PDF</title>
+      <p><indexterm>PDF<indexterm>link from the site</indexterm></indexterm>When the build
+        has made the PDF, the home page and every footer link it beside the print version,
+        with the format and the file's size in the link text, as GOV.UK does for
+        documents:</p>
+      <ul>
+        <li>Whole publication (print version)</li>
+        <li>Whole publication (PDF, 1.2 MB)</li>
+      </ul>
+      <p>A reader then chooses: the print version to read on screen or print from a browser,
+        the PDF to keep. Nothing needs setting; the link is there whenever the PDF is, and
+        only then. If the formatter fails or writes nothing, the build reports
+        <codeph>GOVK008W</codeph>, no page links a PDF, and the site is complete without
+        it.</p>
+    </section>
+    <section id="other-formatters">
+      <title>Other formatters</title>
+      <p><codeph>govuk.pdf.command</codeph> takes any formatter that implements CSS Paged
+        Media, not only DesignSystemPDF: several are open source and several are commercial.
+        Give the command as you would type it, without the two file names:</p>
       <codeblock>dita --input=publication.ditamap --format=govuk --output=out \
      -Dgovuk.print=yes "-Dgovuk.pdf.command=weasyprint --quiet"</codeblock>
-      <p>The PDF is written beside <filepath>print.html</filepath>, named after the map unless
-        <codeph>govuk.pdf.name</codeph> says otherwise. In it, a cross-reference reads
-        <q>Installing the plugin (page 13)</q>, the contents list carries page numbers with
-        leader dots, and index entries cite pages. Two limits are the vocabulary's rather than
-        the plugin's: CSS cannot say <q>above</q> or <q>below</q>, so a reference reads the same
-        whichever way the target lies; and a link to a page the print document excludes stays a
-        link to the website.</p>
-      <p>The plugin bundles no formatter and downloads nothing — you install one, and any
-        formatter that implements CSS Paged Media will do. Several are open source and several
-        are commercial; those that also produce tagged PDF/UA are the ones to prefer for a
-        government publication. If the command fails, the build says so
-        (<codeph>GOVK008W</codeph>) and finishes: the site is complete without the PDF.</p>
-    </section>
-    <section>
-      <title>What a browser cannot do yet</title>
-      <p>Printing from a browser, without a formatter, the contents list and index carry links
-        rather than page numbers, footnotes appear as endnotes, and the accessibility tagging of
-        a saved PDF is the browser's own. All three become page-numbered, footnoted and tagged
-        to PDF/UA from the same file with a formatter, and the project's design folder records
-        (D-23) a companion product that will bundle one so that Java is the only requirement.</p>
+      <p>Page numbers in the contents, the index and cross-references come from rules in the
+        plugin's print stylesheet, so every such formatter resolves them. Footnotes at the
+        foot of the page, running heads, bookmarks and tagging are the formatter's own work:
+        check what yours produces, and for a government publication prefer one that writes
+        tagged PDF/UA. The plugin bundles no formatter and downloads nothing; you install the
+        one you name. Whatever the formatter writes to its error stream while it makes the
+        PDF appears in the build log as a warning, so its own warnings are not lost.</p>
+      <p>Two limits are the vocabulary's rather than any formatter's: CSS cannot say
+        <q>above</q> or <q>below</q>, so a page reference reads the same whichever way the
+        target lies; and a link to a page the print document leaves out stays a link to the
+        website.</p>
     </section>
   </conbody>
 </concept>

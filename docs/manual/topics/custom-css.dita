@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="custom-css" xml:lang="en-GB">
+  <title>Your own fonts, colours and logo</title>
+  <shortdesc>To change the typeface, the colours or the logo, pass your own stylesheet to
+    the build. It is linked after the plugin's stylesheets on every page, so its rules win;
+    a sample shows which styles to override.</shortdesc>
+  <conbody>
+    <p><indexterm>stylesheet<indexterm>your own</indexterm></indexterm><indexterm>fonts<indexterm>changing</indexterm></indexterm><indexterm>colours</indexterm><indexterm>logo</indexterm><indexterm>args.css</indexterm>The
+      branding modes in <xref keyref="branding"/> are complete identities. Most publishers
+      want something smaller: the neutral output with their own typeface, their own colours
+      and their own logo in the masthead. That needs no change to the plugin, only a
+      stylesheet of a few rules added to the build command.</p>
+    <section id="command">
+      <title>Adding a stylesheet to the build</title>
+      <p>The <codeph>govuk</codeph> transformation takes the toolkit's standard stylesheet
+        parameters. Name the stylesheet, say which folder it is in, and ask for it to be
+        copied into the output:</p>
+      <codeblock>dita --input=guide.ditamap --format=govuk --output=out/site \
+     -Dargs.css=custom.css \
+     -Dargs.cssroot=/home/me/guide/theme \
+     -Dargs.copycss=yes</codeblock>
+      <p>On Windows the same command, on one line, with a Windows folder:</p>
+      <codeblock>dita.bat --input=guide.ditamap --format=govuk --output=out\site -Dargs.css=custom.css -Dargs.cssroot=C:\guide\theme -Dargs.copycss=yes</codeblock>
+      <simpletable>
+        <sthead>
+          <stentry>Parameter</stentry>
+          <stentry>Effect</stentry>
+        </sthead>
+        <strow>
+          <stentry><codeph>args.css</codeph></stentry>
+          <stentry>The stylesheet's file name. One stylesheet; join several into one file.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>args.cssroot</codeph></stentry>
+          <stentry>The folder that holds it, as a full path. A relative path is not read from
+            the folder you run the command in.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>args.copycss</codeph></stentry>
+          <stentry><codeph>yes</codeph> copies the stylesheet into the output. Without it
+            the pages link to a file that is not there.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>args.csspath</codeph></stentry>
+          <stentry>Optional: a folder inside the output to copy it to, such as
+            <codeph>theme</codeph>. Left out, the stylesheet sits at the top of the output,
+            beside <filepath>index.html</filepath>.</stentry>
+        </strow>
+      </simpletable>
+      <p>Every page then links the stylesheet after the Design System's stylesheet, the
+        plugin's own, and the overlay of whichever branding mode is in use. That covers
+        topic pages, the home page, the search, glossary and index pages, the figure and
+        table lists, and the print document. A rule in your stylesheet therefore beats a
+        rule of equal weight in any of those, with no need for
+        <codeph>!important</codeph>. The one stylesheet that follows yours is the search
+        component's own, on the search page only; style the search results through
+        the component's custom properties, as the sample does, not by restyling its
+        parts.</p>
+      <note>If the toolkit cannot find the stylesheet it says nothing and the pages are
+        built without it. When your styles do not appear, look in a page's source for the
+        <codeph>link</codeph> to your file: if there is none, the path in
+        <codeph>args.cssroot</codeph> or the name in <codeph>args.css</codeph> is
+        wrong.</note>
+    </section>
+    <section id="what">
+      <title>What to override</title>
+      <p>Two stylesheets set the look. The Design System's reads most of its colours from
+        CSS custom properties, which you set once on <codeph>:root</codeph>. The plugin's
+        own furniture — the masthead, the sidebar, the contents lists, and links in topic
+        text that the toolkit generates — carries classes that begin
+        <codeph>app-</codeph> and sets its colours directly, so those need a rule
+        each.</p>
+      <simpletable>
+        <sthead>
+          <stentry>To change</stentry>
+          <stentry>Override</stentry>
+        </sthead>
+        <strow>
+          <stentry>The typeface</stentry>
+          <stentry><codeph>font-family</codeph> on
+            <codeph>.govuk-template [class*="govuk-"]</codeph>. The Design System sets its
+            font on each of its classes, so a rule on <codeph>body</codeph> alone changes
+            little. The search results take theirs from
+            <codeph>--pagefind-ui-font</codeph> on
+            <codeph>.app-search .pagefind-ui</codeph>.</stentry>
+        </strow>
+        <strow>
+          <stentry>The masthead</stentry>
+          <stentry><codeph>background</codeph> on <codeph>.app-masthead</codeph>, and
+            <codeph>color</codeph> on <codeph>.app-masthead__title</codeph> for the
+            publication's name.</stentry>
+        </strow>
+        <strow>
+          <stentry>The brand colour</stentry>
+          <stentry><codeph>--govuk-brand-colour</codeph>: the rule above the footer, and
+            the Design System components that use the brand colour.</stentry>
+        </strow>
+        <strow>
+          <stentry>Link colours</stentry>
+          <stentry><codeph>--govuk-link-colour</codeph>,
+            <codeph>--govuk-link-hover-colour</codeph> and
+            <codeph>--govuk-link-visited-colour</codeph> for Design System links; and
+            <codeph>color</codeph> on <codeph>.app-sidebar__nav a</codeph>,
+            <codeph>.app-contents a</codeph>, <codeph>.ullinks a</codeph>,
+            <codeph>.linklist a</codeph>, <codeph>.related-links a</codeph> and
+            <codeph>#main-content a:not([class])</codeph>, with their
+            <codeph>:hover</codeph> states, for the plugin's.</stentry>
+        </strow>
+        <strow>
+          <stentry>The footer and page-edge background</stentry>
+          <stentry><codeph>--govuk-template-background-colour</codeph>.</stentry>
+        </strow>
+        <strow>
+          <stentry>The logo</stentry>
+          <stentry>A <codeph>::before</codeph> on <codeph>.app-masthead__title</codeph>
+            with the logo as its background image. The masthead's one link keeps the
+            publication's name as its text, so the logo needs no text of its
+            own.</stentry>
+        </strow>
+      </simpletable>
+      <p>Code keeps its monospace font (<codeph>pre.codeblock</codeph>,
+        <codeph>code</codeph>, <codeph>samp</codeph> and <codeph>kbd</codeph> set their
+        own), and text inside a diagram keeps the font the drawing names.</p>
+    </section>
+    <section id="sample">
+      <title>A sample stylesheet</title>
+      <p>This stylesheet changes all three: a typeface from fonts the reader already has,
+        a green brand colour for the masthead, links and footer, and a logo in front of
+        the publication's name. Copy it and change the values in its first section. It is
+        <filepath>docs/manual/samples/custom.css</filepath> in
+        <xref keyref="plugin-repo"/>, where every change to the plugin is built with it
+        and checked for accessibility.</p>
+      <codeblock><coderef href="../samples/custom.css"/></codeblock>
+    </section>
+    <section id="limits">
+      <title>What to keep in mind</title>
+      <dl>
+        <dlentry>
+          <dt>Accessibility</dt>
+          <dd>The plugin's accessibility checks cover its own styles, not yours. Keep a
+            contrast of at least 4.5 to 1 between text and its background, on the masthead
+            as well as the page, and leave the yellow focus state alone. Check the result
+            before you publish; <xref keyref="accessibility"/> describes what remains the
+            publisher's responsibility.</dd>
+        </dlentry>
+        <dlentry>
+          <dt>Files your stylesheet refers to</dt>
+          <dd>The toolkit copies the stylesheet and nothing else. A logo or font file named
+            in a <codeph>url()</codeph> is looked for relative to the stylesheet in the
+            output, so copy those files there after the build. A logo written into the
+            stylesheet as a <codeph>data:</codeph> URL, as in the sample, needs no second
+            file.</dd>
+        </dlentry>
+        <dlentry>
+          <dt>Fonts and logos you may use</dt>
+          <dd>Host only a font whose licence allows web publication, and do not use a
+            stylesheet to bring in the GOV.UK crown, GDS Transport or the NHS identity
+            unless your organisation is entitled to them (<xref keyref="legal"/>).</dd>
+        </dlentry>
+        <dlentry>
+          <dt>Content Security Policy</dt>
+          <dd>With <codeph>govuk.csp=meta</codeph> the pages load stylesheets, fonts and
+            images from the site itself, and images from <codeph>data:</codeph> URLs. A
+            font fetched from another website is blocked; host the files with the site
+            (<xref keyref="security"/>).</dd>
+        </dlentry>
+        <dlentry>
+          <dt>Print</dt>
+          <dd>Your stylesheet applies when a page is printed and in the print document
+            too, so the typeface carries over to paper. The masthead, and the logo with
+            it, is not printed.</dd>
+        </dlentry>
+        <dlentry>
+          <dt>Other branding modes</dt>
+          <dd>The sample is written for the default neutral mode. The iStandUK, NHS and
+            official modes already place a logo in the masthead and set their own
+            colours; your stylesheet is still linked last in those modes, but leave out
+            the sample's logo and masthead rules there.</dd>
+        </dlentry>
+      </dl>
+    </section>
+  </conbody>
+</concept>

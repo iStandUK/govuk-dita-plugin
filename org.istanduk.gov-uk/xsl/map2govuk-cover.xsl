@@ -397,6 +397,14 @@ map transformation with the plugin's values.
                     </xsl:call-template>
                   </a>
                 </p>
+                <!-- ... and as a PDF, when the build makes one (#146) -->
+                <xsl:if test="normalize-space($GOVUK-PDF-NAME)">
+                  <xsl:comment>govuk-pdf</xsl:comment>
+                  <p class="govuk-body app-print-link app-pdf-link">
+                    <xsl:call-template name="govuk-pdf-link"/>
+                  </p>
+                  <xsl:comment>/govuk-pdf</xsl:comment>
+                </xsl:if>
               </xsl:if>
               <xsl:choose>
                 <xsl:when test="$layout = 'start'">

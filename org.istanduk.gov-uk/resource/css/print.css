@@ -113,6 +113,78 @@ svg {
   max-width: 100%;
 }
 
+/* Type scale of the print document (#148). The Design System's print sizes
+ * are for a web page sent to a printer (body 14pt, headings 32/24/18/14pt).
+ * The print document is a publication, and becomes the PDF, so it takes the
+ * sizes government practice gives for documents: title 24-28pt, section
+ * headings 18-20pt, subheadings 14-16pt, body 12pt, captions 10-11pt. A page
+ * printed from the site keeps the Design System's sizes. These are defaults:
+ * a publisher's stylesheet (args.css) is linked later and can change them. */
+
+/* Title: the publication's, on the cover */
+.app-print .govuk-heading-xl {
+  font-size: 28pt;
+}
+
+/* Section headings: chapters, parts, and topics at the top of the map */
+.app-print .govuk-heading-l {
+  font-size: 20pt;
+}
+
+/* Subheadings: topics inside a chapter, then the sections inside a topic */
+.app-print .govuk-heading-m {
+  font-size: 16pt;
+}
+
+.app-print .govuk-heading-s,
+.app-print #main-content .sectiontitle.tasklabel,
+.app-print #main-content .sectiontitle:not([class*="govuk-heading"]) {
+  font-size: 14pt;
+}
+
+/* The lead paragraph: the cover's abstract and each topic's summary */
+.app-print .govuk-body-l,
+.app-print .govuk-body-lead {
+  font-size: 14pt;
+}
+
+/* Body text, in every component that sets its own size */
+.app-print .govuk-body,
+.app-print .govuk-body-m,
+.app-print .govuk-body-s,
+.app-print .govuk-list,
+.app-print .govuk-table,
+.app-print .govuk-inset-text,
+.app-print .govuk-warning-text,
+.app-print .govuk-details,
+.app-print .govuk-summary-list {
+  font-size: 12pt;
+}
+
+/* Captions of tables and figures, and the cover's imprint (#150) */
+.app-print .govuk-table__caption,
+.app-print #main-content figcaption,
+.app-print .app-print-imprint .govuk-body-s {
+  font-size: 11pt;
+}
+
+/* The cover gives the site's address as the link's own text; the Design
+ * System would print the address again after it */
+.app-print .app-print-imprint a.app-print-url::after {
+  content: none;
+}
+
+/* Code, set a little smaller than the text around it, and endnotes */
+.app-print pre.codeblock,
+.app-print pre.pre {
+  font-size: 10.5pt;
+}
+
+.app-print .app-print-endnotes,
+.app-print .app-print-endnotes .govuk-body {
+  font-size: 10pt;
+}
+
 /* Print document structure (FR-P2): cover and contents on their own pages,
    every chapter on a new page */
 .app-print-cover,

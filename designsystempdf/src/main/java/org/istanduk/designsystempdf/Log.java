@@ -33,6 +33,8 @@ final class Log {
   static final String REMOTE = "DSPDF008W";
   /** A figure has no alternative text, so the PDF cannot meet PDF/UA. */
   static final String ALT = "DSPDF009W";
+  /** Text in a right-to-left script, which this version does not shape or order. */
+  static final String RTL = "DSPDF010W";
   /** Progress, shown with --verbose. */
   static final String INFO = "DSPDF000I";
 

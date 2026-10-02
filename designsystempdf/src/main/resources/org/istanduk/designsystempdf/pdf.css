@@ -108,6 +108,17 @@
   padding-left: 28px;
 }
 
+/* The Design System sets a warning's icon beside its first line by absolute
+   positioning with no offset, nudged by a negative margin. The engine works
+   that position out some 19px higher than a browser, into the paragraph
+   before, so the icon is given the offset a browser arrives at; and it sets
+   the mark low in its line, so the line is shortened to centre it. */
+.govuk-warning-text .govuk-warning-text__icon {
+  top: 3px;
+  margin-top: 0;
+  line-height: 24px;
+}
+
 /* The Design System paints the page canvas for the screen; paper is white */
 html,
 body,

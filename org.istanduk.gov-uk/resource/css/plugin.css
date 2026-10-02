@@ -647,6 +647,21 @@ kbd {
   border-bottom: 1px solid #b1b4b6;
 }
 
+/* Cover details (status, edition, dates, identifiers) and imprint (rights,
+   where the current version is) — #150 */
+.app-print .app-print-meta {
+  margin: 0 0 20px;
+  padding-left: 0;
+}
+
+.app-print .app-print-imprint {
+  margin: 30px 0 20px;
+}
+
+.app-print .app-print-imprint .govuk-body-s {
+  margin-bottom: 5px;
+}
+
 .app-print .app-print-contents {
   margin-bottom: 40px;
 }
