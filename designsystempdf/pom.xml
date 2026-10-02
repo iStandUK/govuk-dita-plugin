@@ -45,7 +45,7 @@ licence texts.
     <batik.version>1.17</batik.version>
 
     <!-- Test only; never in the distribution -->
-    <junit.version>5.14.4</junit.version>
+    <junit.version>6.1.3</junit.version>
     <verapdf.version>1.30.2</verapdf.version>
   </properties>
 

@@ -6,6 +6,6 @@
   "description": "axe-core accessibility checks for the generated sites (#35 / NFR-A1)",
   "dependencies": {
     "@axe-core/playwright": "^4.10.0",
-    "playwright": "^1.49.0"
+    "playwright": "^1.63.0"
   }
 }

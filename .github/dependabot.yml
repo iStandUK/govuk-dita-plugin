@@ -1,6 +1,22 @@
 # Dependency updates (#67) arrive as pull requests against dev (Gitflow, D-22):
 # the pinned action SHAs, the two npm tool trees that only CI uses, and the
 # libraries DesignSystemPDF builds on (designsystempdf/pom.xml).
+#
+# dev requires every pull request to be up to date before it merges, so each
+# one costs a CI run of its own. Updates that only CI uses are therefore
+# grouped, one pull request a week for each group. What reaches publishers
+# stays on its own, because it needs more than a version number changed:
+#
+# - govuk-frontend (tools/branding) must match the release vendored in the
+#   plugin. Its pull request cannot pass on its own; it is the prompt to make
+#   the upgrade (NFR-M2: the vendored files, their checksum, the recompiled
+#   NHS stylesheet, the version in the stylesheets, and a look at the
+#   snapshots).
+# - The libraries DesignSystemPDF ships each need THIRD-PARTY-NOTICES updated
+#   in the same pull request.
+# - Batik is left alone: the build pins batik-svg-dom only to keep it at the
+#   version of the Batik jars the layout engine brings, so it moves when the
+#   engine does, all of Batik together.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -9,21 +25,36 @@ updates:
       interval: weekly
     target-branch: dev
     labels: [dependencies]
+    groups:
+      actions:
+        patterns: ["*"]
   - package-ecosystem: npm
     directory: /tools/a11y
     schedule:
       interval: weekly
     target-branch: dev
     labels: [dependencies]
+    groups:
+      accessibility-tools:
+        patterns: ["*"]
   - package-ecosystem: npm
     directory: /tools/branding
     schedule:
       interval: weekly
     target-branch: dev
     labels: [dependencies]
+    groups:
+      branding-tools:
+        patterns: ["*"]
+        exclude-patterns: ["govuk-frontend"]
   - package-ecosystem: maven
     directory: /designsystempdf
     schedule:
       interval: weekly
     target-branch: dev
     labels: [dependencies]
+    ignore:
+      - dependency-name: "org.apache.xmlgraphics:batik-svg-dom"
+    groups:
+      test-dependencies:
+        patterns: ["org.junit*", "org.verapdf*"]
