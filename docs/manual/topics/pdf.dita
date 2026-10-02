@@ -148,7 +148,9 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
       <p>To use others, put their TrueType (<filepath>.ttf</filepath>) files in a folder
         and pass <codeph>--fonts</codeph>. An organisation entitled to GDS Transport or
         Frutiger supplies its own licensed files this way; neither is ever shipped
-        (<xref keyref="legal"/>).</p>
+        (<xref keyref="legal"/>). A supplied font is also used for any character the
+        other fonts cannot draw, so a publication with passages in a script the bundled
+        fonts lack needs only a font that has it.</p>
     </section>
     <section id="problems">
       <title>When something is wrong</title>
@@ -170,9 +172,14 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
         <strow>
           <stentry><codeph>DSPDF004W</codeph></stentry>
           <stentry>Some characters have no glyph in the fonts and print as a replacement
-            mark. Supply a font that covers them with <codeph>--fonts</codeph>, and name
-            its family first in the <codeph>font-family</codeph> of your own stylesheet
-            for that text. For a right-to-left script, see the known defect
+            mark. Supply a font that covers them with <codeph>--fonts</codeph>; it is
+            used for those characters without your stylesheet having to name
+            it.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>DSPDF010W</codeph></stentry>
+          <stentry>The publication has text in a right-to-left script, which will not
+            read correctly in the PDF whatever fonts are supplied. See the known defect
             below.</stentry>
         </strow>
         <strow>
@@ -197,11 +204,12 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
         right-to-left script, such as Arabic or Hebrew. The website and the print
         document are right — the page is marked with its language and direction and the
         text runs from the right — but in the PDF every such character prints as a
-        replacement mark and the topic is set from the left. The build log reports the
-        characters with <codeph>DSPDF004W</codeph>.</p>
-      <p>Supplying a font with <codeph>--fonts</codeph> does not cure it, and can hide it:
-        the marks remain, because the letters would still be neither joined nor put in
-        right-to-left order, and the warning may no longer be given.</p>
+        replacement mark and the topic is set from the left. The build log says so with
+        <codeph>DSPDF010W</codeph>, and lists the characters that have no glyph with
+        <codeph>DSPDF004W</codeph>.</p>
+      <p>Supplying a font with <codeph>--fonts</codeph> does not cure it. The letters
+        then appear, but unjoined and running from the left, so the text is still
+        unreadable; <codeph>DSPDF010W</codeph> is given all the same.</p>
       <p>Until this is fixed, make the PDF of a right-to-left publication, or of one with
         right-to-left passages, from a browser: open <filepath>print.html</filepath> and
         use the browser's print or save-as-PDF command. Browsers shape and order the text
