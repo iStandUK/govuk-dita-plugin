@@ -356,6 +356,9 @@ jobs:
             --format govuk --output out/kitchen-print -Dgovuk.print=yes
           grep -Eq 'name="t[0-9]+-fnsrc_' out/kitchen-print/print.html
           grep -q 'app-print-endnotes' out/kitchen-print/print.html
+          # #158: a code block is not parted from the warning or note that introduces it
+          awk '/^\.govuk-warning-text \+ pre,$/ { f = 1 } f && /page-break-before: avoid;/ { ok = 1; exit } /^}/ { f = 0 } END { exit !ok }' \
+            out/kitchen-print/govuk/print.css || { echo "print.css does not keep a warning with its code block"; exit 1; }
           grep -Eq 'id="p[0-9]+-shared"' out/kitchen-print/print.html
           grep -q 'xlink:href="#blocks"' out/kitchen-print/print.html
           test -z "$(grep -o ' id="[^"]*"' out/kitchen-print/print.html | sort | uniq -d)"

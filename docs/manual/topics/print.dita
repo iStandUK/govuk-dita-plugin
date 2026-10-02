@@ -100,7 +100,8 @@
       <p>Use the browser's print or save-as-PDF command on any page. The print stylesheet
         hides the masthead, sidebar, search, pagination and footer, lays the content out in
         one column, keeps headings with the text that follows them, keeps tables, figures and
-        code blocks whole where it can, repeats table headers across pages, and puts the page
+        code blocks whole where it can, keeps a warning or note with the code block it
+        introduces, repeats table headers across pages, and puts the page
         number in the bottom margin. Links to other websites print with their address after
         the link text, as the Design System's own print rules provide.</p>
       <p>The paper size is set at build time with <codeph>govuk.pdf.paper</codeph>

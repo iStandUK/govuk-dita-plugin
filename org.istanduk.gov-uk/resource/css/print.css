@@ -73,6 +73,14 @@ pre,
   page-break-inside: avoid;
 }
 
+/* A warning or note that introduces a code block is not left at the foot of a
+   page with the code overleaf: the block takes the warning with it (#158) */
+.govuk-warning-text + pre,
+.govuk-inset-text + pre {
+  break-before: avoid;
+  page-break-before: avoid;
+}
+
 tr {
   break-inside: avoid;
   page-break-inside: avoid;
