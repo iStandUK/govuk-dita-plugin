@@ -132,12 +132,25 @@ frame-ancestors 'none'</codeblock>
           appears; prefer an image, a figure or a link.</li>
       </ul>
     </section>
+    <section id="tools">
+      <title>The programs the build runs</title>
+      <p><indexterm>security<indexterm>external commands</indexterm></indexterm>The build
+        runs two programs besides the toolkit, and only when the publisher has installed
+        them: the search indexer, and the PDF formatter named in
+        <codeph>govuk.pdf.command</codeph>. It downloads neither and bundles neither. The
+        PDF command is run through the system's shell exactly as given, with the print
+        document's path and the PDF's path added, so treat the parameter as you would any
+        command line: set it in the build's own configuration, never from a value taken
+        from content or from an untrusted source. DesignSystemPDF itself makes no network
+        request and reads only the print document and the files it names
+        (<xref keyref="pdf"/>).</p>
+    </section>
     <section id="scope">
       <title>Where responsibility sits</title>
       <p>The plugin answers for its stylesheets, build logic, CSS and JavaScript, and for the
         sites and print documents they produce. It does not answer for DITA-OT's XML parsing,
         DTD and catalog resolution or key and chunk processing, for govuk-frontend, for
-        Pagefind, or for the host's configuration. To report a vulnerability in the plugin,
+        Pagefind, for a PDF formatter, or for the host's configuration. To report a vulnerability in the plugin,
         use the repository's private reporting form — see <xref keyref="security-policy"/> —
         rather than a public issue.</p>
     </section>

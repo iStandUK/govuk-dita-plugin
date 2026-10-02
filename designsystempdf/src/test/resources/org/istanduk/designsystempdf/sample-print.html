@@ -1,0 +1,98 @@
+<!DOCTYPE html
+  SYSTEM "about:legacy-compat">
+<html xmlns="http://www.w3.org/1999/xhtml" class="govuk-template app-print" lang="en-GB">
+<!--
+  A small print document in the shape the plugin writes at print contract 1:
+  cover, contents, two chapters, a cross-reference, a footnote written as an
+  endnote with its call, a table, an inline diagram, a glossary and an index.
+  The page rules are the ones the plugin's print.css carries.
+-->
+<head>
+<meta charset="UTF-8"/>
+<meta name="govuk-print-contract" content="1"/>
+<title>Sample publication — Print version</title>
+<style>
+@page {
+  size: A4 portrait;
+  margin: 20mm 18mm 22mm 18mm;
+  @bottom-right { content: counter(page) " / " counter(pages); font-family: sans-serif; font-size: 9pt; }
+}
+body { font-family: "GDS Transport", arial, sans-serif; font-size: 12pt; }
+code { font-family: ui-monospace, Menlo, Consolas, monospace; }
+.govuk-skip-link, .app-print-screen-only { display: none; }
+.app-print-cover, .app-print-contents { page-break-after: always; }
+.app-print-chapter { page-break-before: always; }
+.app-print a.xref[data-page-label]::after { content: " (" attr(data-page-label) " " target-counter(attr(href url), page) ")"; }
+.app-print .app-print-contents__list a[data-page-label]::after { content: " " leader('.') " " target-counter(attr(href url), page); }
+.app-print .app-index-list a[data-page-label]::after { content: " " target-counter(attr(href url), page); }
+</style>
+</head>
+<body class="govuk-template__body">
+<a href="#main-content" class="govuk-skip-link">Skip to main content</a>
+<div class="govuk-width-container"><main class="govuk-main-wrapper" id="main-content">
+
+<header class="app-print-cover">
+<h1 class="govuk-heading-xl">Sample publication</h1>
+<p class="govuk-body-l">A short publication used to test the generator.</p>
+<p class="govuk-body app-attribution">Example Organisation</p>
+<p class="govuk-body app-print-screen-only"><a class="govuk-link" href="index.html">Website version</a></p>
+</header>
+
+<nav class="app-print-contents" aria-labelledby="app-print-contents-heading">
+<h2 class="govuk-heading-l" id="app-print-contents-heading">Contents</h2>
+<ol class="govuk-list app-print-contents__list">
+<li><a class="govuk-link" href="#first" data-page-label="page">The first chapter</a></li>
+<li><a class="govuk-link" href="#app-print-group-2" data-page-label="page">The second chapter</a>
+<ol class="govuk-list app-print-contents__list">
+<li><a class="govuk-link" href="#second" data-page-label="page">A topic in the second chapter</a></li>
+</ol></li>
+</ol>
+<ol class="govuk-list app-print-contents__list">
+<li><a class="govuk-link" href="#app-print-glossary">Glossary</a></li>
+<li><a class="govuk-link" href="#app-print-index">Index</a></li>
+</ol>
+</nav>
+
+<section class="app-print-topic app-print-chapter"><article class="topic" aria-labelledby="t1-title" lang="en-GB" id="first">
+<h2 id="t1-title" class="govuk-heading-l">The first chapter</h2>
+<p class="govuk-body">The second chapter is described in <a class="xref govuk-link" href="#second" data-page-label="page">A topic in the second chapter</a>.
+A sentence with a footnote<a name="t1-fnsrc_1" href="#t1-fntarg_1" data-page-label="page"><sup>1</sup></a> in it, some <code>inline code</code>,
+Welsh (ŵ ŷ), Greek (αβγ), Cyrillic (жз) and an arrow (→).</p>
+<h3 class="govuk-heading-m" id="first__section">A section</h3>
+<table class="govuk-table">
+<caption class="govuk-table__caption">Table 1. Values</caption>
+<thead><tr><th scope="col">Name</th><th scope="col">Value</th></tr></thead>
+<tbody><tr><td>paper</td><td>A4</td></tr><tr><td>sides</td><td>single</td></tr></tbody>
+</table>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60" role="img" aria-label="A box labelled Start">
+<rect x="5" y="5" width="90" height="50" fill="#1d70b8"/><text x="50" y="35" fill="#ffffff" text-anchor="middle" font-family="Arial, sans-serif">Start</text>
+</svg>
+</article>
+<div class="app-print-endnotes"><div class="fn"><a name="t1-fntarg_1" href="#t1-fnsrc_1" data-page-label="page"><sup>1</sup></a> The text of the footnote.</div><div class="fn"><sup>2</sup> A footnote used only by reference.</div></div>
+</section>
+
+<section class="app-print-group app-print-chapter" id="app-print-group-2">
+<h2 class="govuk-heading-l">The second chapter</h2>
+<section class="app-print-topic"><article class="topic" aria-labelledby="t2-title" lang="en-GB" id="second">
+<h3 id="t2-title" class="govuk-heading-m">A topic in the second chapter</h3>
+<p class="govuk-body">Back to <a class="xref govuk-link" href="#first" data-page-label="page">The first chapter</a>.</p>
+</article></section>
+</section>
+
+<section class="app-print-part app-print-chapter" id="app-print-glossary">
+<h2 class="govuk-heading-l">Glossary</h2>
+<h3 id="glossary-P" class="govuk-heading-m app-az-letter">P</h3>
+<h4 class="govuk-heading-s app-entry__heading">print document</h4>
+<p class="govuk-body app-entry__desc">The whole publication as one file.</p>
+</section>
+
+<section class="app-print-part app-print-chapter" id="app-print-index">
+<h2 class="govuk-heading-l">Index</h2>
+<ul class="govuk-list app-index-list">
+<li><span class="app-index-term">chapters</span> — <a class="govuk-link" href="#second" data-page-label="page">A topic in the second chapter</a></li>
+</ul>
+</section>
+
+</main></div>
+</body>
+</html>

@@ -3,3 +3,6 @@ out/
 temp/
 org.istanduk.gov-uk.zip
 node_modules/
+
+# DesignSystemPDF build output
+designsystempdf/target/

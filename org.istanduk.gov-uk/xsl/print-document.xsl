@@ -271,6 +271,8 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
           <xsl:value-of select="string-join(distinct-values(($authors, $orgs)[. ne '']), ' · ')"/>
         </p>
       </xsl:if>
+      <xsl:call-template name="govuk-print-cover-details"/>
+      <xsl:call-template name="govuk-print-cover-imprint"/>
       <p class="govuk-body app-print-screen-only">
         <a class="govuk-link" href="{concat('index', $OUTEXT)}">
           <xsl:call-template name="getVariable">
@@ -279,6 +281,200 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
         </a>
       </p>
     </header>
+  </xsl:template>
+
+  <!-- ===== Cover details and imprint (#150) =====
+       A PDF travels without the site around it, and the site's footer and
+       phase banner are not printed, so the cover says what they would: the
+       publication's status, edition, dates and identifiers, then who holds
+       the rights and where the current version is. Every line comes from the
+       map's metadata or a parameter the publisher set, never from the build
+       clock, and is left out when its source is absent. The classes the
+       companion generator reads on the cover (h1, app-attribution,
+       govuk-body-l) are not used here. -->
+
+  <!-- The map's own metadata: bookmeta in a bookmap, topicmeta in a map -->
+  <xsl:variable name="govuk-cover-meta" as="element()*"
+                select="$govuk-book/*[contains(@class, ' map/topicmeta ')]"/>
+  <xsl:variable name="govuk-cover-bookid" as="element()?"
+                select="($govuk-cover-meta/*[contains(@class, ' bookmap/bookid ')])[1]"/>
+
+  <!-- A bookmap date (year, month, day children) as an ISO date when all three
+       are numbers, otherwise as written -->
+  <xsl:function name="govuk:book-date" as="xs:string">
+    <xsl:param name="date" as="element()?"/>
+    <xsl:variable name="y" select="normalize-space(string(($date/*[contains(@class, ' bookmap/year ')])[1]))"/>
+    <xsl:variable name="m" select="normalize-space(string(($date/*[contains(@class, ' bookmap/month ')])[1]))"/>
+    <xsl:variable name="d" select="normalize-space(string(($date/*[contains(@class, ' bookmap/day ')])[1]))"/>
+    <xsl:variable name="iso" as="xs:string"
+                  select="if (matches($y, '^[0-9]{4}$') and matches($m, '^[0-9]{1,2}$') and matches($d, '^[0-9]{1,2}$'))
+                          then concat($y, '-', format-number(xs:integer($m), '00'), '-', format-number(xs:integer($d), '00'))
+                          else ''"/>
+    <xsl:sequence select="if ($iso castable as xs:date) then $iso
+                          else string-join(($d, $m, $y)[. ne ''], ' ')"/>
+  </xsl:function>
+
+  <xsl:variable name="govuk-cover-published" as="xs:string">
+    <xsl:variable name="created" as="xs:string"
+                  select="normalize-space(string(($govuk-cover-meta/*[contains(@class, ' topic/critdates ')]
+                                                  /*[contains(@class, ' topic/created ')]/@date)[1]))"/>
+    <xsl:sequence select="if ($created ne '') then $created
+                          else govuk:book-date(($govuk-cover-meta//*[contains(@class, ' bookmap/published ')]
+                                                /*[contains(@class, ' bookmap/completed ')])[1])"/>
+  </xsl:variable>
+  <xsl:variable name="govuk-cover-updated" as="xs:string"
+                select="normalize-space(string(($govuk-cover-meta/*[contains(@class, ' topic/critdates ')]
+                                                /*[contains(@class, ' topic/revised ')]/@modified)[last()]))"/>
+
+  <xsl:template name="govuk-print-cover-labelled">
+    <xsl:param name="label-id" as="xs:string"/>
+    <xsl:param name="value" as="xs:string"/>
+    <li>
+      <xsl:call-template name="getVariable">
+        <xsl:with-param name="id" select="$label-id"/>
+      </xsl:call-template>
+      <xsl:text> </xsl:text>
+      <xsl:value-of select="$value"/>
+    </li>
+  </xsl:template>
+
+  <xsl:template name="govuk-print-cover-details">
+    <xsl:variable name="phase" select="normalize-space($GOVUK-PHASE)"/>
+    <xsl:variable name="edition" select="normalize-space(string(($govuk-cover-bookid/*[contains(@class, ' bookmap/edition ')])[1]))"/>
+    <xsl:variable name="isbn" select="normalize-space(string(($govuk-cover-bookid/*[contains(@class, ' bookmap/isbn ')])[1]))"/>
+    <xsl:variable name="number" select="normalize-space(string(($govuk-cover-bookid/*[contains(@class, ' bookmap/booknumber ')])[1]))"/>
+    <xsl:variable name="items" as="element()*">
+      <xsl:if test="$phase ne ''">
+        <li>
+          <xsl:call-template name="getVariable">
+            <xsl:with-param name="id" select="'govuk-dita.status'"/>
+          </xsl:call-template>
+          <xsl:text> </xsl:text>
+          <strong>
+            <xsl:value-of select="concat(upper-case(substring($phase, 1, 1)), substring($phase, 2))"/>
+          </strong>
+        </li>
+      </xsl:if>
+      <!-- an edition written in words ("Second edition", "Version 2.1") reads
+           as it is; a bare number takes the label -->
+      <xsl:choose>
+        <xsl:when test="matches($edition, '^[0-9][0-9A-Za-z.\-]*$')">
+          <xsl:call-template name="govuk-print-cover-labelled">
+            <xsl:with-param name="label-id" select="'govuk-dita.edition'"/>
+            <xsl:with-param name="value" select="$edition"/>
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:when test="$edition ne ''">
+          <li><xsl:value-of select="$edition"/></li>
+        </xsl:when>
+      </xsl:choose>
+      <xsl:if test="$govuk-cover-published ne ''">
+        <li>
+          <xsl:call-template name="govuk-date-item">
+            <xsl:with-param name="label-id" select="'govuk-dita.published'"/>
+            <xsl:with-param name="value" select="$govuk-cover-published"/>
+          </xsl:call-template>
+        </li>
+      </xsl:if>
+      <xsl:if test="$govuk-cover-updated ne ''">
+        <li>
+          <xsl:call-template name="govuk-date-item">
+            <xsl:with-param name="label-id" select="'govuk-dita.updated'"/>
+            <xsl:with-param name="value" select="$govuk-cover-updated"/>
+          </xsl:call-template>
+        </li>
+      </xsl:if>
+      <xsl:if test="$isbn ne ''">
+        <xsl:call-template name="govuk-print-cover-labelled">
+          <xsl:with-param name="label-id" select="'govuk-dita.isbn'"/>
+          <xsl:with-param name="value" select="$isbn"/>
+        </xsl:call-template>
+      </xsl:if>
+      <xsl:if test="$number ne ''">
+        <xsl:call-template name="govuk-print-cover-labelled">
+          <xsl:with-param name="label-id" select="'govuk-dita.reference'"/>
+          <xsl:with-param name="value" select="$number"/>
+        </xsl:call-template>
+      </xsl:if>
+    </xsl:variable>
+    <xsl:if test="exists($items)">
+      <ul class="govuk-list app-print-meta">
+        <xsl:sequence select="$items"/>
+      </ul>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Rights as the site's footer states them (which print leaves out), the
+       bookmap's own rights summary, and the address of the current version -->
+  <xsl:template name="govuk-print-cover-imprint">
+    <xsl:variable name="licence" select="normalize-space($GOVUK-FOOTER-LICENCE)"/>
+    <xsl:variable name="summary"
+                  select="normalize-space(string(($govuk-cover-meta/*[contains(@class, ' bookmap/bookrights ')]
+                                                  /*[contains(@class, ' bookmap/summary ')])[1]))"/>
+    <xsl:variable name="url" select="normalize-space($GOVUK-SITE-URL)"/>
+    <xsl:variable name="lines" as="element()*">
+      <xsl:choose>
+        <xsl:when test="$GOVUK-BRANDING = 'official'">
+          <p class="govuk-body-s">
+            <xsl:call-template name="getVariable">
+              <xsl:with-param name="id" select="'govuk-dita.crown-copyright'"/>
+            </xsl:call-template>
+            <xsl:if test="$govuk-copyr-years ne ''">
+              <xsl:value-of select="concat(' ', $govuk-copyr-years)"/>
+            </xsl:if>
+          </p>
+          <p class="govuk-body-s">
+            <xsl:call-template name="getVariable">
+              <xsl:with-param name="id" select="'govuk-dita.ogl-prefix'"/>
+            </xsl:call-template>
+            <a class="govuk-link" rel="license"
+               href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">
+              <xsl:call-template name="getVariable">
+                <xsl:with-param name="id" select="'govuk-dita.ogl-name'"/>
+              </xsl:call-template>
+            </a>
+            <xsl:call-template name="getVariable">
+              <xsl:with-param name="id" select="'govuk-dita.ogl-suffix'"/>
+            </xsl:call-template>
+          </p>
+        </xsl:when>
+        <xsl:when test="$licence ne ''">
+          <p class="govuk-body-s"><xsl:value-of select="$licence"/></p>
+        </xsl:when>
+        <xsl:when test="$govuk-copyr-owner ne ''">
+          <p class="govuk-body-s">
+            <xsl:call-template name="getVariable">
+              <xsl:with-param name="id" select="'govuk-dita.copyright'"/>
+            </xsl:call-template>
+            <xsl:text> </xsl:text>
+            <xsl:if test="$govuk-copyr-years ne ''">
+              <xsl:value-of select="concat($govuk-copyr-years, ' ')"/>
+            </xsl:if>
+            <xsl:value-of select="$govuk-copyr-owner"/>
+          </p>
+        </xsl:when>
+      </xsl:choose>
+      <!-- official mode has stated its licence; a second statement would compete -->
+      <xsl:if test="$summary ne '' and $GOVUK-BRANDING ne 'official'">
+        <p class="govuk-body-s"><xsl:value-of select="$summary"/></p>
+      </xsl:if>
+      <!-- the address is the link's own text; print.css stops the Design
+           System printing it a second time after the link -->
+      <xsl:if test="$url ne ''">
+        <p class="govuk-body-s">
+          <xsl:call-template name="getVariable">
+            <xsl:with-param name="id" select="'govuk-dita.available-at'"/>
+          </xsl:call-template>
+          <xsl:text> </xsl:text>
+          <a class="govuk-link app-print-url" href="{$url}"><xsl:value-of select="$url"/></a>
+        </p>
+      </xsl:if>
+    </xsl:variable>
+    <xsl:if test="exists($lines)">
+      <div class="app-print-imprint">
+        <xsl:sequence select="$lines"/>
+      </div>
+    </xsl:if>
   </xsl:template>
 
   <!-- ===== Contents ===== -->

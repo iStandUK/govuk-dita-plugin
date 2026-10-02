@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "manual-site",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8932", "--directory", "out/manual"],
+      "runtimeExecutable": "jwebserver",
+      "runtimeArgs": ["-b", "127.0.0.1", "-p", "8932"],
       "port": 8932
     }
   ]

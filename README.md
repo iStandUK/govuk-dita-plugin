@@ -19,7 +19,7 @@ for two DITA-OT 4.4 behaviours (#52), **search relevance driven by the DITA itse
 **printing** — a print stylesheet on every page and, with `govuk.print=yes`, the whole
 publication as one file to print or save as PDF (#63, D-20). It is listed in the
 [DITA-OT plugin registry](https://www.dita-ot.org/plugins), so `dita install org.istanduk.gov-uk`
-installs it by name (#21); 1.1 adds the bundled PDF step. Coverage of bookmaps, keys, chunking, and the SVG domain is verified against real
+installs it by name (#21). On `dev`, the build links the PDF it makes, with its size, beside the print version (#146), and the manual explains how to install and use **DesignSystemPDF**, the companion generator in [`designsystempdf/`](designsystempdf/README.md) that turns the print document into a page-numbered, tagged PDF with Java alone (D-23). Coverage of bookmaps, keys, chunking, and the SVG domain is verified against real
 corpora ([ORUK](design/07-gap-analysis-oruk.md), [DITA 1.3](design/08-gap-analysis-dita13.md)).
 
 ## Try it
