@@ -120,8 +120,9 @@
         file, linked from the home page and from every footer as "Whole publication (print
         version)". It holds:</p>
       <ul>
-        <li>a cover block with the publication's title, abstract and authorship from the
-          bookmap or map;</li>
+        <li>a cover with the publication's title, abstract and authorship from the bookmap
+          or map, then its details and an imprint (see <q>What the cover shows</q>
+          below);</li>
         <li>a linked contents list, to <codeph>govuk.print.toc.depth</codeph> levels
           (<codeph>3</codeph> by default);</li>
         <li>every navigable topic in the map's reading order, rendered exactly as on its own
@@ -192,6 +193,96 @@
         and writes nothing, and no page links to it. Publications of that size can produce
         print documents per part by building their submaps, or leave printing to the
         per-page stylesheet.</p>
+    </section>
+    <section id="cover">
+      <title>What the cover shows</title>
+      <p><indexterm>print document<indexterm>cover</indexterm></indexterm><indexterm>bookmeta</indexterm>A
+        printed publication, and a PDF above all, travels without the site around it: no
+        footer to state the copyright, no banner to say it is a draft, no address bar to
+        say where it came from. The cover therefore says what the site would. Under the
+        title, the abstract and the author or organisation it carries the publication's
+        details, then an imprint. Every line comes from the map's own metadata or from a
+        parameter you have set; nothing comes from the date of the build, and a line whose
+        source is absent is left out.</p>
+      <simpletable>
+        <sthead>
+          <stentry>On the cover</stentry>
+          <stentry>Comes from</stentry>
+        </sthead>
+        <strow>
+          <stentry>Status, such as <q>Status: Beta</q></stentry>
+          <stentry>The <codeph>govuk.phase</codeph> parameter, which the site shows as its
+            phase banner.</stentry>
+        </strow>
+        <strow>
+          <stentry>Edition</stentry>
+          <stentry><codeph>edition</codeph> in the bookmap's <codeph>bookid</codeph>. An
+            edition written in words (<q>Second edition</q>, <q>Version 2.1</q>) is shown
+            as written; a bare number is shown as <q>Edition 2.1</q>.</stentry>
+        </strow>
+        <strow>
+          <stentry>Published</stentry>
+          <stentry>The first <codeph>created</codeph> date in the map's
+            <codeph>critdates</codeph>; failing that, the bookmap's
+            <codeph>published</codeph> date (<codeph>completed</codeph>, with its year,
+            month and day).</stentry>
+        </strow>
+        <strow>
+          <stentry>Last updated</stentry>
+          <stentry>The last <codeph>revised</codeph> date in the map's
+            <codeph>critdates</codeph>.</stentry>
+        </strow>
+        <strow>
+          <stentry>ISBN; Reference</stentry>
+          <stentry><codeph>isbn</codeph> and <codeph>booknumber</codeph> in the bookmap's
+            <codeph>bookid</codeph>.</stentry>
+        </strow>
+        <strow>
+          <stentry>Copyright</stentry>
+          <stentry>As in the site's footer: <codeph>govuk.footer.licence</codeph> if set,
+            otherwise the years and owner in the bookmap's <codeph>bookrights</codeph>.
+            Official branding states Crown copyright and the Open Government Licence
+            instead.</stentry>
+        </strow>
+        <strow>
+          <stentry>Licence or other rights statement</stentry>
+          <stentry><codeph>summary</codeph> in the bookmap's <codeph>bookrights</codeph>,
+            in every branding mode but official.</stentry>
+        </strow>
+        <strow>
+          <stentry><q>This publication is available at …</q></stentry>
+          <stentry>The <codeph>govuk.site.url</codeph> parameter: where a reader holding
+            the PDF finds the current version.</stentry>
+        </strow>
+      </simpletable>
+      <p>A bookmap that gives the cover everything it can show:</p>
+      <codeblock>&lt;bookmeta&gt;
+  &lt;author&gt;Example Standards Body&lt;/author&gt;
+  &lt;critdates&gt;
+    &lt;created date="2026-03-01"/&gt;
+    &lt;revised modified="2026-09-30"/&gt;
+  &lt;/critdates&gt;
+  &lt;bookid&gt;
+    &lt;edition&gt;2.1&lt;/edition&gt;
+    &lt;isbn&gt;978-0-00-000000-2&lt;/isbn&gt;
+    &lt;booknumber&gt;ESB-2026-04&lt;/booknumber&gt;
+  &lt;/bookid&gt;
+  &lt;bookrights&gt;
+    &lt;copyrfirst&gt;&lt;year&gt;2024&lt;/year&gt;&lt;/copyrfirst&gt;
+    &lt;copyrlast&gt;&lt;year&gt;2026&lt;/year&gt;&lt;/copyrlast&gt;
+    &lt;bookowner&gt;
+      &lt;organization&gt;Example Standards Body&lt;/organization&gt;
+    &lt;/bookowner&gt;
+    &lt;summary&gt;Licensed under the Creative Commons Attribution 4.0
+      International licence.&lt;/summary&gt;
+  &lt;/bookrights&gt;
+&lt;/bookmeta&gt;</codeblock>
+      <p>Dates are shown as <q>1 March 2026</q> when written as
+        <codeph>2026-03-01</codeph>, and as written otherwise. Keep them in the map by
+        hand: a date stamped by tooling on every build says only when the build ran. A
+        map that is not a bookmap can carry <codeph>critdates</codeph> in its
+        <codeph>topicmeta</codeph>; the edition, identifiers and rights need a
+        bookmap.</p>
     </section>
     <section id="pdf">
       <title>A PDF from the build</title>

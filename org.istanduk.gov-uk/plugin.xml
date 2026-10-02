@@ -18,7 +18,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
            desc="Service or publication name shown in the masthead and footer. Defaults to the map title."
            type="string"/>
     <param name="govuk.phase"
-           desc="Show a GOV.UK phase banner above the content with this tag, e.g. 'alpha' or 'beta'. Empty (default) shows no banner. Works in every branding mode."
+           desc="Show a GOV.UK phase banner above the content with this tag, e.g. 'alpha' or 'beta'. Empty (default) shows no banner. Works in every branding mode. The print document's cover shows it as the publication's status."
            type="string"/>
     <param name="govuk.feedback.url"
            desc="Feedback link shown in the phase banner (used only when govuk.phase is set). Empty (default) shows the banner text without a link."
@@ -102,7 +102,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
            desc="Content-Security-Policy on every page. 'no' (default) emits none; 'meta' emits a policy the plugin's pages satisfy (same-origin only, the one constant inline script by hash, WebAssembly for search) as a meta tag, for hosts without header control; any other value is emitted as given. Content the policy would block is reported (GOVK007W)."
            type="string"/>
     <param name="govuk.site.url"
-           desc="The published base URL of the site (for example https://example.org/manual/). Needed for sitemap.xml, whose entries must be absolute; the plugin has no other way to know its own address."
+           desc="The published base URL of the site (for example https://example.org/manual/). Needed for sitemap.xml, whose entries must be absolute, and given on the print document's cover as where the current version is; the plugin has no other way to know its own address."
            type="string"/>
     <param name="govuk.sitemap"
            desc="Write sitemap.xml (and a robots.txt pointing at it, unless one exists) from the map's navigable pages. 'auto' (default) writes it when govuk.site.url is set; 'yes' requires the URL; 'no' never writes it. The search page and the print document are excluded."

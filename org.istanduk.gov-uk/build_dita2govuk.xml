@@ -396,6 +396,10 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
         <param name="GOVUK-SERVICE-NAME" expression="${govuk.service.name}" if:set="govuk.service.name"/>
         <param name="GOVUK-SEARCH" expression="${govuk.search.enabled}"/>
         <param name="GOVUK-BRANDING" expression="${govuk.branding}"/>
+        <!-- for the cover's details and imprint (#150) -->
+        <param name="GOVUK-PHASE" expression="${govuk.phase}" if:set="govuk.phase"/>
+        <param name="GOVUK-FOOTER-LICENCE" expression="${govuk.footer.licence}" if:set="govuk.footer.licence"/>
+        <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
         <param name="GOVUK-FAVICON" expression="${govuk.favicon.name}" if:set="govuk.favicon"/>
         <param name="GOVUK-SVG-INLINE" expression="${govuk.svg.inline}"/>
         <param name="GOVUK-PRINT" expression="${govuk.print}"/>

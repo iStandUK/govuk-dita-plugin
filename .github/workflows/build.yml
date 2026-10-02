@@ -368,6 +368,56 @@ jobs:
           absent -q 'href="print.html"' out/manual-print-ceiling/index.html
           absent -q 'href="../print.html"' out/manual-print-ceiling/topics/install.html
 
+      # The print document's cover (#150): publication details and an imprint
+      # from the map's metadata and the publisher's parameters — every line
+      # present when its source is, and no empty block when it is not.
+      - name: Print cover details and imprint (#150)
+        run: |
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-cover/cover.ditamap \
+            --format govuk --output out/print-cover -Dgovuk.print=yes -Dgovuk.search=no \
+            -Dgovuk.phase=beta -Dgovuk.site.url=https://example.org/standard/
+          c=out/print-cover/print.html
+          grep -q '<li>Status: <strong>Beta</strong></li>' "$c"
+          grep -q '<li>Edition 2.1</li>' "$c"
+          grep -q 'Published <time datetime="2026-03-01">1 March 2026</time>' "$c"
+          # the last of two revisions
+          grep -q 'Last updated <time datetime="2026-09-30">30 September 2026</time>' "$c"
+          absent -q '15 June 2026' "$c"
+          grep -q '<li>ISBN 978-0-00-000000-2</li>' "$c"
+          grep -q '<li>Reference ESB-2026-04</li>' "$c"
+          grep -q '<p class="govuk-body-s">© 2024–2026 Example Standards Body</p>' "$c"
+          grep -q 'Licensed under the Creative Commons Attribution 4.0 International licence.</p>' "$c"
+          grep -q 'This publication is available at <a class="govuk-link app-print-url" href="https://example.org/standard/">https://example.org/standard/</a>' "$c"
+          # the cover lines the companion generator reads are still there, and the site's own pages are untouched
+          grep -q '<p class="govuk-body app-attribution">Example Standards Body</p>' "$c"
+          absent -Eq 'class="[^"]*app-print-(meta|imprint)' out/print-cover/index.html out/print-cover/topic.html
+          # official branding: Crown copyright and the Open Government Licence, and no second licence statement
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-cover/cover.ditamap \
+            --format govuk --output out/print-cover-official -Dgovuk.print=yes -Dgovuk.search=no \
+            -Dgovuk.branding=official
+          c=out/print-cover-official/print.html
+          grep -q '<p class="govuk-body-s">© Crown copyright 2024–2026</p>' "$c"
+          grep -q 'rel="license" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>' "$c"
+          absent -q 'Creative Commons' "$c"
+          absent -q 'Status:' "$c"
+          # the bookmap's own published date, an edition in words, and no rights: details without an imprint
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-cover/published.ditamap \
+            --format govuk --output out/print-cover-published -Dgovuk.print=yes -Dgovuk.search=no
+          c=out/print-cover-published/print.html
+          grep -q '<li>Second edition</li>' "$c"
+          grep -q 'Published <time datetime="2026-03-01">1 March 2026</time>' "$c"
+          absent -q 'Last updated' "$c"
+          absent -Eq 'class="[^"]*app-print-imprint' "$c"
+          # no metadata, no block: the manual has rights but no details; a plain map has neither
+          absent -Eq 'class="[^"]*app-print-meta' out/manual-print/print.html
+          grep -q '<div class="app-print-imprint"><p class="govuk-body-s">© 2026 iStandUK</p></div>' out/manual-print/print.html
+          absent -Eq 'class="[^"]*app-print-(meta|imprint)' out/kitchen-print/print.html
+          for site in out/print-cover out/print-cover-official out/print-cover-published; do
+            test -z "$(grep -o ' id="[^"]*"' "$site/print.html" | sort | uniq -d)"
+          done
+          python3 tools/check_links.py out/print-cover out/print-cover-official out/print-cover-published
+
       # Print page references, the formatter hook, the contract marker and the
       # duplicate-id fix (#106, #107, #108, #121). The Markdown fixture is the
       # shape a converted website has: headings become nested topics, so ids

@@ -30,6 +30,11 @@ collisions with toolkit variables.
   <variable id="govuk-dita.print-page">Print version</variable>
   <variable id="govuk-dita.print-website">Website version</variable>
   <variable id="govuk-dita.page">page</variable>
+  <variable id="govuk-dita.status">Status:</variable>
+  <variable id="govuk-dita.edition">Edition</variable>
+  <variable id="govuk-dita.isbn">ISBN</variable>
+  <variable id="govuk-dita.reference">Reference</variable>
+  <variable id="govuk-dita.available-at">This publication is available at</variable>
   <variable id="govuk-dita.published">Published</variable>
   <variable id="govuk-dita.updated">Last updated</variable>
   <variable id="govuk-dita.content-removed">Content removed by the publisher's content policy</variable>

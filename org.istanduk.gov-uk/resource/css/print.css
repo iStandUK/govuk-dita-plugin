@@ -153,10 +153,17 @@ svg {
   font-size: 12pt;
 }
 
-/* Captions of tables and figures */
+/* Captions of tables and figures, and the cover's imprint (#150) */
 .app-print .govuk-table__caption,
-.app-print #main-content figcaption {
+.app-print #main-content figcaption,
+.app-print .app-print-imprint .govuk-body-s {
   font-size: 11pt;
+}
+
+/* The cover gives the site's address as the link's own text; the Design
+ * System would print the address again after it */
+.app-print .app-print-imprint a.app-print-url::after {
+  content: none;
 }
 
 /* Code, set a little smaller than the text around it, and endnotes */

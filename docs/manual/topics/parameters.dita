@@ -41,7 +41,8 @@
               <entry>text</entry>
               <entry>Shows a GOV.UK phase banner above the content with this tag, for example
                 <codeph>alpha</codeph> or <codeph>beta</codeph>. Empty (default) shows no
-                banner. Works in every branding mode.</entry>
+                banner. Works in every branding mode. The print document's cover shows it as
+                the publication's status.</entry>
             </row>
             <row>
               <entry><codeph>govuk.feedback.url</codeph></entry>
@@ -75,7 +76,7 @@
               <entry>text</entry>
               <entry>Override the footer licence/credit line (neutral, iStandUK and NHS modes;
                 official always shows the Open Government Licence). Empty uses the bookmap's
-                copyright.</entry>
+                copyright. The print document's cover carries the same line.</entry>
             </row>
             <row>
               <entry><codeph>govuk.homepage.layout</codeph></entry>
@@ -221,7 +222,8 @@
               <entry>URL</entry>
               <entry>The published base URL, for example
                 <codeph>https://example.org/manual/</codeph>. Needed for
-                <filepath>sitemap.xml</filepath>, whose entries must be absolute.</entry>
+                <filepath>sitemap.xml</filepath>, whose entries must be absolute; the print
+                document's cover gives it as where the current version is.</entry>
             </row>
             <row>
               <entry><codeph>govuk.sitemap</codeph></entry>
