@@ -316,6 +316,22 @@ jobs:
           grep -q 'href="print.html">Whole publication (print version)' out/manual-print/glossary.html
           grep -q 'govuk/print.css" media="print"' out/manual-print/topics/install.html
           grep -q 'size: A4 portrait;' out/manual-print/govuk/print.css
+          # #148: the print document takes a document's type scale, not a printed web
+          # page's — title 28pt, section heading 20pt, subheadings 16 and 14pt, body
+          # 12pt, captions 11pt — and only the print document does
+          scale() { # selector, size: the first font-size after the selector in print.css
+            awk -v sel="$1" -v size="$2" 'index($0, sel) { f = 1 } f && /font-size/ { ok = index($0, " " size ";") > 0; exit } END { exit !ok }' \
+              out/manual-print/govuk/print.css || { echo "print.css: $1 should be set at $2"; exit 1; }
+          }
+          scale '.app-print .govuk-heading-xl {' 28pt
+          scale '.app-print .govuk-heading-l {' 20pt
+          scale '.app-print .govuk-heading-m {' 16pt
+          scale '.app-print .govuk-heading-s,' 14pt
+          scale '.app-print .govuk-body-l,' 14pt
+          scale '.app-print .govuk-body,' 12pt
+          scale '.app-print .govuk-table__caption,' 11pt
+          grep -q 'class="govuk-template app-print"' out/manual-print/print.html
+          absent -q 'class="govuk-template app-print"' out/manual-print/index.html out/manual-print/topics/install.html
           # the default build: no print document and no links to one (the manual's own
           # topics/print.html page is a different file); print.css still shipped
           test ! -f out/manual/print.html
