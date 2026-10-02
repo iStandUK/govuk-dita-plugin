@@ -90,6 +90,32 @@ archive.
 The fixtures under `fixtures/` exercise bookmaps, keys, chunking, the SVG domain, search
 semantics and unresolved keys; `.github/workflows/build.yml` lists every assertion.
 
+## Keeping in step with govuk-frontend
+
+The plugin vendors one release of govuk-frontend (`org.istanduk.gov-uk/resource/govuk-frontend`),
+and the aim is to follow upstream release by release. Dependabot opens a pull request when
+a new one appears; it cannot pass on its own, because the vendored files have to move with
+it. To make the uplift, on a feature branch:
+
+```bash
+tools/branding/upgrade.sh 6.5.1      # the new version; needs curl, unzip, sha256sum and npm
+```
+
+It fetches the release, replaces the vendored stylesheet and script, records the checksum CI
+holds the release to, pins `tools/branding` to the same version and recompiles the NHS
+stylesheet. The version is written once, in `VERSION.txt`; the stylesheets and CI read it
+from there. Then:
+
+- read upstream's release notes for anything that touches the components the plugin uses,
+  its Sass settings (the NHS recompile), the inline body-class script (the
+  Content-Security-Policy hash) or the print rules (the print document and the PDF);
+- build the manual in each branding mode and look at it, and at the PDF;
+- open the pull request, closing Dependabot's; CI must pass, and its `visual-snapshots`
+  artifact is there to be looked at before merging (NFR-M2).
+
+A patch or minor release should be routine. A major release is a change to plan, with an
+issue of its own.
+
 ## DesignSystemPDF — the second product
 
 `designsystempdf/` holds **DesignSystemPDF**, the generator that renders the plugin's

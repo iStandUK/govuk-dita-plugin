@@ -14,6 +14,15 @@ template, the cover, and the generated utility pages.
                 version="3.0"
                 exclude-result-prefixes="xs govuk">
 
+  <!-- ===== The vendored govuk-frontend release (NFR-M2, #162) =====
+       Its stylesheet and script carry the version in their file names. The
+       version is written once, in resource/govuk-frontend/VERSION.txt, and
+       read from there: by this stylesheet for the links, by the Ant build for
+       init.js, and by CI. An uplift changes that file, not this one. -->
+  <xsl:variable name="govuk-frontend-version" as="xs:string"
+                select="normalize-space(unparsed-text(resolve-uri('../resource/govuk-frontend/VERSION.txt',
+                                                                  static-base-uri())))"/>
+
   <!-- ===== Content-Security-Policy (#82) =====
        Generated sites load nothing from other origins and carry one constant
        inline script (govuk-frontend's body-class snippet), so a strict policy

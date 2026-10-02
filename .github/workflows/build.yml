@@ -82,7 +82,7 @@ jobs:
       DITA_OT_VERSION: ${{ matrix.dita-ot.version }}
       DITA_OT_SHA256: ${{ matrix.dita-ot.sha256 }}
       # govuk-frontend GitHub release zip for the vendored version (VERSION.txt)
-      GOVUK_FRONTEND_SHA256: "3dd21a694a8164d5ce0555a4d91313683a240d9e991269792224cc83e97f5018"
+      GOVUK_FRONTEND_SHA256: "ac64b3abdb8af98624c8c0b8eabf78c894eb9da4d3b268544d0120f15abafc7a"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -532,7 +532,8 @@ jobs:
           absent -q 'app-page-dates' out/kitchen/topics/reference-full.html
           absent -q 'type="module">import' "$media"
           grep -q 'type="module" src="../govuk/init.js"' "$media"
-          grep -q "govuk-frontend-6.5.0.min.js" out/kitchen/govuk/init.js
+          gf=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
+          grep -q "govuk-frontend-${gf}.min.js" out/kitchen/govuk/init.js
           # govuk.svg.sanitize=no keeps the file as authored and still warns
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen-raw -Dgovuk.svg.sanitize=no 2>&1 | tee kitchen-raw.log
@@ -624,8 +625,8 @@ jobs:
 
       # The stock govuk-frontend files are vendored (#70): they must be byte-for-byte
       # the files in the GitHub release named in VERSION.txt, and that release zip
-      # must match its recorded checksum. Bumping the version means updating
-      # VERSION.txt, the four files, and GOVUK_FRONTEND_SHA256 above.
+      # must match its recorded checksum. tools/branding/upgrade.sh makes an uplift:
+      # VERSION.txt, the four files, the brand recompiles and GOVUK_FRONTEND_SHA256 above.
       - name: Vendored govuk-frontend matches its release
         run: |
           v=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
@@ -661,6 +662,8 @@ jobs:
       - name: Check output
         run: |
           set -e
+          # the vendored govuk-frontend release: written once, in VERSION.txt (#162)
+          gf=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
           page=out/manual/topics/introduction.html
           # GOV.UK template structure present
           grep -q 'class="govuk-template"' "$page"
@@ -848,13 +851,13 @@ jobs:
           test -z "$(find out/manual-istanduk -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # NHS branding (govuk.branding=nhs, #47): recoloured base CSS, no neutral overlay,
           # on topic pages AND the generated cover (both build their own CSS links)
-          grep -q 'govuk-frontend-6.5.0-nhs.min.css' out/manual-nhs/topics/introduction.html
-          grep -q 'govuk-frontend-6.5.0-nhs.min.css' out/manual-nhs/index.html
+          grep -q "govuk-frontend-${gf}-nhs.min.css" out/manual-nhs/topics/introduction.html
+          grep -q "govuk-frontend-${gf}-nhs.min.css" out/manual-nhs/index.html
           ! grep -q 'overlay-neutral.css' out/manual-nhs/topics/introduction.html
           ! grep -q 'overlay-neutral.css' out/manual-nhs/index.html
-          grep -q '#005eb8' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
-          grep -q 'Frutiger W01' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
-          ! grep -q 'GDS Transport' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
+          grep -q '#005eb8' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
+          grep -q 'Frutiger W01' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
+          ! grep -q 'GDS Transport' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
           # NHS header identity (G3) and footer overlay (G4)
           test -f out/manual-nhs/govuk/overlay-nhs.css
           grep -q 'overlay-nhs.css' out/manual-nhs/topics/introduction.html
@@ -868,7 +871,7 @@ jobs:
           test -z "$(find out/manual-nhs -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # Official GOV.UK branding (govuk.branding=official, #47/#20): stock CSS
           # (the GOV.UK palette), the crown+wordmark header, OGL/crown-copyright footer
-          grep -q 'govuk-frontend-6.5.0.min.css' out/manual-official/index.html
+          grep -q "govuk-frontend-${gf}.min.css" out/manual-official/index.html
           ! grep -q 'overlay-neutral.css' out/manual-official/index.html
           grep -q 'overlay-official.css' out/manual-official/topics/introduction.html
           grep -q 'app-masthead__govuk-logo' out/manual-official/index.html
