@@ -338,8 +338,10 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     </loadfile>
   </target>
 
+  <!-- govuk.pdf comes before the search index: it finishes the pages (the
+       PDF link, #146), and the indexer should read finished pages -->
   <target name="dita2govuk"
-          depends="dita2govuk.init, dita2html5, govuk.cover, govuk.print, govuk.copy-assets, govuk.search-index, govuk.pdf"/>
+          depends="dita2govuk.init, dita2html5, govuk.cover, govuk.print, govuk.copy-assets, govuk.pdf, govuk.search-index"/>
 
   <target name="govuk.cover"
           description="Generate the GOV.UK home page and search page from the map">
@@ -358,6 +360,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-FOOTER-LICENCE" expression="${govuk.footer.licence}" if:set="govuk.footer.licence"/>
       <param name="GOVUK-PRINT" expression="${govuk.print}"/>
       <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}"/>
+      <param name="GOVUK-PDF-NAME" expression="${govuk.pdf.name}.pdf" if:set="govuk.pdf.on"/>
       <param name="GOVUK-CSP" expression="${govuk.csp}"/>
       <param name="GOVUK-SITEMAP" expression="${govuk.sitemap.enabled}"/>
       <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
@@ -420,12 +423,20 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
   <!-- Render the print document with the publisher's own CSS Paged Media
        formatter (#106, D-23 option A). Runs after the assets are in place, so
        the formatter sees the stylesheets; failure is a warning, never a failed
-       build — the site is complete without the PDF. -->
+       build — the site is complete without the PDF.
+
+       The pages already carry a link to the PDF between two comment markers,
+       govuk-pdf and /govuk-pdf, with a token where its size goes (#146). When
+       the PDF exists the size is filled in and the markers go; otherwise the
+       link goes with them, so no page ever links a file that is not there. -->
   <target name="govuk.pdf" if="govuk.pdf.on" depends="govuk.copy-assets"
           description="Render print.html as PDF with an external formatter (govuk.pdf.command)">
     <local name="govuk.pdf.in"/><local name="govuk.pdf.out"/>
     <local name="govuk.pdf.rc"/><local name="govuk.pdf.missing"/>
     <local name="govuk.pdf.log"/><local name="govuk.pdf.err"/>
+    <local name="govuk.pdf.failed"/><local name="govuk.pdf.written"/>
+    <local name="govuk.pdf.empty"/><local name="govuk.pdf.bytes"/>
+    <local name="govuk.pdf.size"/>
     <property name="govuk.pdf.in" location="${dita.output.dir}/print.html"/>
     <property name="govuk.pdf.out" location="${dita.output.dir}/${govuk.pdf.name}.pdf"/>
     <available property="govuk.pdf.missing" file="${govuk.pdf.in}" type="file"/>
@@ -444,9 +455,48 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
       </condition>
       <echo if:set="govuk.pdf.failed" level="warning"
             message="[GOVK008W]: the PDF command exited ${govuk.pdf.rc}; the site is complete but no PDF was produced. Command: ${govuk.pdf.command}${line.separator}${govuk.pdf.err}${govuk.pdf.log}"/>
-      <echo unless:set="govuk.pdf.failed" level="info"
+      <condition property="govuk.pdf.written">
+        <and>
+          <not><isset property="govuk.pdf.failed"/></not>
+          <available file="${govuk.pdf.out}" type="file"/>
+        </and>
+      </condition>
+      <condition property="govuk.pdf.empty">
+        <and>
+          <not><isset property="govuk.pdf.failed"/></not>
+          <not><isset property="govuk.pdf.written"/></not>
+        </and>
+      </condition>
+      <echo if:set="govuk.pdf.empty" level="warning"
+            message="[GOVK008W]: the PDF command exited 0 but wrote no file at ${govuk.pdf.out}; the site is complete but no PDF was produced. Command: ${govuk.pdf.command}${line.separator}${govuk.pdf.err}${govuk.pdf.log}"/>
+      <echo if:set="govuk.pdf.written" level="info"
             message="govuk: PDF written to ${govuk.pdf.out}"/>
     </sequential>
+    <!-- The PDF exists: its size goes into the link text on every page -->
+    <sequential if:set="govuk.pdf.written">
+      <length file="${govuk.pdf.out}" property="govuk.pdf.bytes"/>
+      <xslt in="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/pdf-size.xsl"
+            out="${dita.temp.dir}/govuk-pdf-size.txt" force="true"
+            style="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/pdf-size.xsl">
+        <param name="BYTES" expression="${govuk.pdf.bytes}"/>
+      </xslt>
+      <loadfile property="govuk.pdf.size" srcfile="${dita.temp.dir}/govuk-pdf-size.txt" encoding="UTF-8">
+        <filterchain><striplinebreaks/></filterchain>
+      </loadfile>
+      <replace dir="${dita.output.dir}" encoding="UTF-8"
+               token="@GOVUK_PDF_SIZE@" value="${govuk.pdf.size}">
+        <include name="**/*${out.ext}"/>
+      </replace>
+      <replaceregexp encoding="UTF-8" flags="g"
+                     match="\s*&lt;!--/?govuk-pdf--&gt;" replace="">
+        <fileset dir="${dita.output.dir}" includes="**/*${out.ext}"/>
+      </replaceregexp>
+    </sequential>
+    <!-- No PDF: the link goes too -->
+    <replaceregexp unless:set="govuk.pdf.written" encoding="UTF-8" flags="gs"
+                   match="\s*&lt;!--govuk-pdf--&gt;.*?&lt;!--/govuk-pdf--&gt;" replace="">
+      <fileset dir="${dita.output.dir}" includes="**/*${out.ext}"/>
+    </replaceregexp>
   </target>
 
   <target name="govuk.copy-assets"

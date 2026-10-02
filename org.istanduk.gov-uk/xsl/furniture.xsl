@@ -21,6 +21,31 @@ template, the cover, and the generated utility pages.
        its pages satisfy, as a <meta http-equiv>) | any literal policy. -->
   <xsl:param name="GOVUK-CSP" select="'no'"/>
 
+  <!-- ===== Link to the generated PDF (#146) =====
+       The PDF's file name when the build will render the print document as
+       PDF (govuk.pdf.command with govuk.print=yes); empty otherwise. The PDF
+       is made after the pages are written, so its size is not known here: the
+       link goes out between two comment markers with a token for the size,
+       and the govuk.pdf Ant target fills the size in, or removes the link
+       when no PDF was produced. -->
+  <xsl:param name="GOVUK-PDF-NAME" select="''"/>
+
+  <!-- $class is the link's class; $prefix the path to the site root -->
+  <xsl:template name="govuk-pdf-link">
+    <xsl:param name="prefix" as="xs:string" select="''"/>
+    <xsl:param name="class" as="xs:string" select="'govuk-link'"/>
+    <a class="{$class}" type="application/pdf"
+       href="{concat($prefix, encode-for-uri(normalize-space($GOVUK-PDF-NAME)))}">
+      <xsl:call-template name="getVariable">
+        <xsl:with-param name="id" select="'govuk-dita.pdf-version-prefix'"/>
+      </xsl:call-template>
+      <xsl:text>@GOVUK_PDF_SIZE@</xsl:text>
+      <xsl:call-template name="getVariable">
+        <xsl:with-param name="id" select="'govuk-dita.pdf-version-suffix'"/>
+      </xsl:call-template>
+    </a>
+  </xsl:template>
+
   <!-- SHA-256 of the body-class snippet emitted by template.xsl and the cover.
        The snippet is byte-for-byte govuk-frontend's own (template.njk), so this
        is the hash the Design System publishes for it; CI checks it against the
@@ -351,6 +376,17 @@ template, the cover, and the generated utility pages.
                       </xsl:call-template>
                     </a>
                   </li>
+                </xsl:if>
+                <!-- ... and as a PDF, when the build makes one (#146) -->
+                <xsl:if test="$print = 'yes' and normalize-space($GOVUK-PDF-NAME)">
+                  <xsl:comment>govuk-pdf</xsl:comment>
+                  <li class="govuk-footer__inline-list-item">
+                    <xsl:call-template name="govuk-pdf-link">
+                      <xsl:with-param name="prefix" select="$prefix"/>
+                      <xsl:with-param name="class" select="'govuk-footer__link'"/>
+                    </xsl:call-template>
+                  </li>
+                  <xsl:comment>/govuk-pdf</xsl:comment>
                 </xsl:if>
               </ul>
             </xsl:if>
