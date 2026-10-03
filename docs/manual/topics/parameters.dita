@@ -152,11 +152,37 @@
                 by the build.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.pdf</codeph></entry>
+              <entry><codeph>auto</codeph> (default), <codeph>yes</codeph>,
+                <codeph>no</codeph></entry>
+              <entry>Render the print document as a page-numbered PDF with DesignSystemPDF
+                (<xref keyref="pdf"/>). <codeph>auto</codeph> makes it when DesignSystemPDF is
+                found on the <codeph>PATH</codeph> or at <codeph>govuk.pdf.cmd</codeph> and
+                <codeph>govuk.print=yes</codeph>; <codeph>yes</codeph> stops the build if
+                either is missing; <codeph>no</codeph> makes none. When the PDF is made, the
+                home page and every footer link it, with its size.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.pdf.cmd</codeph></entry>
+              <entry>a name or path; default <codeph>designsystempdf</codeph></entry>
+              <entry>DesignSystemPDF's launcher, when it is not on the <codeph>PATH</codeph>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.pdf.fonts</codeph></entry>
+              <entry>a folder; empty by default</entry>
+              <entry>TrueType fonts of your own for DesignSystemPDF, used where your
+                stylesheets name them and for characters the bundled fonts lack. A name that
+                is not a folder is reported (<codeph>GOVK008W</codeph>) and the bundled fonts
+                are used.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.pdf.command</codeph></entry>
               <entry>a command; empty by default</entry>
-              <entry>Render the print document as PDF with a CSS Paged Media formatter you have
-                installed: <codeph>designsystempdf</codeph> for the project's own
-                (<xref keyref="pdf"/>), or any other. The print document's path and the
+              <entry>Render the print document with a command you name instead: another CSS
+                Paged Media formatter, or DesignSystemPDF with options of your choosing
+                (<xref keyref="pdf"/>). When it is set, <codeph>govuk.pdf.cmd</codeph> and
+                <codeph>govuk.pdf.fonts</codeph> are not used, and
+                <codeph>govuk.pdf=no</codeph> still turns the PDF off. The print document's path and the
                 output path are appended as the last two arguments. A formatter resolves the
                 page references browsers cannot — page numbers in the contents, the index and
                 cross-references. When the PDF is made, the home page and every footer link

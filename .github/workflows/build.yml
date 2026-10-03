@@ -505,6 +505,22 @@ jobs:
           done
           # ... and a build that names no formatter is as it was
           absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/manual-print out/markdown-mini --include='*.html'
+          # #113: DesignSystemPDF is not installed here, so govuk.pdf=auto (the
+          # default) makes no PDF and says why; yes stops the build; a value it
+          # does not know stops it too
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-pdf-auto -Dgovuk.print=yes -Dgovuk.search=no --verbose 2>&1 | tee pdf-auto.log
+          grep -q 'govuk: PDF disabled (govuk.pdf=auto; DesignSystemPDF not found on PATH)' pdf-auto.log
+          test ! -e out/markdown-pdf-auto/mdmini.pdf
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/markdown-pdf-auto --include='*.html'
+          for bad in "-Dgovuk.pdf=yes|govuk.pdf=yes but DesignSystemPDF was not found" "-Dgovuk.pdf=maybe|govuk.pdf must be 'auto', 'yes' or 'no'"; do
+            arg=${bad%%|*}; want=${bad#*|}
+            if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+                 --format govuk --output out/markdown-pdf-bad -Dgovuk.print=yes "$arg" > pdf-bad.log 2>&1; then
+              echo "$arg should have failed the build"; exit 1
+            fi
+            grep -qF "$want" pdf-bad.log
+          done
 
       # Content reaching readers (epic #77: #78 #79 #80 #81 #82 #59 #60 #61). Every
       # behaviour is a publisher parameter; every finding is a warning, never an error.
@@ -1149,6 +1165,37 @@ jobs:
           absent -q 'GOVK008W' /tmp/kitchen-site.log
           test -f out/pdf/kitchen-site/kitchen.pdf
           grep -q 'href="kitchen.pdf">Whole publication (PDF, ' out/pdf/kitchen-site/index.html
+
+      # #113: with the launcher on the PATH and nothing named, the default
+      # govuk.pdf=auto finds it and makes the PDF, passing the paper and the
+      # outline depth; no turns it off, and without govuk.print there is nothing
+      # to render
+      - name: The plugin finds DesignSystemPDF on its own (#113)
+        working-directory: .
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
+          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk -Dgovuk.search=no --verbose "$@"; }
+          dita --output out/pdf/manual-auto -Dgovuk.print=yes -Dgovuk.pdf.paper=A5 -Dgovuk.print.toc.depth=8 2>&1 | tee /tmp/manual-auto.log
+          grep -q 'govuk: PDF enabled (DesignSystemPDF found: designsystempdf)' /tmp/manual-auto.log
+          grep -q 'with: designsystempdf --paper "A5" --orientation portrait --toc-depth 6$' /tmp/manual-auto.log
+          absent -Eq 'GOVK008W|DSPDF' /tmp/manual-auto.log
+          test -f out/pdf/manual-auto/manual.pdf
+          grep -q 'href="manual.pdf">Whole publication (PDF, ' out/pdf/manual-auto/index.html
+          dita --output out/pdf/manual-auto-no -Dgovuk.print=yes -Dgovuk.pdf=no 2>&1 | tee /tmp/manual-auto-no.log
+          grep -q 'govuk: PDF disabled (govuk.pdf=no)' /tmp/manual-auto-no.log
+          test ! -e out/pdf/manual-auto-no/manual.pdf
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/pdf/manual-auto-no --include='*.html'
+          dita --output out/pdf/manual-auto-noprint 2>&1 | tee /tmp/manual-auto-noprint.log
+          grep -q "govuk: PDF disabled (DesignSystemPDF found, but govuk.print is not 'yes')" /tmp/manual-auto-noprint.log
+          test ! -e out/pdf/manual-auto-noprint/manual.pdf
+          # yes needs the print document
+          if dita --output out/pdf/manual-auto-bad -Dgovuk.pdf=yes > /tmp/manual-auto-bad.log 2>&1; then
+            echo "govuk.pdf=yes without govuk.print=yes should have failed the build"; exit 1
+          fi
+          grep -q 'govuk.pdf=yes needs govuk.print=yes' /tmp/manual-auto-bad.log
 
       - name: Upload the distribution
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

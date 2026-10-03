@@ -136,8 +136,12 @@ frame-ancestors 'none'</codeblock>
       <title>The programs the build runs</title>
       <p><indexterm>security<indexterm>external commands</indexterm></indexterm>The build
         runs two programs besides the toolkit, and only when the publisher has installed
-        them: the search indexer, and the PDF formatter named in
-        <codeph>govuk.pdf.command</codeph>. It downloads neither and bundles neither. The
+        them: the search indexer, and the PDF formatter: DesignSystemPDF, found on the
+        <codeph>PATH</codeph> or at <codeph>govuk.pdf.cmd</codeph>, or the command named in
+        <codeph>govuk.pdf.command</codeph>. It downloads neither and bundles neither. As
+        with the search indexer, whatever answers to the name on the <codeph>PATH</codeph>
+        is run, so keep the build's <codeph>PATH</codeph> to folders you control, or set
+        <codeph>govuk.pdf=no</codeph> where no PDF is wanted. The
         PDF command is run through the system's shell exactly as given, with the print
         document's path and the PDF's path added, so treat the parameter as you would any
         command line: set it in the build's own configuration, never from a value taken
