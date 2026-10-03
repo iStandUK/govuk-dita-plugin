@@ -62,7 +62,7 @@ jobs:
           # (the plugin, the manual and fixtures it is built from, the PDF/UA
           # check) runs the generator's job too: a print.css change can break
           # PDF/UA (#164)
-          pdf=$(printf '%s\n' "$rest" | grep -E '^(designsystempdf/|org\.istanduk\.gov-uk/|docs/manual/|fixtures/|tools/verapdf/)' || true)
+          pdf=$(printf '%s\n' "$rest" | grep -E '^(designsystempdf/|org\.istanduk\.gov-uk/|docs/manual/|fixtures/|\.github/actions/)' || true)
           plugin=$(printf '%s\n' "$rest" | grep -Ev '^designsystempdf/' || true)
           if [ -n "$plugin" ]; then echo "plugin=true"; else echo "plugin=false"; fi >> "$GITHUB_OUTPUT"
           if [ -n "$pdf" ] || [ -n "$workflows" ]; then echo "pdf=true"; else echo "pdf=false"; fi >> "$GITHUB_OUTPUT"
@@ -999,10 +999,6 @@ jobs:
       # the toolkit that builds the print documents to render; as in the build job's matrix
       DITA_OT_VERSION: "4.4.1"
       DITA_OT_SHA256: "154414c1debb548e923bf77e9a09019e249a8887680ff4bfbd8e137de9e8e250"
-      # veraPDF's own command line, which checks every PDF the job makes (#164);
-      # the same version as the library the integration tests use (pom.xml)
-      VERAPDF_VERSION: "1.30.2"
-      VERAPDF_SHA256: "6cc6341cb1af644044054b81f00a6590a7918abb18f762243de115258bcad838"
     defaults:
       run:
         working-directory: designsystempdf
@@ -1205,67 +1201,103 @@ jobs:
           fi
           grep -q 'govuk.pdf=yes needs govuk.print=yes' /tmp/manual-auto-bad.log
 
-      # #164: every PDF this job makes, by any route, is checked with veraPDF's
-      # own command line, and its reports kept for review. The release is pinned
-      # by checksum and must be the version the integration tests use, so a
-      # Dependabot bump of the library is a prompt to move this pin with it.
-      - name: Cache veraPDF
-        id: cache-verapdf
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: verapdf-${{ env.VERAPDF_VERSION }}
-          key: verapdf-${{ env.VERAPDF_VERSION }}-${{ env.VERAPDF_SHA256 }}
-
-      - name: Install veraPDF
+      # #164 (E): the PDF in every branding, with a publisher stylesheet, and
+      # with the generator's own options, so a theme or an option that breaks
+      # the tagging is caught by the check below
+      - name: The PDF in each branding and with the generator's options (#164)
         working-directory: .
         run: |
-          pom=$(sed -n 's:.*<verapdf.version>\(.*\)</verapdf.version>.*:\1:p' designsystempdf/pom.xml)
-          test "$pom" = "$VERAPDF_VERSION" || { echo "pom.xml tests with veraPDF $pom but CI installs $VERAPDF_VERSION: move VERAPDF_VERSION and VERAPDF_SHA256 together"; exit 1; }
-          if [ ! -x "verapdf-${VERAPDF_VERSION}/verapdf" ]; then
-            minor=${VERAPDF_VERSION%.*}
-            curl -sSfL -o verapdf.zip "https://software.verapdf.org/releases/${minor}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
-            echo "${VERAPDF_SHA256}  verapdf.zip" | sha256sum -c -
-            unzip -q verapdf.zip -d /tmp/verapdf-installer
-            java "-DINSTALL_PATH=$PWD/verapdf-${VERAPDF_VERSION}" \
-              -jar "/tmp/verapdf-installer/verapdf-greenfield-${VERAPDF_VERSION}/verapdf-izpack-installer-${VERAPDF_VERSION}.jar" \
-              tools/verapdf/auto-install.xml
-            rm verapdf.zip
-          fi
-          "verapdf-${VERAPDF_VERSION}/verapdf" --version | head -1 | grep -qF "veraPDF ${VERAPDF_VERSION}"
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
+          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --format govuk -Dgovuk.search=no -Dgovuk.print=yes "$@"; }
+          made() { # output folder, PDF name, log
+            test -f "$1/$2.pdf" || { echo "no PDF in $1"; exit 1; }
+            absent -q 'GOVK008W' "$3"
+          }
+          for b in istanduk nhs official; do
+            dita --input docs/manual/manual.ditamap --output "out/pdf/manual-$b" "-Dgovuk.branding=$b" 2>&1 | tee "/tmp/manual-$b.log" > /dev/null
+            made "out/pdf/manual-$b" manual "/tmp/manual-$b.log"
+          done
+          # the manual's own sample publisher stylesheet (#142)
+          dita --input docs/manual/manual.ditamap --output out/pdf/manual-custom \
+            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes 2>&1 | tee /tmp/manual-custom.log > /dev/null
+          made out/pdf/manual-custom manual /tmp/manual-custom.log
+          # the generator's options: mirrored narrow margins, and A5 landscape with one level of bookmarks
+          dita --input fixtures/dita13-kitchen/kitchen.ditamap --output out/pdf/kitchen-double \
+            "-Dgovuk.pdf.command=designsystempdf --sides double --margins narrow" 2>&1 | tee /tmp/kitchen-double.log > /dev/null
+          made out/pdf/kitchen-double kitchen /tmp/kitchen-double.log
+          dita --input docs/manual/manual.ditamap --output out/pdf/manual-a5 \
+            -Dgovuk.pdf.paper=A5 -Dgovuk.pdf.orientation=landscape -Dgovuk.print.toc.depth=1 2>&1 | tee /tmp/manual-a5.log > /dev/null
+          made out/pdf/manual-a5 manual /tmp/manual-a5.log
+          echo "made the PDF in three brandings, with a publisher stylesheet, and with the generator's options"
+
+      # #164: every PDF this job makes, by any route, is checked with veraPDF's
+      # own command line (pinned in .github/actions/verapdf), and its reports
+      # kept for review. PDF/UA-1 is required; PDF/UA-2 is reported, not
+      # required (F), to show what a later move to it would take.
+      - name: Install veraPDF
+        uses: ./.github/actions/verapdf
 
       - name: Every PDF the job made is PDF/UA-1 (#164)
         working-directory: .
         run: |
-          verapdf="$PWD/verapdf-${VERAPDF_VERSION}/verapdf"
           mkdir -p pdf-ua-reports
           {
-            echo "### PDF/UA-1 (veraPDF ${VERAPDF_VERSION})"
+            echo "### PDF/UA ($(verapdf --version | head -1))"
             echo
-            echo "| PDF | Result |"
-            echo "|---|---|"
+            echo "PDF/UA-1 is required. PDF/UA-2 is advisory: the generator writes PDF/UA-1, so these are the rules a move to PDF/UA-2 would have to meet."
+            echo
+            echo "| PDF | PDF/UA-1 | PDF/UA-2 (advisory) |"
+            echo "|---|---|---|"
           } > pdf-ua-reports/summary.md
-          failed=0; count=0
-          # the plugin's builds (govuk.pdf.command and govuk.pdf=auto), and the
-          # integration tests' renders of the sample and the print documents
+          rules() { sed -n 's/^ \{1,\}FAIL \(.*\)/\1/p' | sort -u | paste -sd ';' - | sed 's/;/; /g'; }
+          # veraPDF now and then fails to run at all (an exception, which can
+          # exit 1 like a non-compliant file): only a verdict in its output
+          # counts, and without one it is run again
+          vera() {
+            local out rc i
+            for i in 1 2 3; do
+              out=$(verapdf "$@" 2> /tmp/vera.err) && rc=0 || rc=$?
+              if printf '%s\n' "$out" | grep -Eq '^(PASS|FAIL) |</html>'; then break; fi
+              echo "veraPDF gave no verdict (exit $rc) on $*; trying again" >&2
+              grep -m1 -E 'Exception|Error' /tmp/vera.err >&2 || true
+            done
+            printf '%s\n' "$out"
+          }
+          failed=0; count=0; ua2pass=0
+          # the plugin's builds (govuk.pdf.command, govuk.pdf=auto, each branding
+          # and option above), and the integration tests' renders
           while IFS= read -r pdf; do
-            name=$(printf '%s' "${pdf#./}" | tr '/' '_')
-            "$verapdf" --flavour ua1 --format html "$pdf" > "pdf-ua-reports/${name%.pdf}.html" || true
-            result=$("$verapdf" --flavour ua1 --format text -v "$pdf" || true)
-            printf '%s\n' "$result" > "pdf-ua-reports/${name%.pdf}.txt"
-            if printf '%s\n' "$result" | grep -q '^PASS '; then
-              echo "| \`${pdf#./}\` | pass |" >> pdf-ua-reports/summary.md
+            name=$(printf '%s' "${pdf#./}" | tr '/' '_'); name=${name%.pdf}
+            vera --flavour ua1 --format html "$pdf" > "pdf-ua-reports/${name}.html"
+            ua1=$(vera --flavour ua1 --format text -v "$pdf")
+            ua2=$(vera --flavour ua2 --format text -v "$pdf")
+            printf '%s\n' "$ua1" > "pdf-ua-reports/${name}.txt"
+            printf '%s\n' "$ua2" > "pdf-ua-reports/${name}.ua2.txt"
+            if printf '%s\n' "$ua1" | grep -q '^PASS '; then
+              one="pass"
             else
-              rules=$(printf '%s\n' "$result" | sed -n 's/^ \{1,\}FAIL \(.*\)/\1/p' | sort -u | paste -sd ' ' -)
-              echo "| \`${pdf#./}\` | **fail** ${rules} |" >> pdf-ua-reports/summary.md
-              echo "::error file=${pdf#./}::not PDF/UA-1 compliant: ${rules:-see the report}"
+              r=$(printf '%s\n' "$ua1" | rules)
+              one="**fail** ${r}"
+              echo "::error file=${pdf#./}::not PDF/UA-1 compliant: ${r:-see the report}"
               failed=$((failed + 1))
             fi
+            if printf '%s\n' "$ua2" | grep -q '^PASS '; then
+              two="pass"; ua2pass=$((ua2pass + 1))
+            else
+              two="$(printf '%s\n' "$ua2" | rules)"
+            fi
+            echo "| \`${pdf#./}\` | ${one} | ${two} |" >> pdf-ua-reports/summary.md
             count=$((count + 1))
           done < <(find ./out/pdf ./designsystempdf/target/it -name '*.pdf' -not -path './out/pdf/pdf-ua-negative/*' | sort)
+          echo >> pdf-ua-reports/summary.md
+          echo "${ua2pass} of ${count} would also meet PDF/UA-2." >> pdf-ua-reports/summary.md
           cat pdf-ua-reports/summary.md >> "$GITHUB_STEP_SUMMARY"
-          test "$count" -ge 7 || { echo "expected seven PDFs or more to check, found $count"; exit 1; }
+          test "$count" -ge 13 || { echo "expected thirteen PDFs or more to check, found $count"; exit 1; }
           test "$failed" = 0 || { echo "$failed of $count PDFs are not PDF/UA-1"; exit 1; }
-          echo "all $count PDFs are PDF/UA-1"
+          echo "all $count PDFs are PDF/UA-1; ${ua2pass} would also meet PDF/UA-2"
 
       # ... and the check can fail: a publication with an image that has no
       # alternative text is warned about, rendered, and rejected (#164)
@@ -1280,7 +1312,11 @@ jobs:
           grep -q '\[DSPDF009W\]: 1 image with no alternative text' /tmp/negative.log
           pdf=out/pdf/pdf-ua-negative/negative.pdf
           test -f "$pdf"
-          rc=0; "verapdf-${VERAPDF_VERSION}/verapdf" --flavour ua1 --format text -v "$pdf" > /tmp/negative-ua.txt || rc=$?
+          # only a verdict counts: a run that fails to run at all is tried again
+          for i in 1 2 3; do
+            rc=0; verapdf --flavour ua1 --format text -v "$pdf" > /tmp/negative-ua.txt || rc=$?
+            grep -Eq '^(PASS|FAIL) ' /tmp/negative-ua.txt && break
+          done
           cat /tmp/negative-ua.txt
           test "$rc" = 1 || { echo "veraPDF should exit 1 for a non-compliant PDF, was $rc"; exit 1; }
           grep -q '^FAIL ' /tmp/negative-ua.txt

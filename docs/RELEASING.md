@@ -63,6 +63,8 @@ release pull request.
 - [ ] Do the same for the manual: check both files against their `.sha256` and
       `gh attestation verify`, open the PDF (cover edition, page numbers in the contents),
       unzip the site and open `index.html`
+- [ ] If the release changes the print document or `print.css`, make the accessibility
+      checks that need a person (at the end of this file) on the manual's PDF
 
 ## Registry
 
@@ -142,6 +144,8 @@ need one of these, nor the other way round; when the print contract changes, rel
       `sha256sum -c designsystempdf-x.y.z.zip.sha256` and
       `gh attestation verify designsystempdf-x.y.z.zip --repo iStandUK/govuk-dita-plugin`,
       unzip, run `bin/designsystempdf --version`, and render a print document
+- [ ] Make the accessibility checks that need a person (below) on the manual's PDF
+      rendered by the released zip, and record the outcome in the release notes
 
 ## Afterwards
 
@@ -157,3 +161,33 @@ need one of these, nor the other way round; when the print contract changes, rel
 Run the `release-pdf` workflow by hand from `dev` with **dry-run** ticked (Actions →
 release-pdf → Run workflow): it builds, tests and verifies the assets and keeps them as a
 run artifact, but attests and publishes nothing.
+
+# Accessibility checks a person makes
+
+CI holds every PDF to PDF/UA-1 with veraPDF (#164). That covers the Matterhorn Protocol's
+machine-checkable failure conditions. The others need a person to judge them: whether
+alternative text says what the figure shows, whether the reading order and heading
+hierarchy make sense, and whether decoration is marked as an artifact. Make these checks
+for every DesignSystemPDF release and for any plugin release that changes the print
+document or `print.css`, on the manual's PDF (`org.istanduk.gov-uk-manual-x.y.z.pdf`, or
+one rendered by the release candidate). Record the outcome in the release notes.
+
+- [ ] **PAC** (PDF Accessibility Checker, free, Windows): no errors in the PDF/UA
+      check. Use the screen-reader preview to check that headings nest without gaps,
+      that the contents and index read as lists of links, and that tables have header
+      cells.
+- [ ] **NVDA with a PDF reader** (Windows), and **VoiceOver with Preview** (macOS):
+  - read one chapter from its heading
+  - move by heading and by link
+  - open a cross-reference and come back
+  - read a table cell by cell
+  - read a figure's alternative text
+
+  Note anything read twice, read out of order, or not read at all.
+- [ ] **Matterhorn human checkpoints**, spot-checked:
+  - the document's language is right, and a passage in another language is announced
+  - running heads, page numbers and leader dots are artifacts and are not read
+  - a footnote is reachable from its marker
+  - a link's text makes sense on its own
+- [ ] **Reflow**: in a reader with reflow (Acrobat's "Reflow" view, or "Read Out Loud"),
+      the text follows the source order

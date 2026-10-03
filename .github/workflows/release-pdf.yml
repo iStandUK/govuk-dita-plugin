@@ -81,6 +81,21 @@ jobs:
           cmp /tmp/sample.pdf target/it/sample.pdf
           echo "unpacked, ran and rendered $ASSET"
 
+      # What the released zip renders passes veraPDF's own command line as well
+      # as the library the tests use (#164)
+      - name: Install veraPDF
+        uses: ./.github/actions/verapdf
+
+      - name: The released zip's PDF is PDF/UA-1
+        run: |
+          # veraPDF now and then fails to run at all: only a verdict counts
+          for i in 1 2 3; do
+            verapdf --flavour ua1 --format text -v /tmp/sample.pdf > /tmp/sample-ua.txt || true
+            grep -Eq '^(PASS|FAIL) ' /tmp/sample-ua.txt && break
+          done
+          cat /tmp/sample-ua.txt
+          grep -q '^PASS ' /tmp/sample-ua.txt || { echo "the sample rendered by the released zip is not PDF/UA-1"; exit 1; }
+
       - name: Keep the built assets with the run
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
