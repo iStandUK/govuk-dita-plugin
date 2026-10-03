@@ -28,10 +28,6 @@ env:
   DITA_OT_SHA256: "154414c1debb548e923bf77e9a09019e249a8887680ff4bfbd8e137de9e8e250"
   # the search index in the released manual; as in the build workflow
   PAGEFIND_VERSION: "1.5.2"
-  # veraPDF's command line, which checks the released manual's PDF; the version
-  # DesignSystemPDF's tests use (designsystempdf/pom.xml), checked below
-  VERAPDF_VERSION: "1.30.2"
-  VERAPDF_SHA256: "6cc6341cb1af644044054b81f00a6590a7918abb18f762243de115258bcad838"
 
 jobs:
   asset:
@@ -99,18 +95,7 @@ jobs:
         run: npm install -g "pagefind@${PAGEFIND_VERSION}"
 
       - name: Install veraPDF
-        run: |
-          pom=$(sed -n 's:.*<verapdf.version>\(.*\)</verapdf.version>.*:\1:p' designsystempdf/pom.xml)
-          test "$pom" = "$VERAPDF_VERSION" || { echo "pom.xml tests with veraPDF $pom but the release checks with $VERAPDF_VERSION: move VERAPDF_VERSION and VERAPDF_SHA256 together"; exit 1; }
-          minor=${VERAPDF_VERSION%.*}
-          curl -sSfL -o verapdf.zip "https://software.verapdf.org/releases/${minor}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
-          echo "${VERAPDF_SHA256}  verapdf.zip" | sha256sum -c -
-          unzip -q verapdf.zip -d /tmp/verapdf-installer
-          java "-DINSTALL_PATH=/tmp/verapdf" \
-            -jar "/tmp/verapdf-installer/verapdf-greenfield-${VERAPDF_VERSION}/verapdf-izpack-installer-${VERAPDF_VERSION}.jar" \
-            tools/verapdf/auto-install.xml
-          rm verapdf.zip
-          /tmp/verapdf/verapdf --version | head -1 | grep -qF "veraPDF ${VERAPDF_VERSION}"
+        uses: ./.github/actions/verapdf
 
       - name: Build the manual, in iStandUK branding, as a site and a PDF
         run: |
@@ -130,7 +115,12 @@ jobs:
           grep -q 'overlay-istanduk.css' "$site/index.html"
           grep -q "href=\"${MANUAL}.pdf\">Whole publication (PDF, " "$site/index.html"
           # and its PDF meets PDF/UA-1
-          /tmp/verapdf/verapdf --flavour ua1 --format text -v "$site/$MANUAL.pdf" | tee /tmp/manual-ua.txt
+          # veraPDF now and then fails to run at all: only a verdict counts
+          for i in 1 2 3; do
+            verapdf --flavour ua1 --format text -v "$site/$MANUAL.pdf" > /tmp/manual-ua.txt || true
+            grep -Eq '^(PASS|FAIL) ' /tmp/manual-ua.txt && break
+          done
+          cat /tmp/manual-ua.txt
           grep -q '^PASS ' /tmp/manual-ua.txt || { echo "the manual's PDF is not PDF/UA-1"; exit 1; }
 
       - name: Package the manual and its checksums
