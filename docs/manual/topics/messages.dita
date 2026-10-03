@@ -82,13 +82,19 @@
           </row>
           <row>
             <entry><codeph>GOVK008W</codeph></entry>
-            <entry>The PDF command (<codeph>govuk.pdf.command</codeph>) failed, or was set
-              without <codeph>govuk.print=yes</codeph>, or there was no print document to
-              render. The site is complete; no PDF was produced. Reported by the build step
-              rather than the transformation, so it carries no file and line.</entry>
+            <entry>The PDF command (DesignSystemPDF, or the command in
+              <codeph>govuk.pdf.command</codeph>) failed, or ended without writing the PDF;
+              or <codeph>govuk.pdf.command</codeph> was set without
+              <codeph>govuk.print=yes</codeph>; or there was no print document to render. Also
+              given when <codeph>govuk.pdf.fonts</codeph> names no folder, and then the PDF is
+              still made, with the bundled fonts. The site is complete; no PDF was produced and
+              no page links one. The command's own output follows the message. Reported by
+              the build step rather than the transformation, so it carries no file and
+              line.</entry>
             <entry>Check the command runs by hand on
               <filepath>print.html</filepath>, and that <codeph>govuk.print=yes</codeph>. See
-              <xref keyref="print"/>.</entry>
+              <xref keyref="print"/>, and <xref keyref="pdf"/> for DesignSystemPDF's own
+              messages.</entry>
           </row>
           <row>
             <entry><codeph>GOVK007W</codeph></entry>

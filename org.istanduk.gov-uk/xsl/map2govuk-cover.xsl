@@ -54,8 +54,6 @@ map transformation with the plugin's values.
   <xsl:param name="GOVUK-SITE-URL" select="''"/>
   <xsl:param name="GOVUK-DATES" select="'no'"/>
 
-  <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
-
   <!-- Whether print.html is produced for this publication (FR-P2): the same
        test the print transform applies, so links never point at a missing file -->
   <xsl:variable name="govuk-print-available" as="xs:string"
@@ -397,6 +395,14 @@ map transformation with the plugin's values.
                     </xsl:call-template>
                   </a>
                 </p>
+                <!-- ... and as a PDF, when the build makes one (#146) -->
+                <xsl:if test="normalize-space($GOVUK-PDF-NAME)">
+                  <xsl:comment>govuk-pdf</xsl:comment>
+                  <p class="govuk-body app-print-link app-pdf-link">
+                    <xsl:call-template name="govuk-pdf-link"/>
+                  </p>
+                  <xsl:comment>/govuk-pdf</xsl:comment>
+                </xsl:if>
               </xsl:if>
               <xsl:choose>
                 <xsl:when test="$layout = 'start'">

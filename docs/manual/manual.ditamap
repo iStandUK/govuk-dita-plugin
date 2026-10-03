@@ -10,6 +10,17 @@
   </booktitle>
   <bookmeta>
     <author>iStandUK</author>
+    <!-- The print document's cover shows these (#150). The edition is the plugin
+         release the manual describes and the revised date is that release's; both
+         move with the version bump (docs/RELEASING.md), and CI checks the edition
+         against plugin.xml. -->
+    <critdates>
+      <created date="2026-09-01"/>
+      <revised modified="2026-10-03"/>
+    </critdates>
+    <bookid>
+      <edition>Version 1.1.0</edition>
+    </bookid>
     <bookrights>
       <copyrfirst><year>2026</year></copyrfirst>
       <bookowner>
@@ -38,15 +49,17 @@
   <chapter>
     <topicmeta>
       <navtitle>Reference</navtitle>
-      <shortdesc>Build parameters, branding and the legal position, navigation, search, printing, security, and the build's messages.</shortdesc>
+      <shortdesc>Build parameters, branding and the legal position, your own stylesheet, navigation, search, printing, security, and the build's messages.</shortdesc>
     </topicmeta>
     <topicref keyref="parameters"/>
     <topicref keyref="branding"/>
+    <topicref keyref="custom-css"/>
     <topicref keyref="navigation"/>
     <topicref keyref="layouts"/>
     <topicref keyref="search"/>
     <topicref keyref="glossary-index"/>
     <topicref keyref="print"/>
+    <topicref keyref="pdf"/>
     <topicref keyref="security"/>
     <topicref keyref="accessibility"/>
     <topicref keyref="troubleshooting"/>

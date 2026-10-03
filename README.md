@@ -3,11 +3,19 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: v1.0.1 — released** —
-[v1.0.1](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.1) adds page
-references for PDF (a formatter of your choosing renders the print document with page numbers
-in the contents, the index and cross-references) and fixes colliding ids in the print document
-of publications converted from Markdown. It builds on
+**Status: v1.1.0 — released** —
+[v1.1.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.1.0) brings
+**page-numbered, accessible PDFs with Java alone**: install **DesignSystemPDF**
+([`pdf-v0.1.0`](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/pdf-v0.1.0), the
+companion generator in [`designsystempdf/`](designsystempdf/README.md), D-23) and the build finds
+it (`govuk.pdf=auto`, #113), renders the print document as a tagged PDF/UA-1 file and links it,
+with its size, beside the print version (#146). The print document gains a document's type scale
+(#148), publication details and an imprint on its cover (#150), and keeps a warning with the code
+it introduces (#158); the manual explains your own fonts, colours and logo through a publisher
+stylesheet (#142), and is now released with each version as a PDF and a website (#167).
+govuk-frontend is 6.5.1 (#162). It builds on
+[v1.0.1](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.1) (page references
+through a formatter of your choosing) and
 [v1.0.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.0.0), the first
 release the DITA community can rely on: full DITA 1.3 spec coverage on a GOV.UK Design System
 frontend with a CI safety net (WCAG 2.2 AA via axe-core, valid HTML, internal-link and
@@ -19,7 +27,7 @@ for two DITA-OT 4.4 behaviours (#52), **search relevance driven by the DITA itse
 **printing** — a print stylesheet on every page and, with `govuk.print=yes`, the whole
 publication as one file to print or save as PDF (#63, D-20). It is listed in the
 [DITA-OT plugin registry](https://www.dita-ot.org/plugins), so `dita install org.istanduk.gov-uk`
-installs it by name (#21); 1.1 adds the bundled PDF step. Coverage of bookmaps, keys, chunking, and the SVG domain is verified against real
+installs it by name (#21). Coverage of bookmaps, keys, chunking, and the SVG domain is verified against real
 corpora ([ORUK](design/07-gap-analysis-oruk.md), [DITA 1.3](design/08-gap-analysis-dita13.md)).
 
 ## Try it
@@ -30,7 +38,7 @@ dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 
 (The first command resolves the name through the DITA-OT plugin registry; a release zip URL —
-`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.0.1/org.istanduk.gov-uk-1.0.1.zip`
+`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.1.0/org.istanduk.gov-uk-1.1.0.zip`
 — works in the same place for an offline or pinned install.)
 
 Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. Optionally,
@@ -141,7 +149,7 @@ variant was scoped.
 ## Licence
 
 [Apache-2.0](LICENSE). The plugin vendors
-[govuk-frontend](https://github.com/alphagov/govuk-frontend) v6.5.0 (MIT, © Crown Copyright,
+[govuk-frontend](https://github.com/alphagov/govuk-frontend) (MIT, © Crown Copyright,
 Government Digital Service) with its licence and attribution retained, together with an
 NHS-palette recompile of the same release built from its Sass at vendor time
 ([tools/branding](tools/branding)); see the vendored

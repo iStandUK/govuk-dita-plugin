@@ -16,7 +16,7 @@ request, and reaches `main` only as a release. Decision **D-22** in
 | `release/x.y.z` | Version bump and release notes for one release | `dev` | `main` **and** `dev` |
 | `hotfix/x.y.z` | An urgent fix to the released code | `main` | `main` **and** `dev` |
 
-Dependabot's update pull requests also target `dev`. Pull requests that touch only documentation — the design record, `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `docs/RELEASING.md`, the issue and pull-request templates — skip the build; `ci` still reports, so the rules are satisfied. The manual under `docs/manual/` is built and tested and does not count as documentation here. Nobody commits directly to `main` or `dev` — both are protected: a pull request and a
+Dependabot's update pull requests also target `dev`. Pull requests that touch only documentation — the design record, `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `docs/RELEASING.md`, the issue and pull-request templates — skip the build; `ci` still reports, so the rules are satisfied. The manual under `docs/manual/` is built and tested and does not count as documentation here. A pull request that changes only `designsystempdf/` runs that product's job and skips the plugin's build; one that touches the workflows runs both. Nobody commits directly to `main` or `dev` — both are protected: a pull request and a
 green `ci` status are required, and history is never rewritten. Use descriptive branch
 names (`feature/print-document`, `hotfix/1.0.1`).
 
@@ -81,14 +81,76 @@ node tools/a11y/run.mjs out/manual
 node tools/a11y/print-smoke.mjs out/manual/print.html out/manual.pdf --paper A4
 ```
 
+On Windows, run the toolkit's `dita.bat` rather than the `dita` shell script, even from a
+Unix-style shell: started by the script, Java loads no plugin library, so the Markdown
+fixture builds without its topics (the manual's Troubleshooting topic has the detail).
+Where there is no `zip` command, `jar cMf ../org.istanduk.gov-uk.zip .` makes the same
+archive.
+
 The fixtures under `fixtures/` exercise bookmaps, keys, chunking, the SVG domain, search
 semantics and unresolved keys; `.github/workflows/build.yml` lists every assertion.
+
+## Keeping in step with govuk-frontend
+
+The plugin vendors one release of govuk-frontend (`org.istanduk.gov-uk/resource/govuk-frontend`),
+and the aim is to follow upstream release by release. Dependabot opens a pull request when
+a new one appears; it cannot pass on its own, because the vendored files have to move with
+it. To make the uplift, on a feature branch:
+
+```bash
+tools/branding/upgrade.sh 6.5.1      # the new version; needs curl, unzip, sha256sum and npm
+```
+
+It fetches the release, replaces the vendored stylesheet and script, records the checksum CI
+holds the release to, pins `tools/branding` to the same version and recompiles the NHS
+stylesheet. The version is written once, in `VERSION.txt`; the stylesheets and CI read it
+from there. Then:
+
+- read upstream's release notes for anything that touches the components the plugin uses,
+  its Sass settings (the NHS recompile), the inline body-class script (the
+  Content-Security-Policy hash) or the print rules (the print document and the PDF);
+- build the manual in each branding mode and look at it, and at the PDF;
+- open the pull request, closing Dependabot's; CI must pass, and its `visual-snapshots`
+  artifact is there to be looked at before merging (NFR-M2).
+
+A patch or minor release should be routine. A major release is a change to plan, with an
+issue of its own.
+
+## DesignSystemPDF — the second product
+
+`designsystempdf/` holds **DesignSystemPDF**, the generator that renders the plugin's
+print document as a page-numbered, tagged PDF (decisions D-23 and D-25). It lives in this
+repository beside the plugin but is a separate product: its own version number, its own
+changelog and releases (`pdf-v*` tags), not a DITA-OT plugin, and never bundled with one.
+The two meet only through the print document and its `govuk-print-contract` marker.
+
+```bash
+# Java 17+ and Maven 3.9+; produces target/designsystempdf-<version>.zip
+(cd designsystempdf && mvn -B verify)
+```
+
+Its ground rules, on top of the ones above:
+
+- **The plugin stays Apache-only.** Nothing from `designsystempdf/` — code, jars or
+  fonts — is copied into `org.istanduk.gov-uk/`, and the plugin never requires the
+  generator: a build without it is complete, without a PDF.
+- **The engine is used, not changed.** The LGPL layout engine and the other libraries
+  come from Maven Central as published and ship as separate, unmodified jars in `lib/`;
+  none of their source is copied into the tree. A change needed in the engine goes
+  upstream.
+- **Notices travel with the code.** A new or upgraded dependency updates
+  `THIRD-PARTY-NOTICES` in the same pull request; a font change updates
+  `fonts/README.md` and `fonts/SHA256SUMS`. No restricted typeface is ever added.
+- **Java only**, as for the plugin: no other runtime, and no network request at run time.
+- **Its own changelog.** What a publisher would notice goes in
+  `designsystempdf/CHANGELOG.md`.
 
 ## Releases
 
 See [docs/RELEASING.md](docs/RELEASING.md): a `release/x.y.z` branch from `dev`, the
 version bump, a pull request to `main`, the tag, the release asset and its checksum, the
-DITA-OT registry entry, and the merge back to `dev`.
+DITA-OT registry entry, and the merge back to `dev`. DesignSystemPDF is released on its
+own line, with `pdf-v*` tags.
 
 ## Security
 

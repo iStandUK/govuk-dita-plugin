@@ -33,9 +33,6 @@ element-level typography.
   <xsl:param name="GOVUK-PRINT" select="'no'"/>
   <xsl:param name="GOVUK-PRINT-MAX-TOPICS" select="'500'"/>
 
-  <!-- Pinned vendored govuk-frontend release (see resource/govuk-frontend/VERSION.txt) -->
-  <xsl:variable name="govuk-frontend-version" select="'6.5.0'" as="xs:string"/>
-
   <!-- Whether print.html exists for this publication (FR-P2): the map decides,
        with the same test the print transform applies -->
   <xsl:variable name="govuk-print-available" as="xs:string"

@@ -33,4 +33,5 @@ unaffected.
   <param name="GOVUK-CSP" expression="${govuk.csp}" if:set="govuk.csp"/>
   <param name="GOVUK-DATES" expression="${govuk.dates}" if:set="govuk.dates"/>
   <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}" if:set="govuk.print.max-topics"/>
+  <param name="GOVUK-PDF-NAME" expression="${govuk.pdf.name}.pdf" if:set="govuk.pdf.on"/>
 </params>

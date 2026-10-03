@@ -2,15 +2,15 @@
 
 This directory contains a subset of the compiled
 [govuk-frontend](https://github.com/alphagov/govuk-frontend) release
-**v6.5.0** (see `VERSION.txt`), © Crown Copyright (Government Digital Service),
+named in `VERSION.txt`, © Crown Copyright (Government Digital Service),
 distributed under the MIT licence (`LICENSE.txt` in this directory).
 
 ## What is included
 
-- `govuk-frontend-6.5.0.min.css` (+ source map) — the release's compiled stylesheet,
+- `govuk-frontend-<version>.min.css` (+ source map) — the release's compiled stylesheet,
   unmodified
-- `govuk-frontend-6.5.0.min.js` (+ source map) — the release's compiled script, unmodified
-- `govuk-frontend-6.5.0-nhs.min.css` — the same release recompiled from its Sass against the
+- `govuk-frontend-<version>.min.js` (+ source map) — the release's compiled script, unmodified
+- `govuk-frontend-<version>-nhs.min.css` — the same release recompiled from its Sass against the
   NHS Design System palette by `tools/branding` (design/09, D-17). A derivative work of
   govuk-frontend under the same MIT licence and Crown copyright attribution; it carries
   colours and metrics only

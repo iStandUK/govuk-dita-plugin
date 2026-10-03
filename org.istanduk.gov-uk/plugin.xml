@@ -3,7 +3,7 @@
 This file is part of the govuk-dita-plugin project.
 Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
 -->
-<plugin id="org.istanduk.gov-uk" version="1.0.1">
+<plugin id="org.istanduk.gov-uk" version="1.1.0">
   <require plugin="org.dita.html5"/>
   <transtype name="govuk" extends="html5" desc="GOV.UK Design System HTML5">
     <param name="govuk.branding"
@@ -18,7 +18,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
            desc="Service or publication name shown in the masthead and footer. Defaults to the map title."
            type="string"/>
     <param name="govuk.phase"
-           desc="Show a GOV.UK phase banner above the content with this tag, e.g. 'alpha' or 'beta'. Empty (default) shows no banner. Works in every branding mode."
+           desc="Show a GOV.UK phase banner above the content with this tag, e.g. 'alpha' or 'beta'. Empty (default) shows no banner. Works in every branding mode. The print document's cover shows it as the publication's status."
            type="string"/>
     <param name="govuk.feedback.url"
            desc="Feedback link shown in the phase banner (used only when govuk.phase is set). Empty (default) shows the banner text without a link."
@@ -102,7 +102,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
            desc="Content-Security-Policy on every page. 'no' (default) emits none; 'meta' emits a policy the plugin's pages satisfy (same-origin only, the one constant inline script by hash, WebAssembly for search) as a meta tag, for hosts without header control; any other value is emitted as given. Content the policy would block is reported (GOVK007W)."
            type="string"/>
     <param name="govuk.site.url"
-           desc="The published base URL of the site (for example https://example.org/manual/). Needed for sitemap.xml, whose entries must be absolute; the plugin has no other way to know its own address."
+           desc="The published base URL of the site (for example https://example.org/manual/). Needed for sitemap.xml, whose entries must be absolute, and given on the print document's cover as where the current version is; the plugin has no other way to know its own address."
            type="string"/>
     <param name="govuk.sitemap"
            desc="Write sitemap.xml (and a robots.txt pointing at it, unless one exists) from the map's navigable pages. 'auto' (default) writes it when govuk.site.url is set; 'yes' requires the URL; 'no' never writes it. The search page and the print document are excluded."
@@ -119,7 +119,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val>both</val>
     </param>
     <param name="govuk.print"
-           desc="Also write the whole publication as one self-contained file, print.html, for printing or saving as PDF from a browser: cover, contents, every topic in reading order, glossary and index. 'no' (default) or 'yes'. Linked from the cover and the footer."
+           desc="Also write the whole publication as one self-contained file, print.html, for printing or saving as PDF from a browser, and for rendering as PDF (govuk.pdf): cover, contents, every topic in reading order, glossary and index. 'no' (default) or 'yes'. Linked from the cover and the footer."
            type="enum">
       <val default="true">no</val>
       <val>yes</val>
@@ -131,10 +131,23 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
            desc="How many map levels the print document's contents list shows. 1-9; default 3."
            type="string"/>
     <param name="govuk.pdf.paper"
-           desc="Paper size for printing: a CSS page-size keyword (A5, A4, A3, B5, B4, JIS-B5, JIS-B4, Letter, Legal, Ledger) or a width and height as CSS lengths such as '210mm 297mm'. Default A4. Applies to the print stylesheet now and to the PDF engine planned for 1.1."
+           desc="Paper size for printing: a CSS page-size keyword (A5, A4, A3, B5, B4, JIS-B5, JIS-B4, Letter, Legal, Ledger) or a width and height as CSS lengths such as '210mm 297mm'. Default A4. Written into the print stylesheet, so it applies to printing from a browser and to the PDF a formatter renders."
+           type="string"/>
+    <param name="govuk.pdf"
+           desc="Render the print document as a page-numbered PDF with DesignSystemPDF, the project's own generator, which is installed separately. 'auto' (default) makes the PDF when the generator is found on the PATH or at govuk.pdf.cmd and govuk.print=yes, and otherwise says so in the log; 'yes' stops the build if the generator is missing or govuk.print is not 'yes'; 'no' makes no PDF. When the PDF is produced, the cover and every footer link it, with its size, beside the print version. A failure is reported as a warning and the site is still complete."
+           type="enum">
+      <val default="true">auto</val>
+      <val>yes</val>
+      <val>no</val>
+    </param>
+    <param name="govuk.pdf.cmd"
+           desc="The DesignSystemPDF launcher: a name looked for on the PATH, or a path to it. Default 'designsystempdf'."
+           type="string"/>
+    <param name="govuk.pdf.fonts"
+           desc="A folder of TrueType fonts for DesignSystemPDF: used where the publisher's stylesheets name them, and for characters the bundled fonts lack. Empty (default) uses the bundled fonts."
            type="string"/>
     <param name="govuk.pdf.command"
-           desc="Command that renders the print document as PDF, run after the site is built when govuk.print=yes. The print document's path and the output PDF's path are appended as the last two arguments, so 'weasyprint' becomes 'weasyprint &lt;print.html&gt; &lt;publication.pdf&gt;'. Empty (default) runs nothing. A CSS Paged Media formatter resolves the page references the print stylesheet generates — page numbers in the contents, the index and cross-references — which browsers cannot. The plugin bundles no formatter and downloads nothing; a failure is reported as a warning and the site is still complete."
+           desc="Another formatter to render the print document as PDF, used in place of DesignSystemPDF, run after the site is built when govuk.print=yes. The print document's path and the output PDF's path are appended as the last two arguments, so 'weasyprint' becomes 'weasyprint &lt;print.html&gt; &lt;publication.pdf&gt;'. Empty (default) leaves the choice to govuk.pdf. A CSS Paged Media formatter resolves the page references the print stylesheet generates — page numbers in the contents, the index and cross-references — which browsers cannot. The plugin bundles no formatter and downloads nothing; a failure is reported as a warning and the site is still complete."
            type="string"/>
     <param name="govuk.pdf.name"
            desc="File name for the generated PDF, without the extension. Defaults to the input map's name."

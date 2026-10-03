@@ -7,6 +7,7 @@
   <keydef keys="build" href="topics/build.dita" format="dita" scope="local"/>
   <keydef keys="parameters" href="topics/parameters.dita" format="dita" scope="local"/>
   <keydef keys="branding" href="topics/branding.dita" format="dita" scope="local"/>
+  <keydef keys="custom-css" href="topics/custom-css.dita" format="dita" scope="local"/>
   <keydef keys="navigation" href="topics/navigation.dita" format="dita" scope="local"/>
   <keydef keys="search" href="topics/search.dita" format="dita" scope="local"/>
   <keydef keys="layouts" href="topics/layouts.dita" format="dita" scope="local"/>
@@ -38,6 +39,7 @@
   <keydef keys="troubleshooting" href="topics/troubleshooting.dita" format="dita" scope="local"/>
   <keydef keys="accessibility" href="topics/accessibility.dita" format="dita" scope="local"/>
   <keydef keys="print" href="topics/print.dita" format="dita" scope="local"/>
+  <keydef keys="pdf" href="topics/pdf.dita" format="dita" scope="local"/>
   <keydef keys="security" href="topics/security.dita" format="dita" scope="local"/>
   <keydef keys="messages" href="topics/messages.dita" format="dita" scope="local"/>
   <keydef keys="security-policy" href="https://github.com/iStandUK/govuk-dita-plugin/security/policy" format="html" scope="external">

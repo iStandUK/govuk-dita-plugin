@@ -1,0 +1,132 @@
+/*
+ * Sample publisher stylesheet for the govuk transformation: your own typeface,
+ * colours and logo on top of the neutral branding. Copy it, change the values
+ * marked "change me", and pass it to the build:
+ *
+ *   dita --input=guide.ditamap --format=govuk --output=out/site \
+ *        -Dargs.css=custom.css -Dargs.cssroot=/path/to/folder -Dargs.copycss=yes
+ *
+ * It is linked after the Design System's and the plugin's stylesheets on every
+ * page, so a rule here wins over one of equal weight in theirs.
+ */
+
+/* ===== 1. Your values ===== */
+
+:root {
+  /* change me: the typeface. A stack of fonts readers already have needs no
+   * font files; see section 5 for a font you host yourself. */
+  --brand-font: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* change me: the colours. Keep 4.5:1 contrast against the background each
+   * one is used on (WCAG 2.2 AA). */
+  --brand-colour: #00594f;        /* masthead band, footer rule */
+  --brand-on-colour: #ffffff;     /* text on the masthead band */
+  --brand-link: #00594f;          /* links on white */
+  --brand-link-hover: #003b34;
+  --brand-tint: #f1f5f4;          /* footer and page-edge background */
+}
+
+/* ===== 2. Typeface ===== */
+
+/* The Design System sets its font on every govuk- class, so one rule on the
+ * page element is not enough; this reaches them all, on screen and in print. */
+.govuk-template [class*="govuk-"] {
+  font-family: var(--brand-font);
+}
+
+/* the search results */
+.app-search .pagefind-ui {
+  --pagefind-ui-font: var(--brand-font);
+}
+
+/* ===== 3. Colours ===== */
+
+/* The Design System reads its colours from these properties ... */
+:root {
+  --govuk-brand-colour: var(--brand-colour);
+  --govuk-link-colour: var(--brand-link);
+  --govuk-link-hover-colour: var(--brand-link-hover);
+  --govuk-template-background-colour: var(--brand-tint);
+}
+
+/* ... and the plugin's own furniture sets them directly: the masthead, */
+.app-masthead {
+  background: var(--brand-colour);
+}
+
+.app-masthead__title {
+  color: var(--brand-on-colour);
+}
+
+/* and the links in the sidebar, the contents lists and the topic text. */
+.app-sidebar__nav a,
+.ullinks a,
+.linklist a,
+.related-links a,
+.app-contents a,
+#main-content a:not([class]) {
+  color: var(--brand-link);
+}
+
+.app-sidebar__nav a:hover,
+.ullinks a:hover,
+.linklist a:hover,
+.related-links a:hover,
+.app-contents a:hover,
+#main-content a:not([class]):hover {
+  color: var(--brand-link-hover);
+}
+
+/* Leave the focus colours alone: the yellow focus state is what keyboard users
+ * rely on, and it is tested against every background the Design System uses.
+ * This rule keeps it in charge when a link is both focused and pointed at. */
+.app-sidebar__nav a:focus,
+.ullinks a:focus,
+.linklist a:focus,
+.related-links a:focus,
+.app-contents a:focus,
+#main-content a:not([class]):focus {
+  color: var(--govuk-focus-text-colour);
+}
+
+/* ===== 4. Logo ===== */
+
+/* The masthead holds one link: the publication's name. The logo is drawn in
+ * front of it, so the name stays as the link's text for screen readers. */
+.app-masthead__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-masthead__title::before {
+  content: "";
+  flex: none;
+  width: 40px;                    /* change me: the logo's size */
+  height: 40px;
+  /* change me: the logo. Written into the stylesheet as a data: URL it needs
+   * no second file. To use a file instead, write url("logo.svg") and copy
+   * logo.svg into the output beside this stylesheet after the build. */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='19' fill='%23fff'/%3E%3Cpath d='M11 21l6.5 6.5L29.5 14' fill='none' stroke='%2300594f' stroke-width='4.5'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+/* ===== 5. A font you host yourself (optional) ===== */
+
+/* Uncomment, name the family first in --brand-font, and copy the font files
+ * into the output beside this stylesheet after the build. Use only a font
+ * whose licence lets you publish it on the web.
+
+@font-face {
+  font-family: "Your Font";
+  font-weight: 400;
+  font-display: swap;
+  src: url("your-font-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Your Font";
+  font-weight: 700;
+  font-display: swap;
+  src: url("your-font-bold.woff2") format("woff2");
+}
+*/

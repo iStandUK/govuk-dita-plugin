@@ -22,15 +22,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Documentation-only changes (the design record, repository policy files,
-  # templates) skip the build; the manual under docs/manual/ is built and
-  # tested, so it is not documentation in this sense. `ci` still reports, so
-  # the branch rules are satisfied either way.
+  # The repository holds two products (D-23): the plugin and DesignSystemPDF.
+  # Each change runs the jobs of the product it touches. Documentation-only
+  # changes (the design record, repository policy files, templates) run
+  # neither; the manual under docs/manual/ is built and tested, so it is not
+  # documentation in this sense. A change to the workflows runs both. `ci`
+  # still reports, so the branch rules are satisfied either way.
   changes:
     name: changes
     runs-on: ubuntu-latest
     outputs:
-      docs-only: ${{ steps.classify.outputs.docs-only }}
+      plugin: ${{ steps.classify.outputs.plugin }}
+      pdf: ${{ steps.classify.outputs.pdf }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -44,23 +47,33 @@ jobs:
           if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
              || [ "$GITHUB_REF_TYPE" = "tag" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] \
              || ! git cat-file -e "$BASE" 2>/dev/null; then
-            echo "docs-only=false" >> "$GITHUB_OUTPUT"; echo "full run: no base to compare against"; exit 0
+            { echo "plugin=true"; echo "pdf=true"; } >> "$GITHUB_OUTPUT"; echo "full run: no base to compare against"; exit 0
           fi
           files=$(git diff --name-only "$(git merge-base "$BASE" "$HEAD")" "$HEAD")
           printf 'changed:\n%s\n' "$files"
-          docs='^(design/|docs/RELEASING\.md$|README\.md$|CONTRIBUTING\.md$|SECURITY\.md$|LICENSE|\.github/(ISSUE_TEMPLATE/|pull_request_template\.md$|CODEOWNERS$|dependabot\.yml$))'
-          other=$(printf '%s\n' "$files" | grep -Ev "$docs" || true)
-          if [ -n "$files" ] && [ -z "$other" ]; then
-            echo "docs-only=true" >> "$GITHUB_OUTPUT"; echo "documentation-only change: the build is skipped"
-          else
-            echo "docs-only=false" >> "$GITHUB_OUTPUT"; echo "full run"
+          docs='^(design/|docs/RELEASING\.md$|README\.md$|CONTRIBUTING\.md$|SECURITY\.md$|LICENSE|\.gitignore$|\.github/(ISSUE_TEMPLATE/|pull_request_template\.md$|CODEOWNERS$|dependabot\.yml$))'
+          rest=$(printf '%s\n' "$files" | grep -Ev "$docs" || true)
+          # an empty diff is treated as a full run, as before
+          if [ -z "$files" ]; then
+            { echo "plugin=true"; echo "pdf=true"; } >> "$GITHUB_OUTPUT"; echo "full run: nothing to classify"; exit 0
           fi
+          workflows=$(printf '%s\n' "$rest" | grep -E '^\.github/workflows/' || true)
+          # the PDFs are made from the plugin's print document, so what shapes it
+          # (the plugin, the manual and fixtures it is built from, the PDF/UA
+          # check) runs the generator's job too: a print.css change can break
+          # PDF/UA (#164)
+          pdf=$(printf '%s\n' "$rest" | grep -E '^(designsystempdf/|org\.istanduk\.gov-uk/|docs/manual/|fixtures/|tools/verapdf/)' || true)
+          plugin=$(printf '%s\n' "$rest" | grep -Ev '^designsystempdf/' || true)
+          if [ -n "$plugin" ]; then echo "plugin=true"; else echo "plugin=false"; fi >> "$GITHUB_OUTPUT"
+          if [ -n "$pdf" ] || [ -n "$workflows" ]; then echo "pdf=true"; else echo "pdf=false"; fi >> "$GITHUB_OUTPUT"
+          if [ -z "$rest" ]; then echo "documentation-only change: nothing is built"; fi
+          cat "$GITHUB_OUTPUT"
 
   build:
     runs-on: ubuntu-latest
     name: build (DITA-OT ${{ matrix.dita-ot.version }})
     needs: changes
-    if: needs.changes.outputs.docs-only != 'true'
+    if: needs.changes.outputs.plugin == 'true'
     # DITA-OT version matrix (NFR-M1): add 4.x releases here as they appear,
     # each with the SHA-256 of its distribution zip (shasum -a 256).
     strategy:
@@ -73,11 +86,11 @@ jobs:
       DITA_OT_VERSION: ${{ matrix.dita-ot.version }}
       DITA_OT_SHA256: ${{ matrix.dita-ot.sha256 }}
       # govuk-frontend GitHub release zip for the vendored version (VERSION.txt)
-      GOVUK_FRONTEND_SHA256: "3dd21a694a8164d5ce0555a4d91313683a240d9e991269792224cc83e97f5018"
+      GOVUK_FRONTEND_SHA256: "ac64b3abdb8af98624c8c0b8eabf78c894eb9da4d3b268544d0120f15abafc7a"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: "17"
@@ -189,6 +202,34 @@ jobs:
             "-Dgovuk.footer.links=Privacy|https://example.gov.uk/privacy;Contact|https://example.gov.uk/contact" \
             "-Dgovuk.footer.licence=© 2026 Example Service"
 
+      # FR-T4, #142: the publisher's stylesheet (args.css) is copied into the
+      # output and linked after the plugin's on every kind of page. The stylesheet is the
+      # sample the manual prints, so what publishers copy is what is tested —
+      # here, by the HTML validator and by the accessibility checks below.
+      - name: Build with a publisher stylesheet (FR-T4, #142)
+        run: |
+          last_css() { grep -o '<link rel="stylesheet"[^>]*>' "$1" | tail -1; }
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-custom -Dgovuk.print=yes \
+            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes
+          cmp docs/manual/samples/custom.css out/manual-custom/custom.css
+          for page in index.html glossary.html index-page.html figurelist.html tablelist.html print.html; do
+            last_css "out/manual-custom/$page" | grep -q 'href="custom.css"' || { echo "custom.css is not the last stylesheet on $page"; exit 1; }
+          done
+          last_css out/manual-custom/topics/install.html | grep -q 'href="../custom.css"'
+          # on the search page only the search component's own stylesheet follows it
+          grep -q 'href="custom.css"' out/manual-custom/search.html
+          # the manual prints the sample itself
+          grep -q -e '--brand-colour: #00594f' out/manual-custom/topics/custom-css.html
+          # a branding mode's overlay still comes first, and args.csspath moves the file
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
+            --format govuk --output out/oruk-custom -Dgovuk.branding=istanduk \
+            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes -Dargs.csspath=theme
+          test -f out/oruk-custom/theme/custom.css
+          grep -q 'overlay-istanduk.css' out/oruk-custom/item.html
+          last_css out/oruk-custom/item.html | grep -q 'href="theme/custom.css"'
+          last_css out/oruk-custom/index.html | grep -q 'href="theme/custom.css"'
+
       # Trial finding (#51): DITA-OT resolves no key inside a submap included with
       # <mapref keyref>; the plugin must warn (GOVK001W) and name the entry, and
       # stay silent for the same submap included with <mapref href> and for the manual.
@@ -269,8 +310,9 @@ jobs:
           grep -q 'href="#install"' out/manual-print/print.html
           grep -q 'src="images/' out/manual-print/print.html
           # nothing for search to index, no site chrome, no related-links block, no duplicate ids
+          # (class attributes, not text: the manual's own topics name these classes)
           absent -q 'data-pagefind' out/manual-print/print.html
-          absent -Eq 'app-masthead|app-sidebar|govuk-footer|related-links' out/manual-print/print.html
+          absent -Eq 'class="[^"]*(app-masthead|app-sidebar|govuk-footer|related-links)' out/manual-print/print.html
           test -z "$(grep -o ' id="[^"]*"' out/manual-print/print.html | sort | uniq -d)"
           # linked from the cover and every footer; print.css on every page with the A4 default
           grep -q 'href="print.html">Whole publication (print version)' out/manual-print/index.html
@@ -278,6 +320,22 @@ jobs:
           grep -q 'href="print.html">Whole publication (print version)' out/manual-print/glossary.html
           grep -q 'govuk/print.css" media="print"' out/manual-print/topics/install.html
           grep -q 'size: A4 portrait;' out/manual-print/govuk/print.css
+          # #148: the print document takes a document's type scale, not a printed web
+          # page's — title 28pt, section heading 20pt, subheadings 16 and 14pt, body
+          # 12pt, captions 11pt — and only the print document does
+          scale() { # selector, size: the first font-size after the selector in print.css
+            awk -v sel="$1" -v size="$2" 'index($0, sel) { f = 1 } f && /font-size/ { ok = index($0, " " size ";") > 0; exit } END { exit !ok }' \
+              out/manual-print/govuk/print.css || { echo "print.css: $1 should be set at $2"; exit 1; }
+          }
+          scale '.app-print .govuk-heading-xl {' 28pt
+          scale '.app-print .govuk-heading-l {' 20pt
+          scale '.app-print .govuk-heading-m {' 16pt
+          scale '.app-print .govuk-heading-s,' 14pt
+          scale '.app-print .govuk-body-l,' 14pt
+          scale '.app-print .govuk-body,' 12pt
+          scale '.app-print .govuk-table__caption,' 11pt
+          grep -q 'class="govuk-template app-print"' out/manual-print/print.html
+          absent -q 'class="govuk-template app-print"' out/manual-print/index.html out/manual-print/topics/install.html
           # the default build: no print document and no links to one (the manual's own
           # topics/print.html page is a different file); print.css still shipped
           test ! -f out/manual/print.html
@@ -302,6 +360,9 @@ jobs:
             --format govuk --output out/kitchen-print -Dgovuk.print=yes
           grep -Eq 'name="t[0-9]+-fnsrc_' out/kitchen-print/print.html
           grep -q 'app-print-endnotes' out/kitchen-print/print.html
+          # #158: a code block is not parted from the warning or note that introduces it
+          awk '/^\.govuk-warning-text \+ pre,$/ { f = 1 } f && /page-break-before: avoid;/ { ok = 1; exit } /^}/ { f = 0 } END { exit !ok }' \
+            out/kitchen-print/govuk/print.css || { echo "print.css does not keep a warning with its code block"; exit 1; }
           grep -Eq 'id="p[0-9]+-shared"' out/kitchen-print/print.html
           grep -q 'xlink:href="#blocks"' out/kitchen-print/print.html
           test -z "$(grep -o ' id="[^"]*"' out/kitchen-print/print.html | sort | uniq -d)"
@@ -313,6 +374,66 @@ jobs:
           test ! -f out/manual-print-ceiling/print.html
           absent -q 'href="print.html"' out/manual-print-ceiling/index.html
           absent -q 'href="../print.html"' out/manual-print-ceiling/topics/install.html
+
+      # The print document's cover (#150): publication details and an imprint
+      # from the map's metadata and the publisher's parameters — every line
+      # present when its source is, and no empty block when it is not.
+      - name: Print cover details and imprint (#150)
+        run: |
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-cover/cover.ditamap \
+            --format govuk --output out/print-cover -Dgovuk.print=yes -Dgovuk.search=no \
+            -Dgovuk.phase=beta -Dgovuk.site.url=https://example.org/standard/
+          c=out/print-cover/print.html
+          grep -q '<li>Status: <strong>Beta</strong></li>' "$c"
+          grep -q '<li>Edition 2.1</li>' "$c"
+          grep -q 'Published <time datetime="2026-03-01">1 March 2026</time>' "$c"
+          # the last of two revisions
+          grep -q 'Last updated <time datetime="2026-09-30">30 September 2026</time>' "$c"
+          absent -q '15 June 2026' "$c"
+          grep -q '<li>ISBN 978-0-00-000000-2</li>' "$c"
+          grep -q '<li>Reference ESB-2026-04</li>' "$c"
+          grep -q '<p class="govuk-body-s">© 2024–2026 Example Standards Body</p>' "$c"
+          grep -q 'Licensed under the Creative Commons Attribution 4.0 International licence.</p>' "$c"
+          grep -q 'This publication is available at <a class="govuk-link app-print-url" href="https://example.org/standard/">https://example.org/standard/</a>' "$c"
+          # the cover lines the companion generator reads are still there, and the site's own pages are untouched
+          grep -q '<p class="govuk-body app-attribution">Example Standards Body</p>' "$c"
+          absent -Eq 'class="[^"]*app-print-(meta|imprint)' out/print-cover/index.html out/print-cover/topic.html
+          # official branding: Crown copyright and the Open Government Licence, and no second licence statement
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-cover/cover.ditamap \
+            --format govuk --output out/print-cover-official -Dgovuk.print=yes -Dgovuk.search=no \
+            -Dgovuk.branding=official
+          c=out/print-cover-official/print.html
+          grep -q '<p class="govuk-body-s">© Crown copyright 2024–2026</p>' "$c"
+          grep -q 'rel="license" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>' "$c"
+          absent -q 'Creative Commons' "$c"
+          absent -q 'Status:' "$c"
+          # the bookmap's own published date, an edition in words, and no rights: details without an imprint
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-cover/published.ditamap \
+            --format govuk --output out/print-cover-published -Dgovuk.print=yes -Dgovuk.search=no
+          c=out/print-cover-published/print.html
+          grep -q '<li>Second edition</li>' "$c"
+          grep -q 'Published <time datetime="2026-03-01">1 March 2026</time>' "$c"
+          absent -q 'Last updated' "$c"
+          absent -Eq 'class="[^"]*app-print-imprint' "$c"
+          # no metadata, no block: a bookmap with rights but no dates or identifiers
+          # has an imprint and no details; a plain map has neither
+          absent -Eq 'class="[^"]*app-print-meta' out/oruk-print/print.html
+          grep -q '<div class="app-print-imprint"><p class="govuk-body-s">© The Open Referral Initiative</p></div>' out/oruk-print/print.html
+          absent -Eq 'class="[^"]*app-print-(meta|imprint)' out/kitchen-print/print.html
+          # the manual's own cover: the edition is the plugin's version (they move
+          # together at a release, docs/RELEASING.md), with its dates and copyright
+          version=$(sed -n 's/.*<plugin id="org.istanduk.gov-uk" version="\([^"]*\)".*/\1/p' org.istanduk.gov-uk/plugin.xml)
+          test -n "$version"
+          grep -q "<li>Version ${version}</li>" out/manual-print/print.html \
+            || { echo "the edition in docs/manual/manual.ditamap is not plugin.xml's version, ${version}"; exit 1; }
+          grep -q 'Published <time datetime="2026-09-01">1 September 2026</time>' out/manual-print/print.html
+          grep -Eq 'Last updated <time datetime="[0-9]{4}-[0-9]{2}-[0-9]{2}">' out/manual-print/print.html
+          grep -q '<p class="govuk-body-s">© 2026 iStandUK</p>' out/manual-print/print.html
+          for site in out/print-cover out/print-cover-official out/print-cover-published; do
+            test -z "$(grep -o ' id="[^"]*"' "$site/print.html" | sort | uniq -d)"
+          done
+          python3 tools/check_links.py out/print-cover out/print-cover-official out/print-cover-published
 
       # Print page references, the formatter hook, the contract marker and the
       # duplicate-id fix (#106, #107, #108, #121). The Markdown fixture is the
@@ -356,15 +477,54 @@ jobs:
           assert "(page " in text, "cross-references carry no page number — did target-counter resolve?"
           print("page references resolved in the PDF")
           PY
+          # #146: the home page and every footer link the PDF beside the print version,
+          # with its size; no marker or token is left behind; the link resolves; and the
+          # search index is still built, now after the PDF step
+          size='Whole publication \(PDF, [0-9]+(\.[0-9])? (KB|MB)\)</a>'
+          grep -Eq "<a class=\"govuk-link\" type=\"application/pdf\" href=\"mdmini\.pdf\">$size" out/markdown-pdf/index.html
+          grep -Eq "<a class=\"govuk-footer__link\" type=\"application/pdf\" href=\"mdmini\.pdf\">$size" out/markdown-pdf/index.html
+          grep -Eq "<a class=\"govuk-footer__link\" type=\"application/pdf\" href=\"mdmini\.pdf\">$size" out/markdown-pdf/intro.html
+          grep -q 'href="print.html">Whole publication (print version)' out/markdown-pdf/index.html
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->' out/markdown-pdf --include='*.html'
+          absent -q 'application/pdf' out/markdown-pdf/print.html
+          python3 tools/check_links.py out/markdown-pdf
+          test -d out/markdown-pdf/pagefind
           # a failing command is a warning, not a failed build; and the command needs the print document
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-pdf-fail -Dgovuk.print=yes \
             "-Dgovuk.pdf.command=exit 3;" 2>&1 | tee pdf-fail.log
           grep -q '\[GOVK008W\]: the PDF command exited 3' pdf-fail.log
           test -f out/markdown-pdf-fail/index.html
+          # ... and so is a command that succeeds without writing the PDF
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-pdf-empty -Dgovuk.print=yes \
+            "-Dgovuk.pdf.command=true" 2>&1 | tee pdf-empty.log
+          grep -q '\[GOVK008W\]: the PDF command exited 0 but wrote no file' pdf-empty.log
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-noprint "-Dgovuk.pdf.command=weasyprint" 2>&1 | tee pdf-noprint.log
           grep -q '\[GOVK008W\]: govuk.pdf.command is set but govuk.print is not' pdf-noprint.log
+          # #146: without a PDF no page links one, and nothing of the link is left
+          for site in out/markdown-pdf-fail out/markdown-pdf-empty out/markdown-noprint; do
+            absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' "$site" --include='*.html'
+          done
+          # ... and a build that names no formatter is as it was
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/manual-print out/markdown-mini --include='*.html'
+          # #113: DesignSystemPDF is not installed here, so govuk.pdf=auto (the
+          # default) makes no PDF and says why; yes stops the build; a value it
+          # does not know stops it too
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            --format govuk --output out/markdown-pdf-auto -Dgovuk.print=yes -Dgovuk.search=no --verbose 2>&1 | tee pdf-auto.log
+          grep -q 'govuk: PDF disabled (govuk.pdf=auto; DesignSystemPDF not found on PATH)' pdf-auto.log
+          test ! -e out/markdown-pdf-auto/mdmini.pdf
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/markdown-pdf-auto --include='*.html'
+          for bad in "-Dgovuk.pdf=yes|govuk.pdf=yes but DesignSystemPDF was not found" "-Dgovuk.pdf=maybe|govuk.pdf must be 'auto', 'yes' or 'no'"; do
+            arg=${bad%%|*}; want=${bad#*|}
+            if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+                 --format govuk --output out/markdown-pdf-bad -Dgovuk.print=yes "$arg" > pdf-bad.log 2>&1; then
+              echo "$arg should have failed the build"; exit 1
+            fi
+            grep -qF "$want" pdf-bad.log
+          done
 
       # Content reaching readers (epic #77: #78 #79 #80 #81 #82 #59 #60 #61). Every
       # behaviour is a publisher parameter; every finding is a warning, never an error.
@@ -392,7 +552,8 @@ jobs:
           absent -q 'app-page-dates' out/kitchen/topics/reference-full.html
           absent -q 'type="module">import' "$media"
           grep -q 'type="module" src="../govuk/init.js"' "$media"
-          grep -q "govuk-frontend-6.5.0.min.js" out/kitchen/govuk/init.js
+          gf=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
+          grep -q "govuk-frontend-${gf}.min.js" out/kitchen/govuk/init.js
           # govuk.svg.sanitize=no keeps the file as authored and still warns
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen-raw -Dgovuk.svg.sanitize=no 2>&1 | tee kitchen-raw.log
@@ -484,8 +645,8 @@ jobs:
 
       # The stock govuk-frontend files are vendored (#70): they must be byte-for-byte
       # the files in the GitHub release named in VERSION.txt, and that release zip
-      # must match its recorded checksum. Bumping the version means updating
-      # VERSION.txt, the four files, and GOVUK_FRONTEND_SHA256 above.
+      # must match its recorded checksum. tools/branding/upgrade.sh makes an uplift:
+      # VERSION.txt, the four files, the brand recompiles and GOVUK_FRONTEND_SHA256 above.
       - name: Vendored govuk-frontend matches its release
         run: |
           v=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
@@ -510,7 +671,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -521,6 +682,8 @@ jobs:
       - name: Check output
         run: |
           set -e
+          # the vendored govuk-frontend release: written once, in VERSION.txt (#162)
+          gf=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
           page=out/manual/topics/introduction.html
           # GOV.UK template structure present
           grep -q 'class="govuk-template"' "$page"
@@ -708,13 +871,13 @@ jobs:
           test -z "$(find out/manual-istanduk -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # NHS branding (govuk.branding=nhs, #47): recoloured base CSS, no neutral overlay,
           # on topic pages AND the generated cover (both build their own CSS links)
-          grep -q 'govuk-frontend-6.5.0-nhs.min.css' out/manual-nhs/topics/introduction.html
-          grep -q 'govuk-frontend-6.5.0-nhs.min.css' out/manual-nhs/index.html
+          grep -q "govuk-frontend-${gf}-nhs.min.css" out/manual-nhs/topics/introduction.html
+          grep -q "govuk-frontend-${gf}-nhs.min.css" out/manual-nhs/index.html
           ! grep -q 'overlay-neutral.css' out/manual-nhs/topics/introduction.html
           ! grep -q 'overlay-neutral.css' out/manual-nhs/index.html
-          grep -q '#005eb8' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
-          grep -q 'Frutiger W01' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
-          ! grep -q 'GDS Transport' out/manual-nhs/govuk/govuk-frontend-6.5.0-nhs.min.css
+          grep -q '#005eb8' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
+          grep -q 'Frutiger W01' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
+          ! grep -q 'GDS Transport' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
           # NHS header identity (G3) and footer overlay (G4)
           test -f out/manual-nhs/govuk/overlay-nhs.css
           grep -q 'overlay-nhs.css' out/manual-nhs/topics/introduction.html
@@ -728,7 +891,7 @@ jobs:
           test -z "$(find out/manual-nhs -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # Official GOV.UK branding (govuk.branding=official, #47/#20): stock CSS
           # (the GOV.UK palette), the crown+wordmark header, OGL/crown-copyright footer
-          grep -q 'govuk-frontend-6.5.0.min.css' out/manual-official/index.html
+          grep -q "govuk-frontend-${gf}.min.css" out/manual-official/index.html
           ! grep -q 'overlay-neutral.css' out/manual-official/index.html
           grep -q 'overlay-official.css' out/manual-official/topics/introduction.html
           grep -q 'app-masthead__govuk-logo' out/manual-official/index.html
@@ -787,7 +950,7 @@ jobs:
           (cd tools/a11y && npx playwright install --with-deps chromium)
 
       - name: Accessibility checks — axe-core WCAG 2.2 AA (NFR-A1)
-        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 out/manual-print/print.html out/kitchen-print/print.html out/oruk-print/print.html out/markdown-mini/print.html out/kitchen-strip/topics/media.html out/kitchen-strip/topics/reference-full.html out/manual-csp/search.html
+        run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/manual-print/print.html out/kitchen-print/print.html out/oruk-print/print.html out/markdown-mini/print.html out/kitchen-strip/topics/media.html out/kitchen-strip/topics/reference-full.html out/manual-csp/search.html
 
       # #82: the policy the plugin emits must not block anything on its own pages —
       # served over HTTP (a policy's 'self' is an origin), every page loaded, and a
@@ -820,18 +983,352 @@ jobs:
           name: manual-site-${{ env.DITA_OT_VERSION }}
           path: out/manual
 
+  # DesignSystemPDF (epic #105, D-23, D-25): the second product, built and
+  # tested on its own. Its distribution carries an LGPL engine and open fonts
+  # that never enter the plugin, so the checks here are about provenance as
+  # much as behaviour: the fonts and the engine jars are the bytes their
+  # projects published, and none of the engine is copied into the tree.
+  designsystempdf:
+    name: designsystempdf
+    needs: changes
+    if: needs.changes.outputs.pdf == 'true'
+    runs-on: ubuntu-latest
+    env:
+      # the commit of notofonts/notofonts.github.io the bundled fonts were taken from (fonts/README.md)
+      NOTO_FONTS_COMMIT: "1eb09fb315562c7e07d738691870e52c39b45b39"
+      # the toolkit that builds the print documents to render; as in the build job's matrix
+      DITA_OT_VERSION: "4.4.1"
+      DITA_OT_SHA256: "154414c1debb548e923bf77e9a09019e249a8887680ff4bfbd8e137de9e8e250"
+      # veraPDF's own command line, which checks every PDF the job makes (#164);
+      # the same version as the library the integration tests use (pom.xml)
+      VERAPDF_VERSION: "1.30.2"
+      VERAPDF_SHA256: "6cc6341cb1af644044054b81f00a6590a7918abb18f762243de115258bcad838"
+    defaults:
+      run:
+        working-directory: designsystempdf
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+          cache-dependency-path: designsystempdf/pom.xml
+
+      # The fonts are vendored: they must be the files recorded in SHA256SUMS,
+      # and those must be the files the Noto project serves at the recorded commit.
+      - name: Bundled fonts match their checksums and their upstream
+        run: |
+          (cd fonts && sha256sum -c SHA256SUMS)
+          test "$(ls fonts/*.ttf | wc -l)" = "$(grep -c '\.ttf$' fonts/SHA256SUMS)" || { echo "a font is not listed in SHA256SUMS"; exit 1; }
+          grep -q "$NOTO_FONTS_COMMIT" fonts/README.md || { echo "fonts/README.md does not name commit $NOTO_FONTS_COMMIT"; exit 1; }
+          for f in fonts/*.ttf; do
+            n=$(basename "$f"); family=${n%%-*}
+            curl -sSfL -o "/tmp/$n" "https://raw.githubusercontent.com/notofonts/notofonts.github.io/${NOTO_FONTS_COMMIT}/fonts/${family}/hinted/ttf/${n}"
+            cmp "$f" "/tmp/$n" || { echo "vendored $n differs from its upstream at $NOTO_FONTS_COMMIT"; exit 1; }
+          done
+          # no restricted typeface, ever
+          if ls fonts | grep -Ei 'transport|frutiger'; then echo "a restricted typeface is in fonts/"; exit 1; fi
+          echo "bundled fonts match their checksums and upstream"
+
+      # The documents the generator exists for: the print documents the plugin in
+      # this tree builds from its manual and fixtures (the supported toolkit,
+      # checksum-verified as in the build job).
+      - name: Cache DITA-OT
+        id: cache-dita-ot
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: dita-ot-${{ env.DITA_OT_VERSION }}
+          key: dita-ot-${{ env.DITA_OT_VERSION }}
+
+      - name: Download DITA-OT
+        if: steps.cache-dita-ot.outputs.cache-hit != 'true'
+        working-directory: .
+        run: |
+          curl -sSL -o dita-ot.zip "https://github.com/dita-ot/dita-ot/releases/download/${DITA_OT_VERSION}/dita-ot-${DITA_OT_VERSION}.zip"
+          echo "${DITA_OT_SHA256}  dita-ot.zip" | sha256sum -c -
+          unzip -q dita-ot.zip
+          rm dita-ot.zip
+
+      - name: Build the print documents with the plugin in this tree
+        working-directory: .
+        run: |
+          (cd org.istanduk.gov-uk && zip -qr ../org.istanduk.gov-uk.zip .)
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" uninstall org.istanduk.gov-uk || true
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
+          for f in "docs/manual/manual.ditamap manual" "fixtures/dita13-kitchen/kitchen.ditamap kitchen" "fixtures/oruk-mini/oruk.ditamap oruk-mini"; do
+            set -- $f
+            "dita-ot-${DITA_OT_VERSION}/bin/dita" --input "$1" --format govuk --output "out/pdf/$2" -Dgovuk.print=yes -Dgovuk.search=no
+            grep -q '<meta name="govuk-print-contract" content="1"' "out/pdf/$2/print.html"
+          done
+
+      # Unit tests, then the integration tests: the sample and each print document
+      # rendered twice (byte-identical), with an outline, and valid PDF/UA-1 by
+      # veraPDF — a pinned test dependency, never shipped.
+      - name: Build, test, render and validate with veraPDF
+        run: |
+          docs="$GITHUB_WORKSPACE/out/pdf/manual/print.html:$GITHUB_WORKSPACE/out/pdf/kitchen/print.html:$GITHUB_WORKSPACE/out/pdf/oruk-mini/print.html"
+          mvn -B -ntp --strict-checksums verify "-Ddesignsystempdf.it.documents=$docs"
+
+      - name: The distribution is complete and the engine is unmodified
+        run: |
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' pom.xml | head -1)
+          zip="target/designsystempdf-${version}.zip"
+          test -f "$zip"
+          rm -rf /tmp/dist && mkdir /tmp/dist && unzip -q "$zip" -d /tmp/dist
+          root="/tmp/dist/designsystempdf-${version}"
+          for f in bin/designsystempdf bin/designsystempdf.bat "lib/designsystempdf-${version}.jar" \
+                   LICENSE THIRD-PARTY-NOTICES licenses/LGPL-2.1.txt fonts/OFL.txt fonts/README.md fonts/SHA256SUMS \
+                   README.md CHANGELOG.md; do
+            test -f "$root/$f" || { echo "missing from the distribution: $f"; exit 1; }
+          done
+          test -x "$root/bin/designsystempdf"
+          (cd "$root/fonts" && sha256sum -c SHA256SUMS)
+          # LGPL: the engine ships as the jars its project published — each must match Maven Central's checksum
+          count=0
+          for jar in "$root"/lib/openhtmltopdf-*.jar; do
+            n=$(basename "$jar" .jar); artifact=${n%-*}; v=${n##*-}
+            want=$(curl -sSfL "https://repo1.maven.org/maven2/io/github/openhtmltopdf/${artifact}/${v}/${n}.jar.sha1" | cut -c1-40)
+            have=$(sha1sum "$jar" | cut -c1-40)
+            test "$want" = "$have" || { echo "$n.jar is not the published jar ($have, expected $want)"; exit 1; }
+            # and its source goes out with every release
+            test -f "target/engine-sources/${n}-sources.jar" || { echo "no source jar for $n"; exit 1; }
+            count=$((count + 1))
+          done
+          test "$count" = 4 || { echo "expected the four engine jars, found $count"; exit 1; }
+          # this product's own jar holds only its own code, and none of the engine's source is in the tree
+          if unzip -Z1 "$root/lib/designsystempdf-${version}.jar" | grep -E '\.class$' | grep -v '^org/istanduk/designsystempdf/'; then
+            echo "foreign classes in the product jar"; exit 1
+          fi
+          if grep -rIl --include='*.java' -E '^package (com\.openhtmltopdf|org\.apache)' src; then echo "third-party source in the tree"; exit 1; fi
+          # every shipped jar is accounted for in the notices
+          for jar in "$root"/lib/*.jar; do
+            n=$(basename "$jar"); stem=$(printf '%s' "$n" | sed -E 's/-[0-9][0-9A-Za-z.]*\.jar$//')
+            case "$stem" in batik-*) stem=batik ;; esac
+            grep -q "lib/${stem}-" THIRD-PARTY-NOTICES || [ "$stem" = designsystempdf ] || { echo "$n is not named in THIRD-PARTY-NOTICES"; exit 1; }
+          done
+          # the launcher runs with only its own lib/ on the class path
+          "$root/bin/designsystempdf" --version | tee /tmp/version.txt
+          grep -q "^DesignSystemPDF ${version}$" /tmp/version.txt
+          echo "distribution verified: $(du -h "$zip" | cut -f1)"
+
+      # The unpacked distribution, through its launcher, as a publisher runs it:
+      # the manual comes out page-numbered, and is the same file, byte for byte,
+      # that the integration tests made and veraPDF passed.
+      - name: The launcher renders the manual
+        run: |
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' pom.xml | head -1)
+          dspdf="/tmp/dist/designsystempdf-${version}/bin/designsystempdf"
+          "$dspdf" --in "$GITHUB_WORKSPACE/out/pdf/manual/print.html" --out /tmp/manual.pdf 2>&1 | tee /tmp/manual.log
+          absent -q 'DSPDF' /tmp/manual.log
+          grep -q 'tagged PDF/UA-1' /tmp/manual.log
+          pages=$(sed -n 's/.* written, \([0-9]*\) pages.*/\1/p' /tmp/manual.log)
+          test "${pages:-0}" -ge 40 || { echo "the manual should run to 40 pages or more, was: ${pages:-none}"; exit 1; }
+          cmp /tmp/manual.pdf target/it/manual-print.html.pdf
+          # a contract this release does not know is refused, and nothing is written
+          sed 's/govuk-print-contract" content="1"/govuk-print-contract" content="2"/' "$GITHUB_WORKSPACE/out/pdf/manual/print.html" > /tmp/future.html
+          rc=0; "$dspdf" --in /tmp/future.html --out /tmp/future.pdf 2> /tmp/future.log || rc=$?
+          test "$rc" = 3 || { echo "expected exit code 3 for an unknown contract, was $rc"; exit 1; }
+          grep -q '^\[DSPDF002E\]' /tmp/future.log
+          test ! -e /tmp/future.pdf
+          echo "the launcher rendered the manual: $pages pages"
+
+      # The two products together, as the manual tells a publisher to use them:
+      # the distribution's launcher on the PATH, named in govuk.pdf.command. The
+      # build makes the PDF and every page links it with the file's real size (#146).
+      - name: The plugin runs the launcher and links the PDF (#146)
+        working-directory: .
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
+          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
+            --output out/pdf/manual-site -Dgovuk.print=yes -Dgovuk.search=no \
+            -Dgovuk.pdf.command=designsystempdf 2>&1 | tee /tmp/manual-site.log
+          absent -Eq 'GOVK008W|DSPDF' /tmp/manual-site.log
+          pdf=out/pdf/manual-site/manual.pdf
+          test -f "$pdf"
+          bytes=$(stat -c %s "$pdf")
+          size=$(awk -v b="$bytes" 'BEGIN { if (b >= 1048064) printf "%.1f MB", b / 1048576; else printf "%d KB", int(b / 1024 + 0.5) }')
+          grep -qF "href=\"manual.pdf\">Whole publication (PDF, ${size})</a>" out/pdf/manual-site/index.html
+          grep -qF "href=\"../manual.pdf\">Whole publication (PDF, ${size})</a>" out/pdf/manual-site/topics/install.html
+          grep -qF "href=\"manual.pdf\">Whole publication (PDF, ${size})</a>" out/pdf/manual-site/glossary.html
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->' out/pdf/manual-site --include='*.html'
+          echo "the build made $pdf and linked it as: PDF, ${size}"
+          # #152: what the generator warns about reaches the build log when the PDF is
+          # made — and a run with nothing to say (the manual, above) adds nothing. The
+          # kitchen-sink fixture has Arabic text the bundled fonts cannot draw (the known
+          # defect #153), so the generator warns; the PDF is still made and linked.
+          absent -q 'the PDF command reported' /tmp/manual-site.log
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap --format govuk \
+            --output out/pdf/kitchen-site -Dgovuk.print=yes -Dgovuk.search=no \
+            -Dgovuk.pdf.command=designsystempdf 2>&1 | tee /tmp/kitchen-site.log
+          grep -q 'govuk: the PDF was written, and the PDF command reported:' /tmp/kitchen-site.log
+          grep -q '\[DSPDF004W\]: .*ARABIC LETTER' /tmp/kitchen-site.log
+          # ... and the right-to-left text is reported for what it is (#153)
+          grep -q '\[DSPDF010W\]: the document has text in a right-to-left script' /tmp/kitchen-site.log
+          absent -q 'GOVK008W' /tmp/kitchen-site.log
+          test -f out/pdf/kitchen-site/kitchen.pdf
+          grep -q 'href="kitchen.pdf">Whole publication (PDF, ' out/pdf/kitchen-site/index.html
+
+      # #113: with the launcher on the PATH and nothing named, the default
+      # govuk.pdf=auto finds it and makes the PDF, passing the paper and the
+      # outline depth; no turns it off, and without govuk.print there is nothing
+      # to render
+      - name: The plugin finds DesignSystemPDF on its own (#113)
+        working-directory: .
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
+          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk -Dgovuk.search=no --verbose "$@"; }
+          dita --output out/pdf/manual-auto -Dgovuk.print=yes -Dgovuk.pdf.paper=A5 -Dgovuk.print.toc.depth=8 2>&1 | tee /tmp/manual-auto.log
+          grep -q 'govuk: PDF enabled (DesignSystemPDF found: designsystempdf)' /tmp/manual-auto.log
+          grep -q 'with: designsystempdf --paper "A5" --orientation portrait --toc-depth 6$' /tmp/manual-auto.log
+          absent -Eq 'GOVK008W|DSPDF' /tmp/manual-auto.log
+          test -f out/pdf/manual-auto/manual.pdf
+          grep -q 'href="manual.pdf">Whole publication (PDF, ' out/pdf/manual-auto/index.html
+          dita --output out/pdf/manual-auto-no -Dgovuk.print=yes -Dgovuk.pdf=no 2>&1 | tee /tmp/manual-auto-no.log
+          grep -q 'govuk: PDF disabled (govuk.pdf=no)' /tmp/manual-auto-no.log
+          test ! -e out/pdf/manual-auto-no/manual.pdf
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/pdf/manual-auto-no --include='*.html'
+          dita --output out/pdf/manual-auto-noprint 2>&1 | tee /tmp/manual-auto-noprint.log
+          grep -q "govuk: PDF disabled (DesignSystemPDF found, but govuk.print is not 'yes')" /tmp/manual-auto-noprint.log
+          test ! -e out/pdf/manual-auto-noprint/manual.pdf
+          # yes needs the print document
+          if dita --output out/pdf/manual-auto-bad -Dgovuk.pdf=yes > /tmp/manual-auto-bad.log 2>&1; then
+            echo "govuk.pdf=yes without govuk.print=yes should have failed the build"; exit 1
+          fi
+          grep -q 'govuk.pdf=yes needs govuk.print=yes' /tmp/manual-auto-bad.log
+
+      # #164: every PDF this job makes, by any route, is checked with veraPDF's
+      # own command line, and its reports kept for review. The release is pinned
+      # by checksum and must be the version the integration tests use, so a
+      # Dependabot bump of the library is a prompt to move this pin with it.
+      - name: Cache veraPDF
+        id: cache-verapdf
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: verapdf-${{ env.VERAPDF_VERSION }}
+          key: verapdf-${{ env.VERAPDF_VERSION }}-${{ env.VERAPDF_SHA256 }}
+
+      - name: Install veraPDF
+        working-directory: .
+        run: |
+          pom=$(sed -n 's:.*<verapdf.version>\(.*\)</verapdf.version>.*:\1:p' designsystempdf/pom.xml)
+          test "$pom" = "$VERAPDF_VERSION" || { echo "pom.xml tests with veraPDF $pom but CI installs $VERAPDF_VERSION: move VERAPDF_VERSION and VERAPDF_SHA256 together"; exit 1; }
+          if [ ! -x "verapdf-${VERAPDF_VERSION}/verapdf" ]; then
+            minor=${VERAPDF_VERSION%.*}
+            curl -sSfL -o verapdf.zip "https://software.verapdf.org/releases/${minor}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
+            echo "${VERAPDF_SHA256}  verapdf.zip" | sha256sum -c -
+            unzip -q verapdf.zip -d /tmp/verapdf-installer
+            java "-DINSTALL_PATH=$PWD/verapdf-${VERAPDF_VERSION}" \
+              -jar "/tmp/verapdf-installer/verapdf-greenfield-${VERAPDF_VERSION}/verapdf-izpack-installer-${VERAPDF_VERSION}.jar" \
+              tools/verapdf/auto-install.xml
+            rm verapdf.zip
+          fi
+          "verapdf-${VERAPDF_VERSION}/verapdf" --version | head -1 | grep -qF "veraPDF ${VERAPDF_VERSION}"
+
+      - name: Every PDF the job made is PDF/UA-1 (#164)
+        working-directory: .
+        run: |
+          verapdf="$PWD/verapdf-${VERAPDF_VERSION}/verapdf"
+          mkdir -p pdf-ua-reports
+          {
+            echo "### PDF/UA-1 (veraPDF ${VERAPDF_VERSION})"
+            echo
+            echo "| PDF | Result |"
+            echo "|---|---|"
+          } > pdf-ua-reports/summary.md
+          failed=0; count=0
+          # the plugin's builds (govuk.pdf.command and govuk.pdf=auto), and the
+          # integration tests' renders of the sample and the print documents
+          while IFS= read -r pdf; do
+            name=$(printf '%s' "${pdf#./}" | tr '/' '_')
+            "$verapdf" --flavour ua1 --format html "$pdf" > "pdf-ua-reports/${name%.pdf}.html" || true
+            result=$("$verapdf" --flavour ua1 --format text -v "$pdf" || true)
+            printf '%s\n' "$result" > "pdf-ua-reports/${name%.pdf}.txt"
+            if printf '%s\n' "$result" | grep -q '^PASS '; then
+              echo "| \`${pdf#./}\` | pass |" >> pdf-ua-reports/summary.md
+            else
+              rules=$(printf '%s\n' "$result" | sed -n 's/^ \{1,\}FAIL \(.*\)/\1/p' | sort -u | paste -sd ' ' -)
+              echo "| \`${pdf#./}\` | **fail** ${rules} |" >> pdf-ua-reports/summary.md
+              echo "::error file=${pdf#./}::not PDF/UA-1 compliant: ${rules:-see the report}"
+              failed=$((failed + 1))
+            fi
+            count=$((count + 1))
+          done < <(find ./out/pdf ./designsystempdf/target/it -name '*.pdf' -not -path './out/pdf/pdf-ua-negative/*' | sort)
+          cat pdf-ua-reports/summary.md >> "$GITHUB_STEP_SUMMARY"
+          test "$count" -ge 7 || { echo "expected seven PDFs or more to check, found $count"; exit 1; }
+          test "$failed" = 0 || { echo "$failed of $count PDFs are not PDF/UA-1"; exit 1; }
+          echo "all $count PDFs are PDF/UA-1"
+
+      # ... and the check can fail: a publication with an image that has no
+      # alternative text is warned about, rendered, and rejected (#164)
+      - name: The PDF/UA check rejects an inaccessible PDF (#164)
+        working-directory: .
+        run: |
+          set -o pipefail
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
+          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/pdf-ua-negative/negative.ditamap --format govuk \
+            --output out/pdf/pdf-ua-negative -Dgovuk.print=yes -Dgovuk.search=no 2>&1 | tee /tmp/negative.log
+          grep -q '\[DSPDF009W\]: 1 image with no alternative text' /tmp/negative.log
+          pdf=out/pdf/pdf-ua-negative/negative.pdf
+          test -f "$pdf"
+          rc=0; "verapdf-${VERAPDF_VERSION}/verapdf" --flavour ua1 --format text -v "$pdf" > /tmp/negative-ua.txt || rc=$?
+          cat /tmp/negative-ua.txt
+          test "$rc" = 1 || { echo "veraPDF should exit 1 for a non-compliant PDF, was $rc"; exit 1; }
+          grep -q '^FAIL ' /tmp/negative-ua.txt
+          grep -q 'FAIL 7.3-1' /tmp/negative-ua.txt
+          echo "the inaccessible PDF was rejected"
+
+      - name: Upload the distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: designsystempdf
+          path: |
+            designsystempdf/target/designsystempdf-*.zip
+            designsystempdf/target/engine-sources/*.jar
+
+      - name: Upload the rendered PDFs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: designsystempdf-pdfs
+          path: designsystempdf/target/it/*.pdf
+
+      - name: Upload the PDF/UA reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pdf-ua-reports
+          path: pdf-ua-reports/
+          if-no-files-found: ignore
+
   # One stable status for branch protection to require: passes only when every
-  # matrix leg of `build` passed (add DITA-OT versions to the matrix freely).
+  # job the change called for passed — each matrix leg of `build` (add DITA-OT
+  # versions to the matrix freely) and `designsystempdf`.
   ci:
     name: ci
-    needs: [changes, build]
+    needs: [changes, build, designsystempdf]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - run: |
           test "${{ needs.changes.result }}" = "success" || { echo "change classification failed: ${{ needs.changes.result }}"; exit 1; }
-          if [ "${{ needs.changes.outputs.docs-only }}" = "true" ] && [ "${{ needs.build.result }}" = "skipped" ]; then
-            echo "documentation-only change: build skipped by design"; exit 0
-          fi
-          test "${{ needs.build.result }}" = "success" || { echo "build result: ${{ needs.build.result }}"; exit 1; }
-          echo "all build legs passed"
+          check() { # job, wanted, result
+            if [ "$2" = "true" ]; then
+              test "$3" = "success" || { echo "$1 result: $3"; exit 1; }
+              echo "$1 passed"
+            else
+              test "$3" = "skipped" || { echo "$1 was not wanted for this change but ended: $3"; exit 1; }
+              echo "$1 skipped by design"
+            fi
+          }
+          check build "${{ needs.changes.outputs.plugin }}" "${{ needs.build.result }}"
+          check designsystempdf "${{ needs.changes.outputs.pdf }}" "${{ needs.designsystempdf.result }}"

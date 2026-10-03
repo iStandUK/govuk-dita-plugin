@@ -1,0 +1,115 @@
+name: release-pdf
+
+# DesignSystemPDF release assets with provenance (#112, D-22, D-23). The second
+# product is released on its own line, independently of the plugin: on a
+# pdf-v* tag, build the distribution zip from the tagged tree, check that its
+# version matches the tag, run its tests (veraPDF included), publish an
+# attestation, and put the zip, its SHA-256 and the engine's source jars on the
+# GitHub release (created as a draft if the maintainer has not made it yet).
+# The plugin's v* tags are release.yml's; the DITA-OT registry is not involved.
+# Run by hand with dry-run to build and verify without publishing anything.
+on:
+  push:
+    tags: ['pdf-v*']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Build and verify only; publish nothing
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  asset:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # upload the assets to the release
+      id-token: write      # sign the provenance attestation
+      attestations: write
+    defaults:
+      run:
+        working-directory: designsystempdf
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Version in pom.xml must match the tag
+        run: |
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' pom.xml | head -1)
+          test -n "$version" || { echo "no version in pom.xml"; exit 1; }
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "pdf-v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "pom.xml says $version but the tag is $GITHUB_REF_NAME"; exit 1
+          fi
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && ! grep -Eq "^## ${version} — [0-9]{4}-[0-9]{2}-[0-9]{2}" CHANGELOG.md; then
+            echo "CHANGELOG.md has no dated entry for ${version}"; exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "ASSET=designsystempdf-$version.zip" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Bundled fonts match their checksums
+        run: (cd fonts && sha256sum -c SHA256SUMS)
+
+      # Unit tests and the integration tests: the sample print document rendered
+      # and validated as PDF/UA-1 by veraPDF
+      - name: Build and test
+        run: mvn -B -ntp --strict-checksums verify
+
+      - name: The asset, its checksum and the engine's source
+        run: |
+          cd target
+          test -f "$ASSET"
+          sha256sum "$ASSET" > "$ASSET.sha256"
+          cat "$ASSET.sha256"
+          ls engine-sources/openhtmltopdf-*-sources.jar
+          test "$(ls engine-sources/openhtmltopdf-*-sources.jar | wc -l)" = 4
+
+      - name: The asset unpacks, runs and renders
+        run: |
+          rm -rf /tmp/dist && mkdir /tmp/dist && unzip -q "target/$ASSET" -d /tmp/dist
+          dspdf="/tmp/dist/designsystempdf-${VERSION}/bin/designsystempdf"
+          "$dspdf" --version | tee /tmp/version.txt
+          grep -q "^DesignSystemPDF ${VERSION}$" /tmp/version.txt
+          "$dspdf" --in src/test/resources/org/istanduk/designsystempdf/sample-print.html --out /tmp/sample.pdf | tee /tmp/sample.log
+          grep -q 'tagged PDF/UA-1' /tmp/sample.log
+          # the launcher and the tests make the same file from the same document
+          cmp /tmp/sample.pdf target/it/sample.pdf
+          echo "unpacked, ran and rendered $ASSET"
+
+      - name: Keep the built assets with the run
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.ASSET }}
+          path: |
+            designsystempdf/target/${{ env.ASSET }}
+            designsystempdf/target/${{ env.ASSET }}.sha256
+            designsystempdf/target/engine-sources/*.jar
+
+      - name: Attest build provenance
+        if: github.event_name == 'push'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: designsystempdf/target/${{ env.ASSET }}
+
+      # The plugin's releases stay the repository's "latest": a DesignSystemPDF
+      # draft is created with latest=false, and the checklist says to keep it so.
+      - name: Publish the assets on the release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd target
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$ASSET" "$ASSET.sha256" engine-sources/openhtmltopdf-*-sources.jar --clobber
+            echo "uploaded to the existing release $GITHUB_REF_NAME"
+          else
+            gh release create "$GITHUB_REF_NAME" "$ASSET" "$ASSET.sha256" engine-sources/openhtmltopdf-*-sources.jar \
+              --draft --latest=false --title "DesignSystemPDF $VERSION" \
+              --notes "Draft created by the release-pdf workflow. Add the release notes (docs/RELEASING.md), then publish — not as the latest release."
+            echo "created draft release $GITHUB_REF_NAME"
+          fi
