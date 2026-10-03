@@ -1,10 +1,14 @@
 name: release
 
-# Release asset with provenance (#69, D-22): on a version tag, build the plugin
+# Release assets with provenance (#69, D-22): on a version tag, build the plugin
 # zip from the tagged tree, check its layout and that it installs and builds on
 # the supported DITA-OT, publish an attestation, and put the zip and its SHA-256
 # on the GitHub release (created as a draft if the maintainer has not made it
 # yet). The checksum is the value the DITA-OT registry entry carries.
+# The manual is released with it, at the same version (#167): built with that
+# plugin zip in iStandUK branding, as a website (with search and the print
+# version) and as a PDF made by DesignSystemPDF from the same tag, checked
+# against PDF/UA-1 by veraPDF, each with its SHA-256 and an attestation.
 # Run by hand with dry-run to build and verify without publishing anything.
 on:
   push:
@@ -22,6 +26,12 @@ permissions:
 env:
   DITA_OT_VERSION: "4.4.1"
   DITA_OT_SHA256: "154414c1debb548e923bf77e9a09019e249a8887680ff4bfbd8e137de9e8e250"
+  # the search index in the released manual; as in the build workflow
+  PAGEFIND_VERSION: "1.5.2"
+  # veraPDF's command line, which checks the released manual's PDF; the version
+  # DesignSystemPDF's tests use (designsystempdf/pom.xml), checked below
+  VERAPDF_VERSION: "1.30.2"
+  VERAPDF_SHA256: "6cc6341cb1af644044054b81f00a6590a7918abb18f762243de115258bcad838"
 
 jobs:
   asset:
@@ -42,6 +52,10 @@ jobs:
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
           echo "ASSET=org.istanduk.gov-uk-$version.zip" >> "$GITHUB_ENV"
+          echo "MANUAL=org.istanduk.gov-uk-manual-$version" >> "$GITHUB_ENV"
+          # dates in the manual's PDF and zip come from the tagged commit, so the
+          # same tag gives the same files
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
 
       - name: Build the asset and its checksum
         run: |
@@ -54,6 +68,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          cache: maven
+          cache-dependency-path: designsystempdf/pom.xml
 
       - name: The asset installs and builds on the supported DITA-OT
         run: |
@@ -67,30 +83,99 @@ jobs:
           grep -q "version=\"$VERSION\"" "dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/plugin.xml"
           echo "installed and built $ASSET on DITA-OT $DITA_OT_VERSION"
 
-      - name: Keep the built asset with the run
+      # The manual, released at the plugin's version (#167). DesignSystemPDF and
+      # the plugin both come from this tag; the toolkit already has the plugin
+      # asset installed by the step above.
+      - name: Build DesignSystemPDF from the tagged tree
+        run: |
+          (cd designsystempdf && mvn -B -ntp --strict-checksums -DskipTests package)
+          zip=$(ls designsystempdf/target/designsystempdf-*.zip)
+          rm -rf /tmp/dist && mkdir /tmp/dist && unzip -q "$zip" -d /tmp/dist
+          bin=$(ls -d /tmp/dist/designsystempdf-*/bin)
+          echo "$bin" >> "$GITHUB_PATH"
+          "$bin/designsystempdf" --version
+
+      - name: Install Pagefind
+        run: npm install -g "pagefind@${PAGEFIND_VERSION}"
+
+      - name: Install veraPDF
+        run: |
+          pom=$(sed -n 's:.*<verapdf.version>\(.*\)</verapdf.version>.*:\1:p' designsystempdf/pom.xml)
+          test "$pom" = "$VERAPDF_VERSION" || { echo "pom.xml tests with veraPDF $pom but the release checks with $VERAPDF_VERSION: move VERAPDF_VERSION and VERAPDF_SHA256 together"; exit 1; }
+          minor=${VERAPDF_VERSION%.*}
+          curl -sSfL -o verapdf.zip "https://software.verapdf.org/releases/${minor}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
+          echo "${VERAPDF_SHA256}  verapdf.zip" | sha256sum -c -
+          unzip -q verapdf.zip -d /tmp/verapdf-installer
+          java "-DINSTALL_PATH=/tmp/verapdf" \
+            -jar "/tmp/verapdf-installer/verapdf-greenfield-${VERAPDF_VERSION}/verapdf-izpack-installer-${VERAPDF_VERSION}.jar" \
+            tools/verapdf/auto-install.xml
+          rm verapdf.zip
+          /tmp/verapdf/verapdf --version | head -1 | grep -qF "veraPDF ${VERAPDF_VERSION}"
+
+      - name: Build the manual, in iStandUK branding, as a site and a PDF
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
+            --output "out/$MANUAL" -Dgovuk.branding=istanduk -Dgovuk.print=yes -Dgovuk.pdf=yes \
+            -Dgovuk.search=yes "-Dgovuk.pdf.name=$MANUAL" 2>&1 | tee /tmp/manual.log
+          absent -Eq 'GOVK008W|DSPDF' /tmp/manual.log
+          site="out/$MANUAL"
+          for f in index.html print.html "$MANUAL.pdf" pagefind/pagefind.js; do
+            test -f "$site/$f" || { echo "the released manual has no $f"; exit 1; }
+          done
+          # it is the manual of this release, in this branding, and links its PDF
+          grep -q "<li>Version ${VERSION}</li>" "$site/print.html" \
+            || { echo "the manual's edition is not ${VERSION}"; exit 1; }
+          grep -q 'overlay-istanduk.css' "$site/index.html"
+          grep -q "href=\"${MANUAL}.pdf\">Whole publication (PDF, " "$site/index.html"
+          # and its PDF meets PDF/UA-1
+          /tmp/verapdf/verapdf --flavour ua1 --format text -v "$site/$MANUAL.pdf" | tee /tmp/manual-ua.txt
+          grep -q '^PASS ' /tmp/manual-ua.txt || { echo "the manual's PDF is not PDF/UA-1"; exit 1; }
+
+      - name: Package the manual and its checksums
+        run: |
+          cp "out/$MANUAL/$MANUAL.pdf" "$MANUAL.pdf"
+          # the site as one folder, entries sorted and stamped with the commit's
+          # date, so the same tag gives the same zip
+          rm -rf "/tmp/$MANUAL" && cp -r "out/$MANUAL" "/tmp/$MANUAL"
+          find "/tmp/$MANUAL" -exec touch -h -d "@${SOURCE_DATE_EPOCH}" {} +
+          (cd /tmp && find "$MANUAL" -print | LC_ALL=C sort | TZ=UTC zip -qX "$GITHUB_WORKSPACE/$MANUAL.zip" -@)
+          unzip -Z1 "$MANUAL.zip" | grep -x "${MANUAL}/index.html" > /dev/null
+          for f in "$MANUAL.pdf" "$MANUAL.zip"; do sha256sum "$f" > "$f.sha256"; cat "$f.sha256"; done
+
+      - name: Keep the built assets with the run
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ env.ASSET }}
           path: |
             ${{ env.ASSET }}
             ${{ env.ASSET }}.sha256
+            ${{ env.MANUAL }}.pdf
+            ${{ env.MANUAL }}.pdf.sha256
+            ${{ env.MANUAL }}.zip
+            ${{ env.MANUAL }}.zip.sha256
 
       - name: Attest build provenance
         if: github.event_name == 'push'
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: ${{ env.ASSET }}
+          subject-path: |
+            ${{ env.ASSET }}
+            ${{ env.MANUAL }}.pdf
+            ${{ env.MANUAL }}.zip
 
-      - name: Publish the asset on the release
+      - name: Publish the assets on the release
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          assets=("$ASSET" "$ASSET.sha256" "$MANUAL.pdf" "$MANUAL.pdf.sha256" "$MANUAL.zip" "$MANUAL.zip.sha256")
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "$ASSET" "$ASSET.sha256" --clobber
+            gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
             echo "uploaded to the existing release $GITHUB_REF_NAME"
           else
-            gh release create "$GITHUB_REF_NAME" "$ASSET" "$ASSET.sha256" --draft --title "$GITHUB_REF_NAME" \
+            gh release create "$GITHUB_REF_NAME" "${assets[@]}" --draft --title "$GITHUB_REF_NAME" \
               --notes "Draft created by the release workflow. Add the release notes (docs/RELEASING.md), then publish."
             echo "created draft release $GITHUB_REF_NAME"
           fi

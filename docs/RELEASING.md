@@ -41,11 +41,28 @@ release pull request.
       attestation, and attaches the zip and `org.istanduk.gov-uk-x.y.z.zip.sha256` to the
       GitHub release — creating the release as a **draft** if it does not exist yet. Wait for
       it (Actions → release). Nothing is built by hand.
+- [ ] The same run releases **the manual at the same version** (#167). With that plugin
+      zip, in iStandUK branding, it builds the manual from the tagged tree, with
+      DesignSystemPDF built from the same tag and the pinned Pagefind. It checks that the
+      cover says `Version x.y.z`, that the build gave no `GOVK008W` or `DSPDF` warning, and
+      that the PDF passes veraPDF PDF/UA-1. It attests and attaches:
+  - `org.istanduk.gov-uk-manual-x.y.z.pdf`: the whole manual as a page-numbered,
+    tagged PDF
+  - `org.istanduk.gov-uk-manual-x.y.z.zip`: the manual as a website, with search, the
+    print version and the PDF
+  - a `.sha256` for each
+
+  Their dates come from the tagged commit, so the same tag gives the same files. The
+  manual's edition is the version bump above; CI already fails if it and `plugin.xml`
+  disagree.
 - [ ] Open the draft release, paste the release notes, set it as the latest release, publish
 - [ ] Verify from the public URL in a clean toolkit: `dita install <asset URL>`, build a
       fixture, and confirm the downloaded asset's SHA-256 matches the `.sha256` file and
       `gh attestation verify org.istanduk.gov-uk-x.y.z.zip --repo iStandUK/govuk-dita-plugin`
       succeeds
+- [ ] Do the same for the manual: check both files against their `.sha256` and
+      `gh attestation verify`, open the PDF (cover edition, page numbers in the contents),
+      unzip the site and open `index.html`
 
 ## Registry
 
@@ -72,8 +89,8 @@ above, pull request to `main`, then the same publish, registry and back-merge st
 ## Trying the release build without releasing
 
 Run the `release` workflow by hand from `dev` with **dry-run** ticked (Actions → release →
-Run workflow): it builds and verifies the asset and keeps it as a run artifact, but attests
-and publishes nothing.
+Run workflow): it builds and verifies the plugin asset and the manual and keeps them as a
+run artifact, but attests and publishes nothing.
 
 # Releasing DesignSystemPDF
 
