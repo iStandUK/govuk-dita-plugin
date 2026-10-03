@@ -268,10 +268,9 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
           <stentry>1.0.1 and later 1.x</stentry>
         </strow>
       </simpletable>
-      <p>The link from the site to the PDF needs a plugin release later than 1.0.1; with
-        1.0.1 the PDF is made but nothing links it. Releases up to 1.0.x make the PDF only
-        when DesignSystemPDF is named in <codeph>govuk.pdf.command</codeph>; later ones
-        find it on the <codeph>PATH</codeph> for themselves.</p>
+      <p>From plugin 1.1.0 the build finds DesignSystemPDF on the <codeph>PATH</codeph>
+        for itself and links the PDF from the site. With 1.0.1, name it in
+        <codeph>govuk.pdf.command</codeph>: the PDF is made, but nothing links it.</p>
     </section>
   </conbody>
 </concept>

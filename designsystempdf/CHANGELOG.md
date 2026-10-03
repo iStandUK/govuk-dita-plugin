@@ -2,7 +2,7 @@
 
 DesignSystemPDF is versioned on its own line, independently of the GOV.UK DITA plugin. Releases are tagged `pdf-v<version>`.
 
-## 0.1.0 — unreleased
+## 0.1.0 — 2026-10-03
 
 The first release. Design: [13 — page numbers in print](https://github.com/iStandUK/govuk-dita-plugin/blob/dev/design/13-print-page-numbers.md); decisions D-23 and D-25.
 
