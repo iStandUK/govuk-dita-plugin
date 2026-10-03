@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="topic" xml:lang="en-GB">
+  <title>A figure with no alternative text</title>
+  <body>
+    <p>The diagram below has no alternative text, so a PDF of this publication cannot
+      meet PDF/UA. CI renders it and expects the check to fail (#164).</p>
+    <fig>
+      <title>An undescribed diagram</title>
+      <image href="images/shape.svg"/>
+    </fig>
+  </body>
+</topic>
