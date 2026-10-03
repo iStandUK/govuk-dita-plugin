@@ -16,10 +16,10 @@
          against plugin.xml. -->
     <critdates>
       <created date="2026-09-01"/>
-      <revised modified="2026-09-08"/>
+      <revised modified="2026-10-03"/>
     </critdates>
     <bookid>
-      <edition>Version 1.0.1</edition>
+      <edition>Version 1.1.0</edition>
     </bookid>
     <bookrights>
       <copyrfirst><year>2026</year></copyrfirst>
