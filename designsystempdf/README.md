@@ -32,9 +32,9 @@ dita --input=publication.ditamap --format=govuk --output=out/site \
      -Dgovuk.print=yes -Dgovuk.pdf.command=designsystempdf
 ```
 
-— or, from the plugin release after 1.0.1, simply have `designsystempdf` on the `PATH` (or name its launcher in `govuk.pdf.cmd`): with `govuk.pdf=auto`, the default, the build finds it as it finds Pagefind, passing the paper, the bookmark depth and `govuk.pdf.fonts`.
+— or, from plugin 1.1.0, simply have `designsystempdf` on the `PATH` (or name its launcher in `govuk.pdf.cmd`): with `govuk.pdf=auto`, the default, the build finds it as it finds Pagefind, passing the paper, the bookmark depth and `govuk.pdf.fonts`.
 
-Plugin releases after 1.0.1 also link the PDF from the site's home page and every footer, beside the print version and with its size: "Whole publication (PDF, 1.2 MB)".
+Plugin 1.1.0 and later also link the PDF from the site's home page and every footer, beside the print version and with its size: "Whole publication (PDF, 1.2 MB)".
 
 ### Options
 
