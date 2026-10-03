@@ -1,0 +1,39 @@
+name: Install veraPDF
+description: >-
+  veraPDF's command line, pinned by version and checksum and installed headless,
+  on the PATH as `verapdf` (#164). The one place the pin is written: the build,
+  release and release-pdf workflows all use it.
+runs:
+  using: composite
+  steps:
+    - name: Cache veraPDF
+      id: cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ runner.temp }}/verapdf
+        key: verapdf-1.30.2-6cc6341cb1af644044054b81f00a6590a7918abb18f762243de115258bcad838
+
+    - name: Install veraPDF
+      shell: bash
+      env:
+        # the signed greenfield release (README.md); the version must be the one
+        # DesignSystemPDF's tests use, verapdf.version in designsystempdf/pom.xml
+        VERAPDF_VERSION: "1.30.2"
+        VERAPDF_SHA256: "6cc6341cb1af644044054b81f00a6590a7918abb18f762243de115258bcad838"
+        TARGET: ${{ runner.temp }}/verapdf
+        SELECTION: ${{ github.action_path }}/auto-install.xml
+      run: |
+        pom=$(sed -n 's:.*<verapdf.version>\(.*\)</verapdf.version>.*:\1:p' "$GITHUB_WORKSPACE/designsystempdf/pom.xml")
+        test "$pom" = "$VERAPDF_VERSION" || { echo "pom.xml tests with veraPDF $pom but this action installs $VERAPDF_VERSION: move the version, the checksum and the cache key in .github/actions/verapdf/action.yml together"; exit 1; }
+        if [ ! -x "$TARGET/verapdf" ]; then
+          minor=${VERAPDF_VERSION%.*}
+          curl -sSfL -o "$RUNNER_TEMP/verapdf.zip" "https://software.verapdf.org/releases/${minor}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
+          echo "${VERAPDF_SHA256}  $RUNNER_TEMP/verapdf.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/verapdf.zip" -d "$RUNNER_TEMP/verapdf-installer"
+          java "-DINSTALL_PATH=$TARGET" \
+            -jar "$RUNNER_TEMP/verapdf-installer/verapdf-greenfield-${VERAPDF_VERSION}/verapdf-izpack-installer-${VERAPDF_VERSION}.jar" \
+            "$SELECTION"
+          rm -rf "$RUNNER_TEMP/verapdf.zip" "$RUNNER_TEMP/verapdf-installer"
+        fi
+        "$TARGET/verapdf" --version | head -1 | grep -qF "veraPDF ${VERAPDF_VERSION}"
+        echo "$TARGET" >> "$GITHUB_PATH"
