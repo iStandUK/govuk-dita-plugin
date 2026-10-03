@@ -98,11 +98,14 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       </condition>
     </fail>
     <property environment="govuk.env"/>
+    <!-- Windows spells the variable Path; an unset one stays a literal that
+         names no folder, so joining both is harmless -->
+    <property name="govuk.exec.path" value="${govuk.env.PATH}${path.separator}${govuk.env.Path}"/>
     <condition property="govuk.pagefind.available">
       <or>
         <available file="${govuk.pagefind.cmd}" type="file"/>
-        <available file="${govuk.pagefind.cmd}" filepath="${govuk.env.PATH}"/>
-        <available file="${govuk.pagefind.cmd}.exe" filepath="${govuk.env.PATH}"/>
+        <available file="${govuk.pagefind.cmd}" filepath="${govuk.exec.path}"/>
+        <available file="${govuk.pagefind.cmd}.exe" filepath="${govuk.exec.path}"/>
       </or>
     </condition>
     <fail message="govuk.search=yes but the Pagefind binary was not found (govuk.pagefind.cmd=${govuk.pagefind.cmd}). Install Pagefind or set govuk.pagefind.cmd to its path; see https://pagefind.app/">
@@ -202,10 +205,91 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         </or></not>
       </condition>
     </fail>
-    <!-- An external CSS Paged Media formatter for the print document (#106).
-         The plugin bundles none and downloads nothing: the publisher names a
-         command they have installed. -->
+    <!-- The PDF (#106, #113, D-23). The plugin bundles no formatter and
+         downloads nothing. A command the publisher names in govuk.pdf.command
+         is run as given; otherwise DesignSystemPDF is looked for as Pagefind
+         is: auto makes the PDF when it is found, yes requires it, no makes
+         none. Either way the print document is what is rendered, so the PDF
+         needs govuk.print=yes. -->
+    <property name="govuk.pdf" value="auto"/>
+    <fail message="govuk.pdf must be 'auto', 'yes' or 'no', was: ${govuk.pdf}">
+      <condition><not><or>
+        <equals arg1="${govuk.pdf}" arg2="auto"/>
+        <equals arg1="${govuk.pdf}" arg2="yes"/>
+        <equals arg1="${govuk.pdf}" arg2="no"/>
+      </or></not></condition>
+    </fail>
     <property name="govuk.pdf.command" value=""/>
+    <property name="govuk.pdf.cmd" value="designsystempdf"/>
+    <property name="govuk.pdf.fonts" value=""/>
+    <condition property="govuk.pdf.external">
+      <not><equals arg1="${govuk.pdf.command}" arg2=""/></not>
+    </condition>
+    <!-- the launcher is a shell script on Linux and macOS, a .bat on Windows -->
+    <condition property="govuk.pdf.generator.available">
+      <and>
+        <not><isset property="govuk.pdf.external"/></not>
+        <not><equals arg1="${govuk.pdf}" arg2="no"/></not>
+        <or>
+          <available file="${govuk.pdf.cmd}" type="file"/>
+          <available file="${govuk.pdf.cmd}" filepath="${govuk.exec.path}"/>
+          <available file="${govuk.pdf.cmd}.bat" filepath="${govuk.exec.path}"/>
+          <available file="${govuk.pdf.cmd}.cmd" filepath="${govuk.exec.path}"/>
+          <available file="${govuk.pdf.cmd}.exe" filepath="${govuk.exec.path}"/>
+        </or>
+      </and>
+    </condition>
+    <fail message="govuk.pdf=yes but DesignSystemPDF was not found (govuk.pdf.cmd=${govuk.pdf.cmd}). Install it and put its bin folder on the PATH, set govuk.pdf.cmd to its launcher, or name another formatter in govuk.pdf.command.">
+      <condition><and>
+        <equals arg1="${govuk.pdf}" arg2="yes"/>
+        <not><isset property="govuk.pdf.external"/></not>
+        <not><isset property="govuk.pdf.generator.available"/></not>
+      </and></condition>
+    </fail>
+    <fail message="govuk.pdf=yes needs govuk.print=yes: the PDF is rendered from the print document.">
+      <condition><and>
+        <equals arg1="${govuk.pdf}" arg2="yes"/>
+        <not><equals arg1="${govuk.print}" arg2="yes"/></not>
+      </and></condition>
+    </fail>
+    <!-- DesignSystemPDF is given the paper, the outline depth (it goes to 6)
+         and the publisher's fonts; the page size is also in print.css, for
+         browsers and for any other formatter -->
+    <condition property="govuk.pdf.orientation.arg" value=" --orientation ${govuk.pdf.orientation}" else="">
+      <matches pattern="^[A-Za-z]" string="${govuk.pdf.paper}"/>
+    </condition>
+    <condition property="govuk.pdf.toc-depth" value="6" else="${govuk.print.toc.depth}">
+      <matches pattern="^[7-9]$" string="${govuk.print.toc.depth}"/>
+    </condition>
+    <condition property="govuk.pdf.fonts.dir">
+      <and>
+        <not><equals arg1="${govuk.pdf.fonts}" arg2=""/></not>
+        <available file="${govuk.pdf.fonts}" type="dir"/>
+      </and>
+    </condition>
+    <condition property="govuk.pdf.fonts.missing">
+      <and>
+        <isset property="govuk.pdf.generator.available"/>
+        <not><equals arg1="${govuk.pdf.fonts}" arg2=""/></not>
+        <not><isset property="govuk.pdf.fonts.dir"/></not>
+      </and>
+    </condition>
+    <echo if:set="govuk.pdf.fonts.missing" level="warning"
+          message="[GOVK008W]: govuk.pdf.fonts names no folder: ${govuk.pdf.fonts}; the PDF is made with the bundled fonts."/>
+    <condition property="govuk.pdf.fonts.arg" value=" --fonts &quot;${govuk.pdf.fonts}&quot;" else="">
+      <isset property="govuk.pdf.fonts.dir"/>
+    </condition>
+    <!-- The launcher is quoted only when its path has a space: cmd.exe gives
+         a quoted batch file found on the PATH the wrong folder for itself -->
+    <condition property="govuk.pdf.cmd.arg" value="&quot;${govuk.pdf.cmd}&quot;" else="${govuk.pdf.cmd}">
+      <contains string="${govuk.pdf.cmd}" substring=" "/>
+    </condition>
+    <!-- What is run: the publisher's command as written, or the generator.
+         The print document and the PDF are appended to either. -->
+    <condition property="govuk.pdf.run" value="${govuk.pdf.command}"
+               else="${govuk.pdf.cmd.arg} --paper &quot;${govuk.pdf.paper}&quot;${govuk.pdf.orientation.arg} --toc-depth ${govuk.pdf.toc-depth}${govuk.pdf.fonts.arg}">
+      <isset property="govuk.pdf.external"/>
+    </condition>
     <!-- the shell that runs it, so a publisher's command may carry its own
          arguments and quoting -->
     <condition property="govuk.pdf.shell" value="cmd.exe" else="/bin/sh">
@@ -214,20 +298,50 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <condition property="govuk.pdf.shell.flag" value="/c" else="-c">
       <os family="windows"/>
     </condition>
+    <!-- cmd.exe /c drops the first and last quote of a line that holds more
+         than two, so the whole line is quoted once more; a command that starts
+         with a quoted path then survives -->
+    <condition property="govuk.pdf.shell.quote" value="&quot;" else="">
+      <os family="windows"/>
+    </condition>
     <condition property="govuk.pdf.on">
       <and>
-        <not><equals arg1="${govuk.pdf.command}" arg2=""/></not>
+        <not><equals arg1="${govuk.pdf}" arg2="no"/></not>
+        <or>
+          <isset property="govuk.pdf.external"/>
+          <isset property="govuk.pdf.generator.available"/>
+        </or>
         <equals arg1="${govuk.print}" arg2="yes"/>
       </and>
     </condition>
     <condition property="govuk.pdf.without.print">
       <and>
-        <not><equals arg1="${govuk.pdf.command}" arg2=""/></not>
+        <isset property="govuk.pdf.external"/>
+        <not><equals arg1="${govuk.pdf}" arg2="no"/></not>
         <not><equals arg1="${govuk.print}" arg2="yes"/></not>
       </and>
     </condition>
     <echo if:set="govuk.pdf.without.print" level="warning"
           message="[GOVK008W]: govuk.pdf.command is set but govuk.print is not 'yes', so there is no print document to render. Set govuk.print=yes."/>
+    <condition property="govuk.pdf.notice" value="PDF enabled (govuk.pdf.command: ${govuk.pdf.command})">
+      <and>
+        <isset property="govuk.pdf.on"/>
+        <isset property="govuk.pdf.external"/>
+      </and>
+    </condition>
+    <condition property="govuk.pdf.notice" value="PDF enabled (DesignSystemPDF found: ${govuk.pdf.cmd})">
+      <isset property="govuk.pdf.on"/>
+    </condition>
+    <condition property="govuk.pdf.notice" value="PDF disabled (govuk.pdf=no)">
+      <equals arg1="${govuk.pdf}" arg2="no"/>
+    </condition>
+    <condition property="govuk.pdf.notice" value="PDF disabled (DesignSystemPDF found, but govuk.print is not 'yes')">
+      <isset property="govuk.pdf.generator.available"/>
+    </condition>
+    <condition property="govuk.pdf.notice" value="PDF disabled (govuk.pdf=${govuk.pdf}; DesignSystemPDF not found on PATH)">
+      <not><isset property="govuk.pdf.external"/></not>
+    </condition>
+    <echo if:set="govuk.pdf.notice" level="info" message="govuk: ${govuk.pdf.notice}"/>
     <basename property="govuk.pdf.default.name" file="${args.input}" suffix=".ditamap"/>
     <property name="govuk.pdf.name" value="${govuk.pdf.default.name}"/>
     <!-- CSS takes the orientation keyword only with a named size; explicit
@@ -434,7 +548,7 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
        the PDF exists the size is filled in and the markers go; otherwise the
        link goes with them, so no page ever links a file that is not there. -->
   <target name="govuk.pdf" if="govuk.pdf.on" depends="govuk.copy-assets"
-          description="Render print.html as PDF with an external formatter (govuk.pdf.command)">
+          description="Render print.html as PDF with DesignSystemPDF (govuk.pdf) or another formatter (govuk.pdf.command)">
     <local name="govuk.pdf.in"/><local name="govuk.pdf.out"/>
     <local name="govuk.pdf.rc"/><local name="govuk.pdf.missing"/>
     <local name="govuk.pdf.log"/><local name="govuk.pdf.err"/>
@@ -446,20 +560,20 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
     <property name="govuk.pdf.out" location="${dita.output.dir}/${govuk.pdf.name}.pdf"/>
     <available property="govuk.pdf.missing" file="${govuk.pdf.in}" type="file"/>
     <echo unless:set="govuk.pdf.missing" level="warning"
-          message="[GOVK008W]: no print document to render at ${govuk.pdf.in} (govuk.print.max-topics may have skipped it); govuk.pdf.command not run."/>
+          message="[GOVK008W]: no print document to render at ${govuk.pdf.in} (govuk.print.max-topics may have skipped it); no PDF made."/>
     <sequential if:set="govuk.pdf.missing">
-      <echo level="info" message="govuk: rendering ${govuk.pdf.in} with: ${govuk.pdf.command}"/>
+      <echo level="info" message="govuk: rendering ${govuk.pdf.in} with: ${govuk.pdf.run}"/>
       <exec executable="${govuk.pdf.shell}" resultproperty="govuk.pdf.rc" failonerror="false"
             dir="${dita.output.dir}"
             outputproperty="govuk.pdf.log" errorproperty="govuk.pdf.err">
         <arg value="${govuk.pdf.shell.flag}"/>
-        <arg value="${govuk.pdf.command} &quot;${govuk.pdf.in}&quot; &quot;${govuk.pdf.out}&quot;"/>
+        <arg value="${govuk.pdf.shell.quote}${govuk.pdf.run} &quot;${govuk.pdf.in}&quot; &quot;${govuk.pdf.out}&quot;${govuk.pdf.shell.quote}"/>
       </exec>
       <condition property="govuk.pdf.failed">
         <not><equals arg1="${govuk.pdf.rc}" arg2="0"/></not>
       </condition>
       <echo if:set="govuk.pdf.failed" level="warning"
-            message="[GOVK008W]: the PDF command exited ${govuk.pdf.rc}; the site is complete but no PDF was produced. Command: ${govuk.pdf.command}${line.separator}${govuk.pdf.err}${govuk.pdf.log}"/>
+            message="[GOVK008W]: the PDF command exited ${govuk.pdf.rc}; the site is complete but no PDF was produced. Command: ${govuk.pdf.run}${line.separator}${govuk.pdf.err}${govuk.pdf.log}"/>
       <condition property="govuk.pdf.written">
         <and>
           <not><isset property="govuk.pdf.failed"/></not>
@@ -473,7 +587,7 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
         </and>
       </condition>
       <echo if:set="govuk.pdf.empty" level="warning"
-            message="[GOVK008W]: the PDF command exited 0 but wrote no file at ${govuk.pdf.out}; the site is complete but no PDF was produced. Command: ${govuk.pdf.command}${line.separator}${govuk.pdf.err}${govuk.pdf.log}"/>
+            message="[GOVK008W]: the PDF command exited 0 but wrote no file at ${govuk.pdf.out}; the site is complete but no PDF was produced. Command: ${govuk.pdf.run}${line.separator}${govuk.pdf.err}${govuk.pdf.log}"/>
       <echo if:set="govuk.pdf.written" level="info"
             message="govuk: PDF written to ${govuk.pdf.out}"/>
       <!-- A formatter that made the PDF may still have something to say: what

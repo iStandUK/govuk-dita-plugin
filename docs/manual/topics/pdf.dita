@@ -4,7 +4,7 @@
   <title>PDF with DesignSystemPDF</title>
   <shortdesc>DesignSystemPDF is the plugin's companion: it renders the print document as a
     page-numbered, tagged PDF, with Java as the only requirement. Install it beside the
-    toolkit, name it in the build, and the site links the PDF it makes.</shortdesc>
+    toolkit and the build finds it, makes the PDF and links it from the site.</shortdesc>
   <conbody>
     <p><indexterm>DesignSystemPDF</indexterm><indexterm>PDF<indexterm>DesignSystemPDF</indexterm></indexterm>The
       plugin makes websites and stays small: it holds no PDF engine and no fonts.
@@ -57,12 +57,13 @@
     </section>
     <section id="use">
       <title>Using it with the plugin</title>
-      <p><indexterm>govuk.pdf.command</indexterm>Ask the build for the print document and
-        name DesignSystemPDF as the formatter:</p>
+      <p><indexterm>govuk.pdf</indexterm>With DesignSystemPDF on the
+        <codeph>PATH</codeph>, ask the build for the print document and nothing more:</p>
       <codeblock>dita --input=publication.ditamap --format=govuk --output=out \
-     -Dgovuk.print=yes -Dgovuk.pdf.command=designsystempdf</codeblock>
-      <p>The build writes the site, then the print document, then runs DesignSystemPDF on
-        it. The result is in the output folder beside <filepath>print.html</filepath>:</p>
+     -Dgovuk.print=yes</codeblock>
+      <p>The build finds DesignSystemPDF as it finds Pagefind for search, and says so in its
+        log. It writes the site, then the print document, then runs DesignSystemPDF on it.
+        The result is in the output folder beside <filepath>print.html</filepath>:</p>
       <ul>
         <li><filepath>publication.pdf</filepath>, named after the map, or after
           <codeph>govuk.pdf.name</codeph> if you set it;</li>
@@ -71,16 +72,46 @@
       </ul>
       <p>The paper size and orientation come from <codeph>govuk.pdf.paper</codeph> and
         <codeph>govuk.pdf.orientation</codeph>, the same parameters that set them for
-        printing from a browser, so the PDF and a browser's print agree.</p>
-      <p>If DesignSystemPDF is not on the <codeph>PATH</codeph>, give its full path in the
-        command. If it cannot be run, or fails, the build reports <codeph>GOVK008W</codeph>
-        with DesignSystemPDF's own messages and finishes: the site is complete, and no page
-        links a PDF that is not there.</p>
+        printing from a browser, so the PDF and a browser's print agree. The depth of the
+        bookmarks follows <codeph>govuk.print.toc.depth</codeph>, up to 6, and fonts of your
+        own come from the folder named in <codeph>govuk.pdf.fonts</codeph>.</p>
+      <p><codeph>govuk.pdf</codeph> decides whether the PDF is made:</p>
+      <simpletable>
+        <sthead>
+          <stentry>Value</stentry>
+          <stentry>Effect</stentry>
+        </sthead>
+        <strow>
+          <stentry><codeph>auto</codeph> (default)</stentry>
+          <stentry>Make the PDF when DesignSystemPDF is found and
+            <codeph>govuk.print=yes</codeph>; otherwise build the site without one, and say
+            why in the log.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>yes</codeph></stentry>
+          <stentry>Stop the build at the start if DesignSystemPDF is not found or
+            <codeph>govuk.print</codeph> is not <codeph>yes</codeph>. Use it on a build
+            server, where a missing PDF should not go unnoticed.</stentry>
+        </strow>
+        <strow>
+          <stentry><codeph>no</codeph></stentry>
+          <stentry>Make no PDF, even with DesignSystemPDF installed.</stentry>
+        </strow>
+      </simpletable>
+      <p>If DesignSystemPDF is not on the <codeph>PATH</codeph>, give the path to its
+        launcher in <codeph>govuk.pdf.cmd</codeph>: <filepath>bin/designsystempdf</filepath>,
+        or <filepath>bin\designsystempdf.bat</filepath> on Windows. If it cannot be run, or
+        fails, the build reports <codeph>GOVK008W</codeph> with DesignSystemPDF's own
+        messages and finishes: the site is complete, and no page links a PDF that is not
+        there.</p>
     </section>
     <section id="options">
       <title>Options</title>
-      <p>Options go in the command, before the two file names the plugin adds; quote the
-        whole parameter so the spaces survive:</p>
+      <p><indexterm>govuk.pdf.command</indexterm>The build passes DesignSystemPDF the paper,
+        the bookmark depth and the fonts. For any other option, name the command yourself in
+        <codeph>govuk.pdf.command</codeph>, which is then run in place of the one the build
+        finds. Options go before the two file names the plugin adds; quote the whole
+        parameter so the spaces survive:</p>
       <codeblock>dita --input=publication.ditamap --format=govuk --output=out \
      -Dgovuk.print=yes \
      "-Dgovuk.pdf.command=designsystempdf --sides double"</codeblock>
@@ -103,7 +134,8 @@
         <strow>
           <stentry><codeph>--fonts</codeph></stentry>
           <stentry>A folder of TrueType fonts of your own, used where the stylesheets name
-            their families.</stentry>
+            their families. Through the plugin, set <codeph>govuk.pdf.fonts</codeph>
+            instead.</stentry>
         </strow>
         <strow>
           <stentry><codeph>--toc-depth</codeph></stentry>
@@ -146,7 +178,8 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
         and Noto Sans Mono, which are free to redistribute, and uses them wherever the
         stylesheets ask for a font it has not been given.</p>
       <p>To use others, put their TrueType (<filepath>.ttf</filepath>) files in a folder
-        and pass <codeph>--fonts</codeph>. An organisation entitled to GDS Transport or
+        and name it in <codeph>govuk.pdf.fonts</codeph> (or pass <codeph>--fonts</codeph> when
+        running DesignSystemPDF yourself). An organisation entitled to GDS Transport or
         Frutiger supplies its own licensed files this way; neither is ever shipped
         (<xref keyref="legal"/>). A supplied font is also used for any character the
         other fonts cannot draw, so a publication with passages in a script the bundled
@@ -172,7 +205,7 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
         <strow>
           <stentry><codeph>DSPDF004W</codeph></stentry>
           <stentry>Some characters have no glyph in the fonts and print as a replacement
-            mark. Supply a font that covers them with <codeph>--fonts</codeph>; it is
+            mark. Supply a font that covers them with <codeph>govuk.pdf.fonts</codeph>; it is
             used for those characters without your stylesheet having to name
             it.</stentry>
         </strow>
@@ -207,15 +240,15 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
         replacement mark and the topic is set from the left. The build log says so with
         <codeph>DSPDF010W</codeph>, and lists the characters that have no glyph with
         <codeph>DSPDF004W</codeph>.</p>
-      <p>Supplying a font with <codeph>--fonts</codeph> does not cure it. The letters
+      <p>Supplying a font with <codeph>govuk.pdf.fonts</codeph> does not cure it. The letters
         then appear, but unjoined and running from the left, so the text is still
         unreadable; <codeph>DSPDF010W</codeph> is given all the same.</p>
       <p>Until this is fixed, make the PDF of a right-to-left publication, or of one with
         right-to-left passages, from a browser: open <filepath>print.html</filepath> and
         use the browser's print or save-as-PDF command. Browsers shape and order the text
         correctly; the contents list and index then carry links instead of page numbers
-        (<xref keyref="print"/>). Leave <codeph>govuk.pdf.command</codeph> unset for such
-        a publication, so that the site does not link a PDF with unreadable passages.</p>
+        (<xref keyref="print"/>). Build such a publication with
+        <codeph>govuk.pdf=no</codeph>, so that the site does not link a PDF with unreadable passages.</p>
     </section>
     <section id="versions">
       <title>Which versions work together</title>
@@ -236,7 +269,9 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
         </strow>
       </simpletable>
       <p>The link from the site to the PDF needs a plugin release later than 1.0.1; with
-        1.0.1 the PDF is made but nothing links it.</p>
+        1.0.1 the PDF is made but nothing links it. Releases up to 1.0.x make the PDF only
+        when DesignSystemPDF is named in <codeph>govuk.pdf.command</codeph>; later ones
+        find it on the <codeph>PATH</codeph> for themselves.</p>
     </section>
   </conbody>
 </concept>

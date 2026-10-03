@@ -41,7 +41,8 @@
               <entry>Nothing</entry>
               <entry><codeph>govuk.print=yes</codeph></entry>
               <entry><codeph>govuk.print=yes</codeph> and a formatter:
-                <xref keyref="pdf">DesignSystemPDF</xref>, or another of your choosing</entry>
+                <xref keyref="pdf">DesignSystemPDF</xref>, which the build finds for itself,
+                or another of your choosing</entry>
             </row>
             <row>
               <entry>Who makes it</entry>
@@ -292,10 +293,11 @@
         the index and cross-references stay links, footnotes are endnotes, and every reader
         makes their own copy with their own browser's pagination. A <term>CSS Paged Media
         formatter</term> does what a browser cannot, and the print document already carries
-        the rules it needs. Name one in <codeph>govuk.pdf.command</codeph> and the build
-        renders the print document as PDF once the pages are written:</p>
+        the rules it needs. Install DesignSystemPDF, the project's own, and the build finds
+        it (<codeph>govuk.pdf=auto</codeph>, the default) and renders the print document as
+        PDF once the pages are written:</p>
       <codeblock>dita --input=publication.ditamap --format=govuk --output=out \
-     -Dgovuk.print=yes -Dgovuk.pdf.command=designsystempdf</codeblock>
+     -Dgovuk.print=yes</codeblock>
       <p>That is the publication as a book, made once by the publisher and the same for
         every reader:</p>
       <ul>
@@ -312,9 +314,10 @@
         built and tested against the plugin's own print documents. <xref keyref="pdf"/>
         explains how to install it and what its options do.</p>
       <p>The PDF is written beside <filepath>print.html</filepath>, named after the map unless
-        <codeph>govuk.pdf.name</codeph> says otherwise. The plugin appends the print
-        document's path and the PDF's path to your command, so the command can carry options
-        of its own.</p>
+        <codeph>govuk.pdf.name</codeph> says otherwise. The build log says whether
+        DesignSystemPDF was found; <codeph>govuk.pdf=yes</codeph> makes a missing one stop the
+        build, and <codeph>govuk.pdf=no</codeph> leaves the PDF out even where it is
+        installed.</p>
     </section>
     <section id="link">
       <title>The link to the PDF</title>
@@ -336,7 +339,8 @@
       <title>Other formatters</title>
       <p><codeph>govuk.pdf.command</codeph> takes any formatter that implements CSS Paged
         Media, not only DesignSystemPDF: several are open source and several are commercial.
-        Give the command as you would type it, without the two file names:</p>
+        Give the command as you would type it, without the two file names, which the plugin
+        appends; it is then run in place of DesignSystemPDF:</p>
       <codeblock>dita --input=publication.ditamap --format=govuk --output=out \
      -Dgovuk.print=yes "-Dgovuk.pdf.command=weasyprint --quiet"</codeblock>
       <p>Page numbers in the contents, the index and cross-references come from rules in the
