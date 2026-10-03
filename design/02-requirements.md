@@ -121,7 +121,7 @@ requirements govern its behaviour.
 | NFR-I1 | All generated UI text (labels like "Contents", "Warning", "Search", "Menu") comes from DITA-OT string files, overridable and translatable; `@xml:lang` flows through to `lang` attributes | S | ✅ plugin strings via `dita.xsl.strings` (en-GB shipped, empty-lang fallback); JavaScript reads labels from page data attributes |
 | NFR-M1 | The plugin uses **only documented DITA-OT extension points** — no copied/patched toolkit internals — and CI builds a fixture publication against each supported DITA-OT minor release | M | ✅ CI runs a DITA-OT version matrix (#35), currently `[4.4.1]` — the only supported minor; new 4.x releases are a one-line addition |
 | NFR-M2 | The vendored govuk-frontend release is pinned and recorded; upgrades are deliberate changes validated by visual regression snapshots | M | ✅ CI captures full-page snapshots of the neutral and iStandUK sites as an artifact for review on a govuk-frontend bump (#35); pin, NOTICE and upgrade process already in place; the version is written once (`VERSION.txt`) and `tools/branding/upgrade.sh` makes an uplift (#162; 6.5.1 vendored) |
-| NFR-L1 | Licence Apache-2.0; vendored govuk-frontend (MIT) retained with its licence and attribution; release versioning is semver | M | ✅ v0.1.0 released |
+| NFR-L1 | Licence Apache-2.0; vendored govuk-frontend (MIT) retained with its licence and attribution; release versioning is semver | M | ✅ v0.1.0 released; v1.1.0 adds no licence to the plugin: DesignSystemPDF is a separate product (Apache-2.0 own code; LGPL-2.1 engine as unmodified jars with source; OFL fonts), joined only by the command (D-23) |
 
 ### Security (NFR-S) — [11](11-security.md)
 
