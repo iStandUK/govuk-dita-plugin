@@ -58,7 +58,11 @@ jobs:
             { echo "plugin=true"; echo "pdf=true"; } >> "$GITHUB_OUTPUT"; echo "full run: nothing to classify"; exit 0
           fi
           workflows=$(printf '%s\n' "$rest" | grep -E '^\.github/workflows/' || true)
-          pdf=$(printf '%s\n' "$rest" | grep -E '^designsystempdf/' || true)
+          # the PDFs are made from the plugin's print document, so what shapes it
+          # (the plugin, the manual and fixtures it is built from, the PDF/UA
+          # check) runs the generator's job too: a print.css change can break
+          # PDF/UA (#164)
+          pdf=$(printf '%s\n' "$rest" | grep -E '^(designsystempdf/|org\.istanduk\.gov-uk/|docs/manual/|fixtures/|tools/verapdf/)' || true)
           plugin=$(printf '%s\n' "$rest" | grep -Ev '^designsystempdf/' || true)
           if [ -n "$plugin" ]; then echo "plugin=true"; else echo "plugin=false"; fi >> "$GITHUB_OUTPUT"
           if [ -n "$pdf" ] || [ -n "$workflows" ]; then echo "pdf=true"; else echo "pdf=false"; fi >> "$GITHUB_OUTPUT"
@@ -995,6 +999,10 @@ jobs:
       # the toolkit that builds the print documents to render; as in the build job's matrix
       DITA_OT_VERSION: "4.4.1"
       DITA_OT_SHA256: "154414c1debb548e923bf77e9a09019e249a8887680ff4bfbd8e137de9e8e250"
+      # veraPDF's own command line, which checks every PDF the job makes (#164);
+      # the same version as the library the integration tests use (pom.xml)
+      VERAPDF_VERSION: "1.30.2"
+      VERAPDF_SHA256: "6cc6341cb1af644044054b81f00a6590a7918abb18f762243de115258bcad838"
     defaults:
       run:
         working-directory: designsystempdf
@@ -1197,6 +1205,88 @@ jobs:
           fi
           grep -q 'govuk.pdf=yes needs govuk.print=yes' /tmp/manual-auto-bad.log
 
+      # #164: every PDF this job makes, by any route, is checked with veraPDF's
+      # own command line, and its reports kept for review. The release is pinned
+      # by checksum and must be the version the integration tests use, so a
+      # Dependabot bump of the library is a prompt to move this pin with it.
+      - name: Cache veraPDF
+        id: cache-verapdf
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: verapdf-${{ env.VERAPDF_VERSION }}
+          key: verapdf-${{ env.VERAPDF_VERSION }}-${{ env.VERAPDF_SHA256 }}
+
+      - name: Install veraPDF
+        working-directory: .
+        run: |
+          pom=$(sed -n 's:.*<verapdf.version>\(.*\)</verapdf.version>.*:\1:p' designsystempdf/pom.xml)
+          test "$pom" = "$VERAPDF_VERSION" || { echo "pom.xml tests with veraPDF $pom but CI installs $VERAPDF_VERSION: move VERAPDF_VERSION and VERAPDF_SHA256 together"; exit 1; }
+          if [ ! -x "verapdf-${VERAPDF_VERSION}/verapdf" ]; then
+            minor=${VERAPDF_VERSION%.*}
+            curl -sSfL -o verapdf.zip "https://software.verapdf.org/releases/${minor}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
+            echo "${VERAPDF_SHA256}  verapdf.zip" | sha256sum -c -
+            unzip -q verapdf.zip -d /tmp/verapdf-installer
+            java "-DINSTALL_PATH=$PWD/verapdf-${VERAPDF_VERSION}" \
+              -jar "/tmp/verapdf-installer/verapdf-greenfield-${VERAPDF_VERSION}/verapdf-izpack-installer-${VERAPDF_VERSION}.jar" \
+              tools/verapdf/auto-install.xml
+            rm verapdf.zip
+          fi
+          "verapdf-${VERAPDF_VERSION}/verapdf" --version | head -1 | grep -qF "veraPDF ${VERAPDF_VERSION}"
+
+      - name: Every PDF the job made is PDF/UA-1 (#164)
+        working-directory: .
+        run: |
+          verapdf="$PWD/verapdf-${VERAPDF_VERSION}/verapdf"
+          mkdir -p pdf-ua-reports
+          {
+            echo "### PDF/UA-1 (veraPDF ${VERAPDF_VERSION})"
+            echo
+            echo "| PDF | Result |"
+            echo "|---|---|"
+          } > pdf-ua-reports/summary.md
+          failed=0; count=0
+          # the plugin's builds (govuk.pdf.command and govuk.pdf=auto), and the
+          # integration tests' renders of the sample and the print documents
+          while IFS= read -r pdf; do
+            name=$(printf '%s' "${pdf#./}" | tr '/' '_')
+            "$verapdf" --flavour ua1 --format html "$pdf" > "pdf-ua-reports/${name%.pdf}.html" || true
+            result=$("$verapdf" --flavour ua1 --format text -v "$pdf" || true)
+            printf '%s\n' "$result" > "pdf-ua-reports/${name%.pdf}.txt"
+            if printf '%s\n' "$result" | grep -q '^PASS '; then
+              echo "| \`${pdf#./}\` | pass |" >> pdf-ua-reports/summary.md
+            else
+              rules=$(printf '%s\n' "$result" | sed -n 's/^ \{1,\}FAIL \(.*\)/\1/p' | sort -u | paste -sd ' ' -)
+              echo "| \`${pdf#./}\` | **fail** ${rules} |" >> pdf-ua-reports/summary.md
+              echo "::error file=${pdf#./}::not PDF/UA-1 compliant: ${rules:-see the report}"
+              failed=$((failed + 1))
+            fi
+            count=$((count + 1))
+          done < <(find ./out/pdf ./designsystempdf/target/it -name '*.pdf' -not -path './out/pdf/pdf-ua-negative/*' | sort)
+          cat pdf-ua-reports/summary.md >> "$GITHUB_STEP_SUMMARY"
+          test "$count" -ge 7 || { echo "expected seven PDFs or more to check, found $count"; exit 1; }
+          test "$failed" = 0 || { echo "$failed of $count PDFs are not PDF/UA-1"; exit 1; }
+          echo "all $count PDFs are PDF/UA-1"
+
+      # ... and the check can fail: a publication with an image that has no
+      # alternative text is warned about, rendered, and rejected (#164)
+      - name: The PDF/UA check rejects an inaccessible PDF (#164)
+        working-directory: .
+        run: |
+          set -o pipefail
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
+          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/pdf-ua-negative/negative.ditamap --format govuk \
+            --output out/pdf/pdf-ua-negative -Dgovuk.print=yes -Dgovuk.search=no 2>&1 | tee /tmp/negative.log
+          grep -q '\[DSPDF009W\]: 1 image with no alternative text' /tmp/negative.log
+          pdf=out/pdf/pdf-ua-negative/negative.pdf
+          test -f "$pdf"
+          rc=0; "verapdf-${VERAPDF_VERSION}/verapdf" --flavour ua1 --format text -v "$pdf" > /tmp/negative-ua.txt || rc=$?
+          cat /tmp/negative-ua.txt
+          test "$rc" = 1 || { echo "veraPDF should exit 1 for a non-compliant PDF, was $rc"; exit 1; }
+          grep -q '^FAIL ' /tmp/negative-ua.txt
+          grep -q 'FAIL 7.3-1' /tmp/negative-ua.txt
+          echo "the inaccessible PDF was rejected"
+
       - name: Upload the distribution
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -1211,6 +1301,14 @@ jobs:
         with:
           name: designsystempdf-pdfs
           path: designsystempdf/target/it/*.pdf
+
+      - name: Upload the PDF/UA reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pdf-ua-reports
+          path: pdf-ua-reports/
+          if-no-files-found: ignore
 
   # One stable status for branch protection to require: passes only when every
   # job the change called for passed — each matrix leg of `build` (add DITA-OT
