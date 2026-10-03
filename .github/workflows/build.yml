@@ -87,6 +87,10 @@ jobs:
       DITA_OT_SHA256: ${{ matrix.dita-ot.sha256 }}
       # govuk-frontend GitHub release zip for the vendored version (VERSION.txt)
       GOVUK_FRONTEND_SHA256: "ac64b3abdb8af98624c8c0b8eabf78c894eb9da4d3b268544d0120f15abafc7a"
+      # the published DesignSystemPDF release a publisher installs, which the
+      # plugin must find and work with (#113, D-23); move it with each pdf-v* release
+      DSPDF_RELEASE: "0.1.0"
+      DSPDF_RELEASE_SHA256: "8e6702ca4b7632975d9477485693c6790872896c2e3fef00adab407054406842"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -525,6 +529,38 @@ jobs:
             fi
             grep -qF "$want" pdf-bad.log
           done
+
+      # The plugin with what a publisher installs: the published DesignSystemPDF
+      # release, fetched by checksum and put on the PATH. govuk.pdf=auto finds
+      # it, and the PDF it makes is linked and is PDF/UA-1 (#113, D-23). The
+      # generator job tests the generator in this tree; this tests the join
+      # against the release.
+      - name: Install veraPDF
+        uses: ./.github/actions/verapdf
+
+      - name: The plugin with the released DesignSystemPDF (#113)
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          curl -sSfL -o dspdf.zip \
+            "https://github.com/iStandUK/govuk-dita-plugin/releases/download/pdf-v${DSPDF_RELEASE}/designsystempdf-${DSPDF_RELEASE}.zip"
+          echo "${DSPDF_RELEASE_SHA256}  dspdf.zip" | sha256sum -c -
+          rm -rf /tmp/dspdf-release && unzip -q dspdf.zip -d /tmp/dspdf-release && rm dspdf.zip
+          export PATH="/tmp/dspdf-release/designsystempdf-${DSPDF_RELEASE}/bin:$PATH"
+          designsystempdf --version | grep -qx "DesignSystemPDF ${DSPDF_RELEASE}"
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
+            --output out/manual-dspdf-release -Dgovuk.print=yes -Dgovuk.search=no --verbose 2>&1 | tee dspdf-release.log > /dev/null
+          grep -q 'govuk: PDF enabled (DesignSystemPDF found: designsystempdf)' dspdf-release.log
+          absent -Eq 'GOVK008W|DSPDF' dspdf-release.log
+          pdf=out/manual-dspdf-release/manual.pdf
+          test -f "$pdf"
+          grep -q 'href="manual.pdf">Whole publication (PDF, ' out/manual-dspdf-release/index.html
+          for i in 1 2 3; do
+            verapdf --flavour ua1 --format text "$pdf" > dspdf-release-ua.txt || true
+            grep -Eq '^(PASS|FAIL) ' dspdf-release-ua.txt && break
+          done
+          grep -q '^PASS ' dspdf-release-ua.txt || { cat dspdf-release-ua.txt; echo "the manual made with DesignSystemPDF ${DSPDF_RELEASE} is not PDF/UA-1"; exit 1; }
+          echo "plugin and DesignSystemPDF ${DSPDF_RELEASE}: the manual's PDF is made, linked and PDF/UA-1"
 
       # Content reaching readers (epic #77: #78 #79 #80 #81 #82 #59 #60 #61). Every
       # behaviour is a publisher parameter; every finding is a warning, never an error.
