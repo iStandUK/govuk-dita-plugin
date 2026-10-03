@@ -68,6 +68,31 @@ class RenderIT {
     Path pdf = output.resolve("sample.pdf");
     assertEquals("", render(sample, pdf));
     assertEquals(List.of(), failures(pdf));
+    assertEquals(List.of(), PdfStructure.problems(sample, pdf), "the PDF says what the print document says");
+  }
+
+  /** The structure check is not a formality: a source that says something else is told apart (#164). */
+  @Test
+  void theStructureCheckNoticesADifference() throws Exception {
+    Path sample = output.resolve("sample-print.html");
+    try (InputStream is = RenderIT.class.getResourceAsStream("sample-print.html")) {
+      Files.write(sample, is.readAllBytes());
+    }
+    Path pdf = output.resolve("sample-structure.pdf");
+    render(sample, pdf);
+    String html = Files.readString(sample, StandardCharsets.UTF_8);
+    // one heading a level deeper, one figure described differently, the document in another language
+    String other = html.replaceFirst("<h4", "<h5").replaceFirst("</h4>", "</h5>")
+        .replaceFirst("aria-label=\"[^\"]+\"", "aria-label=\"Something else\"")
+        .replaceFirst("lang=\"en-GB\"", "lang=\"cy\"");
+    Path changed = output.resolve("sample-changed.html");
+    Files.writeString(changed, other, StandardCharsets.UTF_8);
+    List<String> problems = PdfStructure.problems(changed, pdf);
+    assertTrue(problems.stream().anyMatch(p -> p.startsWith("the headings")), problems.toString());
+    assertTrue(problems.stream().anyMatch(p -> p.startsWith("the figures' alternative text")), problems.toString());
+    assertTrue(problems.stream().anyMatch(p -> p.startsWith("the document's language")), problems.toString());
+    Files.delete(changed);
+    Files.delete(pdf);
   }
 
   @TestFactory
@@ -89,6 +114,7 @@ class RenderIT {
           System.out.println(name + ": " + pdf.getNumberOfPages() + " pages");
         }
         assertEquals(List.of(), failures(first), "veraPDF PDF/UA-1" + (warnings.isEmpty() ? "" : "; the generator warned: " + warnings));
+        assertEquals(List.of(), PdfStructure.problems(document, first), "the PDF says what the print document says");
       }));
     }
     return tests;
