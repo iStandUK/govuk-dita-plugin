@@ -212,6 +212,14 @@ by the CI checks.
 `resource/govuk-frontend/VERSION.txt`/`NOTICE.md` and the `$govuk-frontend-version` XSLT
 variable. Upgrades follow the NFR-M2 process (deliberate change, fixture rebuild, checks).
 
+**Update, October 2026 (#162):** the policy is to keep in step with govuk-frontend, release
+by release, and the vendored release is now **6.5.1**. So that an uplift is cheap, the
+version is written once, in `VERSION.txt`: the stylesheets and the CI assertions read it from
+there, and `tools/branding/upgrade.sh <version>` fetches a release, swaps the vendored files,
+records the checksum CI holds it to and recompiles the NHS stylesheet. Dependabot's pull
+request for govuk-frontend is the prompt; it cannot pass until the uplift is made. The
+snapshot review and the CI checks of NFR-M2 stand.
+
 ---
 
 ## D-13 · Landing-page layouts: auto-selected by map shape, publisher-overridable

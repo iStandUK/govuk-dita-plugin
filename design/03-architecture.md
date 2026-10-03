@@ -74,7 +74,7 @@ org.istanduk.gov-uk/
 │   └── utility-pages.xsl      # glossary + index harvest and A–Z pages (FR-G, FR-X)
 │   └── search.xsl             # Pagefind attributes from DITA semantics (FR-S5, #54)
 ├── resource/
-│   ├── govuk-frontend/        # vendored v6.5.0 compiled CSS/JS + maps, VERSION,
+│   ├── govuk-frontend/        # vendored compiled CSS/JS + maps, VERSION,
 │   │                          #   LICENSE, NOTICE — no fonts or crown imagery;
 │   │                          #   + NHS-palette recompile (-nhs.min.css, tools/branding)
 │   ├── css/
@@ -234,7 +234,7 @@ request (`govuk.branding`, D-14, D-17). All four modes render the same GOV.UK De
 component markup; they differ in three places only:
 
 1. **Base stylesheet** — neutral, iStandUK and official load the unmodified vendored
-   `govuk-frontend` dist; NHS loads `govuk-frontend-6.5.0-nhs.min.css`, the same release
+   `govuk-frontend` dist; NHS loads `govuk-frontend-<version>-nhs.min.css`, the same release
    recompiled from its Sass against the NHS palette at vendor time by `tools/branding` and
    committed (builds stay Node-free, D-12; CI rebuilds it and fails on drift).
 2. **Overlay stylesheet** — one small overlay per mode loads after the base:

@@ -141,7 +141,7 @@ variant was scoped.
 ## Licence
 
 [Apache-2.0](LICENSE). The plugin vendors
-[govuk-frontend](https://github.com/alphagov/govuk-frontend) v6.5.0 (MIT, © Crown Copyright,
+[govuk-frontend](https://github.com/alphagov/govuk-frontend) (MIT, © Crown Copyright,
 Government Digital Service) with its licence and attribution retained, together with an
 NHS-palette recompile of the same release built from its Sass at vendor time
 ([tools/branding](tools/branding)); see the vendored
