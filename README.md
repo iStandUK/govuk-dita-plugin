@@ -3,8 +3,16 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: v1.1.0 — released** —
-[v1.1.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.1.0) brings
+**Status: v1.2.0 — released** —
+[v1.2.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.2.0) prints **several
+books from one map**: a print document and PDF for each bookmap a map references, and for each
+part of a bookmap with `govuk.print.books=parts`, beside the whole (#178). It can print **the
+topics the navigation links to** as well as the navigation, so a reference work whose entries
+are reached from index pages prints whole (`govuk.print.scope=linked`, #176). It warns about a
+misspelt `govuk.*` parameter (#174), and builds from DITA-OT project files (#179). With it,
+[DesignSystemPDF `pdf-v0.1.1`](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/pdf-v0.1.1)
+renders publications of ten thousand pages and more, which 0.1.0 could fail on (#182).
+[v1.1.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.1.0) brought
 **page-numbered, accessible PDFs with Java alone**: install **DesignSystemPDF**
 ([`pdf-v0.1.0`](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/pdf-v0.1.0), the
 companion generator in [`designsystempdf/`](designsystempdf/README.md), D-23) and the build finds
@@ -38,7 +46,7 @@ dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 
 (The first command resolves the name through the DITA-OT plugin registry; a release zip URL —
-`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.1.0/org.istanduk.gov-uk-1.1.0.zip`
+`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.2.0/org.istanduk.gov-uk-1.2.0.zip`
 — works in the same place for an offline or pinned install.)
 
 Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. Optionally,
