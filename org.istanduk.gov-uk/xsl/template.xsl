@@ -261,6 +261,7 @@ element-level typography.
       </div>
       <xsl:call-template name="govuk-site-footer">
         <xsl:with-param name="prefix" select="$govuk-root"/>
+        <xsl:with-param name="book-marker" select="true()"/>
         <xsl:with-param name="name" select="$govuk-service-name"/>
         <xsl:with-param name="glossary" select="$GOVUK-GLOSSARY"/>
         <xsl:with-param name="index" select="$GOVUK-INDEX"/>

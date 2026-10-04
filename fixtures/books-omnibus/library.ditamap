@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- A map of two bookmaps (#178): one site, the whole set in print.html,
+     and each bookmap in a print document and PDF of its own. -->
+<map id="library" xml:lang="en-GB">
+  <title>The library</title>
+  <mapref href="alpha/alpha.ditamap"/>
+  <mapref href="beta/beta.ditamap"/>
+</map>

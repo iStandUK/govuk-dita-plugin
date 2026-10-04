@@ -232,6 +232,16 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <!-- What the print document holds (#176): the navigation, or the
          navigation and every topic its topics link to -->
     <property name="govuk.print.scope" value="navigation"/>
+    <!-- Several books from one map (#178): a map's referenced bookmaps are
+         always printed each on its own as well; a bookmap's parts are when
+         this says 'parts' -->
+    <property name="govuk.print.books" value="whole"/>
+    <fail message="govuk.print.books must be 'whole' or 'parts', was: ${govuk.print.books}">
+      <condition><not><or>
+        <equals arg1="${govuk.print.books}" arg2="whole"/>
+        <equals arg1="${govuk.print.books}" arg2="parts"/>
+      </or></not></condition>
+    </fail>
     <fail message="govuk.print.scope must be 'navigation' or 'linked', was: ${govuk.print.scope}">
       <condition><not><or>
         <equals arg1="${govuk.print.scope}" arg2="navigation"/>
@@ -508,7 +518,47 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
   <!-- govuk.pdf comes before the search index: it finishes the pages (the
        PDF link, #146), and the indexer should read finished pages -->
   <target name="dita2govuk"
-          depends="dita2govuk.init, dita2html5, govuk.cover, govuk.print, govuk.copy-assets, govuk.pdf, govuk.search-index"/>
+          depends="dita2govuk.init, dita2html5, govuk.books, govuk.cover, govuk.print, govuk.copy-assets, govuk.pdf, govuk.books.finish, govuk.search-index"/>
+
+  <!-- Several books from one map (#178): books.xsl finds them in the merged
+       map and, when there are any, writes beside it a bookmap of each book,
+       its list of pages, a list of the books for the home page, and an Ant
+       file with a step per book for govuk.books.finish -->
+  <target name="govuk.books" if="govuk.print.on"
+          description="Find the books in the map: referenced bookmaps, or parts (govuk.print.books)">
+    <condition property="govuk.site.dir" value="${dita.output.dir}" else="${_dita.map.output.dir}">
+      <isset property="inner.transform"/>
+    </condition>
+    <dirname property="govuk.books.dir" file="${dita.temp.dir}/${user.input.file}"/>
+    <delete quiet="true">
+      <fileset dir="${govuk.books.dir}" includes="govuk-book-*,govuk-books.xml,govuk-books-build.xml"/>
+    </delete>
+    <condition property="govuk.books.pdf.base" value="${govuk.pdf.name}" else="">
+      <isset property="govuk.pdf.on"/>
+    </condition>
+    <xslt in="${dita.temp.dir}/${user.input.file}" out="${govuk.books.dir}/govuk-books.xml" force="true"
+          style="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/books.xsl">
+      <param name="GOVUK-PRINT-BOOKS" expression="${govuk.print.books}"/>
+      <param name="OUTEXT" expression="${out.ext}" if:set="out.ext"/>
+      <param name="GOVUK-PDF-BASE" expression="${govuk.books.pdf.base}"/>
+      <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}"/>
+      <xmlcatalog refid="dita.catalog"/>
+    </xslt>
+    <available property="govuk.books.on" file="${govuk.books.dir}/govuk-books-build.xml" type="file"/>
+    <makeurl property="govuk.books.url" file="${govuk.books.dir}/govuk-books.xml"/>
+  </target>
+
+  <!-- Each book's PDF and links (#178): the step per book books.xsl wrote,
+       with every property passed on; then any page in no book, or in a book
+       whose print document was not written, loses its marker -->
+  <target name="govuk.books.finish" if="govuk.print.on" depends="govuk.copy-assets"
+          description="Render each book's PDF and link each book from its pages">
+    <ant if:set="govuk.books.on" antfile="${govuk.books.dir}/govuk-books-build.xml" dir="${govuk.books.dir}"
+         target="books" inheritall="true" inheritrefs="false"/>
+    <replaceregexp encoding="UTF-8" flags="g" match="\s*&lt;!--govuk-book:[./]*--&gt;" replace="">
+      <fileset dir="${govuk.site.dir}" includes="**/*${out.ext}"/>
+    </replaceregexp>
+  </target>
 
   <target name="govuk.cover"
           description="Generate the GOV.UK home page and search page from the map">
@@ -528,6 +578,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-PRINT" expression="${govuk.print}"/>
       <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}"/>
       <param name="GOVUK-PDF-NAME" expression="${govuk.pdf.name}.pdf" if:set="govuk.pdf.on"/>
+      <param name="GOVUK-BOOKS" expression="${govuk.books.url}" if:set="govuk.books.on"/>
       <param name="GOVUK-CSP" expression="${govuk.csp}"/>
       <param name="GOVUK-SITEMAP" expression="${govuk.sitemap.enabled}"/>
       <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
@@ -584,9 +635,41 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
         <xmlcatalog refid="dita.catalog"/>
       </xslt>
     </pipeline>
+    <!-- Each book's print document (#178): the same transform over each
+         book's own bookmap, print-ID.html beside print.html. The parameters
+         are the ones above, less the job's own. -->
+    <xslt if:set="govuk.books.on" basedir="${govuk.books.dir}" includes="govuk-book-*.ditamap"
+          destdir="${govuk.print.output.dir}" force="true"
+          style="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/map2govuk-print.xsl">
+      <param name="FILTERFILE" expression="${dita.input.valfile.url}" if:set="dita.input.valfile"/>
+      <param name="OUTEXT" expression="${out.ext}" if:set="out.ext"/>
+      <param name="CSS" expression="${args.css.file}" if:set="args.css.file"/>
+      <param name="CSSPATH" expression="${user.csspath}" if:set="user.csspath"/>
+      <param name="GOVUK-SERVICE-NAME" expression="${govuk.service.name}" if:set="govuk.service.name"/>
+      <param name="GOVUK-SEARCH" expression="${govuk.search.enabled}"/>
+      <param name="GOVUK-BRANDING" expression="${govuk.branding}"/>
+      <param name="GOVUK-PHASE" expression="${govuk.phase}" if:set="govuk.phase"/>
+      <param name="GOVUK-FOOTER-LICENCE" expression="${govuk.footer.licence}" if:set="govuk.footer.licence"/>
+      <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
+      <param name="GOVUK-FAVICON" expression="${govuk.favicon.name}" if:set="govuk.favicon"/>
+      <param name="GOVUK-SVG-INLINE" expression="${govuk.svg.inline}"/>
+      <param name="GOVUK-PRINT" expression="${govuk.print}"/>
+      <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}"/>
+      <param name="GOVUK-PRINT-TOC-DEPTH" expression="${govuk.print.toc.depth}"/>
+      <param name="GOVUK-PRINT-SCOPE" expression="${govuk.print.scope}"/>
+      <param name="GOVUK-SVG-SANITIZE" expression="${govuk.svg.sanitize}"/>
+      <param name="GOVUK-INLINE-SCOPE" expression="${govuk.inline.scope}"/>
+      <param name="GOVUK-INPUT-DIR" expression="${govuk.input.dir.url}"/>
+      <param name="GOVUK-CONTENT-WARNINGS" expression="${govuk.content.warnings}"/>
+      <param name="GOVUK-CONTENT-POLICY" expression="${govuk.content.policy}"/>
+      <param name="GOVUK-CSP" expression="${govuk.csp}"/>
+      <param name="GOVUK-DATES" expression="${govuk.dates}"/>
+      <mapper type="regexp" from="^govuk-book-(.*)\.ditamap$" to="print-\1.html"/>
+      <xmlcatalog refid="dita.catalog"/>
+    </xslt>
     <!-- Above govuk.print.max-topics the transform writes nothing (GOVK003W) -->
     <delete>
-      <fileset dir="${govuk.print.output.dir}" includes="print.html">
+      <fileset dir="${govuk.print.output.dir}" includes="print.html,print-*.html">
         <size value="0" when="equal"/>
       </fileset>
     </delete>

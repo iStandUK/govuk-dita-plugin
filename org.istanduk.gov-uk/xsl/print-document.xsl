@@ -46,6 +46,11 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
     </xsl:for-each>
   </xsl:variable>
 
+  <!-- A book of several (#178) is printed without the glossary and index
+       parts: they belong to the whole publication. books.xsl marks a book's
+       map with govuk-book. -->
+  <xsl:variable name="govuk-print-parts" as="xs:boolean" select="not(/*/@govuk-book)"/>
+
   <xsl:variable name="govuk-print-max" as="xs:integer"
                 select="if ($GOVUK-PRINT-MAX-TOPICS castable as xs:integer)
                         then xs:integer($GOVUK-PRINT-MAX-TOPICS)
@@ -586,7 +591,7 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
         <xsl:with-param name="refs" select="$govuk-norm-map/*[contains(@class, ' map/topicref ')]"/>
         <xsl:with-param name="level" select="1"/>
       </xsl:call-template>
-      <xsl:if test="exists($govuk-gloss) or exists($govuk-ix)">
+      <xsl:if test="$govuk-print-parts and (exists($govuk-gloss) or exists($govuk-ix))">
         <ol class="govuk-list app-print-contents__list">
           <xsl:if test="exists($govuk-gloss)">
             <li><a class="govuk-link" href="#app-print-glossary">
@@ -820,7 +825,7 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
   <!-- ===== Glossary and index parts ===== -->
 
   <xsl:template name="govuk-print-glossary">
-    <xsl:if test="exists($govuk-gloss)">
+    <xsl:if test="$govuk-print-parts and exists($govuk-gloss)">
       <section class="app-print-part app-print-chapter" id="app-print-glossary">
         <h2 class="govuk-heading-l">
           <xsl:call-template name="getVariable">
@@ -839,7 +844,7 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
   </xsl:template>
 
   <xsl:template name="govuk-print-index">
-    <xsl:if test="exists($govuk-ix)">
+    <xsl:if test="$govuk-print-parts and exists($govuk-ix)">
       <section class="app-print-part app-print-chapter" id="app-print-index">
         <h2 class="govuk-heading-l">
           <xsl:call-template name="getVariable">
