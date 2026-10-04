@@ -391,6 +391,37 @@ jobs:
           grep -qF '[GOVK009W]: govuk.xyzzy is not a parameter of this plugin, so it was ignored' misspelt.log
           absent -q '\[GOVK009W\]: govuk\.print ' misspelt.log
           test -f out/manual-print-misspelt/print.html
+          # #176: govuk.print.scope. The fixture's navigation is an index and an
+          # introduction; its items are reached only by key and link.
+          heads() { grep -oE '<h[2-6][^>]*>[^<]*' "$1" | sed -E 's/<(h[2-6])[^>]*>/\1 /' | paste -sd '|' -; }
+          scope() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-scope/scope.ditamap \
+            --format govuk --output "out/print-scope-$1" -Dgovuk.print=yes -Dgovuk.search=no "${@:2}" 2>&1 | tee "scope-$1.log"; }
+          # navigation (the default): only the navigation, and links to items go to the site
+          scope navigation
+          test "$(heads out/print-scope-navigation/print.html)" = "h2 Contents|h2 Index of items|h2 Introduction"
+          grep -q 'href="items/item-a.html"' out/print-scope-navigation/print.html
+          # linked: each item beneath the topic that first links to it, the second
+          # round beneath item A, item D (linked from nowhere) left out, and the
+          # links now within the document, in the contents list too
+          scope linked -Dgovuk.print.scope=linked
+          test "$(heads out/print-scope-linked/print.html)" = "h2 Contents|h2 Index of items|h3 Item A|h4 Item C|h3 Item B|h2 Introduction" \
+            || { echo "linked order: $(heads out/print-scope-linked/print.html)"; exit 1; }
+          absent -q 'Item D' out/print-scope-linked/print.html
+          absent -q 'href="items/item-' out/print-scope-linked/print.html
+          grep -q 'href="#item-c"' out/print-scope-linked/print.html
+          sed -n '/app-print-contents/,/<\/nav>/p' out/print-scope-linked/print.html | grep -q '>Item C</a>'
+          absent -q 'GOVK010W' scope-linked.log
+          # above the ceiling, linked keeps to the navigation and says so
+          scope ceiling -Dgovuk.print.scope=linked -Dgovuk.print.max-topics=3
+          grep -qF '[GOVK010W]: govuk.print.scope=linked would print 5 topic files, above govuk.print.max-topics=3, so the print document holds the 2 topic files in the navigation only.' scope-ceiling.log
+          test "$(heads out/print-scope-ceiling/print.html)" = "h2 Contents|h2 Index of items|h2 Introduction"
+          grep -q 'href="print.html"' out/print-scope-ceiling/index.html
+          # a scope the plugin does not have stops the build
+          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-scope/scope.ditamap --format govuk \
+               --output out/print-scope-bad -Dgovuk.print=yes -Dgovuk.print.scope=everything > scope-bad.log 2>&1; then
+            echo "govuk.print.scope=everything should have failed the build"; exit 1
+          fi
+          grep -qF "govuk.print.scope must be 'navigation' or 'linked'" scope-bad.log
 
       # The print document's cover (#150): publication details and an imprint
       # from the map's metadata and the publisher's parameters — every line
@@ -1287,6 +1318,10 @@ jobs:
           dita --input docs/manual/manual.ditamap --output out/pdf/manual-a5 \
             -Dgovuk.pdf.paper=A5 -Dgovuk.pdf.orientation=landscape -Dgovuk.print.toc.depth=1 2>&1 | tee /tmp/manual-a5.log > /dev/null
           made out/pdf/manual-a5 manual /tmp/manual-a5.log
+          # the linked topics printed beneath the ones that link to them (#176)
+          dita --input fixtures/print-scope/scope.ditamap --output out/pdf/print-scope-linked \
+            -Dgovuk.print.scope=linked 2>&1 | tee /tmp/print-scope-linked.log > /dev/null
+          made out/pdf/print-scope-linked scope /tmp/print-scope-linked.log
           echo "made the PDF in three brandings, with a publisher stylesheet, and with the generator's options"
 
       # #164: every PDF this job makes, by any route, is checked with veraPDF's

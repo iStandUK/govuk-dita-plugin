@@ -142,6 +142,16 @@
                 none.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.print.scope</codeph></entry>
+              <entry><codeph>navigation</codeph> (default), <codeph>linked</codeph></entry>
+              <entry>What the print document, and so the PDF, holds: the topics in the map's
+                navigation, or those and every local topic their links reach, each placed
+                beneath the topic that first links to it. Above
+                <codeph>govuk.print.max-topics</codeph>, <codeph>linked</codeph> keeps to
+                the navigation and warns (<codeph>GOVK010W</codeph>). See
+                <xref keyref="print"/>.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.print.toc.depth</codeph></entry>
               <entry>1–9; default <codeph>3</codeph></entry>
               <entry>How many map levels the print document's contents list shows.</entry>

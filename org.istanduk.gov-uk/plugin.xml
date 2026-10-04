@@ -127,6 +127,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <param name="govuk.print.max-topics"
            desc="Largest publication (distinct topic files) for which the print document is written; above it the build warns (GOVK003W) and writes none, so no PDF is made either. Default 500."
            type="string"/>
+    <param name="govuk.print.scope"
+           desc="What the print document (and so the PDF) holds. 'navigation' (default): the topics in the map's navigation; links to anything else go to the website. 'linked': those, and every local topic their links reach, each placed beneath the topic that first links to it, so a reference work whose items are reached only from index pages prints whole. Above govuk.print.max-topics the print document keeps to the navigation and the build says so (GOVK010W)."
+           type="enum">
+      <val default="true">navigation</val>
+      <val>linked</val>
+    </param>
     <param name="govuk.print.toc.depth"
            desc="How many map levels the print document's contents list shows. 1-9; default 3."
            type="string"/>

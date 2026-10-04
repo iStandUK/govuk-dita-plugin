@@ -8,7 +8,8 @@ publication, print.html beside the cover, written by the govuk.print Ant
 target through map2govuk-print.xsl when govuk.print=yes. It holds a cover
 block, a hyperlinked contents list, every navigable topic in map reading order
 with headings demoted by map depth, per-topic endnotes, and the glossary and
-index as final parts. Every id the site uses is preserved, so cross-references
+index as final parts. With govuk.print.scope=linked (#176) it also holds every
+local topic those topics link to, each beneath the topic that first links to it. Every id the site uses is preserved, so cross-references
 between topics become in-document anchors.
 
 Each topic is rendered by the same html5 and plugin templates as its site page
@@ -52,6 +53,10 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
 
   <!-- ===== The plan: which files render, in reading order ===== -->
 
+  <!-- What the document holds (#176): 'navigation', the topics in the map's
+       navigation; or 'linked', those and every local topic their links reach -->
+  <xsl:param name="GOVUK-PRINT-SCOPE" select="'navigation'"/>
+
   <!-- Every topicref that contributes a topic (furniture.xsl), then one entry
        per distinct file at its first reference. A chunked file's later
        references (item.dita#child) contribute nothing of their own: their
@@ -61,41 +66,53 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
   <xsl:variable name="govuk-print-count" as="xs:integer"
                 select="govuk:print-topic-count($govuk-norm-map)"/>
 
+  <xsl:variable name="govuk-print-nav" as="element(govuk:entry)*">
+    <xsl:for-each-group select="$govuk-print-refs" group-by="govuk:print-file(.)">
+      <xsl:sequence select="govuk:print-load(current-grouping-key(), generate-id(.), '')"/>
+    </xsl:for-each-group>
+  </xsl:variable>
+
+  <!-- With scope 'linked', the topics the navigation's topics link to, in
+       rounds: first those the navigation links to, each claimed by the topic
+       that links to it first, then those only the topics of the round before
+       link to, until no new topic is reached. A topic is placed beneath the
+       one that claimed it. Nothing is gathered when the navigation alone is
+       above the ceiling, for then there is no document. -->
+  <xsl:variable name="govuk-print-reached" as="element(govuk:entry)*"
+                select="if ($GOVUK-PRINT-SCOPE = 'linked' and $GOVUK-PRINT = 'yes'
+                            and $govuk-print-count le $govuk-print-max)
+                        then govuk:print-linked($govuk-print-nav,
+                               map:merge(for $f in ($govuk-print-nav/@file,
+                                                    $govuk-print-refs/replace(string(@href), '#.*$', ''))
+                                         return map:entry(string($f), true()),
+                                         map{'duplicates': 'use-first'}))
+                        else ()"/>
+  <!-- ... and they are printed only when the whole fits within the ceiling;
+       otherwise the document keeps to the navigation (GOVK010W), so no page
+       links a print document that was not written -->
+  <xsl:variable name="govuk-print-linked-fits" as="xs:boolean"
+                select="$govuk-print-count + count($govuk-print-reached) le $govuk-print-max"/>
+  <xsl:variable name="govuk-print-linked" as="element(govuk:entry)*"
+                select="if ($govuk-print-linked-fits) then $govuk-print-reached else ()"/>
+
+  <!-- Second pass: the generated-id scope for every file, and a prefix for
+       every id of a file that would otherwise collide with one already
+       placed (#121). Topic ids need only be unique within their own file:
+       copy-to and chunk repeat root ids, and nested topics repeat ids across
+       files whenever two topics share a heading — Markdown headings become
+       nested topics named after the heading, so "About" and "Benefits" recur
+       across a corpus. Element ids inside a topic are already prefixed with
+       their topic's id by the html5 base, so the topic ids are the whole of
+       the problem. Links into a prefixed file are rewritten to match. The ids
+       placed so far are carried as a map, so a publication of thousands of
+       topics costs one pass, not one per topic. -->
   <xsl:variable name="govuk-print-plan" as="element(govuk:entry)*">
-    <xsl:variable name="first" as="element()*">
-      <xsl:for-each-group select="$govuk-print-refs" group-by="govuk:print-file(.)">
-        <xsl:sequence select="."/>
-      </xsl:for-each-group>
-    </xsl:variable>
-    <xsl:variable name="loaded" as="element(govuk:entry)*">
-      <xsl:for-each select="$first">
-        <xsl:variable name="file" select="govuk:print-file(.)"/>
-        <xsl:variable name="uri" select="resolve-uri($file, $govuk-map-base)"/>
-        <xsl:if test="doc-available($uri)">
-          <govuk:entry ref="{generate-id(.)}" file="{$file}" uri="{$uri}"
-                       page="{govuk:print-page($file)}"
-                       dir="{if (contains($file, '/')) then replace($file, '/[^/]*$', '/') else ''}"
-                       root="{string((doc($uri)//*[contains(@class, ' topic/topic ')])[1]/@id)}"
-                       ids="{string-join(doc($uri)//*[contains(@class, ' topic/topic ')]/@id, ' ')}"/>
-        </xsl:if>
-      </xsl:for-each>
-    </xsl:variable>
-    <!-- Second pass: the generated-id scope for every file, and a prefix for
-         every id of a file that would otherwise collide with one already
-         placed (#121). Topic ids need only be unique within their own file:
-         copy-to and chunk repeat root ids, and nested topics repeat ids across
-         files whenever two topics share a heading — Markdown headings become
-         nested topics named after the heading, so "About" and "Benefits" recur
-         across a corpus. Element ids inside a topic are already prefixed with
-         their topic's id by the html5 base, so the topic ids are the whole of
-         the problem. Links into a prefixed file are rewritten to match. -->
-    <xsl:for-each select="$loaded">
+    <xsl:iterate select="($govuk-print-nav, $govuk-print-linked)">
+      <xsl:param name="placed" as="map(xs:string, xs:boolean)" select="map{}"/>
       <xsl:variable name="n" select="position()"/>
       <xsl:variable name="mine" as="xs:string*" select="tokenize(@ids, ' ')[. ne '']"/>
-      <xsl:variable name="placed" as="xs:string*"
-                    select="for $e in $loaded[position() lt $n] return tokenize($e/@ids, ' ')[. ne '']"/>
       <xsl:variable name="dup" as="xs:string"
-                    select="if (@root = '' or (some $i in $mine satisfies $i = $placed))
+                    select="if (@root = '' or (some $i in $mine satisfies map:contains($placed, $i)))
                             then concat('p', $n, '-') else ''"/>
       <xsl:copy>
         <xsl:copy-of select="@*"/>
@@ -104,13 +121,86 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
         <xsl:attribute name="anchor"
                        select="if (@root ne '') then concat($dup, @root) else concat('app-print-topic-', $n)"/>
       </xsl:copy>
-    </xsl:for-each>
+      <xsl:next-iteration>
+        <xsl:with-param name="placed"
+                        select="map:merge(($placed, for $i in $mine return map:entry($i, true())),
+                                          map{'duplicates': 'use-first'})"/>
+      </xsl:next-iteration>
+    </xsl:iterate>
   </xsl:variable>
 
   <xsl:variable name="govuk-print-by-ref" as="map(xs:string, element(govuk:entry))"
-                select="map:merge(for $e in $govuk-print-plan return map:entry(string($e/@ref), $e))"/>
+                select="map:merge(for $e in $govuk-print-plan[@ref ne ''] return map:entry(string($e/@ref), $e))"/>
   <xsl:variable name="govuk-print-by-page" as="map(xs:string, element(govuk:entry))"
-                select="map:merge(for $e in $govuk-print-plan return map:entry(string($e/@page), $e))"/>
+                select="map:merge(for $e in $govuk-print-plan return map:entry(string($e/@page), $e),
+                                  map{'duplicates': 'use-first'})"/>
+  <!-- the linked topics placed beneath each file, in the order they were claimed -->
+  <xsl:variable name="govuk-print-beneath" as="map(xs:string, element(govuk:entry)*)">
+    <xsl:map>
+      <xsl:for-each-group select="$govuk-print-plan[@parent ne '']" group-by="string(@parent)">
+        <xsl:map-entry key="current-grouping-key()" select="current-group()"/>
+      </xsl:for-each-group>
+    </xsl:map>
+  </xsl:variable>
+
+  <!-- One file's entry, when the file is there to read -->
+  <xsl:function name="govuk:print-load" as="element(govuk:entry)?">
+    <xsl:param name="file" as="xs:string"/>
+    <xsl:param name="ref" as="xs:string"/>
+    <xsl:param name="parent" as="xs:string"/>
+    <xsl:variable name="uri" select="resolve-uri($file, $govuk-map-base)"/>
+    <xsl:if test="doc-available($uri)">
+      <govuk:entry ref="{$ref}" file="{$file}" uri="{$uri}"
+                   page="{govuk:print-page($file)}"
+                   dir="{if (contains($file, '/')) then replace($file, '/[^/]*$', '/') else ''}"
+                   root="{string((doc($uri)//*[contains(@class, ' topic/topic ')])[1]/@id)}"
+                   ids="{string-join(doc($uri)//*[contains(@class, ' topic/topic ')]/@id, ' ')}"
+                   parent="{$parent}"/>
+    </xsl:if>
+  </xsl:function>
+
+  <!-- The local DITA topics a file's cross-references point to, relative to
+       the map, in the order they are first referred to. Related-link lists
+       are not printed, so they are not followed. -->
+  <xsl:function name="govuk:print-links-of" as="xs:string*">
+    <xsl:param name="entry" as="element(govuk:entry)"/>
+    <xsl:sequence select="distinct-values(
+                            for $x in doc($entry/@uri)//*[contains(@class, ' topic/xref ')]
+                                        [not(ancestor::*[contains(@class, ' topic/related-links ')])]
+                                        [not(@scope = ('external', 'peer'))]
+                                        [not(@format) or @format = ('dita', 'xml')]
+                            return (let $href := replace(normalize-space($x/@href), '#.*$', '')
+                                    return if ($href = '' or matches($href, '^([a-zA-Z][a-zA-Z0-9+.-]*:|//|/)')
+                                               or not(matches($href, '\.(dita|xml)$', 'i')))
+                                           then ()
+                                           else govuk:print-normalize(concat($entry/@dir, $href))))"/>
+  </xsl:function>
+
+  <!-- One round of claims, then the next from what it claimed -->
+  <xsl:function name="govuk:print-linked" as="element(govuk:entry)*">
+    <xsl:param name="frontier" as="element(govuk:entry)*"/>
+    <xsl:param name="known" as="map(xs:string, xs:boolean)"/>
+    <xsl:if test="exists($frontier)">
+      <xsl:variable name="claimed" as="element(govuk:entry)*">
+        <xsl:iterate select="$frontier">
+          <xsl:param name="seen" as="map(xs:string, xs:boolean)" select="$known"/>
+          <xsl:variable name="from" select="."/>
+          <xsl:variable name="links" as="xs:string*" select="govuk:print-links-of($from)"/>
+          <xsl:sequence select="for $f in $links[not(map:contains($seen, .))]
+                                return govuk:print-load($f, '', string($from/@file))"/>
+          <xsl:next-iteration>
+            <xsl:with-param name="seen"
+                            select="map:merge(($seen, for $f in $links return map:entry($f, true())),
+                                              map{'duplicates': 'use-first'})"/>
+          </xsl:next-iteration>
+        </xsl:iterate>
+      </xsl:variable>
+      <xsl:sequence select="$claimed,
+                            govuk:print-linked($claimed,
+                              map:merge(($known, for $f in $frontier ! govuk:print-links-of(.) return map:entry($f, true())),
+                                        map{'duplicates': 'use-first'}))"/>
+    </xsl:if>
+  </xsl:function>
 
   <!-- The glossary and index parts: no directory, nothing to scope, but their
        links into topics still become in-document anchors -->
@@ -203,6 +293,12 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
       </xsl:when>
       <xsl:when test="$govuk-print-count eq 0"/>
       <xsl:otherwise>
+        <xsl:if test="not($govuk-print-linked-fits)">
+          <xsl:call-template name="output-message">
+            <xsl:with-param name="id" select="'GOVK010W'"/>
+            <xsl:with-param name="msgparams">%1=<xsl:value-of select="$govuk-print-count + count($govuk-print-reached)"/>;%2=<xsl:value-of select="$govuk-print-max"/>;%3=<xsl:value-of select="$govuk-print-count"/></xsl:with-param>
+          </xsl:call-template>
+        </xsl:if>
         <xsl:variable name="print-label">
           <xsl:call-template name="getVariable">
             <xsl:with-param name="id" select="'govuk-dita.print-page'"/>
@@ -548,13 +644,53 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
             </xsl:if>
             <xsl:apply-templates select="." mode="get-navtitle"/>
           </a>
-          <xsl:call-template name="govuk-print-toc-list">
-            <xsl:with-param name="refs" select="*[contains(@class, ' map/topicref ')]"/>
-            <xsl:with-param name="level" select="$level + 1"/>
-          </xsl:call-template>
+          <xsl:variable name="items" as="element()*">
+            <xsl:apply-templates select="*[contains(@class, ' map/topicref ')]" mode="govuk-print-toc">
+              <xsl:with-param name="level" select="$level + 1"/>
+            </xsl:apply-templates>
+            <xsl:if test="$kind = 'topic'">
+              <xsl:call-template name="govuk-print-toc-beneath">
+                <xsl:with-param name="file" select="string(map:get($govuk-print-by-ref, generate-id(.))/@file)"/>
+                <xsl:with-param name="level" select="$level + 1"/>
+              </xsl:call-template>
+            </xsl:if>
+          </xsl:variable>
+          <xsl:if test="exists($items)">
+            <ol class="govuk-list app-print-contents__list">
+              <xsl:sequence select="$items"/>
+            </ol>
+          </xsl:if>
         </li>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <!-- The contents entries for the topics a file claimed (#176), titled by
+       their first title, to the same depth as the rest of the list -->
+  <xsl:template name="govuk-print-toc-beneath">
+    <xsl:param name="file" as="xs:string"/>
+    <xsl:param name="level" as="xs:integer"/>
+    <xsl:if test="$level le $govuk-print-toc-depth and map:contains($govuk-print-beneath, $file)">
+      <xsl:for-each select="map:get($govuk-print-beneath, $file)">
+        <li>
+          <a class="govuk-link" href="#{@anchor}" data-page-label="{$govuk-print-page-label}">
+            <xsl:value-of select="normalize-space(string((doc(@uri)//*[contains(@class, ' topic/topic ')])[1]
+                                                         /*[contains(@class, ' topic/title ')]))"/>
+          </a>
+          <xsl:variable name="items" as="element()*">
+            <xsl:call-template name="govuk-print-toc-beneath">
+              <xsl:with-param name="file" select="string(@file)"/>
+              <xsl:with-param name="level" select="$level + 1"/>
+            </xsl:call-template>
+          </xsl:variable>
+          <xsl:if test="exists($items)">
+            <ol class="govuk-list app-print-contents__list">
+              <xsl:sequence select="$items"/>
+            </ol>
+          </xsl:if>
+        </li>
+      </xsl:for-each>
+    </xsl:if>
   </xsl:template>
 
   <!-- ===== Body: the map walk ===== -->
@@ -607,9 +743,36 @@ The result carries no data-pagefind-body, so Pagefind never indexes it.
             <xsl:with-param name="level" select="$level + 1"/>
             <xsl:with-param name="top" select="false()"/>
           </xsl:apply-templates>
+          <xsl:call-template name="govuk-print-beneath">
+            <xsl:with-param name="file" select="string($entry/@file)"/>
+            <xsl:with-param name="level" select="$level + 1"/>
+          </xsl:call-template>
         </section>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <!-- With scope 'linked' (#176): the topics a file claimed, each in its own
+       section one level below it, after the file's own children in the map,
+       then the topics each of those claimed in turn -->
+  <xsl:template name="govuk-print-beneath">
+    <xsl:param name="file" as="xs:string"/>
+    <xsl:param name="level" as="xs:integer"/>
+    <xsl:for-each select="if (map:contains($govuk-print-beneath, $file)) then map:get($govuk-print-beneath, $file) else ()">
+      <section class="app-print-topic">
+        <xsl:if test="@root = ''">
+          <xsl:attribute name="id" select="@anchor"/>
+        </xsl:if>
+        <xsl:call-template name="govuk-print-topic">
+          <xsl:with-param name="entry" select="."/>
+          <xsl:with-param name="level" select="$level"/>
+        </xsl:call-template>
+        <xsl:call-template name="govuk-print-beneath">
+          <xsl:with-param name="file" select="string(@file)"/>
+          <xsl:with-param name="level" select="$level + 1"/>
+        </xsl:call-template>
+      </section>
+    </xsl:for-each>
   </xsl:template>
 
   <xsl:template name="govuk-print-heading">
