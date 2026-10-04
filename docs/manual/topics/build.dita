@@ -43,5 +43,18 @@
       <note type="tip">The output directory is created if missing and overwritten in place —
         point it somewhere disposable, not at your source.</note>
     </result>
+    <postreq>
+      <p><indexterm>project files</indexterm><indexterm>DITA-OT<indexterm>project files</indexterm></indexterm>To
+        build several publications in one command, describe them in a DITA-OT project file,
+        one <codeph>deliverable</codeph> each, with <codeph>transtype="govuk"</codeph> and
+        the parameters as <codeph>param</codeph> elements:</p>
+      <codeblock>dita --project=project.xml --output=out</codeblock>
+      <p>Each deliverable is a separate build into its own folder under the output
+        folder. They share nothing, so <b>links from one to another do not resolve</b>. A
+        plain <codeph>href</codeph> to a topic of another deliverable copies that topic into
+        this one. <codeph>scope="peer"</codeph> leaves an unchecked relative path. DITA's
+        cross-deliverable keys are not supported by DITA-OT 4.4. For publications that link
+        to each other, build them as one site from one map instead.</p>
+    </postreq>
   </taskbody>
 </task>
