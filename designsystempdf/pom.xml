@@ -18,7 +18,7 @@ licence texts.
 
   <groupId>org.istanduk</groupId>
   <artifactId>designsystempdf</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <packaging>jar</packaging>
 
   <name>DesignSystemPDF</name>
@@ -37,7 +37,7 @@ licence texts.
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <!-- Reproducible build: the same tree gives the same jar and zip, byte for byte -->
-    <project.build.outputTimestamp>2026-10-03T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-04T00:00:00Z</project.build.outputTimestamp>
 
     <!-- The engine: Open HTML to PDF (LGPL-2.1-or-later), shipped unmodified in lib/ -->
     <openhtmltopdf.version>1.1.87</openhtmltopdf.version>
