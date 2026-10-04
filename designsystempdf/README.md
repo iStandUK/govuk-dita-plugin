@@ -90,6 +90,7 @@ Messages go to standard error in the form `[DSPDF004W]: …` — the style of th
 | `DSPDF008W` | A resource on another origin was not fetched. The generator makes no network request. |
 | `DSPDF009W` | An image, diagram or formula has no alternative text, so the PDF will not meet PDF/UA. Add it in the source. |
 | `DSPDF010W` | The document has text in a right-to-left script, which this version neither shapes nor orders (see Limits): it will not read correctly in the PDF, whatever fonts are supplied. Print the print document from a browser. |
+| `DSPDF011W` | The contents could not be laid out with dots between the titles and the page numbers, so it has the page numbers alone; the rest of the PDF is as usual. Report it, with the print document, at the project's issues page. |
 | `DSPDF000I` | Progress, with `--verbose`. |
 
 ## The same input gives the same bytes
