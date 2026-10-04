@@ -6,6 +6,22 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
 <project name="org.istanduk.gov-uk" xmlns:if="ant:if" xmlns:unless="ant:unless">
 
   <target name="dita2govuk.init">
+    <!-- Unknown parameters (#174): before the plugin sets any govuk.* property
+         of its own, the ones the build was given are checked against those
+         plugin.xml declares. A misspelt name is otherwise ignored without a
+         word, and its default silently applies. A warning, never a failure. -->
+    <tempfile property="istanduk.given.file" prefix="govuk-given" suffix=".properties" deleteonexit="true"/>
+    <tempfile property="istanduk.given.report" prefix="govuk-given" suffix=".txt" deleteonexit="true"/>
+    <echoproperties prefix="govuk." destfile="${istanduk.given.file}"/>
+    <makeurl file="${istanduk.given.file}" property="istanduk.given.url"/>
+    <xslt in="${dita.plugin.org.istanduk.gov-uk.dir}/plugin.xml" out="${istanduk.given.report}" force="true"
+          style="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/given-params.xsl">
+      <param name="GIVEN" expression="${istanduk.given.url}"/>
+    </xslt>
+    <loadfile property="istanduk.given.unknown" srcfile="${istanduk.given.report}" encoding="UTF-8" failonerror="false">
+      <filterchain><trim/><ignoreblank/></filterchain>
+    </loadfile>
+    <echo if:set="istanduk.given.unknown" level="warning" message="${istanduk.given.unknown}"/>
     <!-- Route topic rendering through this plugin's stylesheet (scoped to the
          govuk transtype; plain html5 builds are unaffected). -->
     <property name="args.xsl"
@@ -530,7 +546,7 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
         <xmlcatalog refid="dita.catalog"/>
       </xslt>
     </pipeline>
-    <!-- Above govuk.print.max-topics the transform writes nothing (GOVK003I) -->
+    <!-- Above govuk.print.max-topics the transform writes nothing (GOVK003W) -->
     <delete>
       <fileset dir="${govuk.print.output.dir}" includes="print.html">
         <size value="0" when="equal"/>
@@ -560,7 +576,7 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
     <property name="govuk.pdf.out" location="${dita.output.dir}/${govuk.pdf.name}.pdf"/>
     <available property="govuk.pdf.missing" file="${govuk.pdf.in}" type="file"/>
     <echo unless:set="govuk.pdf.missing" level="warning"
-          message="[GOVK008W]: no print document to render at ${govuk.pdf.in} (govuk.print.max-topics may have skipped it); no PDF made."/>
+          message="[GOVK008W]: no PDF was made, because no print document was written. It is skipped when the publication has more topic files than govuk.print.max-topics=${govuk.print.max-topics} (GOVK003W above gives the count; raise the limit to make both), or has no topics at all."/>
     <sequential if:set="govuk.pdf.missing">
       <echo level="info" message="govuk: rendering ${govuk.pdf.in} with: ${govuk.pdf.run}"/>
       <exec executable="${govuk.pdf.shell}" resultproperty="govuk.pdf.rc" failonerror="false"

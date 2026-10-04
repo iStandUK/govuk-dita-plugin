@@ -302,6 +302,8 @@ jobs:
             --format govuk --output out/manual-print -Dgovuk.print=yes 2>&1 | tee manual-print.log
           test -f out/manual-print/print.html
           absent -q "GOVK003W" manual-print.log
+          # parameters the plugin declares raise no unknown-parameter warning (#174)
+          absent -q "GOVK009W" manual-print.log
           # cover block, contents, chapter groups, topics with demoted headings, glossary and index parts
           grep -q '<h1 class="govuk-heading-xl">GOV.UK DITA plugin manual</h1>' out/manual-print/print.html
           grep -q 'app-print-contents__list' out/manual-print/print.html
@@ -378,6 +380,17 @@ jobs:
           test ! -f out/manual-print-ceiling/print.html
           absent -q 'href="print.html"' out/manual-print-ceiling/index.html
           absent -q 'href="../print.html"' out/manual-print-ceiling/topics/install.html
+          # #174: a misspelt parameter is reported, with what was meant, and is
+          # otherwise ignored, so its default applies: here the ceiling stays at
+          # 500, the manual is under it, and the print document is written
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-print-misspelt -Dgovuk.print=yes -Dgovuk.search=no \
+            -Dgovuk.max-topics=3 -Dgovuk.serach=no -Dgovuk.xyzzy=1 2>&1 | tee misspelt.log
+          grep -qF '[GOVK009W]: govuk.max-topics is not a parameter of this plugin, so it was ignored. Did you mean govuk.print.max-topics?' misspelt.log
+          grep -qF '[GOVK009W]: govuk.serach is not a parameter of this plugin, so it was ignored. Did you mean govuk.search?' misspelt.log
+          grep -qF '[GOVK009W]: govuk.xyzzy is not a parameter of this plugin, so it was ignored' misspelt.log
+          absent -q '\[GOVK009W\]: govuk\.print ' misspelt.log
+          test -f out/manual-print-misspelt/print.html
 
       # The print document's cover (#150): publication details and an imprint
       # from the map's metadata and the publisher's parameters — every line
@@ -1236,6 +1249,13 @@ jobs:
             echo "govuk.pdf=yes without govuk.print=yes should have failed the build"; exit 1
           fi
           grep -q 'govuk.pdf=yes needs govuk.print=yes' /tmp/manual-auto-bad.log
+          # #174: above the topic ceiling there is no print document, so no PDF,
+          # and the build says why in so many words, with the limit in force
+          dita --output out/pdf/manual-auto-ceiling -Dgovuk.print=yes -Dgovuk.print.max-topics=3 2>&1 | tee /tmp/manual-auto-ceiling.log > /dev/null
+          grep -q '\[GOVK003W\]' /tmp/manual-auto-ceiling.log
+          grep -qF '[GOVK008W]: no PDF was made, because no print document was written. It is skipped when the publication has more topic files than govuk.print.max-topics=3' /tmp/manual-auto-ceiling.log
+          test ! -e out/pdf/manual-auto-ceiling/manual.pdf
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/pdf/manual-auto-ceiling --include='*.html'
 
       # #164 (E): the PDF in every branding, with a publisher stylesheet, and
       # with the generator's own options, so a theme or an option that breaks

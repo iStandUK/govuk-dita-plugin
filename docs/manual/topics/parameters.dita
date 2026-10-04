@@ -7,6 +7,11 @@
   <refbody>
     <section>
       <title>Plugin parameters</title>
+      <p>The toolkit accepts any name after <codeph>-D</codeph>, so a misspelt parameter
+        would otherwise be ignored without a word. The build reports a
+        <codeph>govuk.*</codeph> name that is not in this table as
+        <codeph>GOVK009W</codeph>, with the parameter it most looks like, and carries
+        on.</p>
       <table frame="all">
         <title>govuk.* parameters</title>
         <tgroup cols="3">
