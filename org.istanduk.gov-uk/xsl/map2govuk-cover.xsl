@@ -46,6 +46,9 @@ map transformation with the plugin's values.
   <xsl:param name="GOVUK-FAVICON" select="''"/>
   <xsl:param name="GOVUK-FOOTER-LINKS" select="''"/>
   <xsl:param name="GOVUK-FOOTER-LICENCE" select="''"/>
+  <!-- The books the map holds (#178): govuk-books.xml from books.xsl, when
+       there are any -->
+  <xsl:param name="GOVUK-BOOKS" select="''"/>
   <xsl:param name="GOVUK-PRINT" select="'no'"/>
   <xsl:param name="GOVUK-PRINT-MAX-TOPICS" select="'500'"/>
   <!-- sitemap.xml (#60): yes when the Ant build resolved govuk.sitemap and a
@@ -404,6 +407,9 @@ map transformation with the plugin's values.
                   <xsl:comment>/govuk-pdf</xsl:comment>
                 </xsl:if>
               </xsl:if>
+              <!-- each book's, too: listed even when the whole is above the
+                   topic limit and only the books are printed -->
+              <xsl:call-template name="govuk-cover-books"/>
               <xsl:choose>
                 <xsl:when test="$layout = 'start'">
                   <xsl:call-template name="govuk-layout-start">
@@ -626,6 +632,52 @@ map transformation with the plugin's values.
         </body>
       </html>
     </xsl:result-document>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- The books the map holds (#178), each with its print version and, when
+       the build makes PDFs, its PDF: the PDF link carries a token for its
+       size between markers, which govuk.books.finish fills in or removes -->
+  <xsl:template name="govuk-cover-books">
+    <xsl:variable name="books" as="element()*"
+                  select="if (normalize-space($GOVUK-BOOKS) and doc-available($GOVUK-BOOKS))
+                          then doc($GOVUK-BOOKS)//govuk:book[normalize-space(@print)] else ()"/>
+    <xsl:if test="exists($books)">
+      <h2 class="govuk-heading-m">
+        <xsl:call-template name="getVariable">
+          <xsl:with-param name="id" select="'govuk-dita.books'"/>
+        </xsl:call-template>
+      </h2>
+      <ul class="govuk-list app-books">
+        <xsl:for-each select="$books">
+          <xsl:variable name="title" select="string(@title)"/>
+          <li>
+            <a class="govuk-link" href="{@print}">
+              <xsl:value-of select="$title"/>
+              <xsl:text> </xsl:text>
+              <xsl:call-template name="getVariable">
+                <xsl:with-param name="id" select="'govuk-dita.book-print-suffix'"/>
+              </xsl:call-template>
+            </a>
+            <xsl:if test="normalize-space(@pdf)">
+              <xsl:comment select="concat('govuk-pdf-', @id)"/>
+              <br/>
+              <a class="govuk-link" type="application/pdf" href="{encode-for-uri(@pdf)}">
+                <xsl:value-of select="$title"/>
+                <xsl:text> </xsl:text>
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'govuk-dita.book-pdf-prefix'"/>
+                </xsl:call-template>
+                <xsl:value-of select="concat('@GOVUK_PDF_SIZE_', @id, '@')"/>
+                <xsl:call-template name="getVariable">
+                  <xsl:with-param name="id" select="'govuk-dita.pdf-version-suffix'"/>
+                </xsl:call-template>
+              </a>
+              <xsl:comment select="concat('/govuk-pdf-', @id)"/>
+            </xsl:if>
+          </li>
+        </xsl:for-each>
+      </ul>
     </xsl:if>
   </xsl:template>
 

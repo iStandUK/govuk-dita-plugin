@@ -7,6 +7,11 @@
   <refbody>
     <section>
       <title>Plugin parameters</title>
+      <p>The toolkit accepts any name after <codeph>-D</codeph>, so a misspelt parameter
+        would otherwise be ignored without a word. The build reports a
+        <codeph>govuk.*</codeph> name that is not in this table as
+        <codeph>GOVK009W</codeph>, with the parameter it most looks like, and carries
+        on.</p>
       <table frame="all">
         <title>govuk.* parameters</title>
         <tgroup cols="3">
@@ -135,6 +140,25 @@
               <entry>Largest publication, in topic files, for which the print document is
                 written; above it the build warns (<codeph>GOVK003W</codeph>) and writes
                 none.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.print.books</codeph></entry>
+              <entry><codeph>whole</codeph> (default), <codeph>parts</codeph></entry>
+              <entry>With <codeph>parts</codeph>, a bookmap's parts are also printed as books
+                of their own, beside the whole: <filepath>print-<varname>id</varname>.html</filepath>
+                and a PDF each, under the part's title and the bookmap's publisher
+                information. A map that references bookmaps prints each of them this way
+                whatever this says. See <xref keyref="print"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.print.scope</codeph></entry>
+              <entry><codeph>navigation</codeph> (default), <codeph>linked</codeph></entry>
+              <entry>What the print document, and so the PDF, holds: the topics in the map's
+                navigation, or those and every local topic their links reach, each placed
+                beneath the topic that first links to it. Above
+                <codeph>govuk.print.max-topics</codeph>, <codeph>linked</codeph> keeps to
+                the navigation and warns (<codeph>GOVK010W</codeph>). See
+                <xref keyref="print"/>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.print.toc.depth</codeph></entry>

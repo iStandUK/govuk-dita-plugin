@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map id="print-scope" xml:lang="en-GB">
+  <title>Print scope</title>
+  <topicref href="index.dita"/>
+  <topicref href="intro.dita"/>
+  <!-- the items are reached only through keys and links, as in a reference
+       work whose index pages list them (#176) -->
+  <mapref href="links.ditamap" processing-role="resource-only"/>
+</map>

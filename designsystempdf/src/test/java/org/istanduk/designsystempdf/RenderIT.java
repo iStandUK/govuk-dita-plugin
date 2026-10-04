@@ -68,6 +68,88 @@ class RenderIT {
     Path pdf = output.resolve("sample.pdf");
     assertEquals("", render(sample, pdf));
     assertEquals(List.of(), failures(pdf));
+    assertEquals(List.of(), PdfStructure.problems(sample, pdf), "the PDF says what the print document says");
+  }
+
+  /**
+   * Five-digit page numbers in the contents (#182). The engine lays each
+   * contents line out with "999" standing in for its page number and paints
+   * the real one; where a line was left with almost no room (about 0.06em),
+   * the wider number gave the leader less than none, and 0.1.0 wrote no PDF.
+   * Thousands of blank pages before the second topic give it a five-digit
+   * number; the same title with right padding in steps of 0.04em makes sure
+   * one entry lands in that sliver. 0.1.0 fails on this document.
+   */
+  private static Path fiveDigitContents() throws IOException {
+    String html;
+    try (InputStream is = RenderIT.class.getResourceAsStream("sample-print.html")) {
+      html = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+    }
+    StringBuilder items = new StringBuilder();
+    for (int i = 0; i < 1200; i += 4) {
+      items.append(String.format(java.util.Locale.ROOT,
+          "<li><a class=\"govuk-link\" href=\"#second\" data-page-label=\"page\" style=\"padding-right: %.2fem\">"
+          + "Planning a service for people who need help with something that matters</a></li>", i / 100.0));
+    }
+    String marker = "<ol class=\"govuk-list app-print-contents__list\">";
+    String anchor = "<article class=\"topic\" aria-labelledby=\"t2-title\"";
+    assertTrue(html.contains(marker) && html.contains(anchor), "the sample's contents list and second topic");
+    Path document = output.resolve("five-digit-contents-print.html");
+    Files.writeString(document, html.replaceFirst(java.util.regex.Pattern.quote(marker), marker + items)
+        .replaceFirst(java.util.regex.Pattern.quote(anchor), "<div style=\"height: 260000cm\"></div>" + anchor),
+        StandardCharsets.UTF_8);
+    return document;
+  }
+
+  private static int pages(Path pdf) throws IOException {
+    try (PDDocument written = Loader.loadPDF(pdf.toFile())) {
+      return written.getNumberOfPages();
+    }
+  }
+
+  /** The page numbers are written in from the layout, so every leader fits. */
+  @Test
+  void fiveDigitPageNumbersKeepTheirLeaders() throws Exception {
+    Path pdf = output.resolve("five-digit-contents.pdf");
+    String messages = render(fiveDigitContents(), pdf);
+    assertTrue(!messages.contains("DSPDF011W") && !messages.contains("DSPDF007E"), messages);
+    assertTrue(pages(pdf) > 10000, "five-digit page numbers: " + pages(pdf) + " pages");
+    Files.delete(pdf);
+  }
+
+  /** And were a leader still not to fit, the contents loses its dots, not the PDF. */
+  @Test
+  void aLeaderTheEngineCannotFitCostsTheDotsNotThePdf() throws Exception {
+    Path pdf = output.resolve("five-digit-contents-unpinned.pdf");
+    // the numbers left to the engine, as in 0.1.0, so the leader fails as it did
+    String messages = render(fiveDigitContents(), pdf, "-Ddesignsystempdf.pin-from-pages=1000000");
+    assertTrue(messages.contains("[DSPDF011W]"), messages);
+    assertTrue(pages(pdf) > 10000, pages(pdf) + " pages");
+    Files.delete(pdf);
+  }
+
+  /** The structure check is not a formality: a source that says something else is told apart (#164). */
+  @Test
+  void theStructureCheckNoticesADifference() throws Exception {
+    Path sample = output.resolve("sample-print.html");
+    try (InputStream is = RenderIT.class.getResourceAsStream("sample-print.html")) {
+      Files.write(sample, is.readAllBytes());
+    }
+    Path pdf = output.resolve("sample-structure.pdf");
+    render(sample, pdf);
+    String html = Files.readString(sample, StandardCharsets.UTF_8);
+    // one heading a level deeper, one figure described differently, the document in another language
+    String other = html.replaceFirst("<h4", "<h5").replaceFirst("</h4>", "</h5>")
+        .replaceFirst("aria-label=\"[^\"]+\"", "aria-label=\"Something else\"")
+        .replaceFirst("lang=\"en-GB\"", "lang=\"cy\"");
+    Path changed = output.resolve("sample-changed.html");
+    Files.writeString(changed, other, StandardCharsets.UTF_8);
+    List<String> problems = PdfStructure.problems(changed, pdf);
+    assertTrue(problems.stream().anyMatch(p -> p.startsWith("the headings")), problems.toString());
+    assertTrue(problems.stream().anyMatch(p -> p.startsWith("the figures' alternative text")), problems.toString());
+    assertTrue(problems.stream().anyMatch(p -> p.startsWith("the document's language")), problems.toString());
+    Files.delete(changed);
+    Files.delete(pdf);
   }
 
   @TestFactory
@@ -89,6 +171,7 @@ class RenderIT {
           System.out.println(name + ": " + pdf.getNumberOfPages() + " pages");
         }
         assertEquals(List.of(), failures(first), "veraPDF PDF/UA-1" + (warnings.isEmpty() ? "" : "; the generator warned: " + warnings));
+        assertEquals(List.of(), PdfStructure.problems(document, first), "the PDF says what the print document says");
       }));
     }
     return tests;
@@ -109,16 +192,18 @@ class RenderIT {
    * the test libraries are there to change its behaviour — and returns what it
    * reported on standard error.
    */
-  private static String render(Path document, Path pdf) throws IOException, InterruptedException {
+  private static String render(Path document, Path pdf, String... jvm) throws IOException, InterruptedException {
     String classPath = System.getProperty("designsystempdf.it.jar") + File.pathSeparator
         + System.getProperty("designsystempdf.it.lib") + File.separator + "*";
     Path log = Files.createTempFile(output, "render", ".log");
-    Process process = new ProcessBuilder(
+    List<String> command = new ArrayList<>(List.of(
         Paths.get(System.getProperty("java.home"), "bin", "java").toString(),
         "-Djava.awt.headless=true",
-        "-Ddesignsystempdf.home=" + System.getProperty("designsystempdf.home"),
-        "-cp", classPath, "org.istanduk.designsystempdf.Main",
-        "--in", document.toString(), "--out", pdf.toString())
+        "-Ddesignsystempdf.home=" + System.getProperty("designsystempdf.home")));
+    command.addAll(List.of(jvm));
+    command.addAll(List.of("-cp", classPath, "org.istanduk.designsystempdf.Main",
+        "--in", document.toString(), "--out", pdf.toString()));
+    Process process = new ProcessBuilder(command)
         .redirectOutput(ProcessBuilder.Redirect.DISCARD)
         .redirectError(log.toFile())
         .start();

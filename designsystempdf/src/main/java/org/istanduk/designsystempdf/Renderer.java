@@ -36,10 +36,15 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.openhtmltopdf.layout.Layer;
+import com.openhtmltopdf.render.RenderingContext;
 import com.openhtmltopdf.mathmlsupport.MathMLDrawer;
+import com.openhtmltopdf.render.Box;
+import com.openhtmltopdf.render.displaylist.PagedBoxCollector;
 import com.openhtmltopdf.outputdevice.helper.ExternalResourceControlPriority;
 import com.openhtmltopdf.pdfboxout.PDFCreationListener;
 import com.openhtmltopdf.pdfboxout.PdfBoxRenderer;
@@ -116,30 +121,54 @@ final class Renderer {
     quietLibraries();
     XRLog.setLoggerImpl(new EngineLog());
 
-    PdfRendererBuilder builder = new PdfRendererBuilder();
-    builder.withW3cDocument(doc, options.in.toAbsolutePath().toUri().toString());
-    builder.useSVGDrawer(new BatikSVGDrawer());
-    builder.useMathMLDrawer(new MathMLDrawer());
-    builder.usePdfUaAccessibility(options.pdfUa);
-    builder.withProducer("DesignSystemPDF " + version);
-    // The generator makes no request to another origin: a stylesheet, image or
-    // font that is not a local file is reported and left out.
-    builder.useExternalResourceAccessControl((uri, type) -> local(uri), ExternalResourceControlPriority.RUN_BEFORE_RESOLVING_URI);
-    builder.useExternalResourceAccessControl((uri, type) -> local(uri), ExternalResourceControlPriority.RUN_AFTER_RESOLVING_URI);
-    fonts.registerWith(builder);
-
     Path out = options.out.toAbsolutePath();
     if (out.getParent() != null) {
       Files.createDirectories(out.getParent());
     }
+    long seed = seed(source);
+    try {
+      return write(doc, fonts, out, seed);
+    } catch (RuntimeException e) {
+      if (!inLeader(e)) {
+        throw e;
+      }
+      // The engine could not fit a leader even so (#182): the contents again
+      // without dots, rather than no PDF at all
+      log.warn(Log.LEADER, "the contents could not be laid out with dots between the titles and the page numbers,"
+          + " so it has the page numbers alone. The rest of the PDF is as usual.");
+      Element root = doc.getDocumentElement();
+      root.setAttribute("class", (root.getAttribute("class") + " app-pdf-no-leaders").trim());
+      return write(doc, fonts, out, seed);
+    }
+  }
+
+  /**
+   * The engine lays a contents line out with "999" standing in for each
+   * target-counter and paints the real number (#182). Up to 999 pages that
+   * is never too narrow. From a thousand pages, each contents entry's number
+   * is read from the layout and written into the entry (data-pdf-page, which
+   * pdf.css draws in place of target-counter), and the document is laid out
+   * again; until the numbers stand still, at most three times. A shorter
+   * document is laid out once, as it always was. (Tests move the threshold
+   * with -Ddesignsystempdf.pin-from-pages to reach the fallback below.)
+   */
+  static final int PIN_FROM_PAGES = Integer.getInteger("designsystempdf.pin-from-pages", 1000);
+
+  private int write(Document doc, FontRegistry fonts, Path out, long seed) throws IOException {
     // written beside the target and moved into place, so a failed run leaves no half-written PDF
     Path partial = out.resolveSibling(out.getFileName() + ".part");
     int[] pages = new int[1];
-    long seed = seed(source);
     try {
       try (OutputStream os = Files.newOutputStream(partial)) {
-        builder.toStream(os);
-        try (PdfBoxRenderer renderer = builder.buildPdfRenderer()) {
+        PdfBoxRenderer renderer = builder(doc, fonts, os).buildPdfRenderer();
+        try {
+          renderer.layout();
+          for (int pass = 0; pass < 3 && pageCount(renderer) >= PIN_FROM_PAGES && pinContentsPages(doc, renderer); pass++) {
+            log.info("contents page numbers written in for a document of " + pageCount(renderer) + " pages; laying it out again");
+            renderer.close();
+            renderer = builder(doc, fonts, os).buildPdfRenderer();
+            renderer.layout();
+          }
           renderer.setListener(new PDFCreationListener() {
             @Override
             public void preOpen(PdfBoxRenderer r) {
@@ -155,8 +184,9 @@ final class Renderer {
               settle(r.getPdfDocument(), seed);
             }
           });
-          renderer.layout();
           renderer.createPDF();
+        } finally {
+          renderer.close();
         }
       }
       Files.move(partial, out, StandardCopyOption.REPLACE_EXISTING);
@@ -164,6 +194,92 @@ final class Renderer {
       Files.deleteIfExists(partial);
     }
     return pages[0];
+  }
+
+  private PdfRendererBuilder builder(Document doc, FontRegistry fonts, OutputStream os) {
+    PdfRendererBuilder builder = new PdfRendererBuilder();
+    builder.withW3cDocument(doc, options.in.toAbsolutePath().toUri().toString());
+    builder.useSVGDrawer(new BatikSVGDrawer());
+    builder.useMathMLDrawer(new MathMLDrawer());
+    builder.usePdfUaAccessibility(options.pdfUa);
+    builder.withProducer("DesignSystemPDF " + version);
+    // The generator makes no request to another origin: a stylesheet, image or
+    // font that is not a local file is reported and left out.
+    builder.useExternalResourceAccessControl((uri, type) -> local(uri), ExternalResourceControlPriority.RUN_BEFORE_RESOLVING_URI);
+    builder.useExternalResourceAccessControl((uri, type) -> local(uri), ExternalResourceControlPriority.RUN_AFTER_RESOLVING_URI);
+    fonts.registerWith(builder);
+    builder.toStream(os);
+    return builder;
+  }
+
+  private static int pageCount(PdfBoxRenderer renderer) {
+    return renderer.getRootBox().getLayer().getPages().size();
+  }
+
+  /**
+   * Writes each contents entry's page number, as target-counter would paint
+   * it (the page where the target's content starts), into data-pdf-page;
+   * true when any number was new or has moved.
+   */
+  static boolean pinContentsPages(Document doc, PdfBoxRenderer renderer) {
+    RenderingContext c = renderer.getSharedContext().newRenderingContextInstance();
+    Layer root = renderer.getRootBox().getLayer();
+    boolean changed = false;
+    for (Element a : contentsLinks(doc)) {
+      String href = a.getAttribute("href");
+      if (!a.hasAttribute("data-page-label") || !href.startsWith("#")) {
+        continue;
+      }
+      Box target = renderer.getSharedContext().getBoxById(href.substring(1));
+      if (target == null) {
+        continue;
+      }
+      String page = Integer.toString(root.getRelativePageNo(c, PagedBoxCollector.findContentStartY(target)) + 1);
+      if (!page.equals(a.getAttribute("data-pdf-page"))) {
+        a.setAttribute("data-pdf-page", page);
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
+  /**
+   * The links in the contents lists, gathered once. The document can be
+   * tens of megabytes: a live NodeList over all of it is walked again after
+   * every attribute set, so only the contents is walked, and only once.
+   */
+  private static List<Element> contentsLinks(Document doc) {
+    List<Element> links = new ArrayList<>();
+    collectContentsLinks(doc.getDocumentElement(), false, links);
+    return links;
+  }
+
+  private static void collectContentsLinks(Element e, boolean inContents, List<Element> links) {
+    boolean here = inContents || DocumentPreparer.hasClass(e, "app-print-contents__list");
+    if (here && "a".equals(e.getLocalName())) {
+      links.add(e);
+    }
+    // below the contents nothing else is wanted: topics are not walked
+    if (!here && DocumentPreparer.hasClass(e, "app-print-topic")) {
+      return;
+    }
+    for (org.w3c.dom.Node c = e.getFirstChild(); c != null; c = c.getNextSibling()) {
+      if (c instanceof Element child) {
+        collectContentsLinks(child, here, links);
+      }
+    }
+  }
+
+  /** Whether the engine failed while sizing a leader (#182). */
+  static boolean inLeader(Throwable e) {
+    for (Throwable t = e; t != null; t = t.getCause()) {
+      for (StackTraceElement f : t.getStackTrace()) {
+        if (f.getClassName().contains("LeaderFunction")) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**

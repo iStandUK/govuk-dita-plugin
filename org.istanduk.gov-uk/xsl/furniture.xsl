@@ -329,6 +329,9 @@ template, the cover, and the generated utility pages.
     <xsl:param name="footer-links" as="xs:string" select="''"/>
     <xsl:param name="footer-licence" as="xs:string" select="''"/>
     <xsl:param name="print" as="xs:string" select="'no'"/>
+    <!-- topic pages only: the others belong to no book, and are written
+         indented, which a removed marker would not leave as it found (#178) -->
+    <xsl:param name="book-marker" as="xs:boolean" select="false()"/>
     <footer class="govuk-footer">
       <div class="govuk-width-container">
         <div class="govuk-footer__meta">
@@ -396,6 +399,13 @@ template, the cover, and the generated utility pages.
                     </xsl:call-template>
                   </li>
                   <xsl:comment>/govuk-pdf</xsl:comment>
+                </xsl:if>
+                <!-- ... and the book this page is in, when the map holds
+                     several (#178): govuk.books.finish puts the book's links
+                     here, the path to the site root in hand, or takes the
+                     marker away -->
+                <xsl:if test="$print = 'yes' and $book-marker">
+                  <xsl:comment select="concat('govuk-book:', $prefix)"/>
                 </xsl:if>
               </ul>
             </xsl:if>

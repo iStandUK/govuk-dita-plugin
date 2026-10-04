@@ -27,6 +27,11 @@ collisions with toolkit variables.
   <variable id="govuk-dita.print-version">Whole publication (print version)</variable>
   <variable id="govuk-dita.pdf-version-prefix">Whole publication (PDF, </variable>
   <variable id="govuk-dita.pdf-version-suffix">)</variable>
+  <!-- several books from one map (#178): a book's links read "<title> (print version)"
+       and "<title> (PDF, 1.2 MB)"; the title and a space come first -->
+  <variable id="govuk-dita.books">Books in this publication</variable>
+  <variable id="govuk-dita.book-print-suffix">(print version)</variable>
+  <variable id="govuk-dita.book-pdf-prefix">(PDF, </variable>
   <variable id="govuk-dita.print-page">Print version</variable>
   <variable id="govuk-dita.print-website">Website version</variable>
   <variable id="govuk-dita.page">page</variable>

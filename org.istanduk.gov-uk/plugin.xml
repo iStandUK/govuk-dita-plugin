@@ -3,7 +3,7 @@
 This file is part of the govuk-dita-plugin project.
 Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
 -->
-<plugin id="org.istanduk.gov-uk" version="1.1.0">
+<plugin id="org.istanduk.gov-uk" version="1.2.0">
   <require plugin="org.dita.html5"/>
   <transtype name="govuk" extends="html5" desc="GOV.UK Design System HTML5">
     <param name="govuk.branding"
@@ -125,8 +125,20 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val>yes</val>
     </param>
     <param name="govuk.print.max-topics"
-           desc="Largest publication (distinct topic files) for which the print document is written; above it the build says so (GOVK003I) and writes none. Default 500."
+           desc="Largest publication (distinct topic files) for which the print document is written; above it the build warns (GOVK003W) and writes none, so no PDF is made either. Default 500."
            type="string"/>
+    <param name="govuk.print.books"
+           desc="Whether a bookmap's parts are also printed as books of their own. 'whole' (default): one print document and PDF for the bookmap. 'parts': those, and one print document and PDF per part, its cover taking the part's title and the bookmap's publisher information, without the glossary and index. A map that references bookmaps always gets one per bookmap as well, whatever this says."
+           type="enum">
+      <val default="true">whole</val>
+      <val>parts</val>
+    </param>
+    <param name="govuk.print.scope"
+           desc="What the print document (and so the PDF) holds. 'navigation' (default): the topics in the map's navigation; links to anything else go to the website. 'linked': those, and every local topic their links reach, each placed beneath the topic that first links to it, so a reference work whose items are reached only from index pages prints whole. Above govuk.print.max-topics the print document keeps to the navigation and the build says so (GOVK010W)."
+           type="enum">
+      <val default="true">navigation</val>
+      <val>linked</val>
+    </param>
     <param name="govuk.print.toc.depth"
            desc="How many map levels the print document's contents list shows. 1-9; default 3."
            type="string"/>

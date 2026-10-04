@@ -85,16 +85,40 @@
             <entry>The PDF command (DesignSystemPDF, or the command in
               <codeph>govuk.pdf.command</codeph>) failed, or ended without writing the PDF;
               or <codeph>govuk.pdf.command</codeph> was set without
-              <codeph>govuk.print=yes</codeph>; or there was no print document to render. Also
+              <codeph>govuk.print=yes</codeph>; or no print document was written, because the
+              publication has more topic files than <codeph>govuk.print.max-topics</codeph>
+              (<codeph>GOVK003W</codeph> gives the count) or none at all. Also
               given when <codeph>govuk.pdf.fonts</codeph> names no folder, and then the PDF is
               still made, with the bundled fonts. The site is complete; no PDF was produced and
               no page links one. The command's own output follows the message. Reported by
               the build step rather than the transformation, so it carries no file and
               line.</entry>
             <entry>Check the command runs by hand on
-              <filepath>print.html</filepath>, and that <codeph>govuk.print=yes</codeph>. See
+              <filepath>print.html</filepath>, and that <codeph>govuk.print=yes</codeph>. For a
+              large publication, raise <codeph>govuk.print.max-topics</codeph>. See
               <xref keyref="print"/>, and <xref keyref="pdf"/> for DesignSystemPDF's own
               messages.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK009W</codeph></entry>
+            <entry>A <codeph>govuk.*</codeph> parameter given to the build is not one this
+              plugin has, usually because it is misspelt. It is ignored, so the setting it was
+              meant for keeps its default. Where a parameter of the plugin looks like what was
+              meant, the message names it. Reported at the start of the build, so it carries
+              no file and line.</entry>
+            <entry>Correct the name: <codeph>-Dgovuk.max-topics</codeph> is ignored, for
+              example, while <codeph>-Dgovuk.print.max-topics</codeph> raises the print
+              document's limit. <xref keyref="parameters"/> lists every parameter.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK010W</codeph></entry>
+            <entry>With <codeph>govuk.print.scope=linked</codeph>, the topics the navigation
+              links to would take the print document above
+              <codeph>govuk.print.max-topics</codeph>. The message gives both counts. The
+              print document, and so the PDF, is still written, with the navigation only, and
+              its links to the other topics go to the website.</entry>
+            <entry>Raise <codeph>govuk.print.max-topics</codeph> to print the linked topics as
+              well, or keep to the navigation. See <xref keyref="print"/>.</entry>
           </row>
           <row>
             <entry><codeph>GOVK007W</codeph></entry>

@@ -136,3 +136,22 @@ body,
 .app-print .app-print-contents__list a::after {
   content: " " leader('.') " " target-counter(attr(href url), page);
 }
+
+/* In a document of a thousand pages or more, the Renderer writes each entry's
+   page number in (data-pdf-page) and lays the document out again. The engine
+   lays a line out with "999" standing in for target-counter and paints the
+   real number, so a wider one, on a line the title nearly fills, left the
+   leader less than no room (#182); a number written in is as wide at layout
+   as at paint. */
+.app-print .app-print-contents__list a[data-page-label][data-pdf-page]::after {
+  content: " " leader('.') " " attr(data-pdf-page);
+}
+
+/* If the engine still cannot fit a leader, the Renderer draws the contents
+   again without dots (DSPDF011W): the page numbers stay. */
+.app-print.app-pdf-no-leaders .app-print-contents__list a[data-page-label]::after {
+  content: " " target-counter(attr(href url), page);
+}
+.app-print.app-pdf-no-leaders .app-print-contents__list a[data-page-label][data-pdf-page]::after {
+  content: " " attr(data-pdf-page);
+}

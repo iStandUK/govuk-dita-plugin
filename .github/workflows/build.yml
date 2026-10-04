@@ -62,7 +62,7 @@ jobs:
           # (the plugin, the manual and fixtures it is built from, the PDF/UA
           # check) runs the generator's job too: a print.css change can break
           # PDF/UA (#164)
-          pdf=$(printf '%s\n' "$rest" | grep -E '^(designsystempdf/|org\.istanduk\.gov-uk/|docs/manual/|fixtures/|tools/verapdf/)' || true)
+          pdf=$(printf '%s\n' "$rest" | grep -E '^(designsystempdf/|org\.istanduk\.gov-uk/|docs/manual/|fixtures/|\.github/actions/)' || true)
           plugin=$(printf '%s\n' "$rest" | grep -Ev '^designsystempdf/' || true)
           if [ -n "$plugin" ]; then echo "plugin=true"; else echo "plugin=false"; fi >> "$GITHUB_OUTPUT"
           if [ -n "$pdf" ] || [ -n "$workflows" ]; then echo "pdf=true"; else echo "pdf=false"; fi >> "$GITHUB_OUTPUT"
@@ -87,6 +87,10 @@ jobs:
       DITA_OT_SHA256: ${{ matrix.dita-ot.sha256 }}
       # govuk-frontend GitHub release zip for the vendored version (VERSION.txt)
       GOVUK_FRONTEND_SHA256: "ac64b3abdb8af98624c8c0b8eabf78c894eb9da4d3b268544d0120f15abafc7a"
+      # the published DesignSystemPDF release a publisher installs, which the
+      # plugin must find and work with (#113, D-23); move it with each pdf-v* release
+      DSPDF_RELEASE: "0.1.0"
+      DSPDF_RELEASE_SHA256: "8e6702ca4b7632975d9477485693c6790872896c2e3fef00adab407054406842"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -298,6 +302,8 @@ jobs:
             --format govuk --output out/manual-print -Dgovuk.print=yes 2>&1 | tee manual-print.log
           test -f out/manual-print/print.html
           absent -q "GOVK003W" manual-print.log
+          # parameters the plugin declares raise no unknown-parameter warning (#174)
+          absent -q "GOVK009W" manual-print.log
           # cover block, contents, chapter groups, topics with demoted headings, glossary and index parts
           grep -q '<h1 class="govuk-heading-xl">GOV.UK DITA plugin manual</h1>' out/manual-print/print.html
           grep -q 'app-print-contents__list' out/manual-print/print.html
@@ -374,6 +380,113 @@ jobs:
           test ! -f out/manual-print-ceiling/print.html
           absent -q 'href="print.html"' out/manual-print-ceiling/index.html
           absent -q 'href="../print.html"' out/manual-print-ceiling/topics/install.html
+          # #174: a misspelt parameter is reported, with what was meant, and is
+          # otherwise ignored, so its default applies: here the ceiling stays at
+          # 500, the manual is under it, and the print document is written
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+            --format govuk --output out/manual-print-misspelt -Dgovuk.print=yes -Dgovuk.search=no \
+            -Dgovuk.max-topics=3 -Dgovuk.serach=no -Dgovuk.xyzzy=1 2>&1 | tee misspelt.log
+          grep -qF '[GOVK009W]: govuk.max-topics is not a parameter of this plugin, so it was ignored. Did you mean govuk.print.max-topics?' misspelt.log
+          grep -qF '[GOVK009W]: govuk.serach is not a parameter of this plugin, so it was ignored. Did you mean govuk.search?' misspelt.log
+          grep -qF '[GOVK009W]: govuk.xyzzy is not a parameter of this plugin, so it was ignored' misspelt.log
+          absent -q '\[GOVK009W\]: govuk\.print ' misspelt.log
+          test -f out/manual-print-misspelt/print.html
+          # #176: govuk.print.scope. The fixture's navigation is an index and an
+          # introduction; its items are reached only by key and link.
+          heads() { grep -oE '<h[2-6][^>]*>[^<]*' "$1" | sed -E 's/<(h[2-6])[^>]*>/\1 /' | paste -sd '|' -; }
+          scope() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-scope/scope.ditamap \
+            --format govuk --output "out/print-scope-$1" -Dgovuk.print=yes -Dgovuk.search=no "${@:2}" 2>&1 | tee "scope-$1.log"; }
+          # navigation (the default): only the navigation, and links to items go to the site
+          scope navigation
+          test "$(heads out/print-scope-navigation/print.html)" = "h2 Contents|h2 Index of items|h2 Introduction"
+          grep -q 'href="items/item-a.html"' out/print-scope-navigation/print.html
+          # linked: each item beneath the topic that first links to it, the second
+          # round beneath item A, item D (linked from nowhere) left out, and the
+          # links now within the document, in the contents list too
+          scope linked -Dgovuk.print.scope=linked
+          test "$(heads out/print-scope-linked/print.html)" = "h2 Contents|h2 Index of items|h3 Item A|h4 Item C|h3 Item B|h2 Introduction" \
+            || { echo "linked order: $(heads out/print-scope-linked/print.html)"; exit 1; }
+          absent -q 'Item D' out/print-scope-linked/print.html
+          absent -q 'href="items/item-' out/print-scope-linked/print.html
+          grep -q 'href="#item-c"' out/print-scope-linked/print.html
+          sed -n '/app-print-contents/,/<\/nav>/p' out/print-scope-linked/print.html | grep -q '>Item C</a>'
+          absent -q 'GOVK010W' scope-linked.log
+          # above the ceiling, linked keeps to the navigation and says so
+          scope ceiling -Dgovuk.print.scope=linked -Dgovuk.print.max-topics=3
+          grep -qF '[GOVK010W]: govuk.print.scope=linked would print 5 topic files, above govuk.print.max-topics=3, so the print document holds the 2 topic files in the navigation only.' scope-ceiling.log
+          test "$(heads out/print-scope-ceiling/print.html)" = "h2 Contents|h2 Index of items|h2 Introduction"
+          grep -q 'href="print.html"' out/print-scope-ceiling/index.html
+          # a scope the plugin does not have stops the build
+          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-scope/scope.ditamap --format govuk \
+               --output out/print-scope-bad -Dgovuk.print=yes -Dgovuk.print.scope=everything > scope-bad.log 2>&1; then
+            echo "govuk.print.scope=everything should have failed the build"; exit 1
+          fi
+          grep -qF "govuk.print.scope must be 'navigation' or 'linked'" scope-bad.log
+          # #179: a DITA-OT project file passes each input map as a file: URI.
+          # Built from a folder whose name has a space, so the URI is escaped.
+          proj="$RUNNER_TEMP/with space"
+          rm -rf "$proj" && mkdir -p "$proj" && cp -r fixtures "$proj/"
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --project="$proj/fixtures/project/project.xml" \
+            --output="$PWD/out/project" 2>&1 | tee project.log
+          absent -Eq 'BUILD FAILED|does not exist|GOVK009W' project.log
+          for d in scope cover; do
+            test -f "out/project/$d/index.html" && test -f "out/project/$d/print.html" \
+              || { echo "the $d deliverable is incomplete"; exit 1; }
+          done
+          test "$(heads out/project/scope/print.html)" = "h2 Contents|h2 Index of items|h2 Introduction"
+          # #178: several books from one map. A map of two bookmaps: one site,
+          # the whole set in print.html, each bookmap in a print document of its
+          # own under its own cover, and each page's footer naming its book.
+          books() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --input "$1" --format govuk --output "out/$2" \
+            -Dgovuk.print=yes -Dgovuk.search=no "${@:3}" 2>&1 | tee "$2.log"; absent -Eq 'GOVK|DOTX|Error' "$2.log"; }
+          books fixtures/books-omnibus/library.ditamap books-omnibus
+          o=out/books-omnibus
+          test "$(heads $o/print.html)" = "h2 Contents|h2 Alpha topic|h2 Alpha second|h2 Beta topic"
+          test "$(heads $o/print-alpha.html)" = "h2 Contents|h2 Alpha topic|h2 Alpha second"
+          test "$(heads $o/print-beta.html)" = "h2 Contents|h2 Beta topic"
+          grep -q '<h1 class="govuk-heading-xl">The alpha book</h1>' $o/print-alpha.html
+          grep -q '<li>First edition</li>' $o/print-alpha.html
+          grep -q '<li>Second edition</li>' $o/print-beta.html
+          # a link to the other book goes to the site; in the whole set it stays in the document
+          grep -q 'href="beta/b1.html"' $o/print-alpha.html
+          grep -q 'href="#b1"' $o/print.html
+          # the home page lists the books; each page's footer links its own
+          grep -q 'href="print-alpha.html">The alpha book (print version)</a>' $o/index.html
+          grep -q 'href="print-beta.html">The beta book (print version)</a>' $o/index.html
+          grep -q 'href="../print-alpha.html">The alpha book (print version)</a>' $o/alpha/a1.html
+          grep -q 'href="../print-beta.html">The beta book (print version)</a>' $o/beta/b1.html
+          absent -q 'print-beta' $o/alpha/a1.html
+          # no PDF here, so no PDF link and no token; and no marker left anywhere
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-|govuk-book|application/pdf' $o --include='*.html'
+          # a bookmap with parts: one book by default; a book per part when asked,
+          # each with the part's title, the bookmap's publisher information,
+          # and only the part's chapters
+          books fixtures/books-parts/volumes.ditamap books-whole
+          test ! -e out/books-whole/print-planning.html
+          absent -q 'app-books' out/books-whole/index.html
+          books fixtures/books-parts/volumes.ditamap books-parts -Dgovuk.print.books=parts
+          p=out/books-parts
+          cmp out/books-whole/print.html $p/print.html
+          test "$(heads $p/print-planning.html)" = "h2 Contents|h2 Part one: Planning|h2 Planning a service|h2 Planning a budget"
+          test "$(heads $p/print-building.html)" = "h2 Contents|h2 Building a service"
+          for b in planning building; do
+            grep -q 'app-attribution">Example Department' $p/print-$b.html
+            grep -q '<li>Third edition</li>' $p/print-$b.html
+            grep -q '© 2026 Example Department' $p/print-$b.html
+            absent -Eq 'Preface|Appendix|app-print-glossary|app-print-index' $p/print-$b.html
+          done
+          grep -q '<h1 class="govuk-heading-xl">Part two: Building</h1>' $p/print-building.html
+          grep -q 'href="build-a.html"' $p/print-planning.html
+          grep -q 'href="print-building.html">Part two: Building (print version)</a>' $p/build-a.html
+          # the whole bookmap's pages outside the parts are in no book
+          absent -q 'print-planning\|print-building' $p/preface.html
+          absent -rq 'govuk-book' $p --include='*.html'
+          # a value the plugin does not have stops the build
+          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/books-parts/volumes.ditamap --format govuk \
+               --output out/books-bad -Dgovuk.print=yes -Dgovuk.print.books=chapters > books-bad.log 2>&1; then
+            echo "govuk.print.books=chapters should have failed the build"; exit 1
+          fi
+          grep -qF "govuk.print.books must be 'whole' or 'parts'" books-bad.log
 
       # The print document's cover (#150): publication details and an imprint
       # from the map's metadata and the publisher's parameters — every line
@@ -525,6 +638,38 @@ jobs:
             fi
             grep -qF "$want" pdf-bad.log
           done
+
+      # The plugin with what a publisher installs: the published DesignSystemPDF
+      # release, fetched by checksum and put on the PATH. govuk.pdf=auto finds
+      # it, and the PDF it makes is linked and is PDF/UA-1 (#113, D-23). The
+      # generator job tests the generator in this tree; this tests the join
+      # against the release.
+      - name: Install veraPDF
+        uses: ./.github/actions/verapdf
+
+      - name: The plugin with the released DesignSystemPDF (#113)
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          curl -sSfL -o dspdf.zip \
+            "https://github.com/iStandUK/govuk-dita-plugin/releases/download/pdf-v${DSPDF_RELEASE}/designsystempdf-${DSPDF_RELEASE}.zip"
+          echo "${DSPDF_RELEASE_SHA256}  dspdf.zip" | sha256sum -c -
+          rm -rf /tmp/dspdf-release && unzip -q dspdf.zip -d /tmp/dspdf-release && rm dspdf.zip
+          export PATH="/tmp/dspdf-release/designsystempdf-${DSPDF_RELEASE}/bin:$PATH"
+          designsystempdf --version | grep -qx "DesignSystemPDF ${DSPDF_RELEASE}"
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
+            --output out/manual-dspdf-release -Dgovuk.print=yes -Dgovuk.search=no --verbose 2>&1 | tee dspdf-release.log > /dev/null
+          grep -q 'govuk: PDF enabled (DesignSystemPDF found: designsystempdf)' dspdf-release.log
+          absent -Eq 'GOVK008W|DSPDF' dspdf-release.log
+          pdf=out/manual-dspdf-release/manual.pdf
+          test -f "$pdf"
+          grep -q 'href="manual.pdf">Whole publication (PDF, ' out/manual-dspdf-release/index.html
+          for i in 1 2 3; do
+            verapdf --flavour ua1 --format text "$pdf" > dspdf-release-ua.txt || true
+            grep -Eq '^(PASS|FAIL) ' dspdf-release-ua.txt && break
+          done
+          grep -q '^PASS ' dspdf-release-ua.txt || { cat dspdf-release-ua.txt; echo "the manual made with DesignSystemPDF ${DSPDF_RELEASE} is not PDF/UA-1"; exit 1; }
+          echo "plugin and DesignSystemPDF ${DSPDF_RELEASE}: the manual's PDF is made, linked and PDF/UA-1"
 
       # Content reaching readers (epic #77: #78 #79 #80 #81 #82 #59 #60 #61). Every
       # behaviour is a publisher parameter; every finding is a warning, never an error.
@@ -999,10 +1144,6 @@ jobs:
       # the toolkit that builds the print documents to render; as in the build job's matrix
       DITA_OT_VERSION: "4.4.1"
       DITA_OT_SHA256: "154414c1debb548e923bf77e9a09019e249a8887680ff4bfbd8e137de9e8e250"
-      # veraPDF's own command line, which checks every PDF the job makes (#164);
-      # the same version as the library the integration tests use (pom.xml)
-      VERAPDF_VERSION: "1.30.2"
-      VERAPDF_SHA256: "6cc6341cb1af644044054b81f00a6590a7918abb18f762243de115258bcad838"
     defaults:
       run:
         working-directory: designsystempdf
@@ -1204,68 +1345,125 @@ jobs:
             echo "govuk.pdf=yes without govuk.print=yes should have failed the build"; exit 1
           fi
           grep -q 'govuk.pdf=yes needs govuk.print=yes' /tmp/manual-auto-bad.log
+          # #174: above the topic ceiling there is no print document, so no PDF,
+          # and the build says why in so many words, with the limit in force
+          dita --output out/pdf/manual-auto-ceiling -Dgovuk.print=yes -Dgovuk.print.max-topics=3 2>&1 | tee /tmp/manual-auto-ceiling.log > /dev/null
+          grep -q '\[GOVK003W\]' /tmp/manual-auto-ceiling.log
+          grep -qF '[GOVK008W]: no PDF was made, because no print document was written. It is skipped when the publication has more topic files than govuk.print.max-topics=3' /tmp/manual-auto-ceiling.log
+          test ! -e out/pdf/manual-auto-ceiling/manual.pdf
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/pdf/manual-auto-ceiling --include='*.html'
 
-      # #164: every PDF this job makes, by any route, is checked with veraPDF's
-      # own command line, and its reports kept for review. The release is pinned
-      # by checksum and must be the version the integration tests use, so a
-      # Dependabot bump of the library is a prompt to move this pin with it.
-      - name: Cache veraPDF
-        id: cache-verapdf
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: verapdf-${{ env.VERAPDF_VERSION }}
-          key: verapdf-${{ env.VERAPDF_VERSION }}-${{ env.VERAPDF_SHA256 }}
-
-      - name: Install veraPDF
+      # #164 (E): the PDF in every branding, with a publisher stylesheet, and
+      # with the generator's own options, so a theme or an option that breaks
+      # the tagging is caught by the check below
+      - name: The PDF in each branding and with the generator's options (#164)
         working-directory: .
         run: |
-          pom=$(sed -n 's:.*<verapdf.version>\(.*\)</verapdf.version>.*:\1:p' designsystempdf/pom.xml)
-          test "$pom" = "$VERAPDF_VERSION" || { echo "pom.xml tests with veraPDF $pom but CI installs $VERAPDF_VERSION: move VERAPDF_VERSION and VERAPDF_SHA256 together"; exit 1; }
-          if [ ! -x "verapdf-${VERAPDF_VERSION}/verapdf" ]; then
-            minor=${VERAPDF_VERSION%.*}
-            curl -sSfL -o verapdf.zip "https://software.verapdf.org/releases/${minor}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
-            echo "${VERAPDF_SHA256}  verapdf.zip" | sha256sum -c -
-            unzip -q verapdf.zip -d /tmp/verapdf-installer
-            java "-DINSTALL_PATH=$PWD/verapdf-${VERAPDF_VERSION}" \
-              -jar "/tmp/verapdf-installer/verapdf-greenfield-${VERAPDF_VERSION}/verapdf-izpack-installer-${VERAPDF_VERSION}.jar" \
-              tools/verapdf/auto-install.xml
-            rm verapdf.zip
-          fi
-          "verapdf-${VERAPDF_VERSION}/verapdf" --version | head -1 | grep -qF "veraPDF ${VERAPDF_VERSION}"
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
+          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --format govuk -Dgovuk.search=no -Dgovuk.print=yes "$@"; }
+          made() { # output folder, PDF name, log
+            test -f "$1/$2.pdf" || { echo "no PDF in $1"; exit 1; }
+            absent -q 'GOVK008W' "$3"
+          }
+          for b in istanduk nhs official; do
+            dita --input docs/manual/manual.ditamap --output "out/pdf/manual-$b" "-Dgovuk.branding=$b" 2>&1 | tee "/tmp/manual-$b.log" > /dev/null
+            made "out/pdf/manual-$b" manual "/tmp/manual-$b.log"
+          done
+          # the manual's own sample publisher stylesheet (#142)
+          dita --input docs/manual/manual.ditamap --output out/pdf/manual-custom \
+            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes 2>&1 | tee /tmp/manual-custom.log > /dev/null
+          made out/pdf/manual-custom manual /tmp/manual-custom.log
+          # the generator's options: mirrored narrow margins, and A5 landscape with one level of bookmarks
+          dita --input fixtures/dita13-kitchen/kitchen.ditamap --output out/pdf/kitchen-double \
+            "-Dgovuk.pdf.command=designsystempdf --sides double --margins narrow" 2>&1 | tee /tmp/kitchen-double.log > /dev/null
+          made out/pdf/kitchen-double kitchen /tmp/kitchen-double.log
+          dita --input docs/manual/manual.ditamap --output out/pdf/manual-a5 \
+            -Dgovuk.pdf.paper=A5 -Dgovuk.pdf.orientation=landscape -Dgovuk.print.toc.depth=1 2>&1 | tee /tmp/manual-a5.log > /dev/null
+          made out/pdf/manual-a5 manual /tmp/manual-a5.log
+          # the linked topics printed beneath the ones that link to them (#176)
+          dita --input fixtures/print-scope/scope.ditamap --output out/pdf/print-scope-linked \
+            -Dgovuk.print.scope=linked 2>&1 | tee /tmp/print-scope-linked.log > /dev/null
+          made out/pdf/print-scope-linked scope /tmp/print-scope-linked.log
+          # several books from one map (#178): a PDF of the whole set and one per
+          # book, each linked with its size from the home page and the book's pages
+          dita --input fixtures/books-omnibus/library.ditamap --output out/pdf/books-omnibus 2>&1 | tee /tmp/books-omnibus.log > /dev/null
+          for n in library library-alpha library-beta; do made out/pdf/books-omnibus "$n" /tmp/books-omnibus.log; done
+          grep -Eq 'href="library-alpha.pdf">The alpha book \(PDF, [0-9.]+ [KM]B\)</a>' out/pdf/books-omnibus/index.html
+          grep -Eq 'href="../library-beta.pdf">The beta book \(PDF, [0-9.]+ [KM]B\)</a>' out/pdf/books-omnibus/beta/b1.html
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-|govuk-book' out/pdf/books-omnibus --include='*.html'
+          dita --input fixtures/books-parts/volumes.ditamap --output out/pdf/books-parts -Dgovuk.print.books=parts \
+            2>&1 | tee /tmp/books-parts.log > /dev/null
+          for n in volumes volumes-planning volumes-building; do made out/pdf/books-parts "$n" /tmp/books-parts.log; done
+          echo "made the PDF in three brandings, with a publisher stylesheet, and with the generator's options"
+
+      # #164: every PDF this job makes, by any route, is checked with veraPDF's
+      # own command line (pinned in .github/actions/verapdf), and its reports
+      # kept for review. PDF/UA-1 is required; PDF/UA-2 is reported, not
+      # required (F), to show what a later move to it would take.
+      - name: Install veraPDF
+        uses: ./.github/actions/verapdf
 
       - name: Every PDF the job made is PDF/UA-1 (#164)
         working-directory: .
         run: |
-          verapdf="$PWD/verapdf-${VERAPDF_VERSION}/verapdf"
           mkdir -p pdf-ua-reports
           {
-            echo "### PDF/UA-1 (veraPDF ${VERAPDF_VERSION})"
+            echo "### PDF/UA ($(verapdf --version | head -1))"
             echo
-            echo "| PDF | Result |"
-            echo "|---|---|"
+            echo "PDF/UA-1 is required. PDF/UA-2 is advisory: the generator writes PDF/UA-1, so these are the rules a move to PDF/UA-2 would have to meet."
+            echo
+            echo "| PDF | PDF/UA-1 | PDF/UA-2 (advisory) |"
+            echo "|---|---|---|"
           } > pdf-ua-reports/summary.md
-          failed=0; count=0
-          # the plugin's builds (govuk.pdf.command and govuk.pdf=auto), and the
-          # integration tests' renders of the sample and the print documents
+          rules() { sed -n 's/^ \{1,\}FAIL \(.*\)/\1/p' | sort -u | paste -sd ';' - | sed 's/;/; /g'; }
+          # veraPDF now and then fails to run at all (an exception, which can
+          # exit 1 like a non-compliant file): only a verdict in its output
+          # counts, and without one it is run again
+          vera() {
+            local out rc i
+            for i in 1 2 3; do
+              out=$(verapdf "$@" 2> /tmp/vera.err) && rc=0 || rc=$?
+              if printf '%s\n' "$out" | grep -Eq '^(PASS|FAIL) |</html>'; then break; fi
+              echo "veraPDF gave no verdict (exit $rc) on $*; trying again" >&2
+              grep -m1 -E 'Exception|Error' /tmp/vera.err >&2 || true
+            done
+            printf '%s\n' "$out"
+          }
+          failed=0; count=0; ua2pass=0
+          # the plugin's builds (govuk.pdf.command, govuk.pdf=auto, each branding
+          # and option above), and the integration tests' renders
           while IFS= read -r pdf; do
-            name=$(printf '%s' "${pdf#./}" | tr '/' '_')
-            "$verapdf" --flavour ua1 --format html "$pdf" > "pdf-ua-reports/${name%.pdf}.html" || true
-            result=$("$verapdf" --flavour ua1 --format text -v "$pdf" || true)
-            printf '%s\n' "$result" > "pdf-ua-reports/${name%.pdf}.txt"
-            if printf '%s\n' "$result" | grep -q '^PASS '; then
-              echo "| \`${pdf#./}\` | pass |" >> pdf-ua-reports/summary.md
+            name=$(printf '%s' "${pdf#./}" | tr '/' '_'); name=${name%.pdf}
+            vera --flavour ua1 --format html "$pdf" > "pdf-ua-reports/${name}.html"
+            ua1=$(vera --flavour ua1 --format text -v "$pdf")
+            ua2=$(vera --flavour ua2 --format text -v "$pdf")
+            printf '%s\n' "$ua1" > "pdf-ua-reports/${name}.txt"
+            printf '%s\n' "$ua2" > "pdf-ua-reports/${name}.ua2.txt"
+            if printf '%s\n' "$ua1" | grep -q '^PASS '; then
+              one="pass"
             else
-              rules=$(printf '%s\n' "$result" | sed -n 's/^ \{1,\}FAIL \(.*\)/\1/p' | sort -u | paste -sd ' ' -)
-              echo "| \`${pdf#./}\` | **fail** ${rules} |" >> pdf-ua-reports/summary.md
-              echo "::error file=${pdf#./}::not PDF/UA-1 compliant: ${rules:-see the report}"
+              r=$(printf '%s\n' "$ua1" | rules)
+              one="**fail** ${r}"
+              echo "::error file=${pdf#./}::not PDF/UA-1 compliant: ${r:-see the report}"
               failed=$((failed + 1))
             fi
+            if printf '%s\n' "$ua2" | grep -q '^PASS '; then
+              two="pass"; ua2pass=$((ua2pass + 1))
+            else
+              two="$(printf '%s\n' "$ua2" | rules)"
+            fi
+            echo "| \`${pdf#./}\` | ${one} | ${two} |" >> pdf-ua-reports/summary.md
             count=$((count + 1))
           done < <(find ./out/pdf ./designsystempdf/target/it -name '*.pdf' -not -path './out/pdf/pdf-ua-negative/*' | sort)
+          echo >> pdf-ua-reports/summary.md
+          echo "${ua2pass} of ${count} would also meet PDF/UA-2." >> pdf-ua-reports/summary.md
           cat pdf-ua-reports/summary.md >> "$GITHUB_STEP_SUMMARY"
-          test "$count" -ge 7 || { echo "expected seven PDFs or more to check, found $count"; exit 1; }
+          test "$count" -ge 20 || { echo "expected twenty PDFs or more to check, found $count"; exit 1; }
           test "$failed" = 0 || { echo "$failed of $count PDFs are not PDF/UA-1"; exit 1; }
-          echo "all $count PDFs are PDF/UA-1"
+          echo "all $count PDFs are PDF/UA-1; ${ua2pass} would also meet PDF/UA-2"
 
       # ... and the check can fail: a publication with an image that has no
       # alternative text is warned about, rendered, and rejected (#164)
@@ -1280,7 +1478,11 @@ jobs:
           grep -q '\[DSPDF009W\]: 1 image with no alternative text' /tmp/negative.log
           pdf=out/pdf/pdf-ua-negative/negative.pdf
           test -f "$pdf"
-          rc=0; "verapdf-${VERAPDF_VERSION}/verapdf" --flavour ua1 --format text -v "$pdf" > /tmp/negative-ua.txt || rc=$?
+          # only a verdict counts: a run that fails to run at all is tried again
+          for i in 1 2 3; do
+            rc=0; verapdf --flavour ua1 --format text -v "$pdf" > /tmp/negative-ua.txt || rc=$?
+            grep -Eq '^(PASS|FAIL) ' /tmp/negative-ua.txt && break
+          done
           cat /tmp/negative-ua.txt
           test "$rc" = 1 || { echo "veraPDF should exit 1 for a non-compliant PDF, was $rc"; exit 1; }
           grep -q '^FAIL ' /tmp/negative-ua.txt
