@@ -125,7 +125,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val>yes</val>
     </param>
     <param name="govuk.print.max-topics"
-           desc="Largest publication (distinct topic files) for which the print document is written; above it the build says so (GOVK003I) and writes none. Default 500."
+           desc="Largest publication (distinct topic files) for which the print document is written; above it the build warns (GOVK003W) and writes none, so no PDF is made either. Default 500."
            type="string"/>
     <param name="govuk.print.toc.depth"
            desc="How many map levels the print document's contents list shows. 1-9; default 3."
