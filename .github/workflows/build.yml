@@ -89,8 +89,8 @@ jobs:
       GOVUK_FRONTEND_SHA256: "ac64b3abdb8af98624c8c0b8eabf78c894eb9da4d3b268544d0120f15abafc7a"
       # the published DesignSystemPDF release a publisher installs, which the
       # plugin must find and work with (#113, D-23); move it with each pdf-v* release
-      DSPDF_RELEASE: "0.1.0"
-      DSPDF_RELEASE_SHA256: "8e6702ca4b7632975d9477485693c6790872896c2e3fef00adab407054406842"
+      DSPDF_RELEASE: "0.1.1"
+      DSPDF_RELEASE_SHA256: "32dbdf04260f8035e756be5fc0b7a635565ab1d91b59cbbb48cbf4ca4871c664"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
