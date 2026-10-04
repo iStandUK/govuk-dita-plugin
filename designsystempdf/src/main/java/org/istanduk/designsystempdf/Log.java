@@ -35,6 +35,8 @@ final class Log {
   static final String ALT = "DSPDF009W";
   /** Text in a right-to-left script, which this version does not shape or order. */
   static final String RTL = "DSPDF010W";
+  /** The engine could not lay out a leader, so the contents was rendered without its dots (#182). */
+  static final String LEADER = "DSPDF011W";
   /** Progress, shown with --verbose. */
   static final String INFO = "DSPDF000I";
 

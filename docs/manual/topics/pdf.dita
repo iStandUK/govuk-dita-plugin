@@ -216,6 +216,14 @@ designsystempdf --sides double print.html publication.pdf</codeblock>
             below.</stentry>
         </strow>
         <strow>
+          <stentry><codeph>DSPDF011W</codeph></stentry>
+          <stentry>The contents could not be laid out with dots between the titles and the
+            page numbers, so it has the page numbers alone; the rest of the PDF is as
+            usual. Report it, with the print document. (DesignSystemPDF 0.1.0 wrote no PDF
+            at all here, with <codeph>DSPDF007E</codeph>, for some publications of a
+            thousand pages or more.)</stentry>
+        </strow>
+        <strow>
           <stentry><codeph>DSPDF008W</codeph></stentry>
           <stentry>An image or stylesheet on another website was not fetched; nothing is
             requested over the network. Keep the file with the publication.</stentry>

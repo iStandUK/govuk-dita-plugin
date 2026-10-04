@@ -2,6 +2,11 @@
 
 DesignSystemPDF is versioned on its own line, independently of the GOV.UK DITA plugin. Releases are tagged `pdf-v<version>`.
 
+## 0.1.1 — unreleased
+
+- A document of a thousand pages or more no longer fails with `DSPDF007E` (`NegativeArraySizeException: -1`) when a contents entry nearly fills its line ([#182](https://github.com/iStandUK/govuk-dita-plugin/issues/182)). The engine lays each contents line out for a three-digit page number and paints the real one, so a wider number left the dots less than no room. From a thousand pages, each contents entry's page number is now read from the layout and written in, and the document is laid out again, so every line is laid out at its true width. Shorter documents are laid out once, as before, and are unchanged to the byte.
+- If the engine still cannot fit the dots, the contents is drawn without them, page numbers kept, and `DSPDF011W` says so, rather than no PDF being written.
+
 ## 0.1.0 — 2026-10-03
 
 The first release. Design: [13 — page numbers in print](https://github.com/iStandUK/govuk-dita-plugin/blob/dev/design/13-print-page-numbers.md); decisions D-23 and D-25.
