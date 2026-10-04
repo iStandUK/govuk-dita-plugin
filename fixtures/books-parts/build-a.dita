@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="build-a" xml:lang="en-GB">
+  <title>Building a service</title>
+  <body>
+    <p>Chapter in part two. <indexterm>building</indexterm>Back to <xref href="plan-a.dita"/>.</p>
+  </body>
+</topic>

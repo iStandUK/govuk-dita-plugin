@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "bookmap.dtd">
+<bookmap id="alpha" xml:lang="en-GB">
+  <booktitle><mainbooktitle>The alpha book</mainbooktitle></booktitle>
+  <bookmeta><author>Alpha Team</author><bookid><edition>First edition</edition></bookid></bookmeta>
+  <chapter href="a1.dita"/>
+  <chapter href="a2.dita"/>
+</bookmap>

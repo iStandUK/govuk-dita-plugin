@@ -242,6 +242,42 @@
       <p>A reference work printed whole is long: a PDF of ten thousand entries can run to
         tens of thousands of pages and needs memory to match.</p>
     </section>
+    <section id="books">
+      <title>Several books from one map</title>
+      <p><indexterm>govuk.print.books</indexterm><indexterm>print document<indexterm>several books</indexterm></indexterm>One
+        map can hold several books. The site is always one site, and
+        <filepath>print.html</filepath> is always the whole publication. Each book is also
+        printed on its own, beside it:</p>
+      <ul>
+        <li><b>A map that references bookmaps</b>, one <codeph>&lt;mapref&gt;</codeph> each,
+          prints every bookmap as a book of its own, always. Each book has its own cover,
+          from that bookmap's title and metadata, and its own chapters, parts, appendices,
+          front matter and back matter.</li>
+        <li><b>A bookmap with parts</b> is one book unless you set
+          <codeph>govuk.print.books=parts</codeph>, which prints each
+          <codeph>&lt;part&gt;</codeph> as a book as well. A part's book takes its title
+          from the part. Its cover copies the bookmap's publisher information: authorship,
+          edition, dates, identifiers, copyright and licence. It holds the part's own topic,
+          if it has one, and the part's chapters. The bookmap's front matter, back matter
+          and appendices stay in the whole book only.</li>
+      </ul>
+      <p>A book's print document is <filepath>print-<varname>id</varname>.html</filepath>
+        and its PDF <filepath><varname>name</varname>-<varname>id</varname>.pdf</filepath>,
+        where <varname>id</varname> is the bookmap's or the part's <codeph>id</codeph> (or
+        <codeph>book-1</codeph>, <codeph>book-2</codeph> and so on when there is none). The
+        home page lists the books with their print versions and PDFs. Each topic page
+        links its own book's print version and PDF in the footer, beside the whole
+        publication's. A topic used in two books names the first.</p>
+      <p>The glossary, the index and the lists of figures and tables belong to the whole
+        publication. They are printed in <filepath>print.html</filepath> and not in each
+        book. Within a book, a link to another topic in the same book becomes a link
+        within the document, with a page number in a PDF. A link to another book goes to
+        the website. <codeph>govuk.print.max-topics</codeph> and
+        <codeph>govuk.print.scope</codeph> apply to each book on its own.</p>
+      <p>When the books should be separate websites, build each from its own map, or
+        together with a DITA-OT project file (<xref keyref="build"/>). Links between them
+        then do not resolve.</p>
+    </section>
     <section id="cover">
       <title>What the cover shows</title>
       <p><indexterm>print document<indexterm>cover</indexterm></indexterm><indexterm>bookmeta</indexterm>A
