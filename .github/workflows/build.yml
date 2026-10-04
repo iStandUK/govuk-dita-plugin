@@ -422,6 +422,18 @@ jobs:
             echo "govuk.print.scope=everything should have failed the build"; exit 1
           fi
           grep -qF "govuk.print.scope must be 'navigation' or 'linked'" scope-bad.log
+          # #179: a DITA-OT project file passes each input map as a file: URI.
+          # Built from a folder whose name has a space, so the URI is escaped.
+          proj="$RUNNER_TEMP/with space"
+          rm -rf "$proj" && mkdir -p "$proj" && cp -r fixtures "$proj/"
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --project="$proj/fixtures/project/project.xml" \
+            --output="$PWD/out/project" 2>&1 | tee project.log
+          absent -Eq 'BUILD FAILED|does not exist|GOVK009W' project.log
+          for d in scope cover; do
+            test -f "out/project/$d/index.html" && test -f "out/project/$d/print.html" \
+              || { echo "the $d deliverable is incomplete"; exit 1; }
+          done
+          test "$(heads out/project/scope/print.html)" = "h2 Contents|h2 Index of items|h2 Introduction"
 
       # The print document's cover (#150): publication details and an imprint
       # from the map's metadata and the publisher's parameters — every line

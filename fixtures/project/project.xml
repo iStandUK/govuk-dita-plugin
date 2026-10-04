@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Two deliverables from one project file, built with dita project (#179).
+     DITA-OT passes each input map to the plugin as a file: URI. Each
+     deliverable goes to a folder of its own under the output folder
+     given on the command line. -->
+<project xmlns="https://www.dita-ot.org/project">
+  <deliverable id="scope">
+    <context><input href="../print-scope/scope.ditamap"/></context>
+    <output href="scope"/>
+    <publication transtype="govuk">
+      <param name="govuk.search" value="no"/>
+      <param name="govuk.print" value="yes"/>
+    </publication>
+  </deliverable>
+  <deliverable id="cover">
+    <context><input href="../print-cover/cover.ditamap"/></context>
+    <output href="cover"/>
+    <publication transtype="govuk">
+      <param name="govuk.search" value="no"/>
+      <param name="govuk.print" value="yes"/>
+    </publication>
+  </deliverable>
+</project>
