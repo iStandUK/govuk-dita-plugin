@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+One book of several (#178). Imported by the govuk-books-build.xml that
+books.xsl writes beside the merged map, which calls govuk-book once per book;
+run by the govuk.books.finish target, which passes on every property. For a
+book whose print document was written, this renders it as PDF when the build
+makes PDFs, fills the PDF's size into the home page's link (or removes the
+link when no PDF was made), and puts the book's print version and PDF into
+the footer of each of its pages, where the page left a govuk-book marker
+holding its path to the site root.
+-->
+<project name="govuk-books-macros" xmlns:if="ant:if" xmlns:unless="ant:unless">
+
+  <macrodef name="govuk-book">
+    <attribute name="id"/>
+    <attribute name="print"/>
+    <attribute name="pdf"/>
+    <attribute name="pages"/>
+    <attribute name="print-label"/>
+    <attribute name="pdf-prefix"/>
+    <attribute name="pdf-suffix"/>
+    <sequential>
+      <local name="govuk.book.printed"/><local name="govuk.book.pdf.wanted"/>
+      <local name="govuk.book.rc"/><local name="govuk.book.log"/><local name="govuk.book.err"/>
+      <local name="govuk.book.pdf.made"/><local name="govuk.book.said"/>
+      <local name="govuk.book.bytes"/><local name="govuk.book.size"/><local name="govuk.book.pdf.li"/>
+      <available property="govuk.book.printed" file="${govuk.site.dir}/@{print}" type="file"/>
+      <condition property="govuk.book.pdf.wanted">
+        <and>
+          <isset property="govuk.book.printed"/>
+          <isset property="govuk.pdf.on"/>
+          <not><equals arg1="@{pdf}" arg2=""/></not>
+        </and>
+      </condition>
+
+      <!-- the PDF, as govuk.pdf makes the whole publication's -->
+      <sequential if:set="govuk.book.pdf.wanted">
+        <echo level="info" message="govuk: rendering @{print} as @{pdf}"/>
+        <exec executable="${govuk.pdf.shell}" resultproperty="govuk.book.rc" failonerror="false"
+              dir="${govuk.site.dir}" outputproperty="govuk.book.log" errorproperty="govuk.book.err">
+          <arg value="${govuk.pdf.shell.flag}"/>
+          <arg value="${govuk.pdf.shell.quote}${govuk.pdf.run} &quot;${govuk.site.dir}/@{print}&quot; &quot;${govuk.site.dir}/@{pdf}&quot;${govuk.pdf.shell.quote}"/>
+        </exec>
+        <condition property="govuk.book.pdf.made">
+          <and>
+            <equals arg1="${govuk.book.rc}" arg2="0"/>
+            <available file="${govuk.site.dir}/@{pdf}" type="file"/>
+          </and>
+        </condition>
+        <echo unless:set="govuk.book.pdf.made" level="warning"
+              message="[GOVK008W]: no PDF was made of book @{id} (exit ${govuk.book.rc}); its print version is still linked. Command: ${govuk.pdf.run}${line.separator}${govuk.book.err}${govuk.book.log}"/>
+        <echo if:set="govuk.book.pdf.made" level="info" message="govuk: PDF written to @{pdf}"/>
+        <condition property="govuk.book.said">
+          <and>
+            <isset property="govuk.book.pdf.made"/>
+            <length string="${govuk.book.err}" trim="true" when="greater" length="0"/>
+          </and>
+        </condition>
+        <echo if:set="govuk.book.said" level="warning"
+              message="govuk: the PDF of book @{id} was written, and the PDF command reported:${line.separator}${govuk.book.err}"/>
+      </sequential>
+
+      <!-- its size into the home page's link, and the footer's PDF link -->
+      <sequential if:set="govuk.book.pdf.made">
+        <length file="${govuk.site.dir}/@{pdf}" property="govuk.book.bytes"/>
+        <xslt in="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/pdf-size.xsl"
+              out="${dita.temp.dir}/govuk-pdf-size-@{id}.txt" force="true"
+              style="${dita.plugin.org.istanduk.gov-uk.dir}/xsl/pdf-size.xsl">
+          <param name="BYTES" expression="${govuk.book.bytes}"/>
+        </xslt>
+        <loadfile property="govuk.book.size" srcfile="${dita.temp.dir}/govuk-pdf-size-@{id}.txt" encoding="UTF-8">
+          <filterchain><striplinebreaks/></filterchain>
+        </loadfile>
+        <replace file="${govuk.site.dir}/index.html" encoding="UTF-8"
+                 token="@GOVUK_PDF_SIZE_@{id}@" value="${govuk.book.size}"/>
+        <replaceregexp file="${govuk.site.dir}/index.html" encoding="UTF-8" flags="g"
+                       match="\s*&lt;!--/?govuk-pdf-@{id}--&gt;" replace=""/>
+        <property name="govuk.book.pdf.li"
+                  value="&lt;li class=&quot;govuk-footer__inline-list-item&quot;&gt;&lt;a class=&quot;govuk-footer__link&quot; type=&quot;application/pdf&quot; href=&quot;\1@{pdf}&quot;&gt;@{pdf-prefix}${govuk.book.size}@{pdf-suffix}&lt;/a&gt;&lt;/li&gt;"/>
+      </sequential>
+      <sequential unless:set="govuk.book.pdf.made">
+        <replaceregexp file="${govuk.site.dir}/index.html" encoding="UTF-8" flags="gs"
+                       match="\s*&lt;!--govuk-pdf-@{id}--&gt;.*?&lt;!--/govuk-pdf-@{id}--&gt;" replace=""/>
+        <property name="govuk.book.pdf.li" value=""/>
+      </sequential>
+
+      <!-- the book's links in the footer of each of its pages -->
+      <replaceregexp if:set="govuk.book.printed" encoding="UTF-8"
+                     match="&lt;!--govuk-book:([./]*)--&gt;"
+                     replace="&lt;li class=&quot;govuk-footer__inline-list-item&quot;&gt;&lt;a class=&quot;govuk-footer__link&quot; href=&quot;\1@{print}&quot;&gt;@{print-label}&lt;/a&gt;&lt;/li&gt;${govuk.book.pdf.li}">
+        <fileset dir="${govuk.site.dir}" includesfile="@{pages}"/>
+      </replaceregexp>
+    </sequential>
+  </macrodef>
+
+</project>

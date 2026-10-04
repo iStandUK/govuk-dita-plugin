@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "bookmap.dtd">
+<!-- A bookmap in two parts (#178): one book, or with govuk.print.books=parts
+     a book per part as well. -->
+<bookmap id="volumes" xml:lang="en-GB">
+  <booktitle><mainbooktitle>Service manual</mainbooktitle></booktitle>
+  <bookmeta>
+    <author>Example Department</author>
+    <critdates><created date="2026-01-15"/><revised modified="2026-09-30"/></critdates>
+    <bookid><edition>Third edition</edition></bookid>
+    <bookrights>
+      <copyrfirst><year>2026</year></copyrfirst>
+      <bookowner><organization>Example Department</organization></bookowner>
+    </bookrights>
+  </bookmeta>
+  <frontmatter><preface href="preface.dita"/></frontmatter>
+  <part id="planning" href="part-one.dita">
+    <chapter href="plan-a.dita"/>
+    <chapter href="plan-b.dita"/>
+  </part>
+  <part id="building" navtitle="Part two: Building">
+    <chapter href="build-a.dita"/>
+  </part>
+  <appendices><appendix href="appendix.dita"/></appendices>
+  <backmatter><booklists><glossarylist><topicref href="service.dita"/></glossarylist><indexlist/></booklists></backmatter>
+</bookmap>

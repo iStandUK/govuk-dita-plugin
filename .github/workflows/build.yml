@@ -434,6 +434,59 @@ jobs:
               || { echo "the $d deliverable is incomplete"; exit 1; }
           done
           test "$(heads out/project/scope/print.html)" = "h2 Contents|h2 Index of items|h2 Introduction"
+          # #178: several books from one map. A map of two bookmaps: one site,
+          # the whole set in print.html, each bookmap in a print document of its
+          # own under its own cover, and each page's footer naming its book.
+          books() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --input "$1" --format govuk --output "out/$2" \
+            -Dgovuk.print=yes -Dgovuk.search=no "${@:3}" 2>&1 | tee "$2.log"; absent -Eq 'GOVK|DOTX|Error' "$2.log"; }
+          books fixtures/books-omnibus/library.ditamap books-omnibus
+          o=out/books-omnibus
+          test "$(heads $o/print.html)" = "h2 Contents|h2 Alpha topic|h2 Alpha second|h2 Beta topic"
+          test "$(heads $o/print-alpha.html)" = "h2 Contents|h2 Alpha topic|h2 Alpha second"
+          test "$(heads $o/print-beta.html)" = "h2 Contents|h2 Beta topic"
+          grep -q '<h1 class="govuk-heading-xl">The alpha book</h1>' $o/print-alpha.html
+          grep -q '<li>First edition</li>' $o/print-alpha.html
+          grep -q '<li>Second edition</li>' $o/print-beta.html
+          # a link to the other book goes to the site; in the whole set it stays in the document
+          grep -q 'href="beta/b1.html"' $o/print-alpha.html
+          grep -q 'href="#b1"' $o/print.html
+          # the home page lists the books; each page's footer links its own
+          grep -q 'href="print-alpha.html">The alpha book (print version)</a>' $o/index.html
+          grep -q 'href="print-beta.html">The beta book (print version)</a>' $o/index.html
+          grep -q 'href="../print-alpha.html">The alpha book (print version)</a>' $o/alpha/a1.html
+          grep -q 'href="../print-beta.html">The beta book (print version)</a>' $o/beta/b1.html
+          absent -q 'print-beta' $o/alpha/a1.html
+          # no PDF here, so no PDF link and no token; and no marker left anywhere
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-|govuk-book|application/pdf' $o --include='*.html'
+          # a bookmap with parts: one book by default; a book per part when asked,
+          # each with the part's title, the bookmap's publisher information,
+          # and only the part's chapters
+          books fixtures/books-parts/volumes.ditamap books-whole
+          test ! -e out/books-whole/print-planning.html
+          absent -q 'app-books' out/books-whole/index.html
+          books fixtures/books-parts/volumes.ditamap books-parts -Dgovuk.print.books=parts
+          p=out/books-parts
+          cmp out/books-whole/print.html $p/print.html
+          test "$(heads $p/print-planning.html)" = "h2 Contents|h2 Part one: Planning|h2 Planning a service|h2 Planning a budget"
+          test "$(heads $p/print-building.html)" = "h2 Contents|h2 Building a service"
+          for b in planning building; do
+            grep -q 'app-attribution">Example Department' $p/print-$b.html
+            grep -q '<li>Third edition</li>' $p/print-$b.html
+            grep -q '© 2026 Example Department' $p/print-$b.html
+            absent -Eq 'Preface|Appendix|app-print-glossary|app-print-index' $p/print-$b.html
+          done
+          grep -q '<h1 class="govuk-heading-xl">Part two: Building</h1>' $p/print-building.html
+          grep -q 'href="build-a.html"' $p/print-planning.html
+          grep -q 'href="print-building.html">Part two: Building (print version)</a>' $p/build-a.html
+          # the whole bookmap's pages outside the parts are in no book
+          absent -q 'print-planning\|print-building' $p/preface.html
+          absent -rq 'govuk-book' $p --include='*.html'
+          # a value the plugin does not have stops the build
+          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/books-parts/volumes.ditamap --format govuk \
+               --output out/books-bad -Dgovuk.print=yes -Dgovuk.print.books=chapters > books-bad.log 2>&1; then
+            echo "govuk.print.books=chapters should have failed the build"; exit 1
+          fi
+          grep -qF "govuk.print.books must be 'whole' or 'parts'" books-bad.log
 
       # The print document's cover (#150): publication details and an imprint
       # from the map's metadata and the publisher's parameters — every line
@@ -1334,6 +1387,16 @@ jobs:
           dita --input fixtures/print-scope/scope.ditamap --output out/pdf/print-scope-linked \
             -Dgovuk.print.scope=linked 2>&1 | tee /tmp/print-scope-linked.log > /dev/null
           made out/pdf/print-scope-linked scope /tmp/print-scope-linked.log
+          # several books from one map (#178): a PDF of the whole set and one per
+          # book, each linked with its size from the home page and the book's pages
+          dita --input fixtures/books-omnibus/library.ditamap --output out/pdf/books-omnibus 2>&1 | tee /tmp/books-omnibus.log > /dev/null
+          for n in library library-alpha library-beta; do made out/pdf/books-omnibus "$n" /tmp/books-omnibus.log; done
+          grep -Eq 'href="library-alpha.pdf">The alpha book \(PDF, [0-9.]+ [KM]B\)</a>' out/pdf/books-omnibus/index.html
+          grep -Eq 'href="../library-beta.pdf">The beta book \(PDF, [0-9.]+ [KM]B\)</a>' out/pdf/books-omnibus/beta/b1.html
+          absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-|govuk-book' out/pdf/books-omnibus --include='*.html'
+          dita --input fixtures/books-parts/volumes.ditamap --output out/pdf/books-parts -Dgovuk.print.books=parts \
+            2>&1 | tee /tmp/books-parts.log > /dev/null
+          for n in volumes volumes-planning volumes-building; do made out/pdf/books-parts "$n" /tmp/books-parts.log; done
           echo "made the PDF in three brandings, with a publisher stylesheet, and with the generator's options"
 
       # #164: every PDF this job makes, by any route, is checked with veraPDF's
@@ -1398,7 +1461,7 @@ jobs:
           echo >> pdf-ua-reports/summary.md
           echo "${ua2pass} of ${count} would also meet PDF/UA-2." >> pdf-ua-reports/summary.md
           cat pdf-ua-reports/summary.md >> "$GITHUB_STEP_SUMMARY"
-          test "$count" -ge 13 || { echo "expected thirteen PDFs or more to check, found $count"; exit 1; }
+          test "$count" -ge 20 || { echo "expected twenty PDFs or more to check, found $count"; exit 1; }
           test "$failed" = 0 || { echo "$failed of $count PDFs are not PDF/UA-1"; exit 1; }
           echo "all $count PDFs are PDF/UA-1; ${ua2pass} would also meet PDF/UA-2"
 
