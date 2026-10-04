@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map id="links">
+  <title>Links</title>
+  <keydef keys="item-a" href="items/item-a.dita"/>
+  <keydef keys="item-b" href="items/item-b.dita"/>
+  <keydef keys="item-c" href="items/item-c.dita"/>
+  <keydef keys="item-d" href="items/item-d.dita"/>
+  <keydef keys="index" href="index.dita"/>
+</map>

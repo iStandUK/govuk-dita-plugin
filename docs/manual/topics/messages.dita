@@ -111,6 +111,16 @@
               document's limit. <xref keyref="parameters"/> lists every parameter.</entry>
           </row>
           <row>
+            <entry><codeph>GOVK010W</codeph></entry>
+            <entry>With <codeph>govuk.print.scope=linked</codeph>, the topics the navigation
+              links to would take the print document above
+              <codeph>govuk.print.max-topics</codeph>. The message gives both counts. The
+              print document, and so the PDF, is still written, with the navigation only, and
+              its links to the other topics go to the website.</entry>
+            <entry>Raise <codeph>govuk.print.max-topics</codeph> to print the linked topics as
+              well, or keep to the navigation. See <xref keyref="print"/>.</entry>
+          </row>
+          <row>
             <entry><codeph>GOVK007W</codeph></entry>
             <entry>A Content-Security-Policy is in force (<codeph>govuk.csp</codeph>) and
               content that was kept — a remote image or object — will be blocked by it in the

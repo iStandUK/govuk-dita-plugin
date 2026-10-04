@@ -201,6 +201,15 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <not><matches pattern="^[1-9]$" string="${govuk.print.toc.depth}"/></not>
       </condition>
     </fail>
+    <!-- What the print document holds (#176): the navigation, or the
+         navigation and every topic its topics link to -->
+    <property name="govuk.print.scope" value="navigation"/>
+    <fail message="govuk.print.scope must be 'navigation' or 'linked', was: ${govuk.print.scope}">
+      <condition><not><or>
+        <equals arg1="${govuk.print.scope}" arg2="navigation"/>
+        <equals arg1="${govuk.print.scope}" arg2="linked"/>
+      </or></not></condition>
+    </fail>
     <!-- Paper for print.css (and, in 1.1, the PDF engine): a CSS page-size
          keyword, or a width and height as CSS lengths -->
     <property name="govuk.pdf.paper" value="A4"/>
@@ -535,6 +544,7 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
         <param name="GOVUK-PRINT" expression="${govuk.print}"/>
         <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}"/>
         <param name="GOVUK-PRINT-TOC-DEPTH" expression="${govuk.print.toc.depth}"/>
+        <param name="GOVUK-PRINT-SCOPE" expression="${govuk.print.scope}"/>
         <param name="GOVUK-SVG-SANITIZE" expression="${govuk.svg.sanitize}"/>
         <param name="GOVUK-INLINE-SCOPE" expression="${govuk.inline.scope}"/>
         <param name="GOVUK-INPUT-DIR" expression="${govuk.input.dir.url}"/>

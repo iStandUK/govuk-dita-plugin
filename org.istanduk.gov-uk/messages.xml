@@ -11,6 +11,10 @@ DITA-OT convention: four letters, three digits, severity (I/W/E/F).
     <reason>Print document skipped: the publication has %1 topic files, above govuk.print.max-topics=%2.</reason>
     <response>Raise govuk.print.max-topics, or build print documents per part from submaps. Very large publications are not one printable document.</response>
   </message>
+  <message id="GOVK010W" type="WARN">
+    <reason>govuk.print.scope=linked would print %1 topic files, above govuk.print.max-topics=%2, so the print document holds the %3 topic files in the navigation only.</reason>
+    <response>Raise govuk.print.max-topics to print the linked topics as well.</response>
+  </message>
   <message id="GOVK004W" type="WARN">
     <reason>Inlined SVG '%1' carries active or remote content (%2): %3.</reason>
     <response>Diagrams should be static: no script, foreignObject, event-handler attributes, script-scheme links or references to other origins. govuk.svg.sanitize=yes (the default) removes them; govuk.svg.sanitize=no keeps the file as authored.</response>
