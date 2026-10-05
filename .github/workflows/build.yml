@@ -778,7 +778,10 @@ jobs:
           # root-relative paths the publisher hosts; nothing is fetched from gov.uk or nhs.uk
           for site in out/manual out/manual-istanduk out/manual-nhs out/manual-official; do
             absent -Eroh 'src="(https?:)?//' "$site" --include='*.html'
-            absent -Eroh '<link[^>]*href="(https?:)?//' "$site" --include='*.html'
+            # link elements the browser fetches; the metadata's link relations
+            # (canonical, prev, next, license, alternate) name pages, never load them
+            if grep -rhoE '<link [^>]*>' "$site" --include='*.html' | grep -vE 'rel="(canonical|prev|next|license|alternate)"' \
+                 | grep -E 'href="(https?:)?//'; then echo "a link element in $site loads from another origin"; exit 1; fi
             absent -Eroh 'url\(["'"'"']?(https?:)?//' "$site/govuk" --include='*.css'
             absent -Eroh '@import' "$site/govuk" --include='*.css'
           done
