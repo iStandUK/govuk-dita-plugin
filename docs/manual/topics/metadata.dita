@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="metadata" xml:lang="en-GB">
+  <title>Metadata and social sharing</title>
+  <shortdesc>Every page carries metadata in its head, read from the DITA: the tags that link
+    previews, catalogues and search engines read. Nothing is invented; a value the DITA does
+    not give is left out.</shortdesc>
+  <conbody>
+    <p><indexterm>metadata</indexterm><indexterm>Open Graph</indexterm><indexterm>Dublin
+      Core</indexterm>With the default <codeph>govuk.metadata=basic</codeph>, each page has
+      Open Graph tags, which decide how a link to it looks when shared; Dublin Core tags,
+      which government and library catalogues read; and links to its own address, its
+      neighbours in reading order and its licence. <codeph>govuk.metadata=no</codeph> writes
+      none of them. The print document never carries any.</p>
+    <section>
+      <title>What each page carries, and where it comes from</title>
+      <table frame="all" id="metadata-table">
+        <title>Tags written at govuk.metadata=basic</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colwidth="2*"/>
+          <colspec colname="c2" colwidth="3*"/>
+          <thead>
+            <row><entry>Tags</entry><entry>Read from</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry><codeph>og:title</codeph>, <codeph>DC.title</codeph></entry>
+              <entry>The topic's <codeph>title</codeph>. On the home page, the map's title
+                (a bookmap's <codeph>mainbooktitle</codeph>).</entry>
+            </row>
+            <row>
+              <entry><codeph>og:description</codeph>,
+                <codeph>DC.description</codeph></entry>
+              <entry>The topic's <codeph>shortdesc</codeph>, else the
+                <codeph>shortdesc</codeph> in its <codeph>topicref</codeph>. On the home page,
+                the map's <codeph>shortdesc</codeph> or the bookmap's
+                <codeph>booktitlealt</codeph>.</entry>
+            </row>
+            <row>
+              <entry><codeph>og:locale</codeph>, <codeph>DC.language</codeph></entry>
+              <entry>The topic's <codeph>xml:lang</codeph>, else the map's.</entry>
+            </row>
+            <row>
+              <entry><codeph>og:type</codeph></entry>
+              <entry><codeph>website</codeph> on the home page, <codeph>article</codeph>
+                elsewhere.</entry>
+            </row>
+            <row>
+              <entry><codeph>og:site_name</codeph></entry>
+              <entry><codeph>govuk.service.name</codeph>, else the map's title.</entry>
+            </row>
+            <row>
+              <entry><codeph>article:section</codeph></entry>
+              <entry>The title of the top-level entry of the navigation the page is
+                under.</entry>
+            </row>
+            <row>
+              <entry><codeph>article:tag</codeph></entry>
+              <entry>The topic's <codeph>category</codeph> and <codeph>keyword</codeph>
+                elements. A keyword that only repeats a word of the page's title is not a
+                tag, and each tag is written once.</entry>
+            </row>
+            <row>
+              <entry><codeph>article:published_time</codeph>,
+                <codeph>article:modified_time</codeph></entry>
+              <entry>The topic's own <codeph>critdates</codeph>, only when
+                <codeph>govuk.dates</codeph> shows dates. Dates in a bookmap's
+                <codeph>bookmeta</codeph> date the book: the toolkit copies them to every
+                topic, so they are not used for a page.</entry>
+            </row>
+            <row>
+              <entry><codeph>DC.publisher</codeph></entry>
+              <entry><codeph>govuk.organisation</codeph>, else the bookmap's
+                <codeph>publisherinformation</codeph> organization, else the
+                <codeph>bookowner</codeph> organization.</entry>
+            </row>
+            <row>
+              <entry><codeph>DC.creator</codeph></entry>
+              <entry>The publishing organisation. With
+                <codeph>govuk.metadata.persons=yes</codeph>, the topic's (or the bookmap's)
+                <codeph>author</codeph> elements instead.</entry>
+            </row>
+            <row>
+              <entry><codeph>DC.rights</codeph></entry>
+              <entry>What the footer says: Crown copyright for official branding, else
+                <codeph>govuk.footer.licence</codeph>, else the bookmap's
+                <codeph>bookrights</codeph>.</entry>
+            </row>
+            <row>
+              <entry><codeph>link rel="license"</codeph></entry>
+              <entry>The Open Government Licence for official branding, else
+                <codeph>govuk.licence.url</codeph>.</entry>
+            </row>
+            <row>
+              <entry><codeph>link rel="canonical"</codeph>, <codeph>og:url</codeph>,
+                <codeph>link rel="prev"</codeph> and <codeph>"next"</codeph></entry>
+              <entry>The page's address, and its neighbours' in reading order, under
+                <codeph>govuk.site.url</codeph>. Without it they are left out, since the
+                plugin has no other way to know the site's address.</entry>
+            </row>
+            <row>
+              <entry><codeph>og:image</codeph></entry>
+              <entry><codeph>govuk.og.image</codeph>: an absolute URL, or a path under the
+                site root, which needs <codeph>govuk.site.url</codeph>.</entry>
+            </row>
+            <row>
+              <entry><codeph>twitter:card</codeph></entry>
+              <entry>Always <codeph>summary</codeph>; the other values are read from the
+                Open Graph tags.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section>
+      <title>Any other property: data elements</title>
+      <p><indexterm>metadata<indexterm>data element</indexterm></indexterm>A
+        <codeph>&lt;data name="prefix:term" value="…"/&gt;</codeph> in a bookmap's
+        <codeph>bookmeta</codeph>, the <codeph>topicmeta</codeph> of a map or an entry, or a
+        topic's <codeph>prolog</codeph> states a property in a published vocabulary. The
+        prefixes are <codeph>dct</codeph> (Dublin Core terms), <codeph>dcat</codeph>,
+        <codeph>adms</codeph>, <codeph>skos</codeph>, <codeph>rdf</codeph>,
+        <codeph>foaf</codeph>, <codeph>org</codeph>, <codeph>vcard</codeph>,
+        <codeph>schema</codeph> and <codeph>og</codeph>.</p>
+      <codeblock>&lt;prolog>
+  &lt;data name="dct:subject" value="Child health"/>
+&lt;/prolog></codeblock>
+      <ul>
+        <li>A property reaches every tag that is read from it. The example adds an
+          <codeph>article:tag</codeph>.</li>
+        <li>A correct term that nothing at this level reads, such as
+          <codeph>dct:spatial</codeph>, is kept for the catalogue outputs to come, and is
+          not written.</li>
+        <li>A name that is not a term of those vocabularies, such as a misspelt
+          <codeph>dct:spacial</codeph>, is reported once per build
+          (<codeph>GOVK011W</codeph>) and left out.</li>
+        <li>A <codeph>data</codeph> element whose name has no prefix is the publisher's own,
+          and is not metadata.</li>
+      </ul>
+      <p>A page states its own properties first, from the entries above it in the map and
+        then from its prolog. It takes the rest from the publication, except the properties
+        that describe one thing only: its title, description, identifier, type, subjects and
+        dates. A system that generates DITA should follow
+        <xref href="https://github.com/iStandUK/govuk-dita-plugin/blob/dev/docs/SOURCE-SYSTEMS.md"
+              format="html" scope="external">the guide for source systems</xref>.</p>
+    </section>
+    <section>
+      <title>Checking</title>
+      <p>A page the metadata tables require a value for, and that has none, is reported once
+        per build for all such pages (<codeph>GOVK012W</codeph>). To look at a published page
+        as a link preview will, use a social network's sharing debugger, or read the page's
+        source. The repository's <filepath>tools/check_metadata.py</filepath> checks a built
+        site against the same tables offline.</p>
+    </section>
+  </conbody>
+</concept>

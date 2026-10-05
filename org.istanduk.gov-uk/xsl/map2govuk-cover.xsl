@@ -18,6 +18,7 @@ map transformation with the plugin's values.
   <xsl:import href="plugin:org.dita.html5:xsl/map2html5-cover.xsl"/>
   <xsl:import href="furniture.xsl"/>
   <xsl:import href="utility-pages.xsl"/>
+  <xsl:import href="metadata.xsl"/>
 
   <xsl:output method="html"
               include-content-type="no"
@@ -147,6 +148,9 @@ map transformation with the plugin's values.
 
   <xsl:template name="chapter-setup">
     <xsl:call-template name="govuk-check-map"/>
+    <xsl:call-template name="govuk-md-check">
+      <xsl:with-param name="cover" select="$govuk-md-cover"/>
+    </xsl:call-template>
     <html class="govuk-template">
       <xsl:call-template name="setTopicLanguage"/>
       <xsl:call-template name="chapterHead"/>
@@ -206,7 +210,38 @@ map transformation with the plugin's values.
   <xsl:template name="gen-user-head">
     <xsl:call-template name="govuk-csp-meta"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <xsl:call-template name="govuk-md-head">
+      <xsl:with-param name="record" select="$govuk-md-cover"/>
+    </xsl:call-template>
     <xsl:apply-templates select="." mode="gen-user-head"/>
+  </xsl:template>
+
+  <!-- The cover's metadata record (design 14): the publication's title and
+       description, the first page next -->
+  <xsl:variable name="govuk-md-cover" as="element()">
+    <xsl:call-template name="govuk-md-page">
+      <xsl:with-param name="role" select="'cover'"/>
+      <xsl:with-param name="path" select="concat('index', $OUTEXT)"/>
+      <xsl:with-param name="title" select="$govuk-cover-title"/>
+      <xsl:with-param name="description" select="string($govuk-md-publication/govuk:p[@term = 'dct:description']/@value)"/>
+      <xsl:with-param name="next" select="govuk:md-reading(/)[1]"/>
+    </xsl:call-template>
+  </xsl:variable>
+
+  <!-- A generated page's metadata record: its title, and the rest from the
+       publication -->
+  <xsl:template name="govuk-md-utility-head">
+    <xsl:param name="file" as="xs:string"/>
+    <xsl:param name="page-title" as="xs:string"/>
+    <xsl:call-template name="govuk-md-head">
+      <xsl:with-param name="record" as="element()">
+        <xsl:call-template name="govuk-md-page">
+          <xsl:with-param name="role" select="'utility'"/>
+          <xsl:with-param name="path" select="$file"/>
+          <xsl:with-param name="title" select="$page-title"/>
+        </xsl:call-template>
+      </xsl:with-param>
+    </xsl:call-template>
   </xsl:template>
 
   <!-- Kept in step with template.xsl's generateCssLinks; the cover is at the site
@@ -575,6 +610,10 @@ map transformation with the plugin's values.
           <xsl:call-template name="govuk-csp-meta"/>
           <meta name="viewport" content="width=device-width, initial-scale=1"/>
           <title><xsl:value-of select="concat($search-label, ' — ', $govuk-cover-title)"/></title>
+          <xsl:call-template name="govuk-md-utility-head">
+            <xsl:with-param name="file" select="'search.html'"/>
+            <xsl:with-param name="page-title" select="string($search-label)"/>
+          </xsl:call-template>
           <xsl:call-template name="generateCssLinks"/>
           <link rel="stylesheet" href="pagefind/pagefind-ui.css"/>
         </head>

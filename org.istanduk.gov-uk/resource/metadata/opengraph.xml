@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+Open Graph (https://ogp.me/), read when a page is shared: the cover is a
+website and every other page an article. The table format is described in
+design 14, section 7.
+-->
+<scheme id="opengraph" syntax="meta" attribute="property">
+  <kind record="page" when="@role = 'cover'" type="website">
+    <property term="@type" as="og:type" required="yes"/>
+  </kind>
+  <kind record="page" when="@role != 'cover'" type="article">
+    <property term="@type" as="og:type" required="yes"/>
+  </kind>
+  <kind record="page">
+    <property term="dct:title" as="og:title" required="yes"/>
+    <property term="dct:description" as="og:description"/>
+    <property term="@id" as="og:url" format="uri" required="yes"/>
+    <relation name="isPartOf" target="publication" term="dct:title" as="og:site_name"/>
+    <property term="dct:language" as="og:locale" format="locale"/>
+    <property term="foaf:depiction" as="og:image" format="uri"/>
+  </kind>
+  <kind record="page" when="@role != 'cover'">
+    <relation name="section" term="dct:title" as="article:section"/>
+    <property term="dct:subject" as="article:tag" repeat="yes"/>
+    <property term="dct:issued" as="article:published_time" format="date"/>
+    <property term="dct:modified" as="article:modified_time" format="date"/>
+  </kind>
+  <kind record="page">
+    <value as="twitter:card" value="summary" attribute="name"/>
+  </kind>
+</scheme>

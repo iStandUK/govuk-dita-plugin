@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="retired" xml:lang="en-GB" importance="obsolete">
+  <title>Retired check</title>
+  <shortdesc>A check that is no longer made.</shortdesc>
+  <prolog>
+    <critdates>
+      <created date="2025-03-01"/>
+      <revised modified="2026-02-14"/>
+    </critdates>
+  </prolog>
+  <conbody>
+    <p>Kept so that links to it still work.</p>
+  </conbody>
+</concept>

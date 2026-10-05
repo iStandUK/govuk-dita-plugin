@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<task id="check" xml:lang="en-GB">
+  <title>6-8 week check</title>
+  <shortdesc>The physical examination of a baby at six to eight weeks.</shortdesc>
+  <prolog>
+    <author>A. Writer</author>
+    <metadata>
+      <category>Screening</category>
+      <keywords>
+        <!-- the title split into words, as one generator writes them: not tags -->
+        <keyword>6</keyword><keyword>-</keyword><keyword>8</keyword>
+        <keyword>week</keyword><keyword>Check</keyword>
+        <!-- a real alternative name, twice: one tag -->
+        <keyword>newborn examination</keyword>
+        <keyword>Newborn examination</keyword>
+      </keywords>
+    </metadata>
+    <!-- mapped (article:tag), known but unmapped, misspelt, and not metadata -->
+    <data name="dct:subject" value="Child health"/>
+    <data name="dct:spatial" value="http://statistics.data.gov.uk/id/statistical-geography/E92000001"/>
+    <data name="dct:spacial" value="England"/>
+    <data name="internal-id" value="X-17"/>
+  </prolog>
+  <taskbody>
+    <steps>
+      <step><cmd>Examine the baby.</cmd></step>
+    </steps>
+  </taskbody>
+</task>

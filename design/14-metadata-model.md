@@ -98,7 +98,7 @@ These were restated in every issue; they now live in one place, and every scheme
 </topicmeta>
 ```
 
-- A property reaches each scheme whose table maps it. A term that no enabled table maps is reported once per build as a warning and left out, so a misspelt name is not silent.
+- A property reaches each scheme whose table maps it. A name that is not a term of a declared vocabulary is reported once per build as a warning and left out, so a misspelt name is not silent. A correct term that no enabled table maps is left out quietly (Section 12).
 - The table says whether a property's value is a URI, a date or text. Authors do not mark it.
 - This is the convention the toolkit already follows for `othermeta`, which it copies to `<meta>` tags unchanged.
 
@@ -202,3 +202,16 @@ Order: #99, #100, #101, then #102 with #122, then #103 with #123.
 - **Generic output that is valid but meaningless.** The `required` rows and the fixtures hold each scheme to what its consumers need (12 §4); the manual states what comes from where.
 - **Publisher-supplied `data` reaching the page head.** Values are escaped by the writer for its syntax, URI-typed values must parse as absolute URIs, and nothing is fetched. The content policy (#77) is unchanged.
 - **Up-front cost.** #99 is larger than it was. The whole epic is smaller, and scheme eight costs a table.
+
+## 12. As built: the foundation (#99)
+
+What building `basic` settled, where the sections above left it open or a real build showed otherwise:
+
+- **Misspelt, not merely unused.** `resource/metadata/vocabularies.xml` declares each prefix, its namespace and, for a closed vocabulary (`dct`, `dcat`, `adms`, `skos`, `rdf`), every term. A `data` name outside them is the warning (`GOVK011W`, once per name per build). A correct term that no enabled table maps, such as `rdf:type` before #102, is left out quietly. Warning on those would have made the worked example in `fixtures/source-system` warn for writing exactly what the guide asks for. The namespaces serve the Turtle writer and JSON-LD contexts later.
+- **A page's own facts first.** A page record takes its properties from the entries above it in the map (nearest first), then from its prolog. It takes the remaining properties from the publication record, except those that describe one thing only: title, description, alternative title, identifier, type, subject, dates, version, landing page and status. The publication record reads parameters, then bookmeta, then the root map's topicmeta.
+- **A topic's own dates only.** DITA-OT replaces a topic's `critdates` with bookmeta's. The harvest uses `critdates` only when they came from the topic's own file (their `xtrf`), so a page never claims the book's dates. Recovering the topic's own dates, for the dates line and the sitemap too, is #189.
+- **The table language** has three row types: `property` (a term, or `@id` for the record's address, or `@type` for the kind's type), `relation` (to a related record's address, or with `term` to one of its properties) and `value` (a constant). A row can say `format` (`uri`, `date`, `locale`, `text`), `required`, `repeat` (else the first value only), and for `meta`, the `attribute` (`property` for Open Graph, `name` otherwise). A kind's `when` tests `@role` (`cover`, `topic`, `utility`) or a property. `schemes.xml` lists the tables in output order, with the levels that enable each.
+- **Relations** built now: `isPartOf` (the publication, then the entries above, outermost first), `section` (the top-level entry, for `article:section`), `previous` and `next`.
+- **Two additions to the tables of #99:** `DC.creator`, which makes `govuk.metadata.persons` visible, and `rel="license"`.
+- **`govuk.metadata` takes `basic` or `no`** until `full` has a table (#100); a level that enables nothing is refused rather than accepted silently.
+- **The checks.** The cover's transform harvests every page once, and groups any warning by name or by table row, so a 10,000-page publication gets one warning per problem, not one per page. `tools/check_metadata.py` reads the same tables to check a built site, so it names no scheme either. CI proves the point by adding a row to an installed table and finding the tag.

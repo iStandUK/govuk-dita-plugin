@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+Dublin Core in HTML meta elements (DC.*), as read by government and library
+catalogues. The table format is described in design 14, section 7.
+-->
+<scheme id="dublincore" syntax="meta" attribute="name">
+  <kind record="page">
+    <property term="dct:title" as="DC.title" required="yes"/>
+    <property term="dct:creator" as="DC.creator" repeat="yes"/>
+    <property term="dct:description" as="DC.description"/>
+    <property term="dct:language" as="DC.language" required="yes"/>
+    <property term="dct:publisher" as="DC.publisher"/>
+    <property term="dct:rights" as="DC.rights"/>
+  </kind>
+</scheme>
