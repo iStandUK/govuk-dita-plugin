@@ -8,7 +8,7 @@ Everything here is standard DITA 1.3. There is no specialisation and no DTD to i
 
 Each rule is marked:
 
-- **Now**: the plugin acts on it today (v1.2.0).
+- **Now**: the plugin acts on it today (v1.2.0, or the next release where it says so).
 - **Planned**: designed and decided ([design 14](../design/14-metadata-model.md), D-26), not yet built. Write it now: it is valid DITA, it is ignored until then, and nothing will need regenerating.
 
 ## 1. The ten things that matter most
@@ -150,15 +150,15 @@ Metadata goes in the topic's `prolog`. The order of the elements is fixed by the
 
 | Element | Write | Now | Planned |
 |---|---|---|---|
-| `category` | The kind of thing: *Data element*, *Class*, *Attribute*, *Data set*, *Guidance*. One controlled list per publication. | A search filter | The page's subject in every metadata scheme |
-| `keywords/keyword` | Real alternative names, abbreviations and former names. **Never the title split into words**: that adds nothing to search and pollutes the tags. | Searchable aliases | Tags; a keyword that only repeats a word of the title is dropped |
+| `category` | The kind of thing: *Data element*, *Class*, *Attribute*, *Data set*, *Guidance*. One controlled list per publication. | A search filter; a tag in the page's metadata (next release) | The page's subject in the catalogue schemes |
+| `keywords/keyword` | Real alternative names, abbreviations and former names. **Never the title split into words**: that adds nothing to search and pollutes the tags. | Searchable aliases; tags in the page's metadata, where a keyword that only repeats a word of the title is dropped (next release) | Subjects in the catalogue schemes |
 | `audience` | Who it is for, if the publication distinguishes | A search filter | Audience |
-| `critdates` | `created` and `revised`, **only if true**. A batch-stamped date on every topic is worse than none. | The dates line, when the publisher sets `govuk.dates` | Published and modified dates, on the same switch |
+| `critdates` | `created` and `revised`, **only if true**. A batch-stamped date on every topic is worse than none. See the caution below on dates in `bookmeta`. | The dates line, when the publisher sets `govuk.dates`; published and modified dates in the page's metadata, on the same switch (next release) | — |
 | `resourceid` | The identifier the source system uses, stable across releases | — | The page's identifier in catalogue records |
 | `importance="obsolete"` (on the topic) | Retired or superseded items | Demoted in search | Status |
 | `<data name="adms:status" value="retired"/>` | The same fact for catalogues | — | `adms:status` |
-| `author` | An organisation. A person's name is published only if the publisher opts in. | Footer credits (from the map) | Creator |
-| `<data name="prefix:term" value="…"/>` | Any other property (Section 7) | — | Passed through to each scheme that knows the term |
+| `author` | An organisation. A person's name is published only if the publisher opts in. | Footer credits (from the map); the creator in the page's metadata, when the publisher sets `govuk.metadata.persons=yes` (next release) | — |
+| `<data name="prefix:term" value="…"/>` | Any other property (Section 7) | Read; written where a table maps the term (next release) | More schemes that know the term |
 
 ## 6. Metadata in the root map
 
@@ -186,15 +186,17 @@ Publication-wide facts go in `bookmeta` (or the `topicmeta` of a plain map). Top
 
 | Element | Now | Planned |
 |---|---|---|
-| `organization` (publisher, owner), `author` | Footer credits; the home page; the print cover | Publisher in every scheme |
+| `organization` (publisher, owner), `author` | Footer credits; the home page; the print cover; the publisher in every page's metadata (next release) | — |
 | `critdates` | "Published" and "Last updated" on the print cover | Issued and modified |
 | `bookid/edition`, `isbn`, `booknumber` | Edition and reference on the print cover | Version, identifier |
-| `bookrights` (`copyrfirst`, `bookowner`, `summary`) | Copyright line; the rights statement in the imprint | Rights |
-| `data` | — | Catalogue properties (Section 7) |
+| `bookrights` (`copyrfirst`, `bookowner`, `summary`) | Copyright line; the rights statement in the imprint; rights in every page's metadata (next release) | — |
+| `data` | Read, and taken by every page that does not state the property itself (next release) | Catalogue properties (Section 7) |
 
 The licence, the site's address and the organisation's URL are the **publisher's** build parameters, not the source system's. Do not hard-code them in the DITA.
 
-## 7. Any other property: `data` (**Planned**)
+**Caution: dates in `bookmeta` replace the topics' own.** DITA-OT copies `bookmeta`'s `critdates` into every topic, over the topic's own. The page metadata then gives those pages no dates rather than the book's, but the dates line shows the book's dates on every page (#189). Until that is fixed, a source system with true dates per topic should choose one: per-topic dates (leave `critdates` out of `bookmeta`), or publication dates on the print cover.
+
+## 7. Any other property: `data` (**Now**, from the next release; the catalogue schemes that read most terms are **Planned**)
 
 `<data name="…" value="…"/>` is DITA's own extension point. It is allowed in `bookmeta`, in the `topicmeta` of a map or topicref, and in a topic's `prolog`. Write the name as a **prefixed term** from a standard vocabulary:
 
@@ -208,7 +210,7 @@ The licence, the site's address and the organisation's URL are the **publisher's
 
 - Where the value is a thing with a URI (a place, a frequency, a standard, a licence), write the **URI**, not a label.
 - One `data` element per value. Repeat the element for several values.
-- A term the plugin's tables do not know is reported as a warning and left out, so a misspelling is not silent.
+- A name that is not a term of these vocabularies is reported as a warning (`GOVK011W`) and left out, so a misspelling is not silent. A correct term that no enabled table writes yet is kept quietly for the schemes to come.
 - Values are published. Do not write anything internal, and do not name people.
 
 ## 8. Declaring a data asset (**Planned**)
@@ -243,6 +245,24 @@ A publication often holds several catalogue-worthy things: a logical model, each
 - **A term with a definition** is a `glossentry`: `glossterm`, `glossdef`, and `glossAlt` with `glossAcronym` or `glossAbbreviation` for short forms. Reference the entries from the map (in a bookmap, inside `glossarylist`). The glossary page is generated; a `<term keyref="…"/>` in the text links to the definition. (**Now**)
 - **A code list or taxonomy** is a `subjectScheme` map: a `subjectdef` per value, nested for a hierarchy, with a `navtitle` for the label. (**Planned**: published as a SKOS vocabulary.)
 - Group the entries of one scheme together (one `glossgroup`, one `subjectScheme` map), so each scheme can be published as one vocabulary.
+
+### A concept system
+
+A concept system (a model of concepts with definitions, a hierarchy and named associations, such as ISO 13940) needs more than a glossary can hold: each concept has its own page, with its associations, a diagram and links. Write it as follows.
+
+| What | Write | Mark |
+|---|---|---|
+| The scheme | A bookmap for it, whose `bookmeta` says `<data name="rdf:type" value="skos:ConceptScheme"/>` and gives the scheme's IRI as `<data name="dct:identifier" value="https://…/"/>`. Make that IRI resolve: it can be the site's home page. | **Planned** (#103) |
+| A concept | A `concept` topic, one per file, named after the concept (`concept/care_plan.dita`), with `<data name="rdf:type" value="skos:Concept"/>` in its prolog. A `glossentry` cannot hold the association table or the diagram. | Page **Now**; term **Planned** (#103) |
+| Its IRI | `<data name="dct:identifier" value="https://example.org/concept/care_plan"/>` when the concept already has an IRI. It is then the concept's identifier in SKOS and JSON-LD, and the page is its web page. | **Planned** (#103) |
+| Preferred label | The topic's `title`. | **Now** |
+| Definition | The `shortdesc`. Links to other concepts inside it are fine. | **Now** |
+| Alternative labels | `keyword` elements: synonyms, former names and plural forms, if readers search for them. Never a placeholder such as "N/A". | **Now** (search, tags); SKOS **Planned** |
+| Broader concept | `<data name="skos:broader" value="IRI"/>`. The navigation is for reading, and it rarely is the hierarchy: a concept may be placed under an overview page, or under a concept it is not a kind of. State the hierarchy; do not rely on nesting. | **Planned** (#103) |
+| Associations | A table for readers, with the multiplicities. Named relations for machines wait for the publisher's own vocabulary (#191); until then, the related concepts are `related-links`. | Table **Now**; named relations **Planned** |
+| Alignment to an upper ontology | `<data name="skos:broadMatch" value="IRI"/>`, or `skos:exactMatch` where it is the same concept. | **Planned** (#103) |
+| The ontology itself | Its own file (Turtle, RDF/XML, OWL), published beside the pages and referenced from the map as a resource-only `topicref` with its `format`. Multiplicities and OWL restrictions belong there, not in page metadata. | **Planned** (#102) |
+| Tool-internal properties | Leave them out of the DITA (an "is abstract" flag, export-plugin namespaces). | — |
 
 ## 10. Size
 

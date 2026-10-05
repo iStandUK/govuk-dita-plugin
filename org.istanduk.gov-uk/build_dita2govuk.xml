@@ -464,6 +464,40 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <equals arg1="${govuk.dates}" arg2="both"/>
       </or></not></condition>
     </fail>
+    <!-- Page metadata (#99, design 14): basic | no, and the publisher's facts
+         it cannot read from the DITA -->
+    <property name="govuk.metadata" value="basic"/>
+    <fail message="govuk.metadata must be 'basic' or 'no', was: ${govuk.metadata}">
+      <condition><not><or>
+        <equals arg1="${govuk.metadata}" arg2="basic"/>
+        <equals arg1="${govuk.metadata}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <property name="govuk.metadata.persons" value="no"/>
+    <fail message="govuk.metadata.persons must be 'yes' or 'no', was: ${govuk.metadata.persons}">
+      <condition><not><or>
+        <equals arg1="${govuk.metadata.persons}" arg2="yes"/>
+        <equals arg1="${govuk.metadata.persons}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <fail message="govuk.organisation.url must be an absolute http(s) URL, was: ${govuk.organisation.url}">
+      <condition><and>
+        <isset property="govuk.organisation.url"/>
+        <not><matches pattern="^(https?://[^\s]+)?$" string="${govuk.organisation.url}"/></not>
+      </and></condition>
+    </fail>
+    <fail message="govuk.licence.url must be an absolute http(s) URL, was: ${govuk.licence.url}">
+      <condition><and>
+        <isset property="govuk.licence.url"/>
+        <not><matches pattern="^(https?://[^\s]+)?$" string="${govuk.licence.url}"/></not>
+      </and></condition>
+    </fail>
+    <fail message="govuk.og.image must be an absolute http(s) URL or a path under the site root, was: ${govuk.og.image}">
+      <condition><and>
+        <isset property="govuk.og.image"/>
+        <not><matches pattern="^(https?://[^\s]+|[^\s:]+)?$" string="${govuk.og.image}"/></not>
+      </and></condition>
+    </fail>
     <!-- sitemap.xml: auto writes it when the site's base URL is known -->
     <property name="govuk.sitemap" value="auto"/>
     <fail message="govuk.sitemap must be 'auto', 'yes' or 'no', was: ${govuk.sitemap}">
@@ -583,6 +617,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-SITEMAP" expression="${govuk.sitemap.enabled}"/>
       <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
       <param name="GOVUK-DATES" expression="${govuk.dates}"/>
+      <param name="GOVUK-METADATA" expression="${govuk.metadata}"/>
+      <param name="GOVUK-METADATA-PERSONS" expression="${govuk.metadata.persons}"/>
+      <param name="GOVUK-ORGANISATION" expression="${govuk.organisation}" if:set="govuk.organisation"/>
+      <param name="GOVUK-ORGANISATION-URL" expression="${govuk.organisation.url}" if:set="govuk.organisation.url"/>
+      <param name="GOVUK-OG-IMAGE" expression="${govuk.og.image}" if:set="govuk.og.image"/>
+      <param name="GOVUK-LICENCE-URL" expression="${govuk.licence.url}" if:set="govuk.licence.url"/>
     </html5.map>
     <!-- robots.txt beside the sitemap, unless the publisher ships one (#60) -->
     <local name="govuk.robots.exists"/>

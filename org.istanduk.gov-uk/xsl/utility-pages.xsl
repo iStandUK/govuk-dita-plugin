@@ -179,6 +179,10 @@ indexterm markup. Imported by map2govuk-cover.xsl.
           <xsl:call-template name="govuk-csp-meta"/>
           <meta name="viewport" content="width=device-width, initial-scale=1"/>
           <title><xsl:value-of select="concat($page-title, ' — ', $govuk-cover-title)"/></title>
+          <xsl:call-template name="govuk-md-utility-head">
+            <xsl:with-param name="file" select="$file"/>
+            <xsl:with-param name="page-title" select="$page-title"/>
+          </xsl:call-template>
           <xsl:call-template name="generateCssLinks"/>
         </head>
         <body class="govuk-template__body">

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+The vocabularies a <data name="prefix:term"> may use (design 14, D-26): each
+prefix, its namespace, and, for a closed vocabulary, every term it defines. A
+name outside these is reported (GOVK011W) and left out, so a misspelt prefix
+or term is never silent. An open vocabulary (too large to list, or extended
+by its users) accepts any term under its prefix.
+-->
+<vocabularies>
+  <vocabulary prefix="dct" namespace="http://purl.org/dc/terms/">
+    abstract accessRights accrualMethod accrualPeriodicity accrualPolicy alternative audience
+    available bibliographicCitation conformsTo contributor coverage created creator date
+    dateAccepted dateCopyrighted dateSubmitted description educationLevel extent format
+    hasFormat hasPart hasVersion identifier instructionalMethod isFormatOf isPartOf
+    isReferencedBy isReplacedBy isRequiredBy issued isVersionOf language license mediator
+    medium modified provenance publisher references relation replaces requires rights
+    rightsHolder source spatial subject tableOfContents temporal title type valid
+    Agent AgentClass BibliographicResource FileFormat Frequency Jurisdiction LicenseDocument
+    LinguisticSystem Location LocationPeriodOrJurisdiction MediaType MediaTypeOrExtent
+    MethodOfAccrual MethodOfInstruction PeriodOfTime PhysicalMedium PhysicalResource Policy
+    ProvenanceStatement RightsStatement SizeOrDuration Standard
+  </vocabulary>
+  <vocabulary prefix="dcat" namespace="http://www.w3.org/ns/dcat#">
+    accessService accessURL bbox byteSize catalog centroid compressFormat contactPoint dataset
+    distribution downloadURL endDate endpointDescription endpointURL first hadRole
+    hasCurrentVersion hasVersion inCatalog inSeries isVersionOf keyword landingPage last
+    mediaType packageFormat prev previousVersion qualifiedRelation record resource
+    servesDataset service spatialResolutionInMeters startDate temporalResolution theme
+    themeTaxonomy version
+    Catalog CatalogRecord DataService Dataset DatasetSeries Distribution Relationship Resource
+    Role
+  </vocabulary>
+  <vocabulary prefix="adms" namespace="http://www.w3.org/ns/adms#">
+    identifier includedAsset interoperabilityLevel last next prev representationTechnique
+    sample schemaAgency status supportedSchema translation versionNotes
+    Asset AssetDistribution AssetRepository Identifier
+  </vocabulary>
+  <vocabulary prefix="skos" namespace="http://www.w3.org/2004/02/skos/core#">
+    altLabel broadMatch broader broaderTransitive changeNote closeMatch definition
+    editorialNote exactMatch example hasTopConcept hiddenLabel historyNote inScheme
+    mappingRelation member memberList narrowMatch narrower narrowerTransitive notation note
+    prefLabel related relatedMatch scopeNote semanticRelation topConceptOf
+    Collection Concept ConceptScheme OrderedCollection
+  </vocabulary>
+  <vocabulary prefix="rdf" namespace="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    type
+  </vocabulary>
+  <vocabulary prefix="foaf" namespace="http://xmlns.com/foaf/0.1/" open="yes"/>
+  <vocabulary prefix="org" namespace="http://www.w3.org/ns/org#" open="yes"/>
+  <vocabulary prefix="vcard" namespace="http://www.w3.org/2006/vcard/ns#" open="yes"/>
+  <vocabulary prefix="schema" namespace="https://schema.org/" open="yes"/>
+  <vocabulary prefix="og" namespace="https://ogp.me/ns#" open="yes"/>
+</vocabularies>

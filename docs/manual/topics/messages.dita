@@ -121,6 +121,23 @@
               well, or keep to the navigation. See <xref keyref="print"/>.</entry>
           </row>
           <row>
+            <entry><codeph>GOVK011W</codeph></entry>
+            <entry>A <codeph>data</codeph> element's name has a prefix, so it is meant as
+              metadata, but it is not a term of a vocabulary the plugin knows. It is left out
+              wherever it is used; reported once per name, with where it is first used and
+              how often.</entry>
+            <entry>Check the prefix and the spelling of the term. See
+              <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK012W</codeph></entry>
+            <entry>Pages have no value for a tag a metadata table requires. The tag is not
+              written on those pages; reported once per tag, with the number of pages and the
+              first.</entry>
+            <entry>Give those pages the value the tag is read from. See
+              <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
             <entry><codeph>GOVK007W</codeph></entry>
             <entry>A Content-Security-Policy is in force (<codeph>govuk.csp</codeph>) and
               content that was kept — a remote image or object — will be blocked by it in the

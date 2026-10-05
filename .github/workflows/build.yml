@@ -778,13 +778,104 @@ jobs:
           # root-relative paths the publisher hosts; nothing is fetched from gov.uk or nhs.uk
           for site in out/manual out/manual-istanduk out/manual-nhs out/manual-official; do
             absent -Eroh 'src="(https?:)?//' "$site" --include='*.html'
-            absent -Eroh '<link[^>]*href="(https?:)?//' "$site" --include='*.html'
+            # link elements the browser fetches; the metadata's link relations
+            # (canonical, prev, next, license, alternate) name pages, never load them
+            if grep -rhoE '<link [^>]*>' "$site" --include='*.html' | grep -vE 'rel="(canonical|prev|next|license|alternate)"' \
+                 | grep -E 'href="(https?:)?//'; then echo "a link element in $site loads from another origin"; exit 1; fi
             absent -Eroh 'url\(["'"'"']?(https?:)?//' "$site/govuk" --include='*.css'
             absent -Eroh '@import' "$site/govuk" --include='*.css'
           done
 
       # The brand-recoloured CSS is a vendored artifact (#47): guard against it
       # drifting from its Sass source. Rebuild it and fail on any diff.
+      - name: Page metadata (#99, design 14)
+        run: |
+          set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          has() { grep -qF "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
+          dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --format govuk -Dgovuk.search=no "$@"; }
+          # every tag, from where design 14 says it comes
+          dita --input fixtures/metadata/metadata.ditamap --output out/metadata -Dgovuk.print=yes \
+            -Dgovuk.site.url=https://example.org/metadata -Dgovuk.dates=both \
+            -Dgovuk.organisation="Example Trust" -Dgovuk.organisation.url=https://example.org/ \
+            -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ \
+            -Dgovuk.og.image=images/share.png 2>&1 | tee metadata.log
+          p=out/metadata/topics/check.html
+          has $p '<link rel="canonical" href="https://example.org/metadata/topics/check.html">'
+          has $p '<link rel="next" href="https://example.org/metadata/topics/retired.html">'
+          has $p '<link rel="license" href="https://creativecommons.org/licenses/by/4.0/">'
+          has $p '<meta property="og:type" content="article">'
+          has $p '<meta property="og:title" content="6-8 week check">'
+          has $p '<meta property="og:description" content="The physical examination of a baby at six to eight weeks, which replaced the retired check.">'
+          has $p '<meta property="og:url" content="https://example.org/metadata/topics/check.html">'
+          has $p '<meta property="og:site_name" content="Metadata fixture">'
+          has $p '<meta property="og:locale" content="en_GB">'
+          has $p '<meta property="og:image" content="https://example.org/metadata/images/share.png">'
+          has $p '<meta property="article:section" content="6-8 week check">'
+          has $p '<meta property="article:tag" content="Screening">'
+          has $p '<meta name="twitter:card" content="summary">'
+          has $p '<meta name="DC.title" content="6-8 week check">'
+          has $p '<meta name="DC.creator" content="Example Trust">'
+          has $p '<meta name="DC.description" content="The physical examination of a baby at six to eight weeks, which replaced the retired check.">'
+          has $p '<meta name="DC.language" content="en-GB">'
+          has $p '<meta name="DC.publisher" content="Example Trust">'
+          absent -q '<link rel="prev"' $p
+          # keywords that only repeat the title's words are not tags; a real
+          # alternative name is one tag, however often it is written
+          absent -Eq 'article:tag" content="(6|8|-|week|Check)"' $p
+          test "$(grep -oi 'article:tag" content="newborn examination"' $p | wc -l)" = 1
+          # data: a mapped term is written, a known unmapped term is not, a
+          # misspelt one warns once and is left out, an unprefixed one is not metadata
+          has $p '<meta property="article:tag" content="Child health">'
+          absent -q 'statistical-geography' $p
+          absent -q 'England' $p
+          absent -q 'X-17' $p
+          test "$(grep -c 'GOVK011W' metadata.log)" = 1
+          grep -qF "[GOVK011W]: Metadata name 'dct:spacial' is not a term of a vocabulary the plugin knows" metadata.log
+          absent -q 'GOVK012W' metadata.log
+          # a topic's own dates; the cover is a website, with the first page next
+          has out/metadata/topics/retired.html '<link rel="prev" href="https://example.org/metadata/topics/check.html">'
+          has out/metadata/topics/retired.html '<meta property="article:published_time" content="2025-03-01">'
+          has out/metadata/topics/retired.html '<meta property="article:modified_time" content="2026-02-14">'
+          has out/metadata/index.html '<meta property="og:type" content="website">'
+          has out/metadata/index.html '<meta property="og:description" content="Pages whose head metadata CI checks tag by tag.">'
+          has out/metadata/index.html '<link rel="next" href="https://example.org/metadata/topics/check.html">'
+          absent -q 'article:' out/metadata/index.html
+          # the book's dates are not a page's: the toolkit gives every topic
+          # bookmeta's critdates, so a page with none of its own has none
+          absent -q 'article:published_time' out/source-system/elements/person-birth-date.html
+          # without a site URL, nothing URL-valued; persons only when asked
+          dita --input fixtures/metadata/metadata.ditamap --output out/metadata-plain \
+            -Dgovuk.metadata.persons=yes > /dev/null
+          has out/metadata-plain/topics/check.html '<meta name="DC.creator" content="A. Writer">'
+          absent -Eq '<link rel="(canonical|prev|next|license)"|og:url|og:image' out/metadata-plain/topics/*.html out/metadata-plain/index.html
+          absent -Eq '<link rel="canonical"|og:url' out/manual/index.html out/manual/topics/install.html
+          has out/manual/index.html '<meta property="og:title" content="GOV.UK DITA plugin manual">'
+          has out/manual/topics/install.html '<meta property="article:section" content="Getting started">'
+          has out/manual/topics/install.html '<meta name="DC.rights" content="© 2026 iStandUK">'
+          # official branding states the Open Government Licence and Crown copyright
+          has out/manual-official/topics/install.html '<link rel="license" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">'
+          has out/manual-official/topics/install.html '<meta name="DC.rights" content="© Crown copyright">'
+          # govuk.metadata=no writes none; a level the plugin does not have stops the build
+          dita --input fixtures/metadata/metadata.ditamap --output out/metadata-no -Dgovuk.metadata=no > /dev/null
+          if dita --input fixtures/metadata/metadata.ditamap --output out/metadata-bad -Dgovuk.metadata=all > metadata-bad.log 2>&1; then
+            echo "govuk.metadata=all should have failed the build"; exit 1
+          fi
+          grep -qF "govuk.metadata must be 'basic' or 'no'" metadata-bad.log
+          # one checker for every table: each page against the enabled tables,
+          # and no print document carrying any of it
+          python3 tools/check_metadata.py --site-url https://example.org/metadata out/metadata
+          python3 tools/check_metadata.py out/metadata-plain out/manual out/manual-official out/kitchen out/manual-print out/source-system
+          python3 tools/check_metadata.py --level no out/metadata-no
+          # no stylesheet names a scheme: a row added to a table is a tag
+          t="dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata/dublincore.xml"
+          cp "$t" metadata-table.orig
+          sed -i 's#</kind>#  <property term="dct:spatial" as="DC.coverage"/>\n  </kind>#' "$t"
+          dita --input fixtures/metadata/metadata.ditamap --output out/metadata-row > /dev/null
+          cp metadata-table.orig "$t"
+          has out/metadata-row/topics/check.html '<meta name="DC.coverage" content="http://statistics.data.gov.uk/id/statistical-geography/E92000001">'
+          absent -rEq 'opengraph|dublincore|og:|DC\.' org.istanduk.gov-uk/xsl --include='*.xsl'
+
       - name: Branding CSS is current
         run: |
           (cd tools/branding && npm ci && npm run build)
@@ -823,7 +914,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -1091,9 +1182,11 @@ jobs:
       - name: Build determinism (FR-B6)
         run: |
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
-            --format govuk --output out/det-a -Dgovuk.search=no -Dgovuk.print=yes
+            --format govuk --output out/det-a -Dgovuk.search=no -Dgovuk.print=yes \
+            -Dgovuk.site.url=https://example.org/manual/ -Dgovuk.dates=both
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
-            --format govuk --output out/det-b -Dgovuk.search=no -Dgovuk.print=yes
+            --format govuk --output out/det-b -Dgovuk.search=no -Dgovuk.print=yes \
+            -Dgovuk.site.url=https://example.org/manual/ -Dgovuk.dates=both
           diff -r out/det-a out/det-b && echo "double build is byte-identical"
 
       - name: Install accessibility tooling

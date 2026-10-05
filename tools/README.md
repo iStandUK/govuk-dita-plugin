@@ -11,6 +11,7 @@ then:
 | Tool | Checks | Run |
 |---|---|---|
 | `check_links.py` | Every internal `href`/`src` resolves, and `#fragment` anchors exist (NFR) | `python3 tools/check_links.py out/manual [...]` |
+| `check_metadata.py` | Each page's head metadata against the tables in `resource/metadata` that the level enables: required tags, single tags written once, absolute URLs under the site URL, ISO dates; none in a print document (#99, design 14) | `python3 tools/check_metadata.py --site-url https://example.org/manual/ out/manual` |
 | `page_weight.py` | Each page shell (HTML+CSS+JS) is under the budget, uncompressed (NFR-P2) | `python3 tools/page_weight.py --report --budget-kb 300 out/manual` |
 | `a11y/run.mjs` | axe-core at WCAG 2.2 AA over every page (NFR-A1) | `node tools/a11y/run.mjs out/manual [...]` |
 | `a11y/snapshot.mjs` | Full-page PNGs for eyeballing a govuk-frontend upgrade (NFR-M2) | `node tools/a11y/snapshot.mjs out/manual out/snapshots` |
