@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<task id="submit-a-return" xml:lang="en-GB">
+  <title>Submit a return</title>
+  <shortdesc>Prepare a return from the data elements and send it.</shortdesc>
+  <prolog>
+    <metadata>
+      <category>Guidance</category>
+    </metadata>
+  </prolog>
+  <taskbody>
+    <steps>
+      <step>
+        <cmd>Collect each record's data elements.</cmd>
+        <info>Every record needs a <xref keyref="person-birth-date"/>.</info>
+      </step>
+      <step>
+        <cmd>Validate the return against the dictionary.</cmd>
+      </step>
+      <step>
+        <cmd>Send the return.</cmd>
+      </step>
+    </steps>
+  </taskbody>
+</task>

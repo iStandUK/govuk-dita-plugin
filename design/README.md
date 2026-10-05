@@ -23,6 +23,7 @@ commercial help-output tooling.
 | [11-security.md](11-security.md) | Security review: threat model, findings by category and their dispositions, the publisher-choice/warnings principle, what CI proves, residual risks (NFR-S1–S4) |
 | [12-structured-data.md](12-structured-data.md) | Structured data and machine-readable metadata from DITA: what GOV.UK and NHS emit, what consumers still act on in 2026, the DITA → schema.org / Open Graph mapping, a DCAT catalogue record for data-standard publications, risks, and a proposed `govuk.metadata` / `govuk.dcat` shape (OQ-13) |
 | [13-print-page-numbers.md](13-print-page-numbers.md) | Page numbers in print — the options (external formatter hook, reader-side pagination, engine bundled in the core, a companion PDF product on a common core), comparison, and the decided two-step (D-23): `govuk.pdf.command` now, then **DesignSystemPDF** — a separately released, Apache-2.0 generator in this repository that the plugin auto-detects |
+| [14-metadata-model.md](14-metadata-model.md) | One metadata model (D-26): the design review of 12 before any code. The DITA is harvested once into neutral records, each scheme (Open Graph, Dublin Core, schema.org, DCAT, SKOS, ADMS) is a mapping table, and output is written by syntax (`meta`, JSON-LD, Turtle); `data` carries any property, and a branch declares a data asset with `data name="rdf:type"` (closes OQ-13) |
 
 ## Summary of agreed direction
 
