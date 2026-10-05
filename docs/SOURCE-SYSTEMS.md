@@ -246,6 +246,24 @@ A publication often holds several catalogue-worthy things: a logical model, each
 - **A code list or taxonomy** is a `subjectScheme` map: a `subjectdef` per value, nested for a hierarchy, with a `navtitle` for the label. (**Planned**: published as a SKOS vocabulary.)
 - Group the entries of one scheme together (one `glossgroup`, one `subjectScheme` map), so each scheme can be published as one vocabulary.
 
+### A concept system
+
+A concept system (a model of concepts with definitions, a hierarchy and named associations, such as ISO 13940) needs more than a glossary can hold: each concept has its own page, with its associations, a diagram and links. Write it as follows.
+
+| What | Write | Mark |
+|---|---|---|
+| The scheme | A bookmap for it, whose `bookmeta` says `<data name="rdf:type" value="skos:ConceptScheme"/>` and gives the scheme's IRI as `<data name="dct:identifier" value="https://…/"/>`. Make that IRI resolve: it can be the site's home page. | **Planned** (#103) |
+| A concept | A `concept` topic, one per file, named after the concept (`concept/care_plan.dita`), with `<data name="rdf:type" value="skos:Concept"/>` in its prolog. A `glossentry` cannot hold the association table or the diagram. | Page **Now**; term **Planned** (#103) |
+| Its IRI | `<data name="dct:identifier" value="https://example.org/concept/care_plan"/>` when the concept already has an IRI. It is then the concept's identifier in SKOS and JSON-LD, and the page is its web page. | **Planned** (#103) |
+| Preferred label | The topic's `title`. | **Now** |
+| Definition | The `shortdesc`. Links to other concepts inside it are fine. | **Now** |
+| Alternative labels | `keyword` elements: synonyms, former names and plural forms, if readers search for them. Never a placeholder such as "N/A". | **Now** (search, tags); SKOS **Planned** |
+| Broader concept | `<data name="skos:broader" value="IRI"/>`. The navigation is for reading, and it rarely is the hierarchy: a concept may be placed under an overview page, or under a concept it is not a kind of. State the hierarchy; do not rely on nesting. | **Planned** (#103) |
+| Associations | A table for readers, with the multiplicities. Named relations for machines wait for the publisher's own vocabulary (#191); until then, the related concepts are `related-links`. | Table **Now**; named relations **Planned** |
+| Alignment to an upper ontology | `<data name="skos:broadMatch" value="IRI"/>`, or `skos:exactMatch` where it is the same concept. | **Planned** (#103) |
+| The ontology itself | Its own file (Turtle, RDF/XML, OWL), published beside the pages and referenced from the map as a resource-only `topicref` with its `format`. Multiplicities and OWL restrictions belong there, not in page metadata. | **Planned** (#102) |
+| Tool-internal properties | Leave them out of the DITA (an "is abstract" flag, export-plugin namespaces). | — |
+
 ## 10. Size
 
 The plugin has been run on a publication of 10,000 topics, with a PDF of 11,700 pages. For a publication that large, tell the publisher to:
