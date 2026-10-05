@@ -803,7 +803,7 @@ jobs:
           has $p '<link rel="license" href="https://creativecommons.org/licenses/by/4.0/">'
           has $p '<meta property="og:type" content="article">'
           has $p '<meta property="og:title" content="6-8 week check">'
-          has $p '<meta property="og:description" content="The physical examination of a baby at six to eight weeks.">'
+          has $p '<meta property="og:description" content="The physical examination of a baby at six to eight weeks, which replaced the retired check.">'
           has $p '<meta property="og:url" content="https://example.org/metadata/topics/check.html">'
           has $p '<meta property="og:site_name" content="Metadata fixture">'
           has $p '<meta property="og:locale" content="en_GB">'
@@ -813,7 +813,7 @@ jobs:
           has $p '<meta name="twitter:card" content="summary">'
           has $p '<meta name="DC.title" content="6-8 week check">'
           has $p '<meta name="DC.creator" content="Example Trust">'
-          has $p '<meta name="DC.description" content="The physical examination of a baby at six to eight weeks.">'
+          has $p '<meta name="DC.description" content="The physical examination of a baby at six to eight weeks, which replaced the retired check.">'
           has $p '<meta name="DC.language" content="en-GB">'
           has $p '<meta name="DC.publisher" content="Example Trust">'
           absent -q '<link rel="prev"' $p

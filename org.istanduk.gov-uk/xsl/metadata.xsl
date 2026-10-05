@@ -82,6 +82,7 @@ the once-per-build checks).
     <xsl:param name="element" as="element()?"/>
     <xsl:sequence select="normalize-space(string-join($element//text()
                             [not(ancestor::*[contains(@class, ' topic/indexterm ')
+                                             or contains(@class, ' topic/desc ')
                                              or contains(@class, ' topic/draft-comment ')
                                              or contains(@class, ' topic/required-cleanup ')])], ''))"/>
   </xsl:function>
