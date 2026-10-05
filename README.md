@@ -92,6 +92,10 @@ issue first, a `feature/*` branch from `dev`, a small linked pull request; relea
 [docs/RELEASING.md](docs/RELEASING.md). Report vulnerabilities privately as described in
 [SECURITY.md](SECURITY.md).
 
+**Generating DITA from another system?** [docs/SOURCE-SYSTEMS.md](docs/SOURCE-SYSTEMS.md) says
+how to shape the maps and topics and what metadata to write, with a worked example that CI
+builds.
+
 Generated sites are static and same-origin in every branding mode, with one inline script
 (the Design System's own). Content that would run or fetch in a reader's browser — scripts in
 diagrams, remote images, script-scheme links, embeds — is sanitised or reported under the

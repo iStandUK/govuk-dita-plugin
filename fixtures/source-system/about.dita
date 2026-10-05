@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="about" xml:lang="en-GB">
+  <title>About this dictionary</title>
+  <shortdesc>What the dictionary defines, who maintains it and how it is organised.</shortdesc>
+  <conbody>
+    <p>The dictionary defines each <term keyref="term-data-element"/> the service collects.
+      Start with the <xref keyref="elements"/>.</p>
+    <fig>
+      <title>How an element relates to a return</title>
+      <image href="images/model.svg" placement="break">
+        <alt>A return contains records, and each record contains data elements.</alt>
+      </image>
+    </fig>
+  </conbody>
+</concept>

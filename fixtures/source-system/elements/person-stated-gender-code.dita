@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<!-- A retired item: importance says so to search, and adms:status to catalogues.
+     The word in the title is for readers. -->
+<reference id="person-stated-gender-code" xml:lang="en-GB" importance="obsolete">
+  <title>Person stated gender code (retired)</title>
+  <shortdesc>Retired in release 4.0. Kept so that references from older returns still resolve.</shortdesc>
+  <prolog>
+    <metadata>
+      <category>Data element</category>
+    </metadata>
+    <resourceid appname="dictionary" appid="DE-000087"/>
+    <data name="adms:status" value="retired"/>
+  </prolog>
+  <refbody>
+    <section>
+      <p>Use <xref keyref="person-birth-date"/> and the current demographic elements instead.</p>
+    </section>
+  </refbody>
+</reference>

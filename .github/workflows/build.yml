@@ -422,6 +422,13 @@ jobs:
             echo "govuk.print.scope=everything should have failed the build"; exit 1
           fi
           grep -qF "govuk.print.scope must be 'navigation' or 'linked'" scope-bad.log
+          # The worked example of docs/SOURCE-SYSTEMS.md, the guide for systems
+          # that generate DITA: valid, and built without a single warning
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/source-system/dictionary.ditamap \
+            --format govuk --output out/source-system -Dgovuk.print=yes -Dgovuk.search=no -Dgovuk.dates=both 2>&1 | tee source-system.log
+          absent -Eq 'Warning|Error|GOVK|DOT[XJ]' source-system.log
+          test "$(heads out/source-system/print.html)" = "h2 Contents|h2 About this dictionary|h2 Data elements|h3 Person birth date|h4 Where used|h3 Person stated gender code (retired)|h2 Submit a return|h2 data element|h2 Glossary|h3 D|h4 data element|h2 Index|h3 D"
+          grep -q 'alt="A return contains records' out/source-system/about.html
           # #179: a DITA-OT project file passes each input map as a file: URI.
           # Built from a folder whose name has a space, so the URI is escaped.
           proj="$RUNNER_TEMP/with space"

@@ -166,6 +166,8 @@ The writers hold the syntax rules once each: JSON string escaping and nesting; T
 
 ## 9. What a generator should write
 
+The full guide for the developer of a source system, with a worked example that CI builds, is [docs/SOURCE-SYSTEMS.md](../docs/SOURCE-SYSTEMS.md). In brief:
+
 A corpus produced by a tool gains most from the tool writing standard elements. For a data dictionary, per topic:
 
 - `prolog/metadata/category`: the kind of thing (Class, Attribute, Data Element, Data Set). It already drives search filters (D-18) and now also `dct:subject`.

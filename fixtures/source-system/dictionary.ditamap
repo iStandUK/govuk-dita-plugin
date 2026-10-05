@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "bookmap.dtd">
+<!-- The worked example of docs/SOURCE-SYSTEMS.md: what a source system should
+     write. Built in CI, so the guide's example is known to be valid. -->
+<bookmap id="example-dictionary" xml:lang="en-GB">
+  <booktitle>
+    <mainbooktitle>Example data dictionary</mainbooktitle>
+    <booktitlealt>The data elements an example service collects, and how to use them.</booktitlealt>
+  </booktitle>
+  <bookmeta>
+    <publisherinformation>
+      <organization>Example Standards Body</organization>
+    </publisherinformation>
+    <critdates>
+      <created date="2026-01-15"/>
+      <revised modified="2026-09-30"/>
+    </critdates>
+    <bookid>
+      <edition>Release 4.2</edition>
+    </bookid>
+    <bookrights>
+      <copyrfirst><year>2026</year></copyrfirst>
+      <bookowner><organization>Example Standards Body</organization></bookowner>
+    </bookrights>
+    <!-- any catalogue property, as a prefixed term -->
+    <data name="dct:accrualPeriodicity" value="http://publications.europa.eu/resource/authority/frequency/QUARTERLY"/>
+  </bookmeta>
+  <chapter href="about.dita" keys="about"/>
+  <!-- a branch that is a data asset says so, with its own properties -->
+  <chapter href="elements/index.dita" keys="elements">
+    <topicmeta>
+      <data name="rdf:type" value="dct:Standard"/>
+      <data name="dct:identifier" value="https://example.org/dictionary/elements"/>
+    </topicmeta>
+    <!-- the entries are in the navigation, beneath the page that lists them -->
+    <topicref href="elements/person-birth-date.dita" keys="person-birth-date"/>
+    <topicref href="elements/person-stated-gender-code.dita" keys="person-stated-gender-code"/>
+  </chapter>
+  <chapter href="using/submit-a-return.dita" keys="submit-a-return"/>
+  <backmatter>
+    <booklists>
+      <glossarylist>
+        <topicref href="terms/data-element.dita" keys="term-data-element"/>
+      </glossarylist>
+      <indexlist/>
+    </booklists>
+  </backmatter>
+</bookmap>
