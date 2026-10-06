@@ -152,13 +152,20 @@ jobs:
       # (govuk.search=auto with no binary -> site without search, FR-S4)
       - name: Build ORUK fixture (no Pagefind)
         run: |
+          # a self-hosted runner keeps the Node tool cache, and with it any
+          # Pagefind an earlier run installed globally
+          npm uninstall -g pagefind > /dev/null 2>&1 || true
+          if command -v pagefind > /dev/null; then echo "::error::pagefind is on the PATH ($(command -v pagefind)): this build must run without it"; exit 1; fi
           "dita-ot-${DITA_OT_VERSION}/bin/dita" \
             --input fixtures/oruk-mini/oruk.ditamap \
             --format govuk \
             --output out/oruk-mini
 
       - name: Install Pagefind
-        run: npm install -g pagefind@1.5.2
+        # into this run's own folder, so nothing outlives the run
+        run: |
+          npm install --silent --prefix "$RUNNER_TEMP/npm" pagefind@1.5.2
+          echo "$RUNNER_TEMP/npm/node_modules/.bin" >> "$GITHUB_PATH"
 
       # Built with Pagefind on the PATH: search auto-enables (FR-S1)
       - name: Build manual
@@ -939,8 +946,8 @@ jobs:
       # 'wasm-unsafe-eval' (#82); the rolling "latest" release cannot be pinned.
       - name: Install Nu validator
         run: |
-          npm install -g vnu-jar@26.9.7
-          mkdir -p vnu && cp "$(npm root -g)/vnu-jar/build/dist/vnu.jar" vnu/vnu.jar
+          npm install --silent --prefix "$RUNNER_TEMP/npm" vnu-jar@26.9.7
+          mkdir -p vnu && cp "$RUNNER_TEMP/npm/node_modules/vnu-jar/build/dist/vnu.jar" vnu/vnu.jar
           java -jar vnu/vnu.jar --version
 
       - name: Validate HTML
