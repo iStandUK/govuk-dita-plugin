@@ -108,7 +108,6 @@ jobs:
           for tool in zip:zip unzip:unzip curl:curl python3:python3 fc-list:fontconfig; do
             command -v "${tool%%:*}" > /dev/null || missing="$missing ${tool#*:}"
           done
-          python3 -c 'import ensurepip' 2> /dev/null || missing="$missing python3-venv"
           if [ -n "$missing" ]; then
             sudo -n true 2> /dev/null || { echo "::error::the runner lacks$missing and its user has no passwordless sudo to install them"; exit 1; }
             echo "installing:$missing"
@@ -601,26 +600,34 @@ jobs:
           absent -Eq ' id="p[0-9]+-' out/manual-print/print.html
           grep -q '<meta name="govuk-print-contract" content="1"' out/manual-print/print.html
           grep -q 'data-page-label="page"' out/manual-print/print.html
-          # #106: a real CSS Paged Media formatter resolves the page references
-          sudo apt-get update -qq && sudo apt-get install -y -qq libpango-1.0-0 libpangoft2-1.0-0
-          # 70.0 carries the fix for Kozea/WeasyPrint#2833 — 69.0 and earlier crash
-          # resolving govuk-frontend's max(1px, .0625rem) underline thickness — and is
-          # also a security release (CVE-2026-55073)
-          # in a virtual environment: Ubuntu 24.04 refuses pip into the system Python
-          python3 -m venv "$RUNNER_TEMP/py" && . "$RUNNER_TEMP/py/bin/activate"
-          pip install --quiet weasyprint==70.0 pypdf==6.1.1
+          # #106: a real CSS Paged Media formatter, run as an external command,
+          # resolves the page references. The released DesignSystemPDF serves,
+          # run by its path and kept off the PATH (govuk.pdf=auto must still find
+          # nothing below); PDFBox from its own libraries reads the text back.
+          curl -sSfL -o "$RUNNER_TEMP/dspdf.zip" \
+            "https://github.com/iStandUK/govuk-dita-plugin/releases/download/pdf-v${DSPDF_RELEASE}/designsystempdf-${DSPDF_RELEASE}.zip"
+          echo "${DSPDF_RELEASE_SHA256}  $RUNNER_TEMP/dspdf.zip" | sha256sum -c -
+          rm -rf "$RUNNER_TEMP/dspdf-command" && unzip -q "$RUNNER_TEMP/dspdf.zip" -d "$RUNNER_TEMP/dspdf-command"
+          formatter="$RUNNER_TEMP/dspdf-command/designsystempdf-${DSPDF_RELEASE}"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-pdf -Dgovuk.print=yes \
-            "-Dgovuk.pdf.command=weasyprint --quiet" 2>&1 | tee pdf.log
+            "-Dgovuk.pdf.command=$formatter/bin/designsystempdf" 2>&1 | tee pdf.log
           test -f out/markdown-pdf/mdmini.pdf
           absent -q 'GOVK008W' pdf.log
-          python - <<'PY'
-          from pypdf import PdfReader
-          text = "\n".join(p.extract_text() or "" for p in PdfReader("out/markdown-pdf/mdmini.pdf").pages)
-          assert "First case study" in text, "the publication did not render"
-          assert "(page " in text, "cross-references carry no page number — did target-counter resolve?"
-          print("page references resolved in the PDF")
-          PY
+          cat > "$RUNNER_TEMP/PdfText.java" <<'JAVA'
+          import java.io.File;
+          import org.apache.pdfbox.Loader;
+          import org.apache.pdfbox.text.PDFTextStripper;
+          public class PdfText {
+            public static void main(String[] args) throws Exception {
+              try (var doc = Loader.loadPDF(new File(args[0]))) { System.out.print(new PDFTextStripper().getText(doc)); }
+            }
+          }
+          JAVA
+          java -cp "$formatter/lib/*" "$RUNNER_TEMP/PdfText.java" out/markdown-pdf/mdmini.pdf > pdf-text.txt
+          grep -q 'First case study' pdf-text.txt || { echo "the publication did not render"; exit 1; }
+          grep -qF '(page ' pdf-text.txt || { echo "cross-references carry no page number: did target-counter resolve?"; exit 1; }
+          echo "page references resolved in the PDF"
           # #146: the home page and every footer link the PDF beside the print version,
           # with its size; no marker or token is left behind; the link resolves; and the
           # search index is still built, now after the PDF step
@@ -645,7 +652,7 @@ jobs:
             "-Dgovuk.pdf.command=true" 2>&1 | tee pdf-empty.log
           grep -q '\[GOVK008W\]: the PDF command exited 0 but wrote no file' pdf-empty.log
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
-            --format govuk --output out/markdown-noprint "-Dgovuk.pdf.command=weasyprint" 2>&1 | tee pdf-noprint.log
+            --format govuk --output out/markdown-noprint "-Dgovuk.pdf.command=$formatter/bin/designsystempdf" 2>&1 | tee pdf-noprint.log
           grep -q '\[GOVK008W\]: govuk.pdf.command is set but govuk.print is not' pdf-noprint.log
           # #146: without a PDF no page links one, and nothing of the link is left
           for site in out/markdown-pdf-fail out/markdown-pdf-empty out/markdown-noprint; do
@@ -685,8 +692,8 @@ jobs:
           curl -sSfL -o dspdf.zip \
             "https://github.com/iStandUK/govuk-dita-plugin/releases/download/pdf-v${DSPDF_RELEASE}/designsystempdf-${DSPDF_RELEASE}.zip"
           echo "${DSPDF_RELEASE_SHA256}  dspdf.zip" | sha256sum -c -
-          rm -rf /tmp/dspdf-release && unzip -q dspdf.zip -d /tmp/dspdf-release && rm dspdf.zip
-          export PATH="/tmp/dspdf-release/designsystempdf-${DSPDF_RELEASE}/bin:$PATH"
+          rm -rf "$RUNNER_TEMP/dspdf-release" && unzip -q dspdf.zip -d "$RUNNER_TEMP/dspdf-release" && rm dspdf.zip
+          export PATH="$RUNNER_TEMP/dspdf-release/designsystempdf-${DSPDF_RELEASE}/bin:$PATH"
           designsystempdf --version | grep -qx "DesignSystemPDF ${DSPDF_RELEASE}"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
             --output out/manual-dspdf-release -Dgovuk.print=yes -Dgovuk.search=no --verbose 2>&1 | tee dspdf-release.log > /dev/null
@@ -1281,7 +1288,6 @@ jobs:
           for tool in zip:zip unzip:unzip curl:curl python3:python3 fc-list:fontconfig; do
             command -v "${tool%%:*}" > /dev/null || missing="$missing ${tool#*:}"
           done
-          python3 -c 'import ensurepip' 2> /dev/null || missing="$missing python3-venv"
           if [ -n "$missing" ]; then
             sudo -n true 2> /dev/null || { echo "::error::the runner lacks$missing and its user has no passwordless sudo to install them"; exit 1; }
             echo "installing:$missing"
