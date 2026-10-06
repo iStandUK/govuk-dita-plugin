@@ -159,7 +159,7 @@ The first switches to the self-hosted runner; the second falls back to GitHub's 
 A self-hosted runner needs:
 
 - **Registration where this repository can use it:** at the organisation level, in a runner group that allows this repository and public repositories, or on this repository. A runner registered to another repository takes only that repository's jobs.
-- **Linux x64, Ubuntu 22.04 or later,** with `git` and `sha256sum`. The jobs install `curl`, `zip`, `unzip`, `python3` and `fontconfig` themselves when they are missing.
+- **Linux x64, Ubuntu 22.04 or later,** with `git` and `sha256sum`. The jobs install `curl`, `zip`, `unzip`, `python3`, `python3-venv` and `fontconfig` themselves when they are missing. The DesignSystemPDF job fetches Maven 3.9 when the runner has none.
 - **Passwordless `sudo` for the runner's user,** for its `apt-get` installs: any of those tools that are missing, Pango for DesignSystemPDF, and Chromium's libraries for the accessibility checks. Java, Node, Maven and DITA-OT are fetched by the workflow.
 - **Room for about 3 GB** under the runner's work folder.
 - **Nothing it should not share.** Its jobs run this repository's code with the runner user's rights. Keep it separate from runners of private repositories, and from any credentials on the machine.

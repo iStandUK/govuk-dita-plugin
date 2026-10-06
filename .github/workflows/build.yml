@@ -108,6 +108,7 @@ jobs:
           for tool in zip:zip unzip:unzip curl:curl python3:python3 fc-list:fontconfig; do
             command -v "${tool%%:*}" > /dev/null || missing="$missing ${tool#*:}"
           done
+          python3 -c 'import ensurepip' 2> /dev/null || missing="$missing python3-venv"
           if [ -n "$missing" ]; then
             sudo -n true 2> /dev/null || { echo "::error::the runner lacks$missing and its user has no passwordless sudo to install them"; exit 1; }
             echo "installing:$missing"
@@ -605,6 +606,8 @@ jobs:
           # 70.0 carries the fix for Kozea/WeasyPrint#2833 — 69.0 and earlier crash
           # resolving govuk-frontend's max(1px, .0625rem) underline thickness — and is
           # also a security release (CVE-2026-55073)
+          # in a virtual environment: Ubuntu 24.04 refuses pip into the system Python
+          python3 -m venv "$RUNNER_TEMP/py" && . "$RUNNER_TEMP/py/bin/activate"
           pip install --quiet weasyprint==70.0 pypdf==6.1.1
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-pdf -Dgovuk.print=yes \
@@ -1278,6 +1281,7 @@ jobs:
           for tool in zip:zip unzip:unzip curl:curl python3:python3 fc-list:fontconfig; do
             command -v "${tool%%:*}" > /dev/null || missing="$missing ${tool#*:}"
           done
+          python3 -c 'import ensurepip' 2> /dev/null || missing="$missing python3-venv"
           if [ -n "$missing" ]; then
             sudo -n true 2> /dev/null || { echo "::error::the runner lacks$missing and its user has no passwordless sudo to install them"; exit 1; }
             echo "installing:$missing"
@@ -1291,6 +1295,20 @@ jobs:
           java-version: "17"
           cache: maven
           cache-dependency-path: designsystempdf/pom.xml
+
+      # The pom requires Maven 3.9 (enforcer). GitHub's image has it; a
+      # self-hosted runner may not, and Ubuntu's package is 3.8. Fetch a pinned,
+      # checksum-verified 3.9 when no suitable mvn is on the PATH (#68).
+      - name: Maven 3.9
+        env:
+          MAVEN_VERSION: 3.9.16
+          MAVEN_SHA512: 831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6
+        run: |
+          if mvn -v 2> /dev/null | grep -qE '^Apache Maven 3\.(9|[1-9][0-9])\.'; then mvn -v | head -1; exit 0; fi
+          curl -sSfL -o "$RUNNER_TEMP/maven.tar.gz" "https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz"
+          echo "$MAVEN_SHA512  $RUNNER_TEMP/maven.tar.gz" | sha512sum -c -
+          tar -xzf "$RUNNER_TEMP/maven.tar.gz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/apache-maven-$MAVEN_VERSION/bin" >> "$GITHUB_PATH"
 
       # The fonts are vendored: they must be the files recorded in SHA256SUMS,
       # and those must be the files the Noto project serves at the recorded commit.
