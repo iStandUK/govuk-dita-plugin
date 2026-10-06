@@ -99,6 +99,19 @@ jobs:
       DSPDF_RELEASE: "0.1.1"
       DSPDF_RELEASE_SHA256: "32dbdf04260f8035e756be5fc0b7a635565ab1d91b59cbbb48cbf4ca4871c664"
     steps:
+      # A self-hosted runner may lack tools GitHub's image has (CONTRIBUTING.md,
+      # Where CI runs); install whichever are missing. A no-op on ubuntu-latest.
+      - name: Runner prerequisites
+        run: |
+          missing=""
+          for tool in zip:zip unzip:unzip curl:curl python3:python3 fc-list:fontconfig; do
+            command -v "${tool%%:*}" > /dev/null || missing="$missing ${tool#*:}"
+          done
+          if [ -n "$missing" ]; then
+            sudo -n true 2> /dev/null || { echo "::error::the runner lacks$missing and its user has no passwordless sudo to install them"; exit 1; }
+            echo "installing:$missing"
+            sudo apt-get update -qq && sudo apt-get install -y -qq $missing
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -1255,6 +1268,19 @@ jobs:
       run:
         working-directory: designsystempdf
     steps:
+      # A self-hosted runner may lack tools GitHub's image has (CONTRIBUTING.md,
+      # Where CI runs); install whichever are missing. A no-op on ubuntu-latest.
+      - name: Runner prerequisites
+        run: |
+          missing=""
+          for tool in zip:zip unzip:unzip curl:curl python3:python3 fc-list:fontconfig; do
+            command -v "${tool%%:*}" > /dev/null || missing="$missing ${tool#*:}"
+          done
+          if [ -n "$missing" ]; then
+            sudo -n true 2> /dev/null || { echo "::error::the runner lacks$missing and its user has no passwordless sudo to install them"; exit 1; }
+            echo "installing:$missing"
+            sudo apt-get update -qq && sudo apt-get install -y -qq $missing
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
