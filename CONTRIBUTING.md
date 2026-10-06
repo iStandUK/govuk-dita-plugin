@@ -145,6 +145,25 @@ Its ground rules, on top of the ones above:
 - **Its own changelog.** What a publisher would notice goes in
   `designsystempdf/CHANGELOG.md`.
 
+## Where CI runs
+
+The `build` workflow runs on GitHub's `ubuntu-latest` unless the repository variable `CI_RUNS_ON` names a self-hosted runner by its labels, as JSON:
+
+```bash
+gh variable set CI_RUNS_ON --body '["self-hosted","Linux","X64"]'
+gh variable delete CI_RUNS_ON
+```
+
+The first switches to the self-hosted runner; the second falls back to GitHub's runners at once. Pull requests from forks always run on GitHub's runners, because this repository is public. The release workflows stay on GitHub's runners, so release assets are built on a clean machine.
+
+A self-hosted runner needs:
+
+- **Registration where this repository can use it:** at the organisation level, in a runner group that allows this repository and public repositories, or on this repository. A runner registered to another repository takes only that repository's jobs.
+- **Linux x64, Ubuntu 22.04 or later,** with `git`, `curl`, `zip`, `unzip`, `python3` and `sha256sum`.
+- **Passwordless `sudo` for the runner's user,** for the two `apt-get` installs: Pango for DesignSystemPDF, and Chromium's libraries for the accessibility checks. Java, Node, Maven and DITA-OT are fetched by the workflow.
+- **Room for about 3 GB** under the runner's work folder.
+- **Nothing it should not share.** Its jobs run this repository's code with the runner user's rights. Keep it separate from runners of private repositories, and from any credentials on the machine.
+
 ## Releases
 
 See [docs/RELEASING.md](docs/RELEASING.md): a `release/x.y.z` branch from `dev`, the
