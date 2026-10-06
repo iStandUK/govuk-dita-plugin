@@ -1206,7 +1206,10 @@ jobs:
       - name: Install accessibility tooling
         run: |
           (cd tools/a11y && npm ci)
-          (cd tools/a11y && npx playwright install --with-deps chromium)
+          # --with-deps asks apt for the browser's libraries, which only GitHub's
+          # image can grant; the self-hosted runner has them installed once (#193).
+          if [ "$RUNNER_ENVIRONMENT" = github-hosted ]; then deps=--with-deps; else deps=; fi
+          (cd tools/a11y && npx playwright install $deps chromium)
 
       - name: Accessibility checks — axe-core WCAG 2.2 AA (NFR-A1)
         run: node tools/a11y/run.mjs out/manual out/kitchen out/kitchen-flag out/manual-istanduk out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/manual-print/print.html out/kitchen-print/print.html out/oruk-print/print.html out/markdown-mini/print.html out/kitchen-strip/topics/media.html out/kitchen-strip/topics/reference-full.html out/manual-csp/search.html
