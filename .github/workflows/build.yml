@@ -21,6 +21,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Where the jobs run is the repository variable CI_RUNNER (#193): set to
+# 'self-hosted' it sends them to the runner registered on a team machine,
+# for when the organisation's GitHub-hosted minutes are spent; deleted, they
+# go back to ubuntu-latest. No job needs sudo, so the runner needs nothing
+# the jobs do not fetch for themselves.
 jobs:
   # The repository holds two products (D-23): the plugin and DesignSystemPDF.
   # Each change runs the jobs of the product it touches. Documentation-only
@@ -30,7 +35,7 @@ jobs:
   # still reports, so the branch rules are satisfied either way.
   changes:
     name: changes
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     outputs:
       plugin: ${{ steps.classify.outputs.plugin }}
       pdf: ${{ steps.classify.outputs.pdf }}
@@ -70,7 +75,7 @@ jobs:
           cat "$GITHUB_OUTPUT"
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     name: build (DITA-OT ${{ matrix.dita-ot.version }})
     needs: changes
     if: needs.changes.outputs.plugin == 'true'
@@ -100,6 +105,10 @@ jobs:
           java-version: "17"
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      # a Python with pip on either kind of runner, for pypdf in the hook test (#193)
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
         with:
           node-version: "20"
           cache: npm
@@ -579,15 +588,19 @@ jobs:
           absent -Eq ' id="p[0-9]+-' out/manual-print/print.html
           grep -q '<meta name="govuk-print-contract" content="1"' out/manual-print/print.html
           grep -q 'data-page-label="page"' out/manual-print/print.html
-          # #106: a real CSS Paged Media formatter resolves the page references
-          sudo apt-get update -qq && sudo apt-get install -y -qq libpango-1.0-0 libpangoft2-1.0-0
-          # 70.0 carries the fix for Kozea/WeasyPrint#2833 — 69.0 and earlier crash
-          # resolving govuk-frontend's max(1px, .0625rem) underline thickness — and is
-          # also a security release (CVE-2026-55073)
-          pip install --quiet weasyprint==70.0 pypdf==6.1.1
+          # #106: a real CSS Paged Media formatter resolves the page references.
+          # The formatter named in the command is DesignSystemPDF's released
+          # launcher (#193) — by path, not on the PATH, since the #113 assertions
+          # below need the generator absent from it. It stands in for "a
+          # formatter of your choosing" as WeasyPrint did until #193; the
+          # assertion is formatter-agnostic.
+          curl -sSL -o "$RUNNER_TEMP/designsystempdf.zip" "https://github.com/iStandUK/govuk-dita-plugin/releases/download/pdf-v${DSPDF_RELEASE}/designsystempdf-${DSPDF_RELEASE}.zip"
+          echo "${DSPDF_RELEASE_SHA256}  $RUNNER_TEMP/designsystempdf.zip" | sha256sum -c -
+          rm -rf "$RUNNER_TEMP/dspdf" && unzip -q "$RUNNER_TEMP/designsystempdf.zip" -d "$RUNNER_TEMP/dspdf"
+          pip install --quiet pypdf==6.1.1
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-pdf -Dgovuk.print=yes \
-            "-Dgovuk.pdf.command=weasyprint --quiet" 2>&1 | tee pdf.log
+            "-Dgovuk.pdf.command=$RUNNER_TEMP/dspdf/designsystempdf-${DSPDF_RELEASE}/bin/designsystempdf" 2>&1 | tee pdf.log
           test -f out/markdown-pdf/mdmini.pdf
           absent -q 'GOVK008W' pdf.log
           python - <<'PY'
@@ -621,7 +634,7 @@ jobs:
             "-Dgovuk.pdf.command=true" 2>&1 | tee pdf-empty.log
           grep -q '\[GOVK008W\]: the PDF command exited 0 but wrote no file' pdf-empty.log
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
-            --format govuk --output out/markdown-noprint "-Dgovuk.pdf.command=weasyprint" 2>&1 | tee pdf-noprint.log
+            --format govuk --output out/markdown-noprint "-Dgovuk.pdf.command=designsystempdf" 2>&1 | tee pdf-noprint.log
           grep -q '\[GOVK008W\]: govuk.pdf.command is set but govuk.print is not' pdf-noprint.log
           # #146: without a PDF no page links one, and nothing of the link is left
           for site in out/markdown-pdf-fail out/markdown-pdf-empty out/markdown-noprint; do
@@ -1237,7 +1250,7 @@ jobs:
     name: designsystempdf
     needs: changes
     if: needs.changes.outputs.pdf == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     env:
       # the commit of notofonts/notofonts.github.io the bundled fonts were taken from (fonts/README.md)
       NOTO_FONTS_COMMIT: "1eb09fb315562c7e07d738691870e52c39b45b39"
@@ -1619,7 +1632,7 @@ jobs:
     name: ci
     needs: [changes, build, designsystempdf]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     steps:
       - run: |
           test "${{ needs.changes.result }}" = "success" || { echo "change classification failed: ${{ needs.changes.result }}"; exit 1; }

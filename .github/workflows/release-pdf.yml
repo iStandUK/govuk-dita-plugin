@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   asset:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     permissions:
       contents: write      # upload the assets to the release
       id-token: write      # sign the provenance attestation

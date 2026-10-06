@@ -579,3 +579,16 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 **Unchanged from D-24:** `basic` on by default; no persons by default; `HowTo` and `DefinedTermSet` emitted, `FAQPage` not; DCAT keeps its own switch and data.gov.uk's mandatory set; conventions before any specialisation.
 
 **Consequences:** #102, #122 and #123 are unblocked. #99 grows (it carries the harvest, the first writer, the checker and three tables) and the rest shrink to tables and harvesters; the `Dataset`/DCAT agreement test in #122 is unnecessary, since both read one record. The six existing harvests (footer, covers, books, dates, search) stay as they are until there is a reason to touch them. A generator gains most by writing `category`, `data`, `resourceid` and true `keywords` (14 §9).
+
+## D-27 · CI: the formatter hook is tested with DesignSystemPDF, not WeasyPrint; jobs run where a variable says
+
+**Date:** 2026-10-06. Issue [#193](https://github.com/iStandUK/govuk-dita-plugin/issues/193).
+
+**Context:** the build job installed WeasyPrint — `sudo apt-get` for Pango, `pip` for the package — for one assertion: that a real CSS Paged Media engine named in `govuk.pdf.command` resolves the page references the print document writes (#106). Since D-25 the repository ships its own engine, DesignSystemPDF, whose job renders and validates the same print documents. The organisation's free GitHub-hosted minutes ran out on 2026-10-05, and a runner registered to this repository on a team machine has no `sudo` to give a workflow.
+
+**Decisions:**
+
+1. **The `govuk.pdf.command` hook stays, and is tested with a real formatter — DesignSystemPDF's released launcher, by path.** The assertion is formatter-agnostic. By path, not on the `PATH`, because the #113 assertions in the same step need the generator absent from it. WeasyPrint, Pango and the `sudo` step go; `pypdf`, which reads the PDF's text, comes through `actions/setup-python` so it works on either kind of runner. The manual never named WeasyPrint as supported, so no claim is withdrawn.
+2. **Where the jobs run is the repository variable `CI_RUNNER`:** `runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}` on every job. Set to `self-hosted`, the jobs go to the team runner; deleted, they return to GitHub's. No job needs root, so the runner needs nothing the jobs do not fetch for themselves — Java, Node and Python through the setup actions, DITA-OT, DesignSystemPDF and veraPDF by pinned download.
+
+**Consequences:** a self-hosted runner takes one job at a time, so the DITA-OT matrix serialises there; a second runner on the same machine restores parallelism if it is wanted. The `designsystempdf` job is unchanged. D-23's fallback — "the same print document through `govuk.pdf.command`" — is now proved with the project's own engine rather than a third party's, which is a weaker demonstration of portability and a stronger one of the join; a publisher who wants another formatter still has the hook, untested here with that formatter.
