@@ -21,6 +21,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Where the jobs run. The repository variable CI_RUNS_ON, when set, holds the
+# labels of a self-hosted runner as JSON, such as ["self-hosted","Linux","X64"];
+# unset, every job runs on GitHub's ubuntu-latest. Pull requests from forks
+# always run on GitHub's runners: this repository is public, and a self-hosted
+# runner must not run code nobody here has reviewed. Deleting the variable
+# falls back at once, as during an Actions outage. The runner's prerequisites
+# are in CONTRIBUTING.md.
 jobs:
   # The repository holds two products (D-23): the plugin and DesignSystemPDF.
   # Each change runs the jobs of the product it touches. Documentation-only
@@ -30,7 +37,7 @@ jobs:
   # still reports, so the branch rules are satisfied either way.
   changes:
     name: changes
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNS_ON && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNS_ON) || 'ubuntu-latest' }}
     outputs:
       plugin: ${{ steps.classify.outputs.plugin }}
       pdf: ${{ steps.classify.outputs.pdf }}
@@ -70,7 +77,7 @@ jobs:
           cat "$GITHUB_OUTPUT"
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNS_ON && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNS_ON) || 'ubuntu-latest' }}
     name: build (DITA-OT ${{ matrix.dita-ot.version }})
     needs: changes
     if: needs.changes.outputs.plugin == 'true'
@@ -1237,7 +1244,7 @@ jobs:
     name: designsystempdf
     needs: changes
     if: needs.changes.outputs.pdf == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNS_ON && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNS_ON) || 'ubuntu-latest' }}
     env:
       # the commit of notofonts/notofonts.github.io the bundled fonts were taken from (fonts/README.md)
       NOTO_FONTS_COMMIT: "1eb09fb315562c7e07d738691870e52c39b45b39"
@@ -1619,7 +1626,7 @@ jobs:
     name: ci
     needs: [changes, build, designsystempdf]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNS_ON && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNS_ON) || 'ubuntu-latest' }}
     steps:
       - run: |
           test "${{ needs.changes.result }}" = "success" || { echo "change classification failed: ${{ needs.changes.result }}"; exit 1; }
