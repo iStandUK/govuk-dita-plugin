@@ -102,6 +102,7 @@ jobs:
       # A self-hosted runner may lack tools GitHub's image has (CONTRIBUTING.md,
       # Where CI runs); install whichever are missing. A no-op on ubuntu-latest.
       - name: Runner prerequisites
+        working-directory: ${{ github.workspace }}
         run: |
           missing=""
           for tool in zip:zip unzip:unzip curl:curl python3:python3 fc-list:fontconfig; do
@@ -1271,6 +1272,7 @@ jobs:
       # A self-hosted runner may lack tools GitHub's image has (CONTRIBUTING.md,
       # Where CI runs); install whichever are missing. A no-op on ubuntu-latest.
       - name: Runner prerequisites
+        working-directory: ${{ github.workspace }}
         run: |
           missing=""
           for tool in zip:zip unzip:unzip curl:curl python3:python3 fc-list:fontconfig; do
