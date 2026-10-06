@@ -626,7 +626,7 @@ jobs:
           JAVA
           java -cp "$formatter/lib/*" "$RUNNER_TEMP/PdfText.java" out/markdown-pdf/mdmini.pdf > pdf-text.txt
           grep -q 'First case study' pdf-text.txt || { echo "the publication did not render"; exit 1; }
-          grep -qF '(page ' pdf-text.txt || { echo "cross-references carry no page number: did target-counter resolve?"; exit 1; }
+          grep -qF '(page ' pdf-text.txt || { grep -n -i 'case study' pdf-text.txt; echo "cross-references carry no page number: did target-counter resolve?"; exit 1; }
           echo "page references resolved in the PDF"
           # #146: the home page and every footer link the PDF beside the print version,
           # with its size; no marker or token is left behind; the link resolves; and the
