@@ -10,15 +10,16 @@
 // - the same page opened at the top level, or framed without JavaScript, is
 //   shown in full.
 //
-// Usage: node embed-check.mjs <site-dir> <page> [svg-link-href]
-//   e.g. node embed-check.mjs out/kitchen-embed topics/media.html reference-full.html
+// Usage: node embed-check.mjs <site-dir> <page> [svg-link-href] [text-link-page]
+//   e.g. node embed-check.mjs out/kitchen-embed topics/media.html reference-full.html topics/task-full.html
+//   The text link is followed on text-link-page (default: <page>), framed the same way.
 import { chromium } from "playwright";
 import { AxeBuilder } from "@axe-core/playwright";
 import { createServer } from "node:http";
 import { createReadStream, statSync, existsSync } from "node:fs";
 import { join, extname, normalize } from "node:path";
 
-const [root, pagePath, svgHref = ""] = process.argv.slice(2);
+const [root, pagePath, svgHref = "", textPage = pagePath] = process.argv.slice(2);
 if (!root || !pagePath) {
   console.error("usage: node embed-check.mjs <site-dir> <page> [svg-link-href]");
   process.exit(2);
@@ -48,7 +49,8 @@ const server = createServer((req, res) => {
 });
 await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const base = `http://127.0.0.1:${server.address().port}`;
-const hostUrl = `${base}/__host.html?src=${encodeURIComponent(`/${pagePath}?embed=1`)}`;
+const hostFor = (p) => `${base}/__host.html?src=${encodeURIComponent(`/${p}?embed=1`)}`;
+const hostUrl = hostFor(pagePath);
 
 const failures = [];
 const check = (ok, what) => { console.log(`${ok ? "✓" : "✗"} ${what}`); if (!ok) failures.push(what); };
@@ -101,13 +103,15 @@ if (svgHref) {
   }
 }
 
+await page.goto(hostFor(textPage), { waitUntil: "load" });
+frame = await frameOf(page);
 const textLink = await frame.$$eval("main a[href]", (as) => {
-  const a = as.find((x) => !x.getAttribute("href").startsWith("#") && new URL(x.href).origin === location.origin
-    && !x.target && x.offsetWidth > 0);
+  const a = as.find((x) => x instanceof HTMLAnchorElement && !x.getAttribute("href").startsWith("#")
+    && new URL(x.href).origin === location.origin && !x.target && x.offsetWidth > 0);
   if (a) a.setAttribute("data-embed-check", "");
   return a ? a.getAttribute("href") : null;
 });
-check(!!textLink, "framed: the content has a link to another page of the site");
+check(!!textLink, `framed: ${textPage} has a link to another page of the site`);
 if (textLink) {
   await Promise.all([frame.waitForNavigation(), frame.click("[data-embed-check]")]);
   frame = await frameOf(page);

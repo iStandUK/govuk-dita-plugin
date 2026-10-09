@@ -1262,7 +1262,7 @@ jobs:
       # passes axe and the policy, and its diagram and text links stay in the frame; at
       # the top level or without JavaScript the page is shown in full
       - name: Embedded view check (#201)
-        run: node tools/a11y/embed-check.mjs out/kitchen-embed topics/media.html reference-full.html
+        run: node tools/a11y/embed-check.mjs out/kitchen-embed topics/media.html reference-full.html topics/task-full.html
 
       # FR-P1/FR-P2 evidence (#63): the print document and a topic page print to
       # tagged, outlined, multi-page A4 PDFs in Chromium. CI-only; not a build
