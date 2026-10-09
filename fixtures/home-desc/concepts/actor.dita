@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="actor">
+  <title>care actor</title>
+  <shortdesc>organization or person participating in <xref keyref="health"/></shortdesc>
+  <conbody><p>care actor.</p></conbody>
+</concept>

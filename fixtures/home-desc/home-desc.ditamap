@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map>
+  <title>Empty cross-references on the home page</title>
+  <keydef keys="health" href="health.dita"/>
+  <keydef keys="subject" href="subject.dita">
+    <topicmeta><linktext>the person cared for</linktext></topicmeta>
+  </keydef>
+  <keydef keys="actor" href="concepts/actor.dita"/>
+  <keydef keys="iso">
+    <topicmeta><keywords><keyword>ISO 13940</keyword></keywords></topicmeta>
+  </keydef>
+  <topicref href="state.dita"/>
+  <topicref href="matter.dita"/>
+  <topichead navtitle="Related concepts">
+    <topicref href="concepts/actor.dita"/>
+    <topicref href="health.dita"/>
+    <topicref href="subject.dita"/>
+  </topichead>
+</map>
