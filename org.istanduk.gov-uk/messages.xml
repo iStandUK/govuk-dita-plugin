@@ -24,7 +24,7 @@ DITA-OT convention: four letters, three digits, severity (I/W/E/F).
     <response>The plugin inlines SVG and MathML only from under the input directory (govuk.inline.scope=input). Move the file into the publication, or set govuk.inline.scope=any to inline from anywhere on the build machine.</response>
   </message>
   <message id="GOVK006W" type="WARN">
-    <reason>Content policy: %1 '%2' — %3.</reason>
+    <reason>Content policy: %1 '%2': %3.</reason>
     <response>Script-scheme links, images and objects fetched from another origin, and object embeds are rendered as authored under govuk.content.policy=warn; govuk.content.policy=strip replaces them with a placeholder. govuk.content.warnings=no silences this report.</response>
   </message>
   <message id="GOVK007W" type="WARN">
