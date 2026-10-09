@@ -1010,6 +1010,9 @@ jobs:
           grep -q 'govuk-pagination--block' out/manual/topics/install.html
           grep -q 'link-title--decorated">About the plugin' out/manual/topics/install.html
           grep -q 'link-title--decorated">Building a website' out/manual/topics/install.html
+          # both links take the link colours and focus state from govuk-link (#196)
+          test "$(grep -o '<a class="[^"]*govuk-pagination__link[^"]*"' out/manual/topics/install.html | grep -c 'govuk-link govuk-pagination__link')" = 2
+          test -z "$(grep -rhoE '<a class="[^"]*govuk-pagination__link[^"]*"' out/manual --include=*.html | grep -v 'govuk-link ')"
           # svgref accessible name (#10 / NFR-A1)
           grep -q 'aria-label="Sample diagram"' out/oruk-mini/item.html
           # Search (#16 / FR-S): enabled on the manual, gracefully absent on oruk-mini
