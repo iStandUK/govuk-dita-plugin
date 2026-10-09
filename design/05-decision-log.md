@@ -579,3 +579,21 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 **Unchanged from D-24:** `basic` on by default; no persons by default; `HowTo` and `DefinedTermSet` emitted, `FAQPage` not; DCAT keeps its own switch and data.gov.uk's mandatory set; conventions before any specialisation.
 
 **Consequences:** #102, #122 and #123 are unblocked. #99 grows (it carries the harvest, the first writer, the checker and three tables) and the rest shrink to tables and harvesters; the `Dataset`/DCAT agreement test in #122 is unnecessary, since both read one record. The six existing harvests (footer, covers, books, dates, search) stay as they are until there is a reason to touch them. A generator gains most by writing `category`, `data`, `resourceid` and true `keywords` (14 §9).
+
+---
+
+## D-28 · Embedded view: a query switch the plugin implements, not a head-fragment hook
+
+**Date:** 2026-10-09. Issue [#201](https://github.com/iStandUK/govuk-dita-plugin/issues/201), from contsys.org's companion site, which frames concept pages on a screen in a walk-through hospital.
+
+**Context:** some publishers show their own pages inside a frame on a page they control. There the masthead, contents, pagination and footer work against the reader, and diagram links with `target="_top"` replace the page around the frame. The WebHelp build did this with a publisher head fragment and inline script; the GOV.UK build has no such hook, and `govuk.csp=meta` allows no publisher inline script.
+
+**Options:** (a) the plugin implements an opt-in view, switched on per page by `?embed=1`; (b) a general head-fragment hook for publisher scripts; (c) nothing, leaving publishers to restyle framed pages without a way to tell them apart.
+
+**Decision:** (a). `govuk.embed=yes` (default `no`) links `govuk/embed.js` in every page's head: a same-origin file, so `'self'` covers it and the published hash is unchanged, not deferred so the furniture never shows first. When the page is inside a frame and its address has `embed=1`, the script marks `<html>` with `app-embed`; `plugin.css` hides the furniture; same-site links keep `embed=1`. `_top` and `_parent` targets are dropped from inlined SVG links at build time, which needs no script. The view applies only in a frame, so a copied `?embed=1` link opened in a window shows the full page.
+
+**Not offered with `official` or `nhs` branding** (`GOVK014W`): the Design System puts the GOV.UK header and footer on every page of a GOV.UK service, and the NHS identity has the same expectation. In `neutral` and `istanduk` the masthead and footer are the publisher's own.
+
+**Rejected:** (b) reproduces the old behaviour exactly but conflicts with the strict policy the plugin publishes and puts untested code on every page. (c) leaves the problem where it was.
+
+**Consequences:** FR-N9. NFR-A3 holds (without JavaScript the page is complete); NFR-S3 holds (no inline script; framing remains the host's `frame-ancestors` choice, which the manual explains). An SVG shown through DITA's `<object>` keeps its own targets; the page cannot reach into it.

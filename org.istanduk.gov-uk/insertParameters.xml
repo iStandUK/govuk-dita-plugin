@@ -31,6 +31,7 @@ unaffected.
   <param name="GOVUK-CONTENT-WARNINGS" expression="${govuk.content.warnings}" if:set="govuk.content.warnings"/>
   <param name="GOVUK-CONTENT-POLICY" expression="${govuk.content.policy}" if:set="govuk.content.policy"/>
   <param name="GOVUK-CSP" expression="${govuk.csp}" if:set="govuk.csp"/>
+  <param name="GOVUK-EMBED" expression="yes" if:set="govuk.embed.on"/>
   <param name="GOVUK-DATES" expression="${govuk.dates}" if:set="govuk.dates"/>
   <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}" if:set="govuk.print.max-topics"/>
   <param name="GOVUK-PDF-NAME" expression="${govuk.pdf.name}.pdf" if:set="govuk.pdf.on"/>

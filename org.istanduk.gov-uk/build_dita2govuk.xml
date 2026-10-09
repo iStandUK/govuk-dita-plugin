@@ -65,6 +65,33 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     </condition>
     <echo if:set="govuk.branding.nhs" level="warning"
           message="govuk.branding=nhs: the NHS identity ('NHS' letters and logo) is restricted to NHS organisations; non-NHS bodies need permission from NHS England / DHSC. Use this only for a genuine NHS service. The NHS brand font (Frutiger) is licensed to NHS organisations and is not bundled - the build falls back to Arial."/>
+    <!-- Embedded view (#201, D-28): a page framed by the publisher and opened
+         with ?embed=1 shows its content only. Not in the official and NHS
+         identities, whose header and footer belong on every page. -->
+    <property name="govuk.embed" value="no"/>
+    <fail message="govuk.embed must be 'yes' or 'no', was: ${govuk.embed}">
+      <condition>
+        <not><or>
+          <equals arg1="${govuk.embed}" arg2="yes"/>
+          <equals arg1="${govuk.embed}" arg2="no"/>
+        </or></not>
+      </condition>
+    </fail>
+    <condition property="govuk.embed.on">
+      <and>
+        <equals arg1="${govuk.embed}" arg2="yes"/>
+        <not><isset property="govuk.branding.official"/></not>
+        <not><isset property="govuk.branding.nhs"/></not>
+      </and>
+    </condition>
+    <condition property="govuk.embed.ignored">
+      <and>
+        <equals arg1="${govuk.embed}" arg2="yes"/>
+        <not><isset property="govuk.embed.on"/></not>
+      </and>
+    </condition>
+    <echo if:set="govuk.embed.ignored" level="warning"
+          message="[GOVK014W]: govuk.embed=yes is ignored with govuk.branding=${govuk.branding}: that identity's header and footer belong on every page, so no page offers the embedded view."/>
     <!-- Landing-page layout (D-13) -->
     <property name="govuk.homepage.layout" value="auto"/>
     <property name="govuk.homepage.depth" value="2"/>
@@ -614,6 +641,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-PDF-NAME" expression="${govuk.pdf.name}.pdf" if:set="govuk.pdf.on"/>
       <param name="GOVUK-BOOKS" expression="${govuk.books.url}" if:set="govuk.books.on"/>
       <param name="GOVUK-CSP" expression="${govuk.csp}"/>
+      <param name="GOVUK-EMBED" expression="yes" if:set="govuk.embed.on"/>
       <param name="GOVUK-SITEMAP" expression="${govuk.sitemap.enabled}"/>
       <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
       <param name="GOVUK-DATES" expression="${govuk.dates}"/>

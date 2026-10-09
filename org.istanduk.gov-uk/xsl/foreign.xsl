@@ -210,6 +210,16 @@ links and interactivity inside diagrams working.
     </xsl:if>
   </xsl:template>
 
+  <!-- Embedded view (#201): a diagram drawn for use as an <object> sends its
+       links to _top to leave that object. Inlined, there is no object to
+       leave, and inside a publisher's frame _top would replace the page
+       around it; the link follows in its own page instead. -->
+  <xsl:template match="svg:a/@target[. = ('_top', '_parent')]" mode="govuk-svg-inline">
+    <xsl:if test="$GOVUK-EMBED ne 'yes'">
+      <xsl:copy/>
+    </xsl:if>
+  </xsl:template>
+
   <!-- SVG elements: preserve the SVG namespace, isolate ids -->
   <xsl:template match="svg:*" mode="govuk-svg-inline">
     <xsl:param name="token" tunnel="yes"/>

@@ -146,6 +146,9 @@ element-level typography.
   <!-- Responsive viewport (html5 base emits none) -->
   <xsl:template name="gen-user-head">
     <xsl:call-template name="govuk-csp-meta"/>
+    <xsl:call-template name="govuk-embed-script">
+      <xsl:with-param name="prefix" select="string($govuk-root)"/>
+    </xsl:call-template>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <xsl:call-template name="govuk-md-head">
       <xsl:with-param name="record" as="element()?">

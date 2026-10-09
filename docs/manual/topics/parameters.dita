@@ -268,6 +268,15 @@
                 header, which can also carry <codeph>frame-ancestors</codeph>.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.embed</codeph></entry>
+              <entry><codeph>no</codeph> (default) or <codeph>yes</codeph></entry>
+              <entry><codeph>yes</codeph> lets a page that the publisher frames, opened with
+                <codeph>?embed=1</codeph>, show its content only, and keeps the reader's links
+                inside the frame. Ignored, with <codeph>GOVK014W</codeph>, under the
+                <codeph>official</codeph> and <codeph>nhs</codeph> branding. See
+                <xref keyref="embedding"/>.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.site.url</codeph></entry>
               <entry>URL</entry>
               <entry>The published base URL, for example

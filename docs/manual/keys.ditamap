@@ -12,6 +12,7 @@
   <keydef keys="search" href="topics/search.dita" format="dita" scope="local"/>
   <keydef keys="metadata" href="topics/metadata.dita" format="dita" scope="local"/>
   <keydef keys="layouts" href="topics/layouts.dita" format="dita" scope="local"/>
+  <keydef keys="embedding" href="topics/embedding.dita" format="dita" scope="local"/>
   <keydef keys="glossary-index" href="topics/glossary-index.dita" format="dita" scope="local"/>
   <keydef keys="gloss-dita" href="glossary/gloss-dita.dita" format="dita" scope="local" processing-role="resource-only"/>
   <keydef keys="gloss-gds" href="glossary/gloss-gds.dita" format="dita" scope="local" processing-role="resource-only"/>

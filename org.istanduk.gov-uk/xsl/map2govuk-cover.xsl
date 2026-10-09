@@ -209,6 +209,7 @@ map transformation with the plugin's values.
 
   <xsl:template name="gen-user-head">
     <xsl:call-template name="govuk-csp-meta"/>
+    <xsl:call-template name="govuk-embed-script"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <xsl:call-template name="govuk-md-head">
       <xsl:with-param name="record" select="$govuk-md-cover"/>
@@ -608,6 +609,7 @@ map transformation with the plugin's values.
         <head>
           <meta charset="UTF-8"/>
           <xsl:call-template name="govuk-csp-meta"/>
+          <xsl:call-template name="govuk-embed-script"/>
           <meta name="viewport" content="width=device-width, initial-scale=1"/>
           <title><xsl:value-of select="concat($search-label, ' — ', $govuk-cover-title)"/></title>
           <xsl:call-template name="govuk-md-utility-head">

@@ -219,10 +219,15 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-nhs -Dgovuk.branding=nhs
 
+      # govuk.embed is ignored with this identity, and says so (#201)
       - name: Build official (GOV.UK crown) branding
         run: |
+          set -o pipefail
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
-            --format govuk --output out/manual-official -Dgovuk.branding=official
+            --format govuk --output out/manual-official -Dgovuk.branding=official \
+            -Dgovuk.embed=yes 2>&1 | tee manual-official.log
+          grep -q "\[GOVK014W\]: govuk.embed=yes is ignored with govuk.branding=official" manual-official.log
+          test -z "$(grep -rl 'embed.js' out/manual-official --include=*.html)"
 
       - name: Build FR-T3 furniture params (service URL, favicon, footer links/licence)
         run: |
@@ -759,6 +764,17 @@ jobs:
           grep -q "\[GOVK006W\].*remote image .* — removed" kitchen-strip.log
           grep -q '<span class="app-page-dates__item">Published <time datetime="2026-01-14">14 January 2026</time></span>' out/kitchen-strip/topics/reference-full.html
           grep -q '<span class="app-page-dates__item">Last updated <time datetime="2026-09-07">7 September 2026</time></span>' out/kitchen-strip/topics/reference-full.html
+          # #201: govuk.embed=yes links embed.js from every page's head and drops _top from
+          # inlined SVG links; without it neither happens. The browser check is further down.
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+            --format govuk --output out/kitchen-embed -Dgovuk.embed=yes -Dgovuk.csp=meta \
+            -Dgovuk.content.policy=strip
+          grep -q '<script src="../govuk/embed.js"></script>' out/kitchen-embed/topics/media.html
+          grep -q '<script src="govuk/embed.js"></script>' out/kitchen-embed/index.html
+          test -f out/kitchen-embed/govuk/embed.js
+          grep -q 'xlink:href="reference-full.html">' out/kitchen-embed/topics/media.html
+          grep -q 'xlink:href="reference-full.html" target="_top"' out/kitchen/topics/media.html
+          absent -rq 'embed.js' out/kitchen --include=*.html
           # govuk.content.warnings=no is silent; govuk.dates=updated shows the last revision only
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen-quiet -Dgovuk.content.warnings=no -Dgovuk.dates=updated 2>&1 | tee kitchen-quiet.log
@@ -953,7 +969,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -1241,6 +1257,12 @@ jobs:
       # search run so Pagefind's WebAssembly and fetches are exercised under it
       - name: Content-Security-Policy check (#82)
         run: node tools/a11y/csp-check.mjs out/manual-csp --query plugin
+
+      # #201: a kitchen page framed with ?embed=1 under govuk.csp=meta shows content only,
+      # passes axe and the policy, and its diagram and text links stay in the frame; at
+      # the top level or without JavaScript the page is shown in full
+      - name: Embedded view check (#201)
+        run: node tools/a11y/embed-check.mjs out/kitchen-embed topics/media.html reference-full.html
 
       # FR-P1/FR-P2 evidence (#63): the print document and a topic page print to
       # tagged, outlined, multi-page A4 PDFs in Chromium. CI-only; not a build

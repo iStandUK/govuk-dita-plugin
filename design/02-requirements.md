@@ -35,6 +35,7 @@ Remaining ⬜/🔶 items are the v1-release backlog (see
 | FR-N6 | Breadcrumbs (GOV.UK breadcrumbs component) can be enabled by parameter; default off in the sidebar layout | C | ⬜ |
 | FR-N7 | Every page has a skip link, correct landmark structure (`header`, `nav`, `main`, `footer`), and a visible focus order matching the Design System | M | ✅ landmark/h1 structure asserted in CI |
 | FR-N8 | A site home page is generated from the map (title, shortdesc/abstract, top-level entry links) | S | ✅ with the D-13 layouts: auto-selected start/annotated/grouped plus list/grid/accordion overrides |
+| FR-N9 | Opt-in embedded view (`govuk.embed=yes`): a page framed by the publisher and opened with `?embed=1` shows its content only and keeps same-site links in the frame; inlined SVG links lose `_top`/`_parent`; not offered with official or NHS branding; full page without JavaScript or at the top level | C | ✅ #201, D-28; CI frames a page in Chromium (axe, CSP, an SVG and a text link) |
 
 ### Content rendering (FR-R)
 

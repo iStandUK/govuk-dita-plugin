@@ -56,6 +56,7 @@
     <topicref keyref="custom-css"/>
     <topicref keyref="navigation"/>
     <topicref keyref="layouts"/>
+    <topicref keyref="embedding"/>
     <topicref keyref="search"/>
     <topicref keyref="metadata"/>
     <topicref keyref="glossary-index"/>
