@@ -1143,6 +1143,14 @@ jobs:
           ! grep -q 'GDS Transport' out/manual/govuk/plugin.css
           ! grep -q 'GDS Transport' out/manual/govuk/overlay-istanduk.css
           grep -q 'app-tile' out/manual-grid/index.html
+          # a grid row per three tiles, so uneven heights cannot pull a tile
+          # into the row above (#202)
+          for f in out/manual-grid/index.html out/manual-depth1/index.html; do
+            tiles=$(grep -o 'class="app-tile"' "$f" | wc -l)
+            rows=$(grep -o 'class="govuk-grid-row app-topic-grid"' "$f" | wc -l)
+            test "$tiles" -gt 3
+            test "$rows" = "$(( (tiles + 2) / 3 ))"
+          done
           # Localisable UI text (#19 / NFR-I1)
           grep -q 'data-label-menu="Menu"' out/manual/topics/introduction.html
           # iStandUK theme (govuk.branding=istanduk)
