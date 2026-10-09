@@ -126,6 +126,9 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <!-- Publisher favicon (FR-T3): the basename is passed to the XSLT for the
          head link; the file itself is copied by govuk.copy-assets. -->
     <basename property="govuk.favicon.name" file="${govuk.favicon}" if:set="govuk.favicon"/>
+    <!-- Files the publisher's stylesheet refers to (#197): none unless a
+         folder is named; copied by govuk.copy-assets -->
+    <property name="govuk.css.assets" value=""/>
     <!-- Inline local SVG references natively (issue #37) unless disabled -->
     <property name="govuk.svg.inline" value="yes"/>
     <fail message="govuk.svg.inline must be 'yes' or 'no', was: ${govuk.svg.inline}">
@@ -893,6 +896,41 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
     </copy>
     <!-- Publisher favicon (FR-T3): copied next to the CSS, linked by its basename -->
     <copy file="${govuk.favicon}" todir="${dita.output.dir}/govuk" if:set="govuk.favicon"/>
+    <!-- Files the publisher's stylesheet refers to with url(), such as fonts
+         and images (#197): copied with their folders to where DITA-OT copies
+         args.css (args.csspath, or the site root), so they resolve as written.
+         Nothing to copy beside a stylesheet on another site. -->
+    <condition property="govuk.css.assets.named">
+      <not><equals arg1="${govuk.css.assets}" arg2=""/></not>
+    </condition>
+    <condition property="govuk.css.assets.missing">
+      <and>
+        <isset property="govuk.css.assets.named"/>
+        <not><available file="${govuk.css.assets}" type="dir"/></not>
+      </and>
+    </condition>
+    <condition property="govuk.css.assets.remote">
+      <and>
+        <isset property="govuk.css.assets.named"/>
+        <not><isset property="govuk.css.assets.missing"/></not>
+        <isset property="user.csspath.url"/>
+      </and>
+    </condition>
+    <condition property="govuk.css.assets.copy">
+      <and>
+        <isset property="govuk.css.assets.named"/>
+        <not><isset property="govuk.css.assets.missing"/></not>
+        <not><isset property="govuk.css.assets.remote"/></not>
+      </and>
+    </condition>
+    <echo if:set="govuk.css.assets.missing" level="warning"
+          message="[GOVK013W]: govuk.css.assets names no folder: ${govuk.css.assets}; no stylesheet assets were copied."/>
+    <echo if:set="govuk.css.assets.remote" level="warning"
+          message="[GOVK013W]: govuk.css.assets was not copied: args.csspath is an address on another site (${args.csspath}), so the stylesheet's files belong there."/>
+    <property name="user.csspath" value=""/>
+    <copy todir="${dita.output.dir}/${user.csspath}" if:set="govuk.css.assets.copy">
+      <fileset dir="${govuk.css.assets}"/>
+    </copy>
     <!-- Theme assets (safe to redistribute: outlined-path artwork, see
          resource/brand/istanduk/README.md) -->
     <copy if:set="govuk.branding.istanduk" todir="${dita.output.dir}/govuk">

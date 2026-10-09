@@ -582,6 +582,22 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 
 ---
 
+## D-27 · Stylesheet assets: an opt-in folder, not the whole of `args.cssroot`
+
+**Date:** 2026-10-09. Issue [#197](https://github.com/iStandUK/govuk-dita-plugin/issues/197), from theming contsys.org with a self-hosted typeface.
+
+**Context:** FR-T4 lets a publisher append a stylesheet with the toolkit's `args.css`, but `args.copycss=yes` copies that one file. Fonts and images it names with `url()` had to be copied after every build. Under `govuk.csp=meta` a self-hosted font is the only route to a brand typeface (`font-src 'self'` blocks fonts from `data:` URLs and other sites), and when the files are missing the reader quietly gets the fallback face.
+
+**Options:** (a) a new parameter naming a folder of assets; (b) copy the whole `args.cssroot` folder when `args.copycss=yes`; (c) leave it to the publisher's build script.
+
+**Decision:** (a). `govuk.css.assets` names a folder whose contents, subfolders included, are copied to where DITA-OT copies the stylesheet (`args.csspath`, or the site root), so a `url()` resolves as written. Empty by default. Everything in the folder is copied (Ant's default excludes aside), not a list of file types: the folder exists for this purpose, and a type list would silently drop formats it did not foresee. A name that is not a folder, or an `args.csspath` on another site, is a warning (`GOVK013W`), never a failure.
+
+**Rejected:** (b) changes what an existing toolkit parameter does and would publish whatever else sits beside the stylesheet (sources, notes, licences). (c) is the status quo each publisher had to rediscover.
+
+**Consequences:** FR-T4 is complete for fonts and images. The print document links the same stylesheet, so the same files serve it. DesignSystemPDF could later look in this folder for TrueType fonts when `govuk.pdf.fonts` is empty; that is a separate change.
+
+---
+
 ## D-28 · Embedded view: a query switch the plugin implements, not a head-fragment hook
 
 **Date:** 2026-10-09. Issue [#201](https://github.com/iStandUK/govuk-dita-plugin/issues/201), from contsys.org's companion site, which frames concept pages on a screen in a walk-through hospital.

@@ -138,6 +138,14 @@
               <xref keyref="metadata"/>.</entry>
           </row>
           <row>
+            <entry><codeph>GOVK013W</codeph></entry>
+            <entry><codeph>govuk.css.assets</codeph> names no folder, or
+              <codeph>args.csspath</codeph> is an address on another site. No stylesheet
+              assets were copied; the site is complete without them.</entry>
+            <entry>Correct the folder's name, or put the files beside the stylesheet on the
+              other site. See <xref keyref="custom-css"/>.</entry>
+          </row>
+          <row>
             <entry><codeph>GOVK007W</codeph></entry>
             <entry>A Content-Security-Policy is in force (<codeph>govuk.csp</codeph>) and
               content that was kept — a remote image or object — will be blocked by it in the
