@@ -143,10 +143,17 @@ jobs:
 
       - name: Install plugin
         run: |
+          # Integration merges these into files it writes in the JVM's default
+          # charset and reads back as UTF-8; before Java 18 that is Windows-1252
+          # on Windows, so anything outside ASCII breaks the install (#199)
+          if LC_ALL=C.UTF-8 grep -nP '[^\x00-\x7F]' org.istanduk.gov-uk/messages.xml org.istanduk.gov-uk/plugin.xml; then
+            echo "::error::messages.xml and plugin.xml must be ASCII (#199)"; exit 1
+          fi
           (cd org.istanduk.gov-uk && zip -qr ../org.istanduk.gov-uk.zip .)
           # The cached DITA-OT may hold the plugin from an earlier run
           "dita-ot-${DITA_OT_VERSION}/bin/dita" uninstall org.istanduk.gov-uk || true
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
+          # Installed with the default charset Java 17 has on Windows (#199)
+          JAVA_TOOL_OPTIONS=-Dfile.encoding=Cp1252 "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
 
       # Built BEFORE Pagefind is installed: exercises the graceful-absence path
       # (govuk.search=auto with no binary -> site without search, FR-S4)
@@ -754,9 +761,9 @@ jobs:
           grep -q 'src="https://example.org/remote.png"' "$media"
           grep -q "href=\"javascript:alert('xref')\"" "$media"
           grep -q '<object' "$media"
-          grep -q "\[GOVK006W\].*remote image 'https://example.org/remote.png' — kept" kitchen.log
-          grep -q "\[GOVK006W\].*script-scheme link .* — kept" kitchen.log
-          grep -q "\[GOVK006W\].*object embed .* — kept" kitchen.log
+          grep -q "\[GOVK006W\].*remote image 'https://example.org/remote.png': kept" kitchen.log
+          grep -q "\[GOVK006W\].*script-scheme link .*': kept" kitchen.log
+          grep -q "\[GOVK006W\].*object embed .*': kept" kitchen.log
           # #61 default: no dates line; #79: no inline module script, init.js instead
           absent -q 'app-page-dates' out/kitchen/topics/reference-full.html
           absent -q 'type="module">import' "$media"
@@ -774,7 +781,7 @@ jobs:
             --format govuk --output out/kitchen-strip -Dgovuk.content.policy=strip -Dgovuk.dates=both 2>&1 | tee kitchen-strip.log
           absent -Eq 'src="https://example.org/remote.png"|javascript:|<object' out/kitchen-strip/topics/media.html
           test "$(grep -o 'app-content-stripped' out/kitchen-strip/topics/media.html | wc -l)" -ge 3
-          grep -q "\[GOVK006W\].*remote image .* — removed" kitchen-strip.log
+          grep -q "\[GOVK006W\].*remote image .*': removed" kitchen-strip.log
           grep -q '<span class="app-page-dates__item">Published <time datetime="2026-01-14">14 January 2026</time></span>' out/kitchen-strip/topics/reference-full.html
           grep -q '<span class="app-page-dates__item">Last updated <time datetime="2026-09-07">7 September 2026</time></span>' out/kitchen-strip/topics/reference-full.html
           # govuk.content.warnings=no is silent; govuk.dates=updated shows the last revision only

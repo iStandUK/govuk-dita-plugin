@@ -7,7 +7,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
   <require plugin="org.dita.html5"/>
   <transtype name="govuk" extends="html5" desc="GOV.UK Design System HTML5">
     <param name="govuk.branding"
-           desc="Branding mode. 'neutral' (default) uses system fonts and no crown; 'istanduk' adds the iStandUK theme (logo, brand colours) on top of neutral; 'nhs' applies the NHS Design System palette and typography (for NHS organisations only); 'official' applies full GOV.UK branding — the crown logo and GDS Transport font — for genuine GOV.UK services only (see the manual). NHS and official identity assets are restricted; the build warns."
+           desc="Branding mode. 'neutral' (default) uses system fonts and no crown; 'istanduk' adds the iStandUK theme (logo, brand colours) on top of neutral; 'nhs' applies the NHS Design System palette and typography (for NHS organisations only); 'official' applies full GOV.UK branding (the crown logo and GDS Transport font) for genuine GOV.UK services only (see the manual). NHS and official identity assets are restricted; the build warns."
            type="enum">
       <val default="true">neutral</val>
       <val>istanduk</val>
@@ -75,7 +75,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val>no</val>
     </param>
     <param name="govuk.svg.sanitize"
-           desc="Remove active content from inlined SVG diagrams — script, foreignObject, event-handler attributes, script-scheme links and references to other origins. 'yes' (default) removes them; 'no' inlines the file as authored. Findings are reported either way (GOVK004W)."
+           desc="Remove active content from inlined SVG diagrams: script, foreignObject, event-handler attributes, script-scheme links and references to other origins. 'yes' (default) removes them; 'no' inlines the file as authored. Findings are reported either way (GOVK004W)."
            type="enum">
       <val default="true">yes</val>
       <val>no</val>
@@ -87,7 +87,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val>any</val>
     </param>
     <param name="govuk.content.warnings"
-           desc="Report content the toolkit passes through that a static site should not carry — script-scheme links, images and objects fetched from another origin, object embeds — as build warnings (GOVK006W). 'yes' (default) or 'no'. Never fails the build."
+           desc="Report content the toolkit passes through that a static site should not carry (script-scheme links, images and objects fetched from another origin, object embeds) as build warnings (GOVK006W). 'yes' (default) or 'no'. Never fails the build."
            type="enum">
       <val default="true">yes</val>
       <val>no</val>
@@ -183,7 +183,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
            desc="A folder of TrueType fonts for DesignSystemPDF: used where the publisher's stylesheets name them, and for characters the bundled fonts lack. Empty (default) uses the bundled fonts."
            type="string"/>
     <param name="govuk.pdf.command"
-           desc="Another formatter to render the print document as PDF, used in place of DesignSystemPDF, run after the site is built when govuk.print=yes. The print document's path and the output PDF's path are appended as the last two arguments, so 'weasyprint' becomes 'weasyprint &lt;print.html&gt; &lt;publication.pdf&gt;'. Empty (default) leaves the choice to govuk.pdf. A CSS Paged Media formatter resolves the page references the print stylesheet generates — page numbers in the contents, the index and cross-references — which browsers cannot. The plugin bundles no formatter and downloads nothing; a failure is reported as a warning and the site is still complete."
+           desc="Another formatter to render the print document as PDF, used in place of DesignSystemPDF, run after the site is built when govuk.print=yes. The print document's path and the output PDF's path are appended as the last two arguments, so 'weasyprint' becomes 'weasyprint &lt;print.html&gt; &lt;publication.pdf&gt;'. Empty (default) leaves the choice to govuk.pdf. A CSS Paged Media formatter resolves the page references the print stylesheet generates (page numbers in the contents, the index and cross-references), which browsers cannot. The plugin bundles no formatter and downloads nothing; a failure is reported as a warning and the site is still complete."
            type="string"/>
     <param name="govuk.pdf.name"
            desc="File name for the generated PDF, without the extension. Defaults to the input map's name."
