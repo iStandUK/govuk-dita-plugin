@@ -94,7 +94,7 @@ element-level typography.
         <nav class="govuk-pagination govuk-pagination--block" aria-label="Pagination">
           <xsl:if test="exists($prev)">
             <div class="govuk-pagination__prev">
-              <a class="govuk-pagination__link" rel="prev">
+              <a class="govuk-link govuk-pagination__link" rel="prev">
                 <xsl:attribute name="href"><xsl:apply-templates select="$prev" mode="govuk-page-href"/></xsl:attribute>
                 <svg class="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
                   <path d="m6.5938-0.0078125-6.7266 6.7266 6.7441 6.4062 1.377-1.449-4.1856-3.9768h12.896v-2h-12.984l4.2931-4.293-1.3888-1.3852z"></path>
@@ -107,7 +107,7 @@ element-level typography.
           </xsl:if>
           <xsl:if test="exists($next)">
             <div class="govuk-pagination__next">
-              <a class="govuk-pagination__link" rel="next">
+              <a class="govuk-link govuk-pagination__link" rel="next">
                 <xsl:attribute name="href"><xsl:apply-templates select="$next" mode="govuk-page-href"/></xsl:attribute>
                 <svg class="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
                   <path d="m8.107-0.0078125-1.4136 1.414 4.3021 4.2949h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7295-6.7285z"></path>

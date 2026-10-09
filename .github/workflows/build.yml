@@ -143,10 +143,17 @@ jobs:
 
       - name: Install plugin
         run: |
+          # Integration merges these into files it writes in the JVM's default
+          # charset and reads back as UTF-8; before Java 18 that is Windows-1252
+          # on Windows, so anything outside ASCII breaks the install (#199)
+          if LC_ALL=C.UTF-8 grep -nP '[^\x00-\x7F]' org.istanduk.gov-uk/messages.xml org.istanduk.gov-uk/plugin.xml; then
+            echo "::error::messages.xml and plugin.xml must be ASCII (#199)"; exit 1
+          fi
           (cd org.istanduk.gov-uk && zip -qr ../org.istanduk.gov-uk.zip .)
           # The cached DITA-OT may hold the plugin from an earlier run
           "dita-ot-${DITA_OT_VERSION}/bin/dita" uninstall org.istanduk.gov-uk || true
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
+          # Installed with the default charset Java 17 has on Windows (#199)
+          JAVA_TOOL_OPTIONS=-Dfile.encoding=Cp1252 "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
 
       # Built BEFORE Pagefind is installed: exercises the graceful-absence path
       # (govuk.search=auto with no binary -> site without search, FR-S4)
@@ -301,6 +308,24 @@ jobs:
           # the symptom the warning describes, and its absence with <mapref href>
           grep -q '<span>Group</span>' out/keyref-nest/ov.html
           grep -q 'href="ov.html">Overview T</a>' out/keyref-nest-href/t1.html
+
+      # A toolkit installed where the user cannot write, as under C:\Program Files
+      # (#198): the build must write nothing into the DITA-OT folder, and the
+      # unknown-parameter check must still work.
+      - name: Build from a read-only DITA-OT (#198)
+        run: |
+          set -o pipefail
+          chmod -R a-w "dita-ot-${DITA_OT_VERSION}"
+          if touch "dita-ot-${DITA_OT_VERSION}/plugins/org.dita.base/.probe" 2> /dev/null; then
+            echo "::error::the toolkit is still writable (running as root?), so this test proves nothing"; exit 1
+          fi
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/keyref-nest/root-href.ditamap \
+            --format govuk --output out/read-only -Dgovuk.unknown-test=1 2>&1 | tee read-only.log
+          test -f out/read-only/index.html
+          grep -q "\[GOVK009W\]: govuk.unknown-test is not a parameter" read-only.log
+      - name: Make the DITA-OT writable again
+        if: always()
+        run: chmod -R u+w "dita-ot-${DITA_OT_VERSION}"
 
       # Search relevance from DITA semantics (#54): attributes derived from the DITA,
       # the ranking presets, and validation of the parameter (Pagefind is installed,
@@ -756,9 +781,9 @@ jobs:
           grep -q 'src="https://example.org/remote.png"' "$media"
           grep -q "href=\"javascript:alert('xref')\"" "$media"
           grep -q '<object' "$media"
-          grep -q "\[GOVK006W\].*remote image 'https://example.org/remote.png' — kept" kitchen.log
-          grep -q "\[GOVK006W\].*script-scheme link .* — kept" kitchen.log
-          grep -q "\[GOVK006W\].*object embed .* — kept" kitchen.log
+          grep -q "\[GOVK006W\].*remote image 'https://example.org/remote.png': kept" kitchen.log
+          grep -q "\[GOVK006W\].*script-scheme link .*': kept" kitchen.log
+          grep -q "\[GOVK006W\].*object embed .*': kept" kitchen.log
           # #61 default: no dates line; #79: no inline module script, init.js instead
           absent -q 'app-page-dates' out/kitchen/topics/reference-full.html
           absent -q 'type="module">import' "$media"
@@ -776,7 +801,7 @@ jobs:
             --format govuk --output out/kitchen-strip -Dgovuk.content.policy=strip -Dgovuk.dates=both 2>&1 | tee kitchen-strip.log
           absent -Eq 'src="https://example.org/remote.png"|javascript:|<object' out/kitchen-strip/topics/media.html
           test "$(grep -o 'app-content-stripped' out/kitchen-strip/topics/media.html | wc -l)" -ge 3
-          grep -q "\[GOVK006W\].*remote image .* — removed" kitchen-strip.log
+          grep -q "\[GOVK006W\].*remote image .*': removed" kitchen-strip.log
           grep -q '<span class="app-page-dates__item">Published <time datetime="2026-01-14">14 January 2026</time></span>' out/kitchen-strip/topics/reference-full.html
           grep -q '<span class="app-page-dates__item">Last updated <time datetime="2026-09-07">7 September 2026</time></span>' out/kitchen-strip/topics/reference-full.html
           # govuk.content.warnings=no is silent; govuk.dates=updated shows the last revision only
@@ -1030,6 +1055,9 @@ jobs:
           grep -q 'govuk-pagination--block' out/manual/topics/install.html
           grep -q 'link-title--decorated">About the plugin' out/manual/topics/install.html
           grep -q 'link-title--decorated">Building a website' out/manual/topics/install.html
+          # both links take the link colours and focus state from govuk-link (#196)
+          test "$(grep -o '<a class="[^"]*govuk-pagination__link[^"]*"' out/manual/topics/install.html | grep -c 'govuk-link govuk-pagination__link')" = 2
+          test -z "$(grep -rhoE '<a class="[^"]*govuk-pagination__link[^"]*"' out/manual --include=*.html | grep -v 'govuk-link ')"
           # svgref accessible name (#10 / NFR-A1)
           grep -q 'aria-label="Sample diagram"' out/oruk-mini/item.html
           # Search (#16 / FR-S): enabled on the manual, gracefully absent on oruk-mini
@@ -1163,6 +1191,14 @@ jobs:
           ! grep -q 'GDS Transport' out/manual/govuk/plugin.css
           ! grep -q 'GDS Transport' out/manual/govuk/overlay-istanduk.css
           grep -q 'app-tile' out/manual-grid/index.html
+          # a grid row per three tiles, so uneven heights cannot pull a tile
+          # into the row above (#202)
+          for f in out/manual-grid/index.html out/manual-depth1/index.html; do
+            tiles=$(grep -o 'class="app-tile"' "$f" | wc -l)
+            rows=$(grep -o 'class="govuk-grid-row app-topic-grid"' "$f" | wc -l)
+            test "$tiles" -gt 3
+            test "$rows" = "$(( (tiles + 2) / 3 ))"
+          done
           # Localisable UI text (#19 / NFR-I1)
           grep -q 'data-label-menu="Menu"' out/manual/topics/introduction.html
           # iStandUK theme (govuk.branding=istanduk)
