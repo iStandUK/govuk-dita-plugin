@@ -247,10 +247,14 @@ jobs:
       # here, by the HTML validator and by the accessibility checks below.
       - name: Build with a publisher stylesheet (FR-T4, #142)
         run: |
+          set -o pipefail
           last_css() { grep -o '<link rel="stylesheet"[^>]*>' "$1" | tail -1; }
+          # a stylesheet assets folder that does not exist warns, and the site builds (#197)
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-custom -Dgovuk.print=yes \
-            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes
+            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes \
+            "-Dgovuk.css.assets=$PWD/fixtures/css-assets/missing" 2>&1 | tee manual-custom.log
+          grep -q "\[GOVK013W\]: govuk.css.assets names no folder" manual-custom.log
           cmp docs/manual/samples/custom.css out/manual-custom/custom.css
           for page in index.html glossary.html index-page.html figurelist.html tablelist.html print.html; do
             last_css "out/manual-custom/$page" | grep -q 'href="custom.css"' || { echo "custom.css is not the last stylesheet on $page"; exit 1; }
@@ -263,8 +267,12 @@ jobs:
           # a branding mode's overlay still comes first, and args.csspath moves the file
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
             --format govuk --output out/oruk-custom -Dgovuk.branding=istanduk \
-            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes -Dargs.csspath=theme
+            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes -Dargs.csspath=theme \
+            "-Dgovuk.css.assets=$PWD/fixtures/css-assets/assets"
           test -f out/oruk-custom/theme/custom.css
+          # the stylesheet's own files arrive beside it, subfolders kept, and only those (#197)
+          cmp fixtures/css-assets/assets/images/mark.svg out/oruk-custom/theme/images/mark.svg
+          test ! -e out/oruk-custom/theme/README.md
           grep -q 'overlay-istanduk.css' out/oruk-custom/item.html
           last_css out/oruk-custom/item.html | grep -q 'href="theme/custom.css"'
           last_css out/oruk-custom/index.html | grep -q 'href="theme/custom.css"'
