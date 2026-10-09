@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="subject">
+  <title>subject of care</title>
+  <shortdesc>one or more persons scheduled to receive care, as in <xref href="https://example.org/iso-13940" scope="external" format="html"/></shortdesc>
+  <conbody><p>subject of care.</p></conbody>
+</concept>

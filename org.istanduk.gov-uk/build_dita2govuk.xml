@@ -9,9 +9,17 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <!-- Unknown parameters (#174): before the plugin sets any govuk.* property
          of its own, the ones the build was given are checked against those
          plugin.xml declares. A misspelt name is otherwise ignored without a
-         word, and its default silently applies. A warning, never a failure. -->
-    <tempfile property="istanduk.given.file" prefix="govuk-given" suffix=".properties" deleteonexit="true"/>
-    <tempfile property="istanduk.given.report" prefix="govuk-given" suffix=".txt" deleteonexit="true"/>
+         word, and its default silently applies. A warning, never a failure.
+         The working files go in the temp folder, never beside the build file:
+         a toolkit can be installed where the user cannot write (#198).
+         dita.temp.dir is not set yet; the dita command sets base.temp.dir. -->
+    <property name="istanduk.given.dir" value="${base.temp.dir}" if:set="base.temp.dir"/>
+    <property name="istanduk.given.dir" value="${java.io.tmpdir}"/>
+    <mkdir dir="${istanduk.given.dir}"/>
+    <tempfile property="istanduk.given.file" prefix="govuk-given" suffix=".properties"
+              destdir="${istanduk.given.dir}" deleteonexit="true"/>
+    <tempfile property="istanduk.given.report" prefix="govuk-given" suffix=".txt"
+              destdir="${istanduk.given.dir}" deleteonexit="true"/>
     <echoproperties prefix="govuk." destfile="${istanduk.given.file}"/>
     <makeurl file="${istanduk.given.file}" property="istanduk.given.url"/>
     <xslt in="${dita.plugin.org.istanduk.gov-uk.dir}/plugin.xml" out="${istanduk.given.report}" force="true"
@@ -21,6 +29,8 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <loadfile property="istanduk.given.unknown" srcfile="${istanduk.given.report}" encoding="UTF-8" failonerror="false">
       <filterchain><trim/><ignoreblank/></filterchain>
     </loadfile>
+    <delete file="${istanduk.given.file}" quiet="true"/>
+    <delete file="${istanduk.given.report}" quiet="true"/>
     <echo if:set="istanduk.given.unknown" level="warning" message="${istanduk.given.unknown}"/>
     <!-- Route topic rendering through this plugin's stylesheet (scoped to the
          govuk transtype; plain html5 builds are unaffected). -->
