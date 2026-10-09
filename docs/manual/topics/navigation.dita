@@ -12,6 +12,12 @@
         screens and expand/collapse controls on branches, with the current page's ancestors
         open; without JavaScript the full tree simply stays visible, so nothing is ever
         unreachable.</p>
+      <p><indexterm>tooltips</indexterm><indexterm>short description<indexterm>in navigation</indexterm></indexterm>Entries
+        show titles only. A topic's short description is not shown as a tooltip when an
+        entry is pointed at, as some help systems do: a hover tooltip can't be reached on
+        a touch screen or from the keyboard, and the Design System has no component for
+        one. The description is visible text instead: beneath the entry on the home page,
+        in its parent topic's list of children, and under the topic's own title.</p>
       <p>Topics with <codeph>toc="no"</codeph> stay out of the tree but are still built and
         linkable — useful for large reference sets addressed by cross-reference rather than
         browsing, as in the Open Referral UK publications.</p>
