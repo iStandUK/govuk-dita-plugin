@@ -457,22 +457,28 @@ map transformation with the plugin's values.
                 </xsl:when>
                 <xsl:when test="$layout = 'grid'">
                   <xsl:call-template name="govuk-contents-heading"/>
-                  <div class="govuk-grid-row app-topic-grid">
-                    <xsl:for-each select="$entries">
-                      <div class="govuk-grid-column-one-third">
-                        <!-- Unstyled by default; themes may tint it (D-14) -->
-                        <div class="app-tile">
-                          <xsl:apply-templates select="." mode="govuk-entry"/>
-                          <xsl:call-template name="govuk-child-list">
-                            <xsl:with-param name="children"
-                                            select="*[contains(@class, ' map/topicref ')]
-                                                    [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
-                            <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
-                          </xsl:call-template>
+                  <!-- A row per three tiles, as the Design System's grid
+                       examples do: columns float, and only a row clears, so
+                       one row of every tile let a short tile's gap take the
+                       next row's first tile (#202) -->
+                  <xsl:for-each-group select="$entries" group-adjacent="(position() - 1) idiv 3">
+                    <div class="govuk-grid-row app-topic-grid">
+                      <xsl:for-each select="current-group()">
+                        <div class="govuk-grid-column-one-third">
+                          <!-- Unstyled by default; themes may tint it (D-14) -->
+                          <div class="app-tile">
+                            <xsl:apply-templates select="." mode="govuk-entry"/>
+                            <xsl:call-template name="govuk-child-list">
+                              <xsl:with-param name="children"
+                                              select="*[contains(@class, ' map/topicref ')]
+                                                      [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
+                              <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
+                            </xsl:call-template>
+                          </div>
                         </div>
-                      </div>
-                    </xsl:for-each>
-                  </div>
+                      </xsl:for-each>
+                    </div>
+                  </xsl:for-each-group>
                 </xsl:when>
                 <xsl:when test="$layout = 'grouped'">
                   <xsl:call-template name="govuk-contents-heading"/>
