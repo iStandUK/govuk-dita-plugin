@@ -579,3 +579,19 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 **Unchanged from D-24:** `basic` on by default; no persons by default; `HowTo` and `DefinedTermSet` emitted, `FAQPage` not; DCAT keeps its own switch and data.gov.uk's mandatory set; conventions before any specialisation.
 
 **Consequences:** #102, #122 and #123 are unblocked. #99 grows (it carries the harvest, the first writer, the checker and three tables) and the rest shrink to tables and harvesters; the `Dataset`/DCAT agreement test in #122 is unnecessary, since both read one record. The six existing harvests (footer, covers, books, dates, search) stay as they are until there is a reason to touch them. A generator gains most by writing `category`, `data`, `resourceid` and true `keywords` (14 §9).
+
+---
+
+## D-27 · Stylesheet assets: an opt-in folder, not the whole of `args.cssroot`
+
+**Date:** 2026-10-09. Issue [#197](https://github.com/iStandUK/govuk-dita-plugin/issues/197), from theming contsys.org with a self-hosted typeface.
+
+**Context:** FR-T4 lets a publisher append a stylesheet with the toolkit's `args.css`, but `args.copycss=yes` copies that one file. Fonts and images it names with `url()` had to be copied after every build. Under `govuk.csp=meta` a self-hosted font is the only route to a brand typeface (`font-src 'self'` blocks fonts from `data:` URLs and other sites), and when the files are missing the reader quietly gets the fallback face.
+
+**Options:** (a) a new parameter naming a folder of assets; (b) copy the whole `args.cssroot` folder when `args.copycss=yes`; (c) leave it to the publisher's build script.
+
+**Decision:** (a). `govuk.css.assets` names a folder whose contents, subfolders included, are copied to where DITA-OT copies the stylesheet (`args.csspath`, or the site root), so a `url()` resolves as written. Empty by default. Everything in the folder is copied (Ant's default excludes aside), not a list of file types: the folder exists for this purpose, and a type list would silently drop formats it did not foresee. A name that is not a folder, or an `args.csspath` on another site, is a warning (`GOVK013W`), never a failure.
+
+**Rejected:** (b) changes what an existing toolkit parameter does and would publish whatever else sits beside the stylesheet (sources, notes, licences). (c) is the status quo each publisher had to rediscover.
+
+**Consequences:** FR-T4 is complete for fonts and images. The print document links the same stylesheet, so the same files serve it. DesignSystemPDF could later look in this folder for TrueType fonts when `govuk.pdf.fonts` is empty; that is a separate change.
