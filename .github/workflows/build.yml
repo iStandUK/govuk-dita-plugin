@@ -289,6 +289,24 @@ jobs:
           grep -q '<span>Group</span>' out/keyref-nest/ov.html
           grep -q 'href="ov.html">Overview T</a>' out/keyref-nest-href/t1.html
 
+      # A toolkit installed where the user cannot write, as under C:\Program Files
+      # (#198): the build must write nothing into the DITA-OT folder, and the
+      # unknown-parameter check must still work.
+      - name: Build from a read-only DITA-OT (#198)
+        run: |
+          set -o pipefail
+          chmod -R a-w "dita-ot-${DITA_OT_VERSION}"
+          if touch "dita-ot-${DITA_OT_VERSION}/plugins/org.dita.base/.probe" 2> /dev/null; then
+            echo "::error::the toolkit is still writable (running as root?), so this test proves nothing"; exit 1
+          fi
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/keyref-nest/root-href.ditamap \
+            --format govuk --output out/read-only -Dgovuk.unknown-test=1 2>&1 | tee read-only.log
+          test -f out/read-only/index.html
+          grep -q "\[GOVK009W\]: govuk.unknown-test is not a parameter" read-only.log
+      - name: Make the DITA-OT writable again
+        if: always()
+        run: chmod -R u+w "dita-ot-${DITA_OT_VERSION}"
+
       # Search relevance from DITA semantics (#54): attributes derived from the DITA,
       # the ranking presets, and validation of the parameter (Pagefind is installed,
       # so search.html is produced).
