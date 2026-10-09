@@ -296,7 +296,77 @@ map transformation with the plugin's values.
   <xsl:function name="dita-ot:govuk-desc" as="xs:string"
                 xmlns:dita-ot="http://dita-ot.sourceforge.net/ns/201007/dita-ot">
     <xsl:param name="ref" as="element()"/>
-    <xsl:sequence select="normalize-space(string(($ref/*[contains(@class, ' map/topicmeta ')]/*[contains(@class, ' map/shortdesc ')])[1]))"/>
+    <xsl:variable name="text" as="xs:string*">
+      <xsl:apply-templates mode="govuk-desc-text"
+                           select="($ref/*[contains(@class, ' map/topicmeta ')]/*[contains(@class, ' map/shortdesc ')])[1]/node()"/>
+    </xsl:variable>
+    <xsl:sequence select="normalize-space(string-join($text, ''))"/>
+  </xsl:function>
+
+  <!-- A description's words as a reader sees them on the topic's own page
+       (#200). The map's copy of a short description is taken before DITA-OT
+       fills in the text of empty cross-references, so that is done here, the
+       same way: the target's title. Text a page never shows is left out. -->
+  <xsl:template match="text()" mode="govuk-desc-text">
+    <xsl:sequence select="string(.)"/>
+  </xsl:template>
+
+  <xsl:template match="*" mode="govuk-desc-text">
+    <xsl:apply-templates mode="govuk-desc-text"/>
+  </xsl:template>
+
+  <xsl:template match="processing-instruction() | comment()
+                       | *[contains(@class, ' topic/indexterm ') or contains(@class, ' topic/desc ')
+                           or contains(@class, ' topic/draft-comment ') or contains(@class, ' topic/required-cleanup ')
+                           or contains(@class, ' topic/data ')]"
+                mode="govuk-desc-text"/>
+
+  <xsl:template match="*[contains(@class, ' topic/xref ')]" mode="govuk-desc-text">
+    <xsl:variable name="own" as="xs:string*">
+      <xsl:apply-templates mode="govuk-desc-text"/>
+    </xsl:variable>
+    <xsl:sequence select="if (normalize-space(string-join($own, '')) ne '') then $own
+                          else govuk:link-text(.)"/>
+  </xsl:template>
+
+  <!-- The text DITA-OT gives a cross-reference with none of its own: the
+       target's title; failing that, the navigation title of the map entry
+       for the same file; failing that, the file's name, so that no word is
+       silently dropped. Links outside the publication show their address. -->
+  <xsl:function name="govuk:link-text" as="xs:string">
+    <xsl:param name="xref" as="element()"/>
+    <xsl:variable name="href" select="normalize-space($xref/@href)"/>
+    <xsl:variable name="file" select="substring-before(concat($href, '#'), '#')"/>
+    <xsl:variable name="ids" select="tokenize(substring-after($href, '#'), '/')"/>
+    <xsl:variable name="local" as="xs:boolean"
+                  select="$file ne '' and not($xref/@scope = ('external', 'peer'))
+                          and (not($xref/@format) or $xref/@format = 'dita')"/>
+    <xsl:variable name="uri" select="if ($local) then string(resolve-uri($file, $govuk-map-base)) else ''"/>
+    <xsl:variable name="topic" as="element()?"
+                  select="if ($uri ne '' and doc-available($uri))
+                          then (doc($uri)//*[contains(@class, ' topic/topic ')]
+                                              [empty($ids[1]) or $ids[1] = '' or @id = $ids[1]])[1]
+                          else ()"/>
+    <xsl:variable name="target" as="element()?"
+                  select="if (exists($ids[2])) then ($topic//*[@id = $ids[2]])[1] else $topic"/>
+    <xsl:variable name="title" as="xs:string*">
+      <xsl:apply-templates mode="govuk-desc-text"
+                           select="($target/*[contains(@class, ' topic/title ')])[1]/node()"/>
+    </xsl:variable>
+    <xsl:variable name="entry" as="element()?"
+                  select="if ($local)
+                          then ($govuk-norm-map//*[contains(@class, ' map/topicref ')]
+                                                  [substring-before(concat(@href, '#'), '#') = $file])[1]
+                          else ()"/>
+    <xsl:variable name="navtitle" as="xs:string*">
+      <xsl:if test="exists($entry)">
+        <xsl:apply-templates select="$entry" mode="get-navtitle"/>
+      </xsl:if>
+    </xsl:variable>
+    <xsl:sequence select="(normalize-space(string-join($title, '')),
+                           normalize-space(string-join($navtitle, '')),
+                           if ($local) then replace(tokenize($file, '/')[last()], '\.[^.]*$', '') else $href)
+                          [. ne ''][1]"/>
   </xsl:function>
 
   <!-- A linked (or plain) entry heading with optional description -->

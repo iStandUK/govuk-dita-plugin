@@ -262,6 +262,26 @@ jobs:
           last_css out/oruk-custom/item.html | grep -q 'href="theme/custom.css"'
           last_css out/oruk-custom/index.html | grep -q 'href="theme/custom.css"'
 
+      # Home-page descriptions read as the topic pages do (#200): cross-references
+      # with no text of their own take their target's title, in entry descriptions
+      # and list hints alike, and text a page never shows stays out.
+      - name: Build home-desc fixture (empty cross-references, #200)
+        run: |
+          for layout in grid grouped; do
+            out="out/home-desc-$layout"
+            "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/home-desc/home-desc.ditamap \
+              --format govuk --output "$out" -Dgovuk.homepage.layout=$layout
+            for page in state matter concepts/actor health subject; do
+              text=$(grep -o '<p class="shortdesc[^>]*>.*' "$out/$page.html" | sed 's#</p>.*##; s#<[^>]*>##g')
+              test -n "$text"
+              grep -qF ">$text</" "$out/index.html" || { echo "::error::home page ($layout) lacks: $text"; exit 1; }
+            done
+            grep -qF 'app-entry__desc">overall level of health of a subject of care</p>' "$out/index.html"
+            grep -qF 'app-group-list__hint">organization or person participating in health</div>' "$out/index.html"
+            grep -qF 'receive care, as in https://example.org/iso-13940</div>' "$out/index.html"
+            if grep -q 'check the wording' "$out/index.html"; then echo "::error::draft comment shown"; exit 1; fi
+          done
+
       # Trial finding (#51): DITA-OT resolves no key inside a submap included with
       # <mapref keyref>; the plugin must warn (GOVK001W) and name the entry, and
       # stay silent for the same submap included with <mapref href> and for the manual.
