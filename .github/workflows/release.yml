@@ -46,12 +46,14 @@ jobs:
           if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "v$version" != "$GITHUB_REF_NAME" ]; then
             echo "plugin.xml says $version but the tag is $GITHUB_REF_NAME"; exit 1
           fi
-          echo "VERSION=$version" >> "$GITHUB_ENV"
-          echo "ASSET=org.istanduk.gov-uk-$version.zip" >> "$GITHUB_ENV"
-          echo "MANUAL=org.istanduk.gov-uk-manual-$version" >> "$GITHUB_ENV"
-          # dates in the manual's PDF and zip come from the tagged commit, so the
-          # same tag gives the same files
-          echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
+          {
+            echo "VERSION=$version"
+            echo "ASSET=org.istanduk.gov-uk-$version.zip"
+            echo "MANUAL=org.istanduk.gov-uk-manual-$version"
+            # dates in the manual's PDF and zip come from the tagged commit, so the
+            # same tag gives the same files
+            echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)"
+          } >> "$GITHUB_ENV"
 
       - name: Build the asset and its checksum
         run: |
@@ -116,7 +118,7 @@ jobs:
           grep -q "href=\"${MANUAL}.pdf\">Whole publication (PDF, " "$site/index.html"
           # and its PDF meets PDF/UA-1
           # veraPDF now and then fails to run at all: only a verdict counts
-          for i in 1 2 3; do
+          for _ in 1 2 3; do
             verapdf --flavour ua1 --format text -v "$site/$MANUAL.pdf" > /tmp/manual-ua.txt || true
             grep -Eq '^(PASS|FAIL) ' /tmp/manual-ua.txt && break
           done

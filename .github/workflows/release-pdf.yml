@@ -67,7 +67,7 @@ jobs:
           sha256sum "$ASSET" > "$ASSET.sha256"
           cat "$ASSET.sha256"
           ls engine-sources/openhtmltopdf-*-sources.jar
-          test "$(ls engine-sources/openhtmltopdf-*-sources.jar | wc -l)" = 4
+          test "$(find engine-sources -maxdepth 1 -name 'openhtmltopdf-*-sources.jar' | wc -l)" = 4
 
       - name: The asset unpacks, runs and renders
         run: |
@@ -89,7 +89,7 @@ jobs:
       - name: The released zip's PDF is PDF/UA-1
         run: |
           # veraPDF now and then fails to run at all: only a verdict counts
-          for i in 1 2 3; do
+          for _ in 1 2 3; do
             verapdf --flavour ua1 --format text -v /tmp/sample.pdf > /tmp/sample-ua.txt || true
             grep -Eq '^(PASS|FAIL) ' /tmp/sample-ua.txt && break
           done
