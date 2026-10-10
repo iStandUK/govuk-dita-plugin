@@ -50,6 +50,9 @@ changed_since_prebuild() {
       -*=*) v="${a#*=}" ;;
       *) v="$a" ;;
     esac
+    # the value as one path (it may hold spaces), then each word of it (a
+    # command and its arguments, say)
+    [ -e "$v" ] && paths+=("$v")
     for t in $v; do
       [ -e "$t" ] && paths+=("$t")
     done
