@@ -201,7 +201,7 @@ jobs:
       - name: Build DITA 1.3 kitchen sink
         run: |
           set -o pipefail
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen 2>&1 | tee kitchen.log
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
@@ -309,7 +309,7 @@ jobs:
       - name: Build keyref-nest fixture (unresolved keys, #51)
         run: |
           set -o pipefail
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/keyref-nest/root-keyref.ditamap \
             --format govuk --output out/keyref-nest 2>&1 | tee keyref-nest.log
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/keyref-nest/root-href.ditamap \
@@ -347,7 +347,7 @@ jobs:
       # so search.html is produced).
       - name: Build search-semantics fixture (#54)
         run: |
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
             --format govuk --output out/search-semantics -Dgovuk.search.ranking=reference
           # live topic: shortdesc weighted, "Where used" table ignored, keywords/searchtitle/filters in head
@@ -386,9 +386,7 @@ jobs:
       - name: Build print document (#63)
         run: |
           set -o pipefail
-          # bash -e ignores a negated command, so a plain "! grep" can never fail
-          # the step; negative assertions go through this instead
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-print -Dgovuk.print=yes 2>&1 | tee manual-print.log
           test -f out/manual-print/print.html
@@ -591,7 +589,7 @@ jobs:
       # present when its source is, and no empty block when it is not.
       - name: Print cover details and imprint (#150)
         run: |
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-cover/cover.ditamap \
             --format govuk --output out/print-cover -Dgovuk.print=yes -Dgovuk.search=no \
             -Dgovuk.phase=beta -Dgovuk.site.url=https://example.org/standard/
@@ -653,7 +651,7 @@ jobs:
       - name: Print page numbers and the external formatter (#106–#108, #121)
         run: |
           set -o pipefail
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-mini -Dgovuk.print=yes
           md=out/markdown-mini/print.html
@@ -759,7 +757,7 @@ jobs:
       - name: The plugin with the released DesignSystemPDF (#113)
         run: |
           set -o pipefail
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           curl -sSfL -o dspdf.zip \
             "https://github.com/iStandUK/govuk-dita-plugin/releases/download/pdf-v${DSPDF_RELEASE}/designsystempdf-${DSPDF_RELEASE}.zip"
           echo "${DSPDF_RELEASE_SHA256}  dspdf.zip" | sha256sum -c -
@@ -785,7 +783,7 @@ jobs:
       - name: Content policy, SVG sanitising, dates, sitemap and CSP (#77)
         run: |
           set -o pipefail
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           media=out/kitchen/topics/media.html
           # #78 + #59: the unsafe diagram is inlined without its active content or DTD
           # default attributes; its ordinary external link stays; findings warned once
@@ -904,7 +902,7 @@ jobs:
       - name: Page metadata (#99, design 14)
         run: |
           set -o pipefail
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           has() { grep -qF "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
           dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --format govuk -Dgovuk.search=no "$@"; }
           # every tag, from where design 14 says it comes
@@ -1038,7 +1036,7 @@ jobs:
       - name: Check output
         run: |
           set -e
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           # the vendored govuk-frontend release: written once, in VERSION.txt (#162)
           gf=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
           page=out/manual/topics/introduction.html
@@ -1518,7 +1516,7 @@ jobs:
       # that the integration tests made and veraPDF passed.
       - name: The launcher renders the manual
         run: |
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' pom.xml | head -1)
           dspdf="/tmp/dist/designsystempdf-${version}/bin/designsystempdf"
           "$dspdf" --in "$GITHUB_WORKSPACE/out/pdf/manual/print.html" --out /tmp/manual.pdf 2>&1 | tee /tmp/manual.log
@@ -1542,7 +1540,7 @@ jobs:
         working-directory: .
         run: |
           set -o pipefail
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
           export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
@@ -1582,7 +1580,7 @@ jobs:
         working-directory: .
         run: |
           set -o pipefail
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
           export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
           dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk -Dgovuk.search=no --verbose "$@"; }
@@ -1619,7 +1617,7 @@ jobs:
         working-directory: .
         run: |
           set -o pipefail
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
           export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
           dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --format govuk -Dgovuk.search=no -Dgovuk.print=yes "$@"; }
