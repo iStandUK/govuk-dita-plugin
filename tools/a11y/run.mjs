@@ -25,16 +25,31 @@ if (args.length === 0) {
 }
 const files = args.flatMap(htmlUnder).sort();
 
+// Pages are checked a few at a time (#216), each in its own tab; the results
+// are reported afterwards in the files' sorted order, so the output is the same
+// as one at a time. AXE_TABS sets how many (default 4).
+const tabs = Math.max(1, Number(process.env.AXE_TABS) || 4);
 const browser = await chromium.launch();
 const context = await browser.newContext();
-const page = await context.newPage();
-let total = 0;
+const results = new Array(files.length);
+let next = 0;
+async function worker() {
+  const page = await context.newPage();
+  while (next < files.length) {
+    const i = next++;
+    await page.goto(pathToFileURL(files[i]).href, { waitUntil: "load" });
+    const { violations } = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .analyze();
+    results[i] = violations;
+  }
+  await page.close();
+}
+await Promise.all(Array.from({ length: Math.min(tabs, files.length) }, worker));
 
-for (const file of files) {
-  await page.goto(pathToFileURL(file).href, { waitUntil: "load" });
-  const { violations } = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    .analyze();
+let total = 0;
+files.forEach((file, i) => {
+  const violations = results[i];
   if (violations.length) {
     total += violations.length;
     console.log(`\n✗ ${file}`);
@@ -45,7 +60,7 @@ for (const file of files) {
       console.log(`    ${v.helpUrl}`);
     }
   }
-}
+});
 
 await browser.close();
 console.log(`\naxe checked ${files.length} page(s); ${total} violation type(s) found`);

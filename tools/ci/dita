@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# This file is part of the govuk-dita-plugin project.
+# Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+#
+# CI's way of running DITA-OT (#217). Most of the build job's time is DITA-OT
+# starting up, one build after another, so CI makes the builds it can ahead of
+# time, several at once, and each step then gets the result of its build
+# without waiting. The steps and their assertions are unchanged.
+#
+#   tools/ci/dita <dita arguments...>
+#       Run a build. If the prebuild made this very build, print its log and
+#       return its exit status; otherwise run DITA-OT now, and note the build
+#       in the manifest so that the next run can make it ahead of time.
+#   tools/ci/dita --prebuild <manifest>
+#       Make every build in the manifest, several at once.
+#   tools/ci/dita --report
+#       Say how many builds were made ahead and used, and how many ran live.
+#
+# A prebuilt result is used only when it is certainly the build the step asks
+# for: the same arguments, working folder, PATH and Java options; and no file
+# it could read (the fixtures, the manual, the installed plugin, any path in its
+# parameters) changed after the prebuild began. Otherwise the step builds live.
+# A wrong guess about what to prebuild costs time, never correctness.
+#
+# Environment: DITA_OT_HOME (the toolkit), PREBUILD_DIR (results and the
+# manifest of this run; unset, the script just runs DITA-OT).
+set -u
+
+toolkit="${DITA_OT_HOME:?DITA_OT_HOME is not set}"
+store="${PREBUILD_DIR:-}"
+
+# What, besides the arguments, decides a build's result
+context() {
+  printf '%s\0' "$PWD" "${PATH:-}" "${JAVA_TOOL_OPTIONS:-}" "${ANT_OPTS:-}"
+}
+context_hash() { context | sha256sum | cut -c1-64; }
+key_of() { { context; printf '%s\0' "$@"; } | sha256sum | cut -c1-64; }
+
+# Something the build could read changed after the prebuild began
+changed_since_prebuild() {
+  local mark="$store/.started" a v t skip=""
+  local -a paths=(fixtures docs "$toolkit/plugins/org.istanduk.gov-uk")
+  set -f
+  for a in "$@"; do
+    # the build's own output and temp folders are written by the prebuild itself
+    if [ -n "$skip" ]; then skip=""; continue; fi
+    case "$a" in
+      -o|--output|-t|--temp) skip=1; continue ;;
+      --output=*|--temp=*) continue ;;
+      -*=*) v="${a#*=}" ;;
+      *) v="$a" ;;
+    esac
+    for t in $v; do
+      [ -e "$t" ] && paths+=("$t")
+    done
+  done
+  set +f
+  [ -n "$(find "${paths[@]}" -newer "$mark" -print -quit 2> /dev/null)" ]
+}
+
+case "${1:-}" in
+  --prebuild)
+    manifest="${2:?usage: dita --prebuild <manifest>}"
+    : "${store:?PREBUILD_DIR is not set}"
+    mkdir -p "$store"
+    touch "$store/.started"
+    [ -s "$manifest" ] || { echo "no manifest of builds yet: every build runs live this time"; exit 0; }
+    here=$(context_hash)
+    # entries recorded in another context (a step that changes PATH, say) cannot be reused
+    awk -F'\t' -v c="$here" '$2 == c { print $1 }' "$manifest" | sort -u > "$store/.todo"
+    jobs=$(nproc)
+    mem=$(awk '/^MemAvailable:/ { printf "%d", $2 / 1572864 }' /proc/meminfo 2> /dev/null || echo 4)
+    [ "$mem" -lt "$jobs" ] && jobs=$mem
+    [ "$jobs" -gt 4 ] && jobs=4
+    [ "$jobs" -lt 1 ] && jobs=1
+    echo "making $(wc -l < "$store/.todo") build(s) ahead, $jobs at a time"
+    export toolkit store
+    # one build: its own temp folder, so builds started together never share one
+    xargs -d '\n' -n 1 -P "$jobs" bash -c '
+      mapfile -d "" -t args < <(printf "%s" "$1" | base64 -d)
+      key=$({ printf "%s\0" "$PWD" "${PATH:-}" "${JAVA_TOOL_OPTIONS:-}" "${ANT_OPTS:-}"; printf "%s\0" "${args[@]}"; } | sha256sum | cut -c1-64)
+      tmp=$(mktemp -d "$store/tmp.XXXXXX")
+      "$toolkit/bin/dita" "${args[@]}" --temp="$tmp/t" > "$store/$key.log" 2>&1
+      echo $? > "$store/$key.rc.part" && mv "$store/$key.rc.part" "$store/$key.rc"
+      rm -rf "$tmp"
+    ' _ < "$store/.todo"
+    echo "made $(ls "$store"/*.rc 2> /dev/null | wc -l) build(s) ahead"
+    exit 0
+    ;;
+  --report)
+    [ -n "$store" ] || { echo "no builds were made ahead"; exit 0; }
+    made=$(ls "$store"/*.rc 2> /dev/null | wc -l)
+    used=$(ls "$store"/*.used 2> /dev/null | wc -l)
+    live=$( [ -f "$store/manifest.tsv" ] && wc -l < "$store/manifest.tsv" || echo 0)
+    echo "builds made ahead: $made, used: $used; built live: $live"
+    if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+      echo "DITA-OT builds: $made made ahead ($used used), $live built live (#217)" >> "$GITHUB_STEP_SUMMARY"
+    fi
+    exit 0
+    ;;
+esac
+
+if [ -n "$store" ]; then
+  key=$(key_of "$@")
+  if [ -f "$store/$key.rc" ]; then
+    if changed_since_prebuild "$@"; then
+      echo "(tools/ci/dita: an input changed since the prebuild, so this build runs live)" >&2
+    else
+      cat "$store/$key.log"
+      touch "$store/$key.used"
+      exit "$(cat "$store/$key.rc")"
+    fi
+  fi
+  mkdir -p "$store"
+  printf '%s\t%s\n' "$(printf '%s\0' "$@" | base64 -w0)" "$(context_hash)" >> "$store/manifest.tsv"
+fi
+exec "$toolkit/bin/dita" "$@"
