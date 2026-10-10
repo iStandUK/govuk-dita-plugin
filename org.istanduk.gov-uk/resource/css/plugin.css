@@ -11,7 +11,7 @@
 
 /* govuk-frontend scopes its font to govuk-* classes; give the plugin's own
  * furniture (masthead, sidebar, generated links) a matching stack. The plugin
- * never names the restricted GDS Transport face itself: neutral builds use the
+ * never names the restricted GOV.UK typeface itself: neutral builds use the
  * system stack below, and a future official mode adds the face via its own
  * overlay. */
 body {

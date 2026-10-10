@@ -201,6 +201,7 @@ jobs:
       - name: Build DITA 1.3 kitchen sink
         run: |
           set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen 2>&1 | tee kitchen.log
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
@@ -210,7 +211,7 @@ jobs:
           # chunk=by-topic children resolve assets to the output root (upstream PATH2PROJ bug worked around)
           grep -q '"../govuk/plugin.css"' out/kitchen/topics/composite_comp-child-one.html
           grep -q 'Reused safety note' out/kitchen/topics/conref-use.html
-          ! grep -q 'excluded by the filter' out/kitchen-flag/topics/blocks.html
+          absent -q 'excluded by the filter' out/kitchen-flag/topics/blocks.html
           grep -q 'administrators' out/kitchen-flag/topics/blocks.html
           # DITAVAL style flags render — flag__style--* CSS shipped and applied (#29)
           grep -q 'flag__style--italics' out/kitchen-flag/govuk/plugin.css
@@ -308,6 +309,7 @@ jobs:
       - name: Build keyref-nest fixture (unresolved keys, #51)
         run: |
           set -o pipefail
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/keyref-nest/root-keyref.ditamap \
             --format govuk --output out/keyref-nest 2>&1 | tee keyref-nest.log
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/keyref-nest/root-href.ditamap \
@@ -316,8 +318,8 @@ jobs:
           grep -q "Navigation entry 'Group' has keyref='k-ov'" keyref-nest.log
           # once per affected branch: the nested mapref and topicref beneath 'Group' stay quiet
           test "$(grep -c 'GOVK001W' keyref-nest.log)" = 1
-          ! grep -q "GOVK001W" keyref-nest-href.log
-          ! grep -q "GOVK001W" manual-build.log
+          absent -q "GOVK001W" keyref-nest-href.log
+          absent -q "GOVK001W" manual-build.log
           # the symptom the warning describes, and its absence with <mapref href>
           grep -q '<span>Group</span>' out/keyref-nest/ov.html
           grep -q 'href="ov.html">Overview T</a>' out/keyref-nest-href/t1.html
@@ -345,6 +347,7 @@ jobs:
       # so search.html is produced).
       - name: Build search-semantics fixture (#54)
         run: |
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
             --format govuk --output out/search-semantics -Dgovuk.search.ranking=reference
           # live topic: shortdesc weighted, "Where used" table ignored, keywords/searchtitle/filters in head
@@ -354,7 +357,7 @@ jobs:
           grep -q 'data-pagefind-meta="title\[content\]" content="Widget Code (Data Element)"' out/search-semantics/live.html
           grep -q 'data-pagefind-filter="category\[content\]" content="Data Element"' out/search-semantics/live.html
           grep -q 'data-pagefind-filter="audience\[content\]" content="analyst"' out/search-semantics/live.html
-          ! grep -q 'data-pagefind-weight="0.3"' out/search-semantics/live.html
+          absent -q 'data-pagefind-weight="0.3"' out/search-semantics/live.html
           # demoted by outputclass on the title, and by importance="obsolete" on the topic
           for t in retired obsolete; do
             grep -Eq '<h1 [^>]*data-pagefind-weight="2"' out/search-semantics/$t.html
@@ -370,8 +373,10 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
             --format govuk --output out/search-semantics-json '-Dgovuk.search.ranking={termFrequency:0.5,metaWeights:{keywords:3}}'
           grep -q 'data-ranking="{&#34;termFrequency&#34;:0.5,&#34;metaWeights&#34;:{&#34;keywords&#34;:3}}"' out/search-semantics-json/search.html
-          ! "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
-            --format govuk --output out/search-semantics-bad -Dgovuk.search.ranking=fastest
+          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
+            --format govuk --output out/search-semantics-bad -Dgovuk.search.ranking=fastest; then
+            echo "an invalid govuk.search.ranking should fail the build"; exit 1
+          fi
           # the manual: shortdesc weighting applies everywhere, ranking stays Pagefind's default
           grep -q 'data-pagefind-weight="4"' out/manual/topics/introduction.html
           if grep -q 'data-ranking' out/manual/search.html; then echo "manual search page should carry no ranking"; exit 1; fi
@@ -1033,6 +1038,7 @@ jobs:
       - name: Check output
         run: |
           set -e
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
           # the vendored govuk-frontend release: written once, in VERSION.txt (#162)
           gf=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
           page=out/manual/topics/introduction.html
@@ -1057,7 +1063,7 @@ jobs:
           # mainbooktitle only (F1); svgref renders as img without link class (F2);
           # keyref xrefs resolve; column spans and chunked headings survive
           grep -q '>ORUK Mini Test</a>' out/oruk-mini/item.html
-          ! grep -q 'booktitlealt\|long abstract' out/oruk-mini/item.html
+          absent -q 'booktitlealt\|long abstract' out/oruk-mini/item.html
           grep -q '<svg [^>]*role="img"' out/oruk-mini/class-page.html
           test -f out/oruk-mini/images/sample.svg
           grep -q 'colspan="3"' out/oruk-mini/item.html
@@ -1070,7 +1076,7 @@ jobs:
           grep -q 'app-attribution' out/manual/index.html
           grep -q 'govuk-body-l' out/oruk-mini/index.html
           grep -q 'app-attribution' out/oruk-mini/index.html
-          ! grep -q 'commonltr' out/manual/index.html
+          absent -q 'commonltr' out/manual/index.html
           test ! -f out/manual/commonltr.css
           # Navigation enhancement shipped (#9 / FR-N2, FR-N4)
           test -f out/manual/govuk/plugin.js
@@ -1090,7 +1096,7 @@ jobs:
           grep -q 'data-pagefind-body' out/manual/topics/introduction.html
           grep -q '<script src="govuk/search.js">' out/manual/search.html
           grep -q 'PagefindUI' out/manual/govuk/search.js
-          ! grep -q 'search.html' out/oruk-mini/item.html
+          absent -q 'search.html' out/oruk-mini/item.html
           test ! -d out/oruk-mini/pagefind
           # Landing-page layouts (#14 / D-13)
           grep -q 'app-entry__heading' out/manual/index.html
@@ -1100,7 +1106,7 @@ jobs:
           grep -q 'govuk-accordion__section' out/manual-accordion/index.html
           # govuk.homepage.depth=1: entry headings only, no child lists
           grep -q 'app-entry__heading' out/manual-depth1/index.html
-          ! grep -q 'app-group-list' out/manual-depth1/index.html
+          absent -q 'app-group-list' out/manual-depth1/index.html
           # Phase banner (govuk.phase, FR-T3/#49): shown on every page when set,
           # with the tag capitalised and the feedback link; absent by default
           grep -q 'govuk-phase-banner' out/manual-depth1/index.html
@@ -1108,7 +1114,7 @@ jobs:
           grep -q 'govuk-phase-banner' out/manual-depth1/glossary.html
           grep -q 'phase-banner__content__tag">Beta<' out/manual-depth1/index.html
           grep -q 'href="https://example.org/feedback"' out/manual-depth1/topics/introduction.html
-          ! grep -q 'govuk-phase-banner' out/manual/topics/introduction.html
+          absent -q 'govuk-phase-banner' out/manual/topics/introduction.html
           grep -q 'app-group-list' out/manual-grid/index.html
           # Manual documents the layouts with screenshots of itself
           grep -q 'homepage-grid.png' out/manual/topics/layouts.html
@@ -1117,26 +1123,26 @@ jobs:
           grep -q 'app-masthead__search' out/manual/topics/introduction.html
           grep -q 'app-masthead__search' out/manual/index.html
           grep -q 'govuk-footer__inline-list' out/manual/topics/introduction.html
-          ! grep -q 'app-masthead__search' out/oruk-mini/item.html
+          absent -q 'app-masthead__search' out/oruk-mini/item.html
           # Bookmap metadata in the footer on every page type (#42)
           grep -q '© 2026 iStandUK' out/manual/topics/introduction.html
           grep -q '© 2026 iStandUK' out/manual/index.html
           grep -q '© 2026 iStandUK' out/manual/glossary.html
           # author == owner: no redundant attribution line
-          ! grep -q 'app-footer__attribution' out/manual/topics/introduction.html
+          absent -q 'app-footer__attribution' out/manual/topics/introduction.html
           # author distinct from owner surfaces as a footer attribution (oruk-mini)
           grep -q '© The Open Referral Initiative' out/oruk-mini/item.html
           grep -q '© The Open Referral Initiative' out/oruk-mini/index.html
           grep -q 'By Open Referral' out/oruk-mini/item.html
           # plain map (no bookmeta) keeps the service-name fallback, no copyright
-          ! grep -q 'app-footer__attribution' out/kitchen/topics/blocks.html
-          ! grep -q '©' out/kitchen/topics/blocks.html
+          absent -q 'app-footer__attribution' out/kitchen/topics/blocks.html
+          absent -q '©' out/kitchen/topics/blocks.html
           # Glossary and index (#17, #18 / FR-G, FR-X)
           grep -q 'app-az-letter' out/manual/glossary.html
           grep -q '(DITA)' out/manual/glossary.html
           # glossary is self-contained: full definitions inline, no links to
           # per-entry pages (which do not exist for resource-only glossentries) (#34)
-          ! grep -q 'href="glossary/' out/manual/glossary.html
+          absent -q 'href="glossary/' out/manual/glossary.html
           # glossgroup members are harvested, not just standalone glossentry topics (#34)
           grep -q '>Saxon<' out/manual/glossary.html
           grep -q '>Pagefind<' out/manual/glossary.html
@@ -1149,7 +1155,7 @@ jobs:
           test -f out/manual/topics/accessibility.html
           grep -q 'Publishing your accessibility statement' out/manual/topics/accessibility.html
           grep -q 'accessibility.html' out/manual/index.html
-          ! grep -q 'glossary.html' out/oruk-mini/item.html
+          absent -q 'glossary.html' out/oruk-mini/item.html
           test ! -f out/oruk-mini/glossary.html
           test ! -f out/oruk-mini/index-page.html
           # Figure list / table list from bookmap booklists (#33 / FR-X)
@@ -1165,7 +1171,7 @@ jobs:
           # only generated when the bookmap requests them (oruk-mini booklists has toc only)
           test ! -f out/oruk-mini/figurelist.html
           test ! -f out/oruk-mini/tablelist.html
-          ! grep -q 'figurelist.html' out/oruk-mini/item.html
+          absent -q 'figurelist.html' out/oruk-mini/item.html
           # bookmap appendix builds and groups on the home page (auto layout, #33)
           test -f out/manual/topics/legal.html
           grep -q 'Licensing and legal' out/manual/index.html
@@ -1184,7 +1190,7 @@ jobs:
           grep -q '<object ' out/kitchen/topics/media.html
           # ditavalref branch filter removes only its subtree's excluded content
           grep -q 'Common content' out/kitchen/topics/branch.html
-          ! grep -q 'Draft-only' out/kitchen/topics/branch.html
+          absent -q 'Draft-only' out/kitchen/topics/branch.html
           # RTL: @dir and @xml:lang propagate to the page
           grep -q 'lang="ar"' out/kitchen/topics/rtl.html
           grep -q 'dir="rtl"' out/kitchen/topics/rtl.html
@@ -1195,7 +1201,7 @@ jobs:
           grep -q 'href="topics/blocks.html"' out/kitchen/index.html
           grep -q 'app-group-list' out/kitchen/index.html
           grep -q 'app-hazard__banner' out/kitchen/topics/hazard.html
-          ! grep -q 'govuk-warning-text"' out/kitchen/topics/hazard.html
+          absent -q 'govuk-warning-text"' out/kitchen/topics/hazard.html
           grep -q 'choicetable govuk-table' out/kitchen/topics/task-full.html
           # Task labels, troubleshooting labels, ui-d, dl/lq styling (#30, #31)
           grep -q '<h2 class="sectiontitle tasklabel">Procedure' out/kitchen/topics/task-full.html
@@ -1209,11 +1215,11 @@ jobs:
           grep -q '<svg ' out/kitchen/topics/media.html
           grep -Eq 'xlink:href="blocks.html"|href="blocks.html"' out/kitchen/topics/media.html
           grep -Eq 'xlink:href="reference-full.html"|href="reference-full.html"' out/kitchen/topics/media.html
-          ! grep -q '<img class="xref svgref"' out/kitchen/topics/media.html
-          ! grep -Eq 'cellpadding|cellspacing|choicetableborder' out/kitchen/topics/task-full.html out/kitchen/topics/reference-full.html
+          absent -q '<img class="xref svgref"' out/kitchen/topics/media.html
+          absent -Eq 'cellpadding|cellspacing|choicetableborder' out/kitchen/topics/task-full.html out/kitchen/topics/reference-full.html
           # Plugin CSS never names the restricted typeface; the tile wrapper ships
-          ! grep -q 'GDS Transport' out/manual/govuk/plugin.css
-          ! grep -q 'GDS Transport' out/manual/govuk/overlay-istanduk.css
+          absent -q 'GDS Transport' out/manual/govuk/plugin.css
+          absent -q 'GDS Transport' out/manual/govuk/overlay-istanduk.css
           grep -q 'app-tile' out/manual-grid/index.html
           # a grid row per three tiles, so uneven heights cannot pull a tile
           # into the row above (#202)
@@ -1229,17 +1235,17 @@ jobs:
           grep -q 'overlay-istanduk.css' out/manual-istanduk/topics/introduction.html
           grep -q 'istanduk-logo.svg' out/manual-istanduk/topics/introduction.html
           test -f out/manual-istanduk/govuk/istanduk-logo.svg
-          ! grep -q 'overlay-istanduk.css' out/manual/topics/introduction.html
+          absent -q 'overlay-istanduk.css' out/manual/topics/introduction.html
           test -z "$(find out/manual-istanduk -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # NHS branding (govuk.branding=nhs, #47): recoloured base CSS, no neutral overlay,
           # on topic pages AND the generated cover (both build their own CSS links)
           grep -q "govuk-frontend-${gf}-nhs.min.css" out/manual-nhs/topics/introduction.html
           grep -q "govuk-frontend-${gf}-nhs.min.css" out/manual-nhs/index.html
-          ! grep -q 'overlay-neutral.css' out/manual-nhs/topics/introduction.html
-          ! grep -q 'overlay-neutral.css' out/manual-nhs/index.html
+          absent -q 'overlay-neutral.css' out/manual-nhs/topics/introduction.html
+          absent -q 'overlay-neutral.css' out/manual-nhs/index.html
           grep -q '#005eb8' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
           grep -q 'Frutiger W01' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
-          ! grep -q 'GDS Transport' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
+          absent -q 'GDS Transport' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
           # NHS header identity (G3) and footer overlay (G4)
           test -f out/manual-nhs/govuk/overlay-nhs.css
           grep -q 'overlay-nhs.css' out/manual-nhs/topics/introduction.html
@@ -1247,14 +1253,14 @@ jobs:
           grep -q 'app-masthead__nhs-logo' out/manual-nhs/index.html
           grep -q 'aria-label="NHS"' out/manual-nhs/index.html
           # other brands never load the NHS overlay
-          ! grep -q 'overlay-nhs.css' out/manual/topics/introduction.html
-          ! grep -q 'overlay-nhs.css' out/manual-istanduk/topics/introduction.html
+          absent -q 'overlay-nhs.css' out/manual/topics/introduction.html
+          absent -q 'overlay-nhs.css' out/manual-istanduk/topics/introduction.html
           # NHS mode bundles no restricted font/crown assets either
           test -z "$(find out/manual-nhs -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # Official GOV.UK branding (govuk.branding=official, #47/#20): stock CSS
           # (the GOV.UK palette), the crown+wordmark header, OGL/crown-copyright footer
           grep -q "govuk-frontend-${gf}.min.css" out/manual-official/index.html
-          ! grep -q 'overlay-neutral.css' out/manual-official/index.html
+          absent -q 'overlay-neutral.css' out/manual-official/index.html
           grep -q 'overlay-official.css' out/manual-official/topics/introduction.html
           grep -q 'app-masthead__govuk-logo' out/manual-official/index.html
           grep -q 'aria-label="GOV.UK"' out/manual-official/index.html
@@ -1263,8 +1269,8 @@ jobs:
           # official ships no restricted font/crest asset (GDS Transport self-supplied;
           # the footer crest image is suppressed, not bundled)
           test -z "$(find out/manual-official -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
-          ! grep -q 'overlay-official.css' out/manual/topics/introduction.html
-          ! grep -q 'overlay-official.css' out/manual-nhs/topics/introduction.html
+          absent -q 'overlay-official.css' out/manual/topics/introduction.html
+          absent -q 'overlay-official.css' out/manual-nhs/topics/introduction.html
           # FR-T3 furniture params (#49): service URL, favicon, footer links/licence
           grep -q 'app-masthead__title" href="https://example.gov.uk"' out/manual-frt3/index.html
           grep -q 'app-masthead__title" href="https://example.gov.uk"' out/manual-frt3/topics/introduction.html
@@ -1275,13 +1281,13 @@ jobs:
           grep -q 'href="https://example.gov.uk/contact">Contact</a>' out/manual-frt3/glossary.html
           grep -q 'licence-description">© 2026 Example Service' out/manual-frt3/topics/introduction.html
           # defaults: none of these appear in a plain build
-          ! grep -q '<link rel="icon"' out/manual/topics/introduction.html
-          ! grep -q 'Example Service' out/manual/topics/introduction.html
+          absent -q '<link rel="icon"' out/manual/topics/introduction.html
+          absent -q 'Example Service' out/manual/topics/introduction.html
           # FR-T1: neutral builds ship no restricted assets and load no external
           # resources (external hyperlinks in content are fine; external assets are not)
           test -z "$(find out/manual out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
-          ! grep -Eroh 'src="https?://' out/manual out/oruk-mini --include='*.html'
-          ! grep -Eroh '<link[^>]*href="https?://' out/manual out/oruk-mini --include='*.html'
+          absent -Eroh 'src="https?://' out/manual out/oruk-mini --include='*.html'
+          absent -Eroh '<link[^>]*href="https?://' out/manual out/oruk-mini --include='*.html'
           echo "All output checks passed"
 
       # Verification NFRs (#35)
