@@ -226,6 +226,12 @@ jobs:
           npm install --silent --prefix "$RUNNER_TEMP/npm" pagefind@1.5.2
           echo "$RUNNER_TEMP/npm/node_modules/.bin" >> "$GITHUB_PATH"
 
+      # veraPDF goes on the PATH before the builds are made ahead, so that every
+      # build after it runs with the PATH the prebuild had (#217); the released-
+      # DesignSystemPDF step below uses it
+      - name: Install veraPDF
+        uses: ./.github/actions/verapdf
+
       # #217: the builds the steps below make are listed in a manifest, kept in
       # the cache under this workflow's hash. They are made here, several at
       # once, and each step's tools/ci/dita then uses the result of its build,
@@ -823,9 +829,6 @@ jobs:
       # it, and the PDF it makes is linked and is PDF/UA-1 (#113, D-23). The
       # generator job tests the generator in this tree; this tests the join
       # against the release.
-      - name: Install veraPDF
-        uses: ./.github/actions/verapdf
-
       - name: The plugin with the released DesignSystemPDF (#113)
         run: |
           set -o pipefail
