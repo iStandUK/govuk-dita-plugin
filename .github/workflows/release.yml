@@ -94,7 +94,10 @@ jobs:
           "$bin/designsystempdf" --version
 
       - name: Install Pagefind
-        run: npm install -g "pagefind@${PAGEFIND_VERSION}"
+        # into this run's own folder, so nothing outlives the run; as in the build workflow
+        run: |
+          npm install --silent --prefix "$RUNNER_TEMP/npm" "pagefind@${PAGEFIND_VERSION}"
+          echo "$RUNNER_TEMP/npm/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Install veraPDF
         uses: ./.github/actions/verapdf
@@ -102,7 +105,7 @@ jobs:
       - name: Build the manual, in iStandUK branding, as a site and a PDF
         run: |
           set -o pipefail
-          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
             --output "out/$MANUAL" -Dgovuk.branding=istanduk -Dgovuk.print=yes -Dgovuk.pdf=yes \
             -Dgovuk.search=yes "-Dgovuk.pdf.name=$MANUAL" 2>&1 | tee "$RUNNER_TEMP/manual.log"
