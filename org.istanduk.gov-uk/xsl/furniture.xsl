@@ -91,6 +91,20 @@ template, the cover, and the generated utility pages.
     </xsl:if>
   </xsl:template>
 
+  <!-- ===== Embedded view (#201, D-28) =====
+       'yes' when govuk.embed=yes and the branding allows it (the build
+       decides). A file, not an inline script, so a strict policy's 'self'
+       covers it and the published hash is unchanged; in the head and not
+       deferred, so a framed page never shows its furniture first. -->
+  <xsl:param name="GOVUK-EMBED" select="'no'"/>
+
+  <xsl:template name="govuk-embed-script">
+    <xsl:param name="prefix" as="xs:string" select="''"/>
+    <xsl:if test="$GOVUK-EMBED = 'yes'">
+      <script src="{concat($prefix, 'govuk/embed.js')}"></script>
+    </xsl:if>
+  </xsl:template>
+
   <!-- ===== Print document helpers (FR-P2, D-20) =====
        Shared by the topic template, the cover and the print transform, so every
        page agrees on whether print.html exists: it does when govuk.print=yes

@@ -35,6 +35,7 @@ Remaining ⬜/🔶 items are the v1-release backlog (see
 | FR-N6 | Breadcrumbs (GOV.UK breadcrumbs component) can be enabled by parameter; default off in the sidebar layout | C | ⬜ |
 | FR-N7 | Every page has a skip link, correct landmark structure (`header`, `nav`, `main`, `footer`), and a visible focus order matching the Design System | M | ✅ landmark/h1 structure asserted in CI |
 | FR-N8 | A site home page is generated from the map (title, shortdesc/abstract, top-level entry links) | S | ✅ with the D-13 layouts: auto-selected start/annotated/grouped plus list/grid/accordion overrides |
+| FR-N9 | Opt-in embedded view (`govuk.embed=yes`): a page framed by the publisher and opened with `?embed=1` shows its content only and keeps same-site links in the frame; inlined SVG links lose `_top`/`_parent`; not offered with official or NHS branding; full page without JavaScript or at the top level | C | ✅ #201, D-28; CI frames a page in Chromium (axe, CSP, an SVG and a text link) |
 
 ### Content rendering (FR-R)
 
@@ -87,7 +88,7 @@ requirements govern its behaviour.
 | FR-T1 | Default branding is **neutral**: no crown, no GDS Transport font (system font stack; no request for font assets is ever made), a plain header bar carrying the service/publication name | M | ✅ asserted in CI on every build |
 | FR-T2 | `govuk.branding=official` enables full GOV.UK branding (crown and GOV.UK logotype in the masthead, OGL/crown-copyright footer) and `govuk.branding=nhs` the NHS identity on a recoloured palette — each for entitled organisations only, documented prominently and warned in the build log. No restricted font or crest file is bundled: GDS Transport and Frutiger fall back to a system stack and an entitled publisher supplies them via `args.css`; the logos render inline from MIT-licensed artwork only in the chosen mode | M | ✅ v0.9.1 (#47/#48, D-17); CI asserts no restricted font or crest asset ships in any mode |
 | FR-T3 | Service name, home link, phase banner (alpha/beta with feedback link), footer links, and footer licence text are all parameter-driven | M | ✅ `govuk.service.name`/`service.url`, `govuk.phase`/`feedback.url`, `govuk.footer.links`/`footer.licence`, `govuk.favicon` (#49) |
-| FR-T4 | Publishers can append their own stylesheet after the plugin's (standard `args.css`/`args.cssroot` behaviour preserved) | S | ✅ the manual shows the command and a sample stylesheet for fonts, colours and a logo; CI builds with that sample and asserts the link order (#142) |
+| FR-T4 | Publishers can append their own stylesheet after the plugin's (standard `args.css`/`args.cssroot` behaviour preserved) | S | ✅ the manual shows the command and a sample stylesheet for fonts, colours and a logo; CI builds with that sample and asserts the link order (#142); `govuk.css.assets` copies the fonts and images it refers to beside it (#197, D-27) |
 | FR-T5 | Favicon and social-preview metadata are parameter-driven, with neutral defaults | C | 🔶 `govuk.favicon` ✅ (#49); social-preview metadata ⬜ |
 
 ### Print and PDF (FR-P) — D-20
