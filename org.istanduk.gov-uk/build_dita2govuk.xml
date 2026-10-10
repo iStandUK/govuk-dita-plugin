@@ -9,9 +9,17 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <!-- Unknown parameters (#174): before the plugin sets any govuk.* property
          of its own, the ones the build was given are checked against those
          plugin.xml declares. A misspelt name is otherwise ignored without a
-         word, and its default silently applies. A warning, never a failure. -->
-    <tempfile property="istanduk.given.file" prefix="govuk-given" suffix=".properties" deleteonexit="true"/>
-    <tempfile property="istanduk.given.report" prefix="govuk-given" suffix=".txt" deleteonexit="true"/>
+         word, and its default silently applies. A warning, never a failure.
+         The working files go in the temp folder, never beside the build file:
+         a toolkit can be installed where the user cannot write (#198).
+         dita.temp.dir is not set yet; the dita command sets base.temp.dir. -->
+    <property name="istanduk.given.dir" value="${base.temp.dir}" if:set="base.temp.dir"/>
+    <property name="istanduk.given.dir" value="${java.io.tmpdir}"/>
+    <mkdir dir="${istanduk.given.dir}"/>
+    <tempfile property="istanduk.given.file" prefix="govuk-given" suffix=".properties"
+              destdir="${istanduk.given.dir}" deleteonexit="true"/>
+    <tempfile property="istanduk.given.report" prefix="govuk-given" suffix=".txt"
+              destdir="${istanduk.given.dir}" deleteonexit="true"/>
     <echoproperties prefix="govuk." destfile="${istanduk.given.file}"/>
     <makeurl file="${istanduk.given.file}" property="istanduk.given.url"/>
     <xslt in="${dita.plugin.org.istanduk.gov-uk.dir}/plugin.xml" out="${istanduk.given.report}" force="true"
@@ -21,6 +29,8 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <loadfile property="istanduk.given.unknown" srcfile="${istanduk.given.report}" encoding="UTF-8" failonerror="false">
       <filterchain><trim/><ignoreblank/></filterchain>
     </loadfile>
+    <delete file="${istanduk.given.file}" quiet="true"/>
+    <delete file="${istanduk.given.report}" quiet="true"/>
     <echo if:set="istanduk.given.unknown" level="warning" message="${istanduk.given.unknown}"/>
     <!-- Route topic rendering through this plugin's stylesheet (scoped to the
          govuk transtype; plain html5 builds are unaffected). -->
@@ -65,6 +75,33 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     </condition>
     <echo if:set="govuk.branding.nhs" level="warning"
           message="govuk.branding=nhs: the NHS identity ('NHS' letters and logo) is restricted to NHS organisations; non-NHS bodies need permission from NHS England / DHSC. Use this only for a genuine NHS service. The NHS brand font (Frutiger) is licensed to NHS organisations and is not bundled - the build falls back to Arial."/>
+    <!-- Embedded view (#201, D-28): a page framed by the publisher and opened
+         with ?embed=1 shows its content only. Not in the official and NHS
+         identities, whose header and footer belong on every page. -->
+    <property name="govuk.embed" value="no"/>
+    <fail message="govuk.embed must be 'yes' or 'no', was: ${govuk.embed}">
+      <condition>
+        <not><or>
+          <equals arg1="${govuk.embed}" arg2="yes"/>
+          <equals arg1="${govuk.embed}" arg2="no"/>
+        </or></not>
+      </condition>
+    </fail>
+    <condition property="govuk.embed.on">
+      <and>
+        <equals arg1="${govuk.embed}" arg2="yes"/>
+        <not><isset property="govuk.branding.official"/></not>
+        <not><isset property="govuk.branding.nhs"/></not>
+      </and>
+    </condition>
+    <condition property="govuk.embed.ignored">
+      <and>
+        <equals arg1="${govuk.embed}" arg2="yes"/>
+        <not><isset property="govuk.embed.on"/></not>
+      </and>
+    </condition>
+    <echo if:set="govuk.embed.ignored" level="warning"
+          message="[GOVK014W]: govuk.embed=yes is ignored with govuk.branding=${govuk.branding}: that identity's header and footer belong on every page, so no page offers the embedded view."/>
     <!-- Landing-page layout (D-13) -->
     <property name="govuk.homepage.layout" value="auto"/>
     <property name="govuk.homepage.depth" value="2"/>
@@ -89,6 +126,9 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <!-- Publisher favicon (FR-T3): the basename is passed to the XSLT for the
          head link; the file itself is copied by govuk.copy-assets. -->
     <basename property="govuk.favicon.name" file="${govuk.favicon}" if:set="govuk.favicon"/>
+    <!-- Files the publisher's stylesheet refers to (#197): none unless a
+         folder is named; copied by govuk.copy-assets -->
+    <property name="govuk.css.assets" value=""/>
     <!-- Inline local SVG references natively (issue #37) unless disabled -->
     <property name="govuk.svg.inline" value="yes"/>
     <fail message="govuk.svg.inline must be 'yes' or 'no', was: ${govuk.svg.inline}">
@@ -464,6 +504,40 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <equals arg1="${govuk.dates}" arg2="both"/>
       </or></not></condition>
     </fail>
+    <!-- Page metadata (#99, design 14): basic | no, and the publisher's facts
+         it cannot read from the DITA -->
+    <property name="govuk.metadata" value="basic"/>
+    <fail message="govuk.metadata must be 'basic' or 'no', was: ${govuk.metadata}">
+      <condition><not><or>
+        <equals arg1="${govuk.metadata}" arg2="basic"/>
+        <equals arg1="${govuk.metadata}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <property name="govuk.metadata.persons" value="no"/>
+    <fail message="govuk.metadata.persons must be 'yes' or 'no', was: ${govuk.metadata.persons}">
+      <condition><not><or>
+        <equals arg1="${govuk.metadata.persons}" arg2="yes"/>
+        <equals arg1="${govuk.metadata.persons}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <fail message="govuk.organisation.url must be an absolute http(s) URL, was: ${govuk.organisation.url}">
+      <condition><and>
+        <isset property="govuk.organisation.url"/>
+        <not><matches pattern="^(https?://[^\s]+)?$" string="${govuk.organisation.url}"/></not>
+      </and></condition>
+    </fail>
+    <fail message="govuk.licence.url must be an absolute http(s) URL, was: ${govuk.licence.url}">
+      <condition><and>
+        <isset property="govuk.licence.url"/>
+        <not><matches pattern="^(https?://[^\s]+)?$" string="${govuk.licence.url}"/></not>
+      </and></condition>
+    </fail>
+    <fail message="govuk.og.image must be an absolute http(s) URL or a path under the site root, was: ${govuk.og.image}">
+      <condition><and>
+        <isset property="govuk.og.image"/>
+        <not><matches pattern="^(https?://[^\s]+|[^\s:]+)?$" string="${govuk.og.image}"/></not>
+      </and></condition>
+    </fail>
     <!-- sitemap.xml: auto writes it when the site's base URL is known -->
     <property name="govuk.sitemap" value="auto"/>
     <fail message="govuk.sitemap must be 'auto', 'yes' or 'no', was: ${govuk.sitemap}">
@@ -580,9 +654,16 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-PDF-NAME" expression="${govuk.pdf.name}.pdf" if:set="govuk.pdf.on"/>
       <param name="GOVUK-BOOKS" expression="${govuk.books.url}" if:set="govuk.books.on"/>
       <param name="GOVUK-CSP" expression="${govuk.csp}"/>
+      <param name="GOVUK-EMBED" expression="yes" if:set="govuk.embed.on"/>
       <param name="GOVUK-SITEMAP" expression="${govuk.sitemap.enabled}"/>
       <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
       <param name="GOVUK-DATES" expression="${govuk.dates}"/>
+      <param name="GOVUK-METADATA" expression="${govuk.metadata}"/>
+      <param name="GOVUK-METADATA-PERSONS" expression="${govuk.metadata.persons}"/>
+      <param name="GOVUK-ORGANISATION" expression="${govuk.organisation}" if:set="govuk.organisation"/>
+      <param name="GOVUK-ORGANISATION-URL" expression="${govuk.organisation.url}" if:set="govuk.organisation.url"/>
+      <param name="GOVUK-OG-IMAGE" expression="${govuk.og.image}" if:set="govuk.og.image"/>
+      <param name="GOVUK-LICENCE-URL" expression="${govuk.licence.url}" if:set="govuk.licence.url"/>
     </html5.map>
     <!-- robots.txt beside the sitemap, unless the publisher ships one (#60) -->
     <local name="govuk.robots.exists"/>
@@ -815,6 +896,41 @@ Sitemap: ${govuk.site.url.slash}sitemap.xml
     </copy>
     <!-- Publisher favicon (FR-T3): copied next to the CSS, linked by its basename -->
     <copy file="${govuk.favicon}" todir="${dita.output.dir}/govuk" if:set="govuk.favicon"/>
+    <!-- Files the publisher's stylesheet refers to with url(), such as fonts
+         and images (#197): copied with their folders to where DITA-OT copies
+         args.css (args.csspath, or the site root), so they resolve as written.
+         Nothing to copy beside a stylesheet on another site. -->
+    <condition property="govuk.css.assets.named">
+      <not><equals arg1="${govuk.css.assets}" arg2=""/></not>
+    </condition>
+    <condition property="govuk.css.assets.missing">
+      <and>
+        <isset property="govuk.css.assets.named"/>
+        <not><available file="${govuk.css.assets}" type="dir"/></not>
+      </and>
+    </condition>
+    <condition property="govuk.css.assets.remote">
+      <and>
+        <isset property="govuk.css.assets.named"/>
+        <not><isset property="govuk.css.assets.missing"/></not>
+        <isset property="user.csspath.url"/>
+      </and>
+    </condition>
+    <condition property="govuk.css.assets.copy">
+      <and>
+        <isset property="govuk.css.assets.named"/>
+        <not><isset property="govuk.css.assets.missing"/></not>
+        <not><isset property="govuk.css.assets.remote"/></not>
+      </and>
+    </condition>
+    <echo if:set="govuk.css.assets.missing" level="warning"
+          message="[GOVK013W]: govuk.css.assets names no folder: ${govuk.css.assets}; no stylesheet assets were copied."/>
+    <echo if:set="govuk.css.assets.remote" level="warning"
+          message="[GOVK013W]: govuk.css.assets was not copied: args.csspath is an address on another site (${args.csspath}), so the stylesheet's files belong there."/>
+    <property name="user.csspath" value=""/>
+    <copy todir="${dita.output.dir}/${user.csspath}" if:set="govuk.css.assets.copy">
+      <fileset dir="${govuk.css.assets}"/>
+    </copy>
     <!-- Theme assets (safe to redistribute: outlined-path artwork, see
          resource/brand/istanduk/README.md) -->
     <copy if:set="govuk.branding.istanduk" todir="${dita.output.dir}/govuk">

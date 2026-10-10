@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- Page metadata (#99, design 14): the keyword filter, data terms that are
+     mapped, known but unmapped, misspelt and unprefixed, and a plain map's
+     own facts. CI builds it with and without govuk.site.url. -->
+<map xml:lang="en-GB">
+  <title>Metadata fixture</title>
+  <topicmeta>
+    <shortdesc>Pages whose head metadata CI checks tag by tag.</shortdesc>
+  </topicmeta>
+  <topicref href="topics/check.dita">
+    <topicref href="topics/retired.dita"/>
+  </topicref>
+</map>

@@ -18,6 +18,7 @@ map transformation with the plugin's values.
   <xsl:import href="plugin:org.dita.html5:xsl/map2html5-cover.xsl"/>
   <xsl:import href="furniture.xsl"/>
   <xsl:import href="utility-pages.xsl"/>
+  <xsl:import href="metadata.xsl"/>
 
   <xsl:output method="html"
               include-content-type="no"
@@ -147,6 +148,9 @@ map transformation with the plugin's values.
 
   <xsl:template name="chapter-setup">
     <xsl:call-template name="govuk-check-map"/>
+    <xsl:call-template name="govuk-md-check">
+      <xsl:with-param name="cover" select="$govuk-md-cover"/>
+    </xsl:call-template>
     <html class="govuk-template">
       <xsl:call-template name="setTopicLanguage"/>
       <xsl:call-template name="chapterHead"/>
@@ -205,8 +209,40 @@ map transformation with the plugin's values.
 
   <xsl:template name="gen-user-head">
     <xsl:call-template name="govuk-csp-meta"/>
+    <xsl:call-template name="govuk-embed-script"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <xsl:call-template name="govuk-md-head">
+      <xsl:with-param name="record" select="$govuk-md-cover"/>
+    </xsl:call-template>
     <xsl:apply-templates select="." mode="gen-user-head"/>
+  </xsl:template>
+
+  <!-- The cover's metadata record (design 14): the publication's title and
+       description, the first page next -->
+  <xsl:variable name="govuk-md-cover" as="element()">
+    <xsl:call-template name="govuk-md-page">
+      <xsl:with-param name="role" select="'cover'"/>
+      <xsl:with-param name="path" select="concat('index', $OUTEXT)"/>
+      <xsl:with-param name="title" select="$govuk-cover-title"/>
+      <xsl:with-param name="description" select="string($govuk-md-publication/govuk:p[@term = 'dct:description']/@value)"/>
+      <xsl:with-param name="next" select="govuk:md-reading(/)[1]"/>
+    </xsl:call-template>
+  </xsl:variable>
+
+  <!-- A generated page's metadata record: its title, and the rest from the
+       publication -->
+  <xsl:template name="govuk-md-utility-head">
+    <xsl:param name="file" as="xs:string"/>
+    <xsl:param name="page-title" as="xs:string"/>
+    <xsl:call-template name="govuk-md-head">
+      <xsl:with-param name="record" as="element()">
+        <xsl:call-template name="govuk-md-page">
+          <xsl:with-param name="role" select="'utility'"/>
+          <xsl:with-param name="path" select="$file"/>
+          <xsl:with-param name="title" select="$page-title"/>
+        </xsl:call-template>
+      </xsl:with-param>
+    </xsl:call-template>
   </xsl:template>
 
   <!-- Kept in step with template.xsl's generateCssLinks; the cover is at the site
@@ -261,7 +297,77 @@ map transformation with the plugin's values.
   <xsl:function name="dita-ot:govuk-desc" as="xs:string"
                 xmlns:dita-ot="http://dita-ot.sourceforge.net/ns/201007/dita-ot">
     <xsl:param name="ref" as="element()"/>
-    <xsl:sequence select="normalize-space(string(($ref/*[contains(@class, ' map/topicmeta ')]/*[contains(@class, ' map/shortdesc ')])[1]))"/>
+    <xsl:variable name="text" as="xs:string*">
+      <xsl:apply-templates mode="govuk-desc-text"
+                           select="($ref/*[contains(@class, ' map/topicmeta ')]/*[contains(@class, ' map/shortdesc ')])[1]/node()"/>
+    </xsl:variable>
+    <xsl:sequence select="normalize-space(string-join($text, ''))"/>
+  </xsl:function>
+
+  <!-- A description's words as a reader sees them on the topic's own page
+       (#200). The map's copy of a short description is taken before DITA-OT
+       fills in the text of empty cross-references, so that is done here, the
+       same way: the target's title. Text a page never shows is left out. -->
+  <xsl:template match="text()" mode="govuk-desc-text">
+    <xsl:sequence select="string(.)"/>
+  </xsl:template>
+
+  <xsl:template match="*" mode="govuk-desc-text">
+    <xsl:apply-templates mode="govuk-desc-text"/>
+  </xsl:template>
+
+  <xsl:template match="processing-instruction() | comment()
+                       | *[contains(@class, ' topic/indexterm ') or contains(@class, ' topic/desc ')
+                           or contains(@class, ' topic/draft-comment ') or contains(@class, ' topic/required-cleanup ')
+                           or contains(@class, ' topic/data ')]"
+                mode="govuk-desc-text"/>
+
+  <xsl:template match="*[contains(@class, ' topic/xref ')]" mode="govuk-desc-text">
+    <xsl:variable name="own" as="xs:string*">
+      <xsl:apply-templates mode="govuk-desc-text"/>
+    </xsl:variable>
+    <xsl:sequence select="if (normalize-space(string-join($own, '')) ne '') then $own
+                          else govuk:link-text(.)"/>
+  </xsl:template>
+
+  <!-- The text DITA-OT gives a cross-reference with none of its own: the
+       target's title; failing that, the navigation title of the map entry
+       for the same file; failing that, the file's name, so that no word is
+       silently dropped. Links outside the publication show their address. -->
+  <xsl:function name="govuk:link-text" as="xs:string">
+    <xsl:param name="xref" as="element()"/>
+    <xsl:variable name="href" select="normalize-space($xref/@href)"/>
+    <xsl:variable name="file" select="substring-before(concat($href, '#'), '#')"/>
+    <xsl:variable name="ids" select="tokenize(substring-after($href, '#'), '/')"/>
+    <xsl:variable name="local" as="xs:boolean"
+                  select="$file ne '' and not($xref/@scope = ('external', 'peer'))
+                          and (not($xref/@format) or $xref/@format = 'dita')"/>
+    <xsl:variable name="uri" select="if ($local) then string(resolve-uri($file, $govuk-map-base)) else ''"/>
+    <xsl:variable name="topic" as="element()?"
+                  select="if ($uri ne '' and doc-available($uri))
+                          then (doc($uri)//*[contains(@class, ' topic/topic ')]
+                                              [empty($ids[1]) or $ids[1] = '' or @id = $ids[1]])[1]
+                          else ()"/>
+    <xsl:variable name="target" as="element()?"
+                  select="if (exists($ids[2])) then ($topic//*[@id = $ids[2]])[1] else $topic"/>
+    <xsl:variable name="title" as="xs:string*">
+      <xsl:apply-templates mode="govuk-desc-text"
+                           select="($target/*[contains(@class, ' topic/title ')])[1]/node()"/>
+    </xsl:variable>
+    <xsl:variable name="entry" as="element()?"
+                  select="if ($local)
+                          then ($govuk-norm-map//*[contains(@class, ' map/topicref ')]
+                                                  [substring-before(concat(@href, '#'), '#') = $file])[1]
+                          else ()"/>
+    <xsl:variable name="navtitle" as="xs:string*">
+      <xsl:if test="exists($entry)">
+        <xsl:apply-templates select="$entry" mode="get-navtitle"/>
+      </xsl:if>
+    </xsl:variable>
+    <xsl:sequence select="(normalize-space(string-join($title, '')),
+                           normalize-space(string-join($navtitle, '')),
+                           if ($local) then replace(tokenize($file, '/')[last()], '\.[^.]*$', '') else $href)
+                          [. ne ''][1]"/>
   </xsl:function>
 
   <!-- A linked (or plain) entry heading with optional description -->
@@ -422,22 +528,28 @@ map transformation with the plugin's values.
                 </xsl:when>
                 <xsl:when test="$layout = 'grid'">
                   <xsl:call-template name="govuk-contents-heading"/>
-                  <div class="govuk-grid-row app-topic-grid">
-                    <xsl:for-each select="$entries">
-                      <div class="govuk-grid-column-one-third">
-                        <!-- Unstyled by default; themes may tint it (D-14) -->
-                        <div class="app-tile">
-                          <xsl:apply-templates select="." mode="govuk-entry"/>
-                          <xsl:call-template name="govuk-child-list">
-                            <xsl:with-param name="children"
-                                            select="*[contains(@class, ' map/topicref ')]
-                                                    [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
-                            <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
-                          </xsl:call-template>
+                  <!-- A row per three tiles, as the Design System's grid
+                       examples do: columns float, and only a row clears, so
+                       one row of every tile let a short tile's gap take the
+                       next row's first tile (#202) -->
+                  <xsl:for-each-group select="$entries" group-adjacent="(position() - 1) idiv 3">
+                    <div class="govuk-grid-row app-topic-grid">
+                      <xsl:for-each select="current-group()">
+                        <div class="govuk-grid-column-one-third">
+                          <!-- Unstyled by default; themes may tint it (D-14) -->
+                          <div class="app-tile">
+                            <xsl:apply-templates select="." mode="govuk-entry"/>
+                            <xsl:call-template name="govuk-child-list">
+                              <xsl:with-param name="children"
+                                              select="*[contains(@class, ' map/topicref ')]
+                                                      [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
+                              <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
+                            </xsl:call-template>
+                          </div>
                         </div>
-                      </div>
-                    </xsl:for-each>
-                  </div>
+                      </xsl:for-each>
+                    </div>
+                  </xsl:for-each-group>
                 </xsl:when>
                 <xsl:when test="$layout = 'grouped'">
                   <xsl:call-template name="govuk-contents-heading"/>
@@ -573,8 +685,13 @@ map transformation with the plugin's values.
         <head>
           <meta charset="UTF-8"/>
           <xsl:call-template name="govuk-csp-meta"/>
+          <xsl:call-template name="govuk-embed-script"/>
           <meta name="viewport" content="width=device-width, initial-scale=1"/>
           <title><xsl:value-of select="concat($search-label, ' — ', $govuk-cover-title)"/></title>
+          <xsl:call-template name="govuk-md-utility-head">
+            <xsl:with-param name="file" select="'search.html'"/>
+            <xsl:with-param name="page-title" select="string($search-label)"/>
+          </xsl:call-template>
           <xsl:call-template name="generateCssLinks"/>
           <link rel="stylesheet" href="pagefind/pagefind-ui.css"/>
         </head>

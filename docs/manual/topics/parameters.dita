@@ -70,6 +70,15 @@
                 ships no favicon.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.css.assets</codeph></entry>
+              <entry>a folder; empty by default</entry>
+              <entry>A folder of files the <codeph>args.css</codeph> stylesheet refers to with
+                <codeph>url()</codeph>, such as fonts and images. Its contents are copied, with
+                their subfolders, beside the stylesheet (into <codeph>args.csspath</codeph>).
+                Empty copies nothing; a name that is not a folder gives
+                <codeph>GOVK013W</codeph>. See <xref keyref="custom-css"/>.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.footer.links</codeph></entry>
               <entry>text</entry>
               <entry>Extra footer links as a <codeph>;</codeph>-separated list of
@@ -268,6 +277,15 @@
                 header, which can also carry <codeph>frame-ancestors</codeph>.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.embed</codeph></entry>
+              <entry><codeph>no</codeph> (default) or <codeph>yes</codeph></entry>
+              <entry><codeph>yes</codeph> lets a page that the publisher frames, opened with
+                <codeph>?embed=1</codeph>, show its content only, and keeps the reader's links
+                inside the frame. Ignored, with <codeph>GOVK014W</codeph>, under the
+                <codeph>official</codeph> and <codeph>nhs</codeph> branding. See
+                <xref keyref="embedding"/>.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.site.url</codeph></entry>
               <entry>URL</entry>
               <entry>The published base URL, for example
@@ -295,6 +313,46 @@
                 is only as good as its source — publications whose dates are batch-stamped
                 by tooling should leave this off. When on, revised dates also become
                 <codeph>lastmod</codeph> in the sitemap.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.metadata</codeph></entry>
+              <entry><codeph>basic</codeph> (default), <codeph>no</codeph></entry>
+              <entry>Metadata in each page's head, read from the DITA: the canonical,
+                previous, next and licence links, Open Graph and Dublin Core tags. Tags whose
+                value is a URL need <codeph>govuk.site.url</codeph>. See
+                <xref keyref="metadata"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.organisation</codeph></entry>
+              <entry>Text</entry>
+              <entry>The publishing organisation, for metadata. Default: the bookmap's
+                <codeph>publisherinformation</codeph> organization, else its
+                <codeph>bookowner</codeph> organization.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.organisation.url</codeph></entry>
+              <entry>URL</entry>
+              <entry>The publishing organisation's home page, for metadata.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.og.image</codeph></entry>
+              <entry>URL or path</entry>
+              <entry>The image shown when a page is shared: an absolute URL, or a path under
+                the site root, which needs <codeph>govuk.site.url</codeph>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.licence.url</codeph></entry>
+              <entry>URL</entry>
+              <entry>The licence the content is published under, as
+                <codeph>rel="license"</codeph>. Official branding states the Open Government
+                Licence without it.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.metadata.persons</codeph></entry>
+              <entry><codeph>no</codeph> (default), <codeph>yes</codeph></entry>
+              <entry>Name the <codeph>author</codeph> elements as the creator in metadata.
+                Without it the creator is the organisation, so no person's name is
+                published unless the publisher chooses.</entry>
             </row>
             <row>
               <entry namest="c1" nameend="c3">Further parameters — phase banner, footer

@@ -11,7 +11,7 @@
 
 /* govuk-frontend scopes its font to govuk-* classes; give the plugin's own
  * furniture (masthead, sidebar, generated links) a matching stack. The plugin
- * never names the restricted GDS Transport face itself: neutral builds use the
+ * never names the restricted GOV.UK typeface itself: neutral builds use the
  * system stack below, and a future official mode adds the face via its own
  * overlay. */
 body {
@@ -722,4 +722,21 @@ div.app-content-stripped {
 
 .app-page-dates__item + .app-page-dates__item::before {
   content: " · ";
+}
+
+/* ===== Embedded view (#201, D-28) =====
+ * Set by embed.js on a framed page opened with ?embed=1 (govuk.embed=yes):
+ * the content alone, across the width the furniture took. The skip link
+ * stays, and a publisher's stylesheet can build on .app-embed. */
+.app-embed .app-masthead,
+.app-embed .govuk-phase-banner,
+.app-embed .app-sidebar,
+.app-embed .govuk-pagination,
+.app-embed .govuk-footer {
+  display: none;
+}
+
+.app-embed .govuk-grid-column-two-thirds {
+  float: none;
+  width: 100%;
 }

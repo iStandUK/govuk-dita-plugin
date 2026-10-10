@@ -31,7 +31,15 @@ unaffected.
   <param name="GOVUK-CONTENT-WARNINGS" expression="${govuk.content.warnings}" if:set="govuk.content.warnings"/>
   <param name="GOVUK-CONTENT-POLICY" expression="${govuk.content.policy}" if:set="govuk.content.policy"/>
   <param name="GOVUK-CSP" expression="${govuk.csp}" if:set="govuk.csp"/>
+  <param name="GOVUK-EMBED" expression="yes" if:set="govuk.embed.on"/>
   <param name="GOVUK-DATES" expression="${govuk.dates}" if:set="govuk.dates"/>
   <param name="GOVUK-PRINT-MAX-TOPICS" expression="${govuk.print.max-topics}" if:set="govuk.print.max-topics"/>
   <param name="GOVUK-PDF-NAME" expression="${govuk.pdf.name}.pdf" if:set="govuk.pdf.on"/>
+  <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
+  <param name="GOVUK-METADATA" expression="${govuk.metadata}" if:set="govuk.metadata"/>
+  <param name="GOVUK-METADATA-PERSONS" expression="${govuk.metadata.persons}" if:set="govuk.metadata.persons"/>
+  <param name="GOVUK-ORGANISATION" expression="${govuk.organisation}" if:set="govuk.organisation"/>
+  <param name="GOVUK-ORGANISATION-URL" expression="${govuk.organisation.url}" if:set="govuk.organisation.url"/>
+  <param name="GOVUK-OG-IMAGE" expression="${govuk.og.image}" if:set="govuk.og.image"/>
+  <param name="GOVUK-LICENCE-URL" expression="${govuk.licence.url}" if:set="govuk.licence.url"/>
 </params>
