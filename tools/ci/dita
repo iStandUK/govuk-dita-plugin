@@ -15,11 +15,14 @@
 #       Make every build in the manifest, several at once.
 #   tools/ci/dita --report
 #       Say how many builds were made ahead and used, and how many ran live.
+#   (tools/ci/dita --one is the prebuild's own: one build of the manifest.)
 #
 # A prebuilt result is used only when it is certainly the build the step asks
 # for: the same arguments, working folder, PATH and Java options; and no file
 # it could read (the fixtures, the manual, the installed plugin, any path in its
-# parameters) changed after the prebuild began. Otherwise the step builds live.
+# parameters) appeared, changed or went after the prebuild began, judged by
+# change times, which unpacking or copying with old timestamps cannot hide.
+# Otherwise the step builds live.
 # A wrong guess about what to prebuild costs time, never correctness.
 #
 # Environment: DITA_OT_HOME (the toolkit), PREBUILD_DIR (results and the
@@ -36,13 +39,13 @@ context() {
 context_hash() { context | sha256sum | cut -c1-64; }
 key_of() { { context; printf '%s\0' "$@"; } | sha256sum | cut -c1-64; }
 
-# Something the build could read changed after the prebuild began
-changed_since_prebuild() {
-  local mark="$store/.started" a v t skip=""
-  local -a paths=(fixtures docs "$toolkit/plugins/org.istanduk.gov-uk")
+# The files and folders a build names in its arguments, other than its own
+# output and temp folders: each value as one path (it may hold spaces), and each
+# word of it (a command and its arguments, say)
+inputs_of() {
+  local a v t skip=""
   set -f
   for a in "$@"; do
-    # the build's own output and temp folders are written by the prebuild itself
     if [ -n "$skip" ]; then skip=""; continue; fi
     case "$a" in
       -o|--output|-t|--temp) skip=1; continue ;;
@@ -50,18 +53,48 @@ changed_since_prebuild() {
       -*=*) v="${a#*=}" ;;
       *) v="$a" ;;
     esac
-    # the value as one path (it may hold spaces), then each word of it (a
-    # command and its arguments, say)
-    [ -e "$v" ] && paths+=("$v")
+    [ -e "$v" ] && printf '%s\0' "$v"
     for t in $v; do
-      [ -e "$t" ] && paths+=("$t")
+      [ -e "$t" ] && printf '%s\0' "$t"
     done
   done
   set +f
-  [ -n "$(find "${paths[@]}" -newer "$mark" -print -quit 2> /dev/null)" ]
+}
+
+# Something the build could read appeared, changed or went after the prebuild
+# began. Change times (ctime), which no tool sets back, for what the build
+# names, the fixtures and the manual: a file unpacked or copied with an old
+# modification time still counts. Modification times for the installed
+# plugin, whose change times the read-only-toolkit step resets with chmod.
+changed_since_prebuild() { # key, arguments
+  local key=$1 mark="$store/.started" p
+  shift
+  local -a named=()
+  mapfile -d '' -t named < <(inputs_of "$@")
+  [ -n "$(find fixtures docs "${named[@]}" -cnewer "$mark" -print -quit 2> /dev/null)" ] && return 0
+  [ -n "$(find "$toolkit/plugins/org.istanduk.gov-uk" -newer "$mark" -print -quit 2> /dev/null)" ] && return 0
+  # an input the prebuild found that is gone now
+  if [ -f "$store/$key.inputs" ]; then
+    while IFS= read -r -d '' p; do
+      [ -e "$p" ] || return 0
+    done < "$store/$key.inputs"
+  fi
+  return 1
 }
 
 case "${1:-}" in
+  --one)
+    # one build of the prebuild, in its own temp folder so that builds started
+    # together never share one; the inputs it found are kept for the check above
+    mapfile -d '' -t args < <(printf '%s' "${2:?}" | base64 -d)
+    key=$(key_of "${args[@]}")
+    inputs_of "${args[@]}" > "$store/$key.inputs"
+    tmp=$(mktemp -d "$store/tmp.XXXXXX")
+    "$toolkit/bin/dita" "${args[@]}" --temp="$tmp/t" > "$store/$key.log" 2>&1
+    echo $? > "$store/$key.rc.part" && mv "$store/$key.rc.part" "$store/$key.rc"
+    rm -rf "$tmp"
+    exit 0
+    ;;
   --prebuild)
     manifest="${2:?usage: dita --prebuild <manifest>}"
     : "${store:?PREBUILD_DIR is not set}"
@@ -79,14 +112,7 @@ case "${1:-}" in
     echo "making $(wc -l < "$store/.todo") build(s) ahead, $jobs at a time"
     export toolkit store
     # one build: its own temp folder, so builds started together never share one
-    xargs -d '\n' -n 1 -P "$jobs" bash -c '
-      mapfile -d "" -t args < <(printf "%s" "$1" | base64 -d)
-      key=$({ printf "%s\0" "$PWD" "${PATH:-}" "${JAVA_TOOL_OPTIONS:-}" "${ANT_OPTS:-}"; printf "%s\0" "${args[@]}"; } | sha256sum | cut -c1-64)
-      tmp=$(mktemp -d "$store/tmp.XXXXXX")
-      "$toolkit/bin/dita" "${args[@]}" --temp="$tmp/t" > "$store/$key.log" 2>&1
-      echo $? > "$store/$key.rc.part" && mv "$store/$key.rc.part" "$store/$key.rc"
-      rm -rf "$tmp"
-    ' _ < "$store/.todo"
+    xargs -d '\n' -n 1 -P "$jobs" "$0" --one < "$store/.todo"
     echo "made $(ls "$store"/*.rc 2> /dev/null | wc -l) build(s) ahead"
     exit 0
     ;;
@@ -106,7 +132,7 @@ esac
 if [ -n "$store" ]; then
   key=$(key_of "$@")
   if [ -f "$store/$key.rc" ]; then
-    if changed_since_prebuild "$@"; then
+    if changed_since_prebuild "$key" "$@"; then
       echo "(tools/ci/dita: an input changed since the prebuild, so this build runs live)" >&2
     else
       cat "$store/$key.log"
