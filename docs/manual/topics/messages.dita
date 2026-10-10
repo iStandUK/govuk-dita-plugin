@@ -153,6 +153,15 @@
             <entry>Host the resource with the publication, strip it, or set
               <codeph>govuk.csp</codeph> to a policy that allows its origin.</entry>
           </row>
+          <row>
+            <entry><codeph>GOVK014W</codeph></entry>
+            <entry><codeph>govuk.embed=yes</codeph> was given with the
+              <codeph>official</codeph> or <codeph>nhs</codeph> branding. Those identities'
+              header and footer belong on every page, so no page offers the embedded
+              view.</entry>
+            <entry>Leave the parameter out, or use the neutral or istanduk branding. See
+              <xref keyref="embedding"/>.</entry>
+          </row>
         </tbody>
       </tgroup>
     </table>

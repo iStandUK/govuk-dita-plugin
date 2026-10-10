@@ -35,7 +35,10 @@
         plugin's pages are known to satisfy; they are also what
         <codeph>govuk.csp=meta</codeph> writes into each page for hosts that cannot set
         headers (see <xref keyref="parameters"/>), except that
-        <codeph>frame-ancestors</codeph> only works as a header.</p>
+        <codeph>frame-ancestors</codeph> only works as a header. A host that shows its own
+        pages inside a frame (<xref keyref="embedding"/>) sets
+        <codeph>frame-ancestors 'self'</codeph>, or names the framing site, in place of
+        <codeph>'none'</codeph>.</p>
       <table frame="all" id="header-table">
         <title>Recommended response headers</title>
         <tgroup cols="2">

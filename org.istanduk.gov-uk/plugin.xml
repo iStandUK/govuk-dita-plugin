@@ -71,6 +71,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val default="true">yes</val>
       <val>no</val>
     </param>
+    <param name="govuk.embed"
+           desc="Embedded view for pages the publisher shows inside a frame of their own: 'yes' lets a framed page opened with ?embed=1 show its content only, without the masthead, contents, pagination or footer, and keeps links inside the frame. 'no' (default). Ignored with the official and nhs branding (GOVK014W)."
+           type="enum">
+      <val>yes</val>
+      <val default="true">no</val>
+    </param>
     <param name="govuk.svg.inline"
            desc="Inline local SVG diagrams (svgref) as native SVG so links and interactivity inside them work. 'yes' (default) inlines; 'no' keeps the image rendering."
            type="enum">
