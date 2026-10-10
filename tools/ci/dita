@@ -53,9 +53,11 @@ inputs_of() {
       -*=*) v="${a#*=}" ;;
       *) v="$a" ;;
     esac
-    [ -e "$v" ] && printf '%s\0' "$v"
+    # only what is written as a path: a bare word such as "no" or "both" is a
+    # value, even if a file of that name happens to lie in the working folder
+    case "$v" in */*) [ -e "$v" ] && printf '%s\0' "$v" ;; esac
     for t in $v; do
-      [ -e "$t" ] && printf '%s\0' "$t"
+      case "$t" in */*) [ -e "$t" ] && printf '%s\0' "$t" ;; esac
     done
   done
   set +f
@@ -66,17 +68,19 @@ inputs_of() {
 # names, the fixtures and the manual: a file unpacked or copied with an old
 # modification time still counts. Modification times for the installed
 # plugin, whose change times the read-only-toolkit step resets with chmod.
-changed_since_prebuild() { # key, arguments
+changed_since_prebuild() { # key, arguments; sets $why
   local key=$1 mark="$store/.started" p
   shift
   local -a named=()
   mapfile -d '' -t named < <(inputs_of "$@")
-  [ -n "$(find fixtures docs "${named[@]}" -cnewer "$mark" -print -quit 2> /dev/null)" ] && return 0
-  [ -n "$(find "$toolkit/plugins/org.istanduk.gov-uk" -newer "$mark" -print -quit 2> /dev/null)" ] && return 0
+  why=$(find fixtures docs "${named[@]}" -cnewer "$mark" -print -quit 2> /dev/null)
+  [ -n "$why" ] && { why="$why changed"; return 0; }
+  why=$(find "$toolkit/plugins/org.istanduk.gov-uk" -type f -newer "$mark" -print -quit 2> /dev/null)
+  [ -n "$why" ] && { why="$why changed"; return 0; }
   # an input the prebuild found that is gone now
   if [ -f "$store/$key.inputs" ]; then
     while IFS= read -r -d '' p; do
-      [ -e "$p" ] || return 0
+      [ -e "$p" ] || { why="$p is gone"; return 0; }
     done < "$store/$key.inputs"
   fi
   return 1
@@ -133,7 +137,7 @@ if [ -n "$store" ]; then
   key=$(key_of "$@")
   if [ -f "$store/$key.rc" ]; then
     if changed_since_prebuild "$key" "$@"; then
-      echo "(tools/ci/dita: an input changed since the prebuild, so this build runs live)" >&2
+      echo "(tools/ci/dita: since the prebuild, $why; this build runs live)" >&2
     else
       cat "$store/$key.log"
       touch "$store/$key.used"

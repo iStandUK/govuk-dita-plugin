@@ -1055,10 +1055,10 @@ jobs:
           python3 tools/check_metadata.py --level no out/metadata-no
           # no stylesheet names a scheme: a row added to a table is a tag
           t="dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata/dublincore.xml"
-          cp "$t" metadata-table.orig
+          cp -p "$t" metadata-table.orig
           sed -i 's#</kind>#  <property term="dct:spatial" as="DC.coverage"/>\n  </kind>#' "$t"
           dita --input fixtures/metadata/metadata.ditamap --output out/metadata-row > /dev/null
-          cp metadata-table.orig "$t"
+          cp -p metadata-table.orig "$t"
           has out/metadata-row/topics/check.html '<meta name="DC.coverage" content="http://statistics.data.gov.uk/id/statistical-geography/E92000001">'
           absent -rEq 'opengraph|dublincore|og:|DC\.' org.istanduk.gov-uk/xsl --include='*.xsl'
 
