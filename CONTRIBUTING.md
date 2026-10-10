@@ -167,6 +167,8 @@ A self-hosted runner needs:
 - **Room for about 3 GB** under the runner's work folder.
 - **Nothing it should not share.** Its jobs run this repository's code with the runner user's rights. Keep it separate from runners of private repositories, and from any credentials on the machine.
 
+A self-hosted runner keeps its machine between runs, so a step leaves nothing behind it: scratch files go under `$RUNNER_TEMP`, which the runner empties at the end of each job, never under `/tmp`; and nothing is installed globally (such as `npm -g`).
+
 ## Releases
 
 See [docs/RELEASING.md](docs/RELEASING.md): a `release/x.y.z` branch from `dev`, the
