@@ -41,6 +41,7 @@ jobs:
     outputs:
       plugin: ${{ steps.classify.outputs.plugin }}
       pdf: ${{ steps.classify.outputs.pdf }}
+      workflows: ${{ steps.classify.outputs.workflows }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -54,7 +55,7 @@ jobs:
           if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
              || [ "$GITHUB_REF_TYPE" = "tag" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] \
              || ! git cat-file -e "$BASE" 2>/dev/null; then
-            { echo "plugin=true"; echo "pdf=true"; } >> "$GITHUB_OUTPUT"; echo "full run: no base to compare against"; exit 0
+            { echo "plugin=true"; echo "pdf=true"; echo "workflows=true"; } >> "$GITHUB_OUTPUT"; echo "full run: no base to compare against"; exit 0
           fi
           files=$(git diff --name-only "$(git merge-base "$BASE" "$HEAD")" "$HEAD")
           printf 'changed:\n%s\n' "$files"
@@ -62,7 +63,7 @@ jobs:
           rest=$(printf '%s\n' "$files" | grep -Ev "$docs" || true)
           # an empty diff is treated as a full run, as before
           if [ -z "$files" ]; then
-            { echo "plugin=true"; echo "pdf=true"; } >> "$GITHUB_OUTPUT"; echo "full run: nothing to classify"; exit 0
+            { echo "plugin=true"; echo "pdf=true"; echo "workflows=true"; } >> "$GITHUB_OUTPUT"; echo "full run: nothing to classify"; exit 0
           fi
           workflows=$(printf '%s\n' "$rest" | grep -E '^\.github/workflows/' || true)
           # the PDFs are made from the plugin's print document, so what shapes it
@@ -71,8 +72,11 @@ jobs:
           # PDF/UA (#164)
           pdf=$(printf '%s\n' "$rest" | grep -E '^(designsystempdf/|org\.istanduk\.gov-uk/|docs/manual/|fixtures/|\.github/actions/)' || true)
           plugin=$(printf '%s\n' "$rest" | grep -Ev '^designsystempdf/' || true)
-          if [ -n "$plugin" ]; then echo "plugin=true"; else echo "plugin=false"; fi >> "$GITHUB_OUTPUT"
-          if [ -n "$pdf" ] || [ -n "$workflows" ]; then echo "pdf=true"; else echo "pdf=false"; fi >> "$GITHUB_OUTPUT"
+          {
+            if [ -n "$plugin" ]; then echo "plugin=true"; else echo "plugin=false"; fi
+            if [ -n "$pdf" ] || [ -n "$workflows" ]; then echo "pdf=true"; else echo "pdf=false"; fi
+            if [ -n "$workflows" ]; then echo "workflows=true"; else echo "workflows=false"; fi
+          } >> "$GITHUB_OUTPUT"
           if [ -z "$rest" ]; then echo "documentation-only change: nothing is built"; fi
           cat "$GITHUB_OUTPUT"
 
@@ -111,6 +115,7 @@ jobs:
           if [ -n "$missing" ]; then
             sudo -n true 2> /dev/null || { echo "::error::the runner lacks$missing and its user has no passwordless sudo to install them"; exit 1; }
             echo "installing:$missing"
+            # shellcheck disable=SC2086 # $missing is a list of package names
             sudo apt-get update -qq && sudo apt-get install -y -qq $missing
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -771,7 +776,7 @@ jobs:
           pdf=out/manual-dspdf-release/manual.pdf
           test -f "$pdf"
           grep -q 'href="manual.pdf">Whole publication (PDF, ' out/manual-dspdf-release/index.html
-          for i in 1 2 3; do
+          for _ in 1 2 3; do
             verapdf --flavour ua1 --format text "$pdf" > dspdf-release-ua.txt || true
             grep -Eq '^(PASS|FAIL) ' dspdf-release-ua.txt && break
           done
@@ -870,6 +875,7 @@ jobs:
           grep -q "'sha256-$hash'" out/manual-csp/topics/install.html || { echo "CSP hash does not match the inline snippet"; exit 1; }
           # #87: the manual documents every message the plugin can emit, and the security
           # and build-messages topics are built and linked
+          # shellcheck disable=SC2013 # message ids are single words
           for code in $(grep -o 'id="GOVK[0-9]*[IWEF]"' org.istanduk.gov-uk/messages.xml | cut -d'"' -f2); do
             grep -q "$code" docs/manual/topics/messages.dita || { echo "$code is not in the manual's build-messages topic"; exit 1; }
           done
@@ -1389,6 +1395,7 @@ jobs:
           if [ -n "$missing" ]; then
             sudo -n true 2> /dev/null || { echo "::error::the runner lacks$missing and its user has no passwordless sudo to install them"; exit 1; }
             echo "installing:$missing"
+            # shellcheck disable=SC2086 # $missing is a list of package names
             sudo apt-get update -qq && sudo apt-get install -y -qq $missing
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -1419,7 +1426,7 @@ jobs:
       - name: Bundled fonts match their checksums and their upstream
         run: |
           (cd fonts && sha256sum -c SHA256SUMS)
-          test "$(ls fonts/*.ttf | wc -l)" = "$(grep -c '\.ttf$' fonts/SHA256SUMS)" || { echo "a font is not listed in SHA256SUMS"; exit 1; }
+          test "$(find fonts -maxdepth 1 -name '*.ttf' | wc -l)" = "$(grep -c '\.ttf$' fonts/SHA256SUMS)" || { echo "a font is not listed in SHA256SUMS"; exit 1; }
           grep -q "$NOTO_FONTS_COMMIT" fonts/README.md || { echo "fonts/README.md does not name commit $NOTO_FONTS_COMMIT"; exit 1; }
           for f in fonts/*.ttf; do
             n=$(basename "$f"); family=${n%%-*}
@@ -1427,7 +1434,7 @@ jobs:
             cmp "$f" "/tmp/$n" || { echo "vendored $n differs from its upstream at $NOTO_FONTS_COMMIT"; exit 1; }
           done
           # no restricted typeface, ever
-          if ls fonts | grep -Ei 'transport|frutiger'; then echo "a restricted typeface is in fonts/"; exit 1; fi
+          if printf '%s\n' fonts/* | grep -Ei 'transport|frutiger'; then echo "a restricted typeface is in fonts/"; exit 1; fi
           echo "bundled fonts match their checksums and upstream"
 
       # The documents the generator exists for: the print documents the plugin in
@@ -1456,6 +1463,7 @@ jobs:
           "dita-ot-${DITA_OT_VERSION}/bin/dita" uninstall org.istanduk.gov-uk || true
           "dita-ot-${DITA_OT_VERSION}/bin/dita" install "$PWD/org.istanduk.gov-uk.zip"
           for f in "docs/manual/manual.ditamap manual" "fixtures/dita13-kitchen/kitchen.ditamap kitchen" "fixtures/oruk-mini/oruk.ditamap oruk-mini"; do
+            # shellcheck disable=SC2086 # split "map name" into its two words
             set -- $f
             "dita-ot-${DITA_OT_VERSION}/bin/dita" --input "$1" --format govuk --output "out/pdf/$2" -Dgovuk.print=yes -Dgovuk.search=no
             grep -q '<meta name="govuk-print-contract" content="1"' "out/pdf/$2/print.html"
@@ -1680,8 +1688,8 @@ jobs:
           # exit 1 like a non-compliant file): only a verdict in its output
           # counts, and without one it is run again
           vera() {
-            local out rc i
-            for i in 1 2 3; do
+            local out rc _
+            for _ in 1 2 3; do
               out=$(verapdf "$@" 2> /tmp/vera.err) && rc=0 || rc=$?
               if printf '%s\n' "$out" | grep -Eq '^(PASS|FAIL) |</html>'; then break; fi
               echo "veraPDF gave no verdict (exit $rc) on $*; trying again" >&2
@@ -1736,7 +1744,7 @@ jobs:
           pdf=out/pdf/pdf-ua-negative/negative.pdf
           test -f "$pdf"
           # only a verdict counts: a run that fails to run at all is tried again
-          for i in 1 2 3; do
+          for _ in 1 2 3; do
             rc=0; verapdf --flavour ua1 --format text -v "$pdf" > /tmp/negative-ua.txt || rc=$?
             grep -Eq '^(PASS|FAIL) ' /tmp/negative-ua.txt && break
           done
@@ -1769,12 +1777,41 @@ jobs:
           path: pdf-ua-reports/
           if-no-files-found: ignore
 
+  # The workflows themselves: actionlint checks their syntax and
+  # expressions, and runs ShellCheck over every run: block. ShellCheck catches
+  # what #209 fixed by hand, a "! command" that bash -e ignores (SC2251), and
+  # word splitting, unquoted globs and the like. Both are pinned and
+  # checksum-verified (#68); Dependabot does not see them, so move them by hand.
+  lint:
+    name: lint
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
+    runs-on: ${{ vars.CI_RUNS_ON && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNS_ON) || 'ubuntu-latest' }}
+    env:
+      ACTIONLINT_VERSION: 1.7.12
+      ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+      SHELLCHECK_VERSION: 0.11.0
+      # GitHub's recorded digest of the release asset; ShellCheck publishes no checksums
+      SHELLCHECK_SHA256: 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: actionlint and ShellCheck
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/actionlint.tar.gz" "https://github.com/rhysd/actionlint/releases/download/v$ACTIONLINT_VERSION/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum -c -
+          curl -sSfL -o "$RUNNER_TEMP/shellcheck.tar.xz" "https://github.com/koalaman/shellcheck/releases/download/v$SHELLCHECK_VERSION/shellcheck-v$SHELLCHECK_VERSION.linux.x86_64.tar.xz"
+          echo "$SHELLCHECK_SHA256  $RUNNER_TEMP/shellcheck.tar.xz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          tar -xJf "$RUNNER_TEMP/shellcheck.tar.xz" -C "$RUNNER_TEMP"
+          "$RUNNER_TEMP/actionlint" -version
+          "$RUNNER_TEMP/actionlint" -shellcheck "$RUNNER_TEMP/shellcheck-v$SHELLCHECK_VERSION/shellcheck" -pyflakes= -color
+
   # One stable status for branch protection to require: passes only when every
   # job the change called for passed — each matrix leg of `build` (add DITA-OT
-  # versions to the matrix freely) and `designsystempdf`.
+  # versions to the matrix freely), `designsystempdf` and `lint`.
   ci:
     name: ci
-    needs: [changes, build, designsystempdf]
+    needs: [changes, build, designsystempdf, lint]
     if: always()
     runs-on: ${{ vars.CI_RUNS_ON && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNS_ON) || 'ubuntu-latest' }}
     steps:
@@ -1791,3 +1828,4 @@ jobs:
           }
           check build "${{ needs.changes.outputs.plugin }}" "${{ needs.build.result }}"
           check designsystempdf "${{ needs.changes.outputs.pdf }}" "${{ needs.designsystempdf.result }}"
+          check lint "${{ needs.changes.outputs.workflows }}" "${{ needs.lint.result }}"

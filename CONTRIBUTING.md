@@ -79,6 +79,9 @@ python3 tools/page_weight.py --report --budget-kb 300 out/manual
 (cd tools/a11y && npm ci && npx playwright install chromium)
 node tools/a11y/run.mjs out/manual
 node tools/a11y/print-smoke.mjs out/manual/print.html out/manual.pdf --paper A4
+
+# the workflows: actionlint runs ShellCheck over every run: block when it is on the PATH
+actionlint
 ```
 
 On Windows, run the toolkit's `dita.bat` rather than the `dita` shell script, even from a
