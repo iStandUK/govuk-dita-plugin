@@ -1428,7 +1428,7 @@ jobs:
       - name: Bundled fonts match their checksums and their upstream
         run: |
           (cd fonts && sha256sum -c SHA256SUMS)
-          test "$(find fonts -maxdepth 1 -name '*.ttf' | wc -l)" ="$(grep -c '\.ttf$' fonts/SHA256SUMS)" || { echo "a font is not listed in SHA256SUMS"; exit 1; }
+          test "$(find fonts -maxdepth 1 -name '*.ttf' | wc -l)" = "$(grep -c '\.ttf$' fonts/SHA256SUMS)" || { echo "a font is not listed in SHA256SUMS"; exit 1; }
           grep -q "$NOTO_FONTS_COMMIT" fonts/README.md || { echo "fonts/README.md does not name commit $NOTO_FONTS_COMMIT"; exit 1; }
           for f in fonts/*.ttf; do
             n=$(basename "$f"); family=${n%%-*}
