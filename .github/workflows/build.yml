@@ -19,6 +19,10 @@ on:
     branches: [main, dev, 'release/**', 'hotfix/**']
     tags: ['v*']
   pull_request:
+  # the merge queue on dev (#214): the queue tests dev with the queued pull
+  # requests applied, and merges exactly what passed
+  merge_group:
+    types: [checks_requested]
   workflow_dispatch:
 
 # Where the jobs run. The repository variable CI_RUNS_ON, when set, holds the
@@ -38,17 +42,59 @@ jobs:
   changes:
     name: changes
     runs-on: ${{ vars.CI_RUNS_ON && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(vars.CI_RUNS_ON) || 'ubuntu-latest' }}
+    # reading pull requests and earlier runs, to know a tree was already tested (#213)
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
     outputs:
-      plugin: ${{ steps.classify.outputs.plugin }}
-      pdf: ${{ steps.classify.outputs.pdf }}
+      plugin: ${{ steps.tested.outputs.done == 'true' && 'false' || steps.classify.outputs.plugin }}
+      pdf: ${{ steps.tested.outputs.done == 'true' && 'false' || steps.classify.outputs.pdf }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - id: classify
+      # #213: a push to dev whose files were already tested need not be tested
+      # again. With branches required up to date, a squash-merged pull request
+      # was tested as its head on top of the dev it was merged into, and the
+      # merge commit holds exactly those files; through the merge queue, the
+      # queue tested this very commit. Anything uncertain (no pull request
+      # found, a head that does not contain the previous dev, different files,
+      # no green run, no python3) means a full run.
+      - id: tested
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         env:
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          full() { echo "full run: $1"; exit 0; }
+          command -v python3 > /dev/null || full "no python3 to read the API"
+          api() { curl -sSf -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/$1"; }
+          green() { # event, sha: a successful run of this workflow for that commit
+            api "actions/workflows/build.yml/runs?event=$1&head_sha=$2&status=success&per_page=1" \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin)["total_count"])' 2> /dev/null || echo 0
+          }
+          said() { echo "done=true" >> "$GITHUB_OUTPUT"; echo "$1" | tee -a "$GITHUB_STEP_SUMMARY"; }
+          if [ "$(green merge_group "$GITHUB_SHA")" -gt 0 ]; then
+            said "Already tested: the merge queue tested this commit, ${GITHUB_SHA}."; exit 0
+          fi
+          [ "$(git rev-list --parents -n 1 HEAD | wc -w)" = 2 ] || full "not a single-parent (squash) commit"
+          pr=$(api "commits/$GITHUB_SHA/pulls" | python3 -c '
+          import json, os, sys
+          for p in json.load(sys.stdin):
+              if p.get("merge_commit_sha") == os.environ["GITHUB_SHA"] and p["base"]["ref"] == "dev":
+                  print(p["number"], p["head"]["sha"]); break' 2> /dev/null) || full "the pull request could not be read"
+          [ -n "$pr" ] || full "no pull request merged as this commit"
+          set -- $pr
+          git fetch -q origin "pull/$1/head" || full "pull request #$1's head could not be fetched"
+          git merge-base --is-ancestor HEAD^ "$2" || full "#$1's head did not contain the dev it was merged into"
+          [ "$(git rev-parse "$2^{tree}")" = "$(git rev-parse "HEAD^{tree}")" ] || full "the files differ from #$1's head"
+          [ "$(green pull_request "$2")" -gt 0 ] || full "no green run of #$1's head ($2)"
+          said "Already tested: pull request #$1's head $2 holds these files and passed; nothing is built again."
+      - id: classify
+        if: steps.tested.outputs.done != 'true'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}
         run: |
           # No usable base (a new branch, a tag, a manual run): build everything.
           if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
@@ -98,6 +144,12 @@ jobs:
       # plugin must find and work with (#113, D-23); move it with each pdf-v* release
       DSPDF_RELEASE: "0.1.1"
       DSPDF_RELEASE_SHA256: "32dbdf04260f8035e756be5fc0b7a635565ab1d91b59cbbb48cbf4ca4871c664"
+      # Most of a DITA-OT build in CI is the JVM starting; these options
+      # roughly halve that and leave the output byte-identical (#218; the
+      # determinism step checks it). They reach DITA-OT only, through its launcher.
+      ANT_OPTS: "-XX:TieredStopAtLevel=1 -XX:+UseSerialGC"
+      # the toolkit, for tools/ci/dita (#217)
+      DITA_OT_HOME: ${{ github.workspace }}/dita-ot-${{ matrix.dita-ot.version }}
     steps:
       # A self-hosted runner may lack tools GitHub's image has (CONTRIBUTING.md,
       # Where CI runs); install whichever are missing. A no-op on ubuntu-latest.
@@ -174,25 +226,49 @@ jobs:
           npm install --silent --prefix "$RUNNER_TEMP/npm" pagefind@1.5.2
           echo "$RUNNER_TEMP/npm/node_modules/.bin" >> "$GITHUB_PATH"
 
+      # veraPDF goes on the PATH before the builds are made ahead, so that every
+      # build after it runs with the PATH the prebuild had (#217); the released-
+      # DesignSystemPDF step below uses it
+      - name: Install veraPDF
+        uses: ./.github/actions/verapdf
+
+      # #217: the builds the steps below make are listed in a manifest, kept in
+      # the cache under this workflow's hash. They are made here, several at
+      # once, and each step's tools/ci/dita then uses the result of its build,
+      # or builds live if it is not certainly the same build. With no manifest
+      # yet (a changed workflow), every build runs live and the manifest is saved
+      # at the end of a green run.
+      - name: Restore the manifest of builds
+        id: manifest
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: prebuild-manifest
+          key: prebuild-${{ matrix.dita-ot.version }}-${{ hashFiles('.github/workflows/build.yml', 'tools/ci/dita') }}
+
+      - name: Make the builds ahead (#217)
+        run: |
+          echo "PREBUILD_DIR=$RUNNER_TEMP/prebuild" >> "$GITHUB_ENV"
+          PREBUILD_DIR="$RUNNER_TEMP/prebuild" tools/ci/dita --prebuild prebuild-manifest/manifest.tsv
+
       # Built with Pagefind on the PATH: search auto-enables (FR-S1)
       - name: Build manual
         run: |
           set -o pipefail
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" \
+          tools/ci/dita \
             --input docs/manual/manual.ditamap \
             --format govuk \
             --output out/manual 2>&1 | tee manual-build.log
 
       - name: Build layout overrides
         run: |
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-grid -Dgovuk.homepage.layout=grid
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-accordion -Dgovuk.homepage.layout=accordion
 
       - name: Build depth override (also exercises the phase banner, FR-T3/#49)
         run: |
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-depth1 \
             -Dgovuk.homepage.layout=grid -Dgovuk.homepage.depth=1 \
             -Dgovuk.phase=beta -Dgovuk.feedback.url=https://example.org/feedback
@@ -201,16 +277,17 @@ jobs:
       - name: Build DITA 1.3 kitchen sink
         run: |
           set -o pipefail
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          tools/ci/dita --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen 2>&1 | tee kitchen.log
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+          tools/ci/dita --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen-flag --filter fixtures/dita13-kitchen/flags.ditaval
           # spot-checks of verified processing behaviour
           test -f out/kitchen/topics/composite_comp-child-one.html
           # chunk=by-topic children resolve assets to the output root (upstream PATH2PROJ bug worked around)
           grep -q '"../govuk/plugin.css"' out/kitchen/topics/composite_comp-child-one.html
           grep -q 'Reused safety note' out/kitchen/topics/conref-use.html
-          ! grep -q 'excluded by the filter' out/kitchen-flag/topics/blocks.html
+          absent -q 'excluded by the filter' out/kitchen-flag/topics/blocks.html
           grep -q 'administrators' out/kitchen-flag/topics/blocks.html
           # DITAVAL style flags render — flag__style--* CSS shipped and applied (#29)
           grep -q 'flag__style--italics' out/kitchen-flag/govuk/plugin.css
@@ -218,19 +295,19 @@ jobs:
 
       - name: Build iStandUK theme
         run: |
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-istanduk -Dgovuk.branding=istanduk
 
       - name: Build NHS branding
         run: |
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-nhs -Dgovuk.branding=nhs
 
       # govuk.embed is ignored with this identity, and says so (#201)
       - name: Build official (GOV.UK crown) branding
         run: |
           set -o pipefail
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-official -Dgovuk.branding=official \
             -Dgovuk.embed=yes 2>&1 | tee manual-official.log
           grep -q "\[GOVK014W\]: govuk.embed=yes is ignored with govuk.branding=official" manual-official.log
@@ -239,7 +316,7 @@ jobs:
       - name: Build FR-T3 furniture params (service URL, favicon, footer links/licence)
         run: |
           printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#1d70b8"/></svg>' > favicon.svg
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-frt3 \
             -Dgovuk.service.url=https://example.gov.uk \
             -Dgovuk.favicon="$PWD/favicon.svg" \
@@ -255,7 +332,7 @@ jobs:
           set -o pipefail
           last_css() { grep -o '<link rel="stylesheet"[^>]*>' "$1" | tail -1; }
           # a stylesheet assets folder that does not exist warns, and the site builds (#197)
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-custom -Dgovuk.print=yes \
             -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes \
             "-Dgovuk.css.assets=$PWD/fixtures/css-assets/missing" 2>&1 | tee manual-custom.log
@@ -270,7 +347,7 @@ jobs:
           # the manual prints the sample itself
           grep -q -e '--brand-colour: #00594f' out/manual-custom/topics/custom-css.html
           # a branding mode's overlay still comes first, and args.csspath moves the file
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
+          tools/ci/dita --input fixtures/oruk-mini/oruk.ditamap \
             --format govuk --output out/oruk-custom -Dgovuk.branding=istanduk \
             -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes -Dargs.csspath=theme \
             "-Dgovuk.css.assets=$PWD/fixtures/css-assets/assets"
@@ -289,7 +366,7 @@ jobs:
         run: |
           for layout in grid grouped; do
             out="out/home-desc-$layout"
-            "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/home-desc/home-desc.ditamap \
+            tools/ci/dita --input fixtures/home-desc/home-desc.ditamap \
               --format govuk --output "$out" -Dgovuk.homepage.layout=$layout
             for page in state matter concepts/actor health subject; do
               text=$(grep -o '<p class="shortdesc[^>]*>.*' "$out/$page.html" | sed 's#</p>.*##; s#<[^>]*>##g')
@@ -308,16 +385,17 @@ jobs:
       - name: Build keyref-nest fixture (unresolved keys, #51)
         run: |
           set -o pipefail
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/keyref-nest/root-keyref.ditamap \
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          tools/ci/dita --input fixtures/keyref-nest/root-keyref.ditamap \
             --format govuk --output out/keyref-nest 2>&1 | tee keyref-nest.log
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/keyref-nest/root-href.ditamap \
+          tools/ci/dita --input fixtures/keyref-nest/root-href.ditamap \
             --format govuk --output out/keyref-nest-href 2>&1 | tee keyref-nest-href.log
           grep -q "\[GOVK001W\]" keyref-nest.log
           grep -q "Navigation entry 'Group' has keyref='k-ov'" keyref-nest.log
           # once per affected branch: the nested mapref and topicref beneath 'Group' stay quiet
           test "$(grep -c 'GOVK001W' keyref-nest.log)" = 1
-          ! grep -q "GOVK001W" keyref-nest-href.log
-          ! grep -q "GOVK001W" manual-build.log
+          absent -q "GOVK001W" keyref-nest-href.log
+          absent -q "GOVK001W" manual-build.log
           # the symptom the warning describes, and its absence with <mapref href>
           grep -q '<span>Group</span>' out/keyref-nest/ov.html
           grep -q 'href="ov.html">Overview T</a>' out/keyref-nest-href/t1.html
@@ -345,7 +423,8 @@ jobs:
       # so search.html is produced).
       - name: Build search-semantics fixture (#54)
         run: |
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
+          tools/ci/dita --input fixtures/search-semantics/search.ditamap \
             --format govuk --output out/search-semantics -Dgovuk.search.ranking=reference
           # live topic: shortdesc weighted, "Where used" table ignored, keywords/searchtitle/filters in head
           grep -Eq '<p [^>]*class="[^"]*shortdesc[^"]*"[^>]*data-pagefind-weight="4"' out/search-semantics/live.html
@@ -354,7 +433,7 @@ jobs:
           grep -q 'data-pagefind-meta="title\[content\]" content="Widget Code (Data Element)"' out/search-semantics/live.html
           grep -q 'data-pagefind-filter="category\[content\]" content="Data Element"' out/search-semantics/live.html
           grep -q 'data-pagefind-filter="audience\[content\]" content="analyst"' out/search-semantics/live.html
-          ! grep -q 'data-pagefind-weight="0.3"' out/search-semantics/live.html
+          absent -q 'data-pagefind-weight="0.3"' out/search-semantics/live.html
           # demoted by outputclass on the title, and by importance="obsolete" on the topic
           for t in retired obsolete; do
             grep -Eq '<h1 [^>]*data-pagefind-weight="2"' out/search-semantics/$t.html
@@ -367,11 +446,13 @@ jobs:
           grep -q 'data-ranking="{ &#34;termFrequency&#34;: 0.0, &#34;pageLength&#34;: 0.0 }"' out/search-semantics/search.html
           grep -q '<script src="govuk/search.js">' out/search-semantics/search.html
           test -f out/search-semantics/govuk/search.js
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
+          tools/ci/dita --input fixtures/search-semantics/search.ditamap \
             --format govuk --output out/search-semantics-json '-Dgovuk.search.ranking={termFrequency:0.5,metaWeights:{keywords:3}}'
           grep -q 'data-ranking="{&#34;termFrequency&#34;:0.5,&#34;metaWeights&#34;:{&#34;keywords&#34;:3}}"' out/search-semantics-json/search.html
-          ! "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/search-semantics/search.ditamap \
-            --format govuk --output out/search-semantics-bad -Dgovuk.search.ranking=fastest
+          if tools/ci/dita --input fixtures/search-semantics/search.ditamap \
+            --format govuk --output out/search-semantics-bad -Dgovuk.search.ranking=fastest; then
+            echo "an invalid govuk.search.ranking should fail the build"; exit 1
+          fi
           # the manual: shortdesc weighting applies everywhere, ranking stays Pagefind's default
           grep -q 'data-pagefind-weight="4"' out/manual/topics/introduction.html
           if grep -q 'data-ranking' out/manual/search.html; then echo "manual search page should carry no ranking"; exit 1; fi
@@ -384,7 +465,7 @@ jobs:
           # bash -e ignores a negated command, so a plain "! grep" can never fail
           # the step; negative assertions go through this instead
           absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-print -Dgovuk.print=yes 2>&1 | tee manual-print.log
           test -f out/manual-print/print.html
           absent -q "GOVK003W" manual-print.log
@@ -435,11 +516,11 @@ jobs:
           absent -q 'href="../print.html"' out/manual/topics/install.html
           grep -q 'govuk/print.css" media="print"' out/manual/index.html
           # paper parameters flow into print.css; a bad size fails the build
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
+          tools/ci/dita --input fixtures/oruk-mini/oruk.ditamap \
             --format govuk --output out/oruk-print -Dgovuk.print=yes \
             -Dgovuk.pdf.paper=Letter -Dgovuk.pdf.orientation=landscape
           grep -q 'size: Letter landscape;' out/oruk-print/govuk/print.css
-          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap \
+          if tools/ci/dita --input fixtures/oruk-mini/oruk.ditamap \
             --format govuk --output out/oruk-print-bad -Dgovuk.pdf.paper=A9; then
             echo "govuk.pdf.paper=A9 should have failed the build"; exit 1
           fi
@@ -448,7 +529,7 @@ jobs:
           grep -q 'id="child2"' out/oruk-print/print.html
           grep -q 'href="#child2"' out/oruk-print/print.html
           # kitchen: footnotes as per-file endnotes, copy-to duplicates prefixed, links inside inlined SVG re-based
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+          tools/ci/dita --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen-print -Dgovuk.print=yes
           grep -Eq 'name="t[0-9]+-fnsrc_' out/kitchen-print/print.html
           grep -q 'app-print-endnotes' out/kitchen-print/print.html
@@ -459,7 +540,7 @@ jobs:
           grep -q 'xlink:href="#blocks"' out/kitchen-print/print.html
           test -z "$(grep -o ' id="[^"]*"' out/kitchen-print/print.html | sort | uniq -d)"
           # the topic ceiling: skipped with a warning, and nothing links to the missing file
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-print-ceiling -Dgovuk.print=yes \
             -Dgovuk.print.max-topics=3 -Dgovuk.search=no 2>&1 | tee ceiling.log
           grep -q "\[GOVK003W\]" ceiling.log
@@ -469,7 +550,7 @@ jobs:
           # #174: a misspelt parameter is reported, with what was meant, and is
           # otherwise ignored, so its default applies: here the ceiling stays at
           # 500, the manual is under it, and the print document is written
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-print-misspelt -Dgovuk.print=yes -Dgovuk.search=no \
             -Dgovuk.max-topics=3 -Dgovuk.serach=no -Dgovuk.xyzzy=1 2>&1 | tee misspelt.log
           grep -qF '[GOVK009W]: govuk.max-topics is not a parameter of this plugin, so it was ignored. Did you mean govuk.print.max-topics?' misspelt.log
@@ -480,7 +561,7 @@ jobs:
           # #176: govuk.print.scope. The fixture's navigation is an index and an
           # introduction; its items are reached only by key and link.
           heads() { grep -oE '<h[2-6][^>]*>[^<]*' "$1" | sed -E 's/<(h[2-6])[^>]*>/\1 /' | paste -sd '|' -; }
-          scope() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-scope/scope.ditamap \
+          scope() { tools/ci/dita --input fixtures/print-scope/scope.ditamap \
             --format govuk --output "out/print-scope-$1" -Dgovuk.print=yes -Dgovuk.search=no "${@:2}" 2>&1 | tee "scope-$1.log"; }
           # navigation (the default): only the navigation, and links to items go to the site
           scope navigation
@@ -503,14 +584,14 @@ jobs:
           test "$(heads out/print-scope-ceiling/print.html)" = "h2 Contents|h2 Index of items|h2 Introduction"
           grep -q 'href="print.html"' out/print-scope-ceiling/index.html
           # a scope the plugin does not have stops the build
-          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-scope/scope.ditamap --format govuk \
+          if tools/ci/dita --input fixtures/print-scope/scope.ditamap --format govuk \
                --output out/print-scope-bad -Dgovuk.print=yes -Dgovuk.print.scope=everything > scope-bad.log 2>&1; then
             echo "govuk.print.scope=everything should have failed the build"; exit 1
           fi
           grep -qF "govuk.print.scope must be 'navigation' or 'linked'" scope-bad.log
           # The worked example of docs/SOURCE-SYSTEMS.md, the guide for systems
           # that generate DITA: valid, and built without a single warning
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/source-system/dictionary.ditamap \
+          tools/ci/dita --input fixtures/source-system/dictionary.ditamap \
             --format govuk --output out/source-system -Dgovuk.print=yes -Dgovuk.search=no -Dgovuk.dates=both 2>&1 | tee source-system.log
           absent -Eq 'Warning|Error|GOVK|DOT[XJ]' source-system.log
           test "$(heads out/source-system/print.html)" = "h2 Contents|h2 About this dictionary|h2 Data elements|h3 Person birth date|h4 Where used|h3 Person stated gender code (retired)|h2 Submit a return|h2 data element|h2 Glossary|h3 D|h4 data element|h2 Index|h3 D"
@@ -519,7 +600,7 @@ jobs:
           # Built from a folder whose name has a space, so the URI is escaped.
           proj="$RUNNER_TEMP/with space"
           rm -rf "$proj" && mkdir -p "$proj" && cp -r fixtures "$proj/"
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --project="$proj/fixtures/project/project.xml" \
+          tools/ci/dita --project="$proj/fixtures/project/project.xml" \
             --output="$PWD/out/project" 2>&1 | tee project.log
           absent -Eq 'BUILD FAILED|does not exist|GOVK009W' project.log
           for d in scope cover; do
@@ -530,7 +611,7 @@ jobs:
           # #178: several books from one map. A map of two bookmaps: one site,
           # the whole set in print.html, each bookmap in a print document of its
           # own under its own cover, and each page's footer naming its book.
-          books() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --input "$1" --format govuk --output "out/$2" \
+          books() { tools/ci/dita --input "$1" --format govuk --output "out/$2" \
             -Dgovuk.print=yes -Dgovuk.search=no "${@:3}" 2>&1 | tee "$2.log"; absent -Eq 'GOVK|DOTX|Error' "$2.log"; }
           books fixtures/books-omnibus/library.ditamap books-omnibus
           o=out/books-omnibus
@@ -575,7 +656,7 @@ jobs:
           absent -q 'print-planning\|print-building' $p/preface.html
           absent -rq 'govuk-book' $p --include='*.html'
           # a value the plugin does not have stops the build
-          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/books-parts/volumes.ditamap --format govuk \
+          if tools/ci/dita --input fixtures/books-parts/volumes.ditamap --format govuk \
                --output out/books-bad -Dgovuk.print=yes -Dgovuk.print.books=chapters > books-bad.log 2>&1; then
             echo "govuk.print.books=chapters should have failed the build"; exit 1
           fi
@@ -587,7 +668,7 @@ jobs:
       - name: Print cover details and imprint (#150)
         run: |
           absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-cover/cover.ditamap \
+          tools/ci/dita --input fixtures/print-cover/cover.ditamap \
             --format govuk --output out/print-cover -Dgovuk.print=yes -Dgovuk.search=no \
             -Dgovuk.phase=beta -Dgovuk.site.url=https://example.org/standard/
           c=out/print-cover/print.html
@@ -606,7 +687,7 @@ jobs:
           grep -q '<p class="govuk-body app-attribution">Example Standards Body</p>' "$c"
           absent -Eq 'class="[^"]*app-print-(meta|imprint)' out/print-cover/index.html out/print-cover/topic.html
           # official branding: Crown copyright and the Open Government Licence, and no second licence statement
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-cover/cover.ditamap \
+          tools/ci/dita --input fixtures/print-cover/cover.ditamap \
             --format govuk --output out/print-cover-official -Dgovuk.print=yes -Dgovuk.search=no \
             -Dgovuk.branding=official
           c=out/print-cover-official/print.html
@@ -615,7 +696,7 @@ jobs:
           absent -q 'Creative Commons' "$c"
           absent -q 'Status:' "$c"
           # the bookmap's own published date, an edition in words, and no rights: details without an imprint
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/print-cover/published.ditamap \
+          tools/ci/dita --input fixtures/print-cover/published.ditamap \
             --format govuk --output out/print-cover-published -Dgovuk.print=yes -Dgovuk.search=no
           c=out/print-cover-published/print.html
           grep -q '<li>Second edition</li>' "$c"
@@ -649,7 +730,7 @@ jobs:
         run: |
           set -o pipefail
           absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+          tools/ci/dita --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-mini -Dgovuk.print=yes
           md=out/markdown-mini/print.html
           # #121: ids repeat across the Markdown topics; the merged document must not
@@ -674,7 +755,7 @@ jobs:
           echo "${DSPDF_RELEASE_SHA256}  $RUNNER_TEMP/dspdf.zip" | sha256sum -c -
           rm -rf "$RUNNER_TEMP/dspdf-command" && unzip -q "$RUNNER_TEMP/dspdf.zip" -d "$RUNNER_TEMP/dspdf-command"
           formatter="$RUNNER_TEMP/dspdf-command/designsystempdf-${DSPDF_RELEASE}"
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+          tools/ci/dita --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-pdf -Dgovuk.print=yes \
             "-Dgovuk.pdf.command=$formatter/bin/designsystempdf" 2>&1 | tee pdf.log
           test -f out/markdown-pdf/mdmini.pdf
@@ -707,17 +788,17 @@ jobs:
           python3 tools/check_links.py out/markdown-pdf
           test -d out/markdown-pdf/pagefind
           # a failing command is a warning, not a failed build; and the command needs the print document
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+          tools/ci/dita --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-pdf-fail -Dgovuk.print=yes \
             "-Dgovuk.pdf.command=exit 3;" 2>&1 | tee pdf-fail.log
           grep -q '\[GOVK008W\]: the PDF command exited 3' pdf-fail.log
           test -f out/markdown-pdf-fail/index.html
           # ... and so is a command that succeeds without writing the PDF
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+          tools/ci/dita --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-pdf-empty -Dgovuk.print=yes \
             "-Dgovuk.pdf.command=true" 2>&1 | tee pdf-empty.log
           grep -q '\[GOVK008W\]: the PDF command exited 0 but wrote no file' pdf-empty.log
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+          tools/ci/dita --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-noprint "-Dgovuk.pdf.command=$formatter/bin/designsystempdf" 2>&1 | tee pdf-noprint.log
           grep -q '\[GOVK008W\]: govuk.pdf.command is set but govuk.print is not' pdf-noprint.log
           # #146: without a PDF no page links one, and nothing of the link is left
@@ -729,14 +810,14 @@ jobs:
           # #113: DesignSystemPDF is not installed here, so govuk.pdf=auto (the
           # default) makes no PDF and says why; yes stops the build; a value it
           # does not know stops it too
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+          tools/ci/dita --input fixtures/markdown-mini/mdmini.ditamap \
             --format govuk --output out/markdown-pdf-auto -Dgovuk.print=yes -Dgovuk.search=no --verbose 2>&1 | tee pdf-auto.log
           grep -q 'govuk: PDF disabled (govuk.pdf=auto; DesignSystemPDF not found on PATH)' pdf-auto.log
           test ! -e out/markdown-pdf-auto/mdmini.pdf
           absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/markdown-pdf-auto --include='*.html'
           for bad in "-Dgovuk.pdf=yes|govuk.pdf=yes but DesignSystemPDF was not found" "-Dgovuk.pdf=maybe|govuk.pdf must be 'auto', 'yes' or 'no'"; do
             arg=${bad%%|*}; want=${bad#*|}
-            if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/markdown-mini/mdmini.ditamap \
+            if tools/ci/dita --input fixtures/markdown-mini/mdmini.ditamap \
                  --format govuk --output out/markdown-pdf-bad -Dgovuk.print=yes "$arg" > pdf-bad.log 2>&1; then
               echo "$arg should have failed the build"; exit 1
             fi
@@ -748,9 +829,6 @@ jobs:
       # it, and the PDF it makes is linked and is PDF/UA-1 (#113, D-23). The
       # generator job tests the generator in this tree; this tests the join
       # against the release.
-      - name: Install veraPDF
-        uses: ./.github/actions/verapdf
-
       - name: The plugin with the released DesignSystemPDF (#113)
         run: |
           set -o pipefail
@@ -761,7 +839,7 @@ jobs:
           rm -rf "$RUNNER_TEMP/dspdf-release" && unzip -q dspdf.zip -d "$RUNNER_TEMP/dspdf-release" && rm dspdf.zip
           export PATH="$RUNNER_TEMP/dspdf-release/designsystempdf-${DSPDF_RELEASE}/bin:$PATH"
           designsystempdf --version | grep -qx "DesignSystemPDF ${DSPDF_RELEASE}"
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
+          tools/ci/dita --input docs/manual/manual.ditamap --format govuk \
             --output out/manual-dspdf-release -Dgovuk.print=yes -Dgovuk.search=no --verbose 2>&1 | tee dspdf-release.log > /dev/null
           grep -q 'govuk: PDF enabled (DesignSystemPDF found: designsystempdf)' dspdf-release.log
           absent -Eq 'GOVK008W|DSPDF' dspdf-release.log
@@ -804,13 +882,13 @@ jobs:
           gf=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
           grep -q "govuk-frontend-${gf}.min.js" out/kitchen/govuk/init.js
           # govuk.svg.sanitize=no keeps the file as authored and still warns
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+          tools/ci/dita --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen-raw -Dgovuk.svg.sanitize=no 2>&1 | tee kitchen-raw.log
           grep -q "alert('script inside svg')" out/kitchen-raw/topics/media.html
           grep -q 'onload=' out/kitchen-raw/topics/media.html
           grep -q "\[GOVK004W\].*kept (govuk.svg.sanitize=no)" kitchen-raw.log
           # govuk.content.policy=strip replaces the findings with placeholders; govuk.dates=both
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+          tools/ci/dita --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen-strip -Dgovuk.content.policy=strip -Dgovuk.dates=both 2>&1 | tee kitchen-strip.log
           absent -Eq 'src="https://example.org/remote.png"|javascript:|<object' out/kitchen-strip/topics/media.html
           test "$(grep -o 'app-content-stripped' out/kitchen-strip/topics/media.html | wc -l)" -ge 3
@@ -819,7 +897,7 @@ jobs:
           grep -q '<span class="app-page-dates__item">Last updated <time datetime="2026-09-07">7 September 2026</time></span>' out/kitchen-strip/topics/reference-full.html
           # #201: govuk.embed=yes links embed.js from every page's head and drops _top from
           # inlined SVG links; without it neither happens. The browser check is further down.
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+          tools/ci/dita --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen-embed -Dgovuk.embed=yes -Dgovuk.csp=meta \
             -Dgovuk.content.policy=strip
           grep -q '<script src="../govuk/embed.js"></script>' out/kitchen-embed/topics/media.html
@@ -829,26 +907,26 @@ jobs:
           grep -q 'xlink:href="reference-full.html" target="_top"' out/kitchen/topics/media.html
           absent -rq 'embed.js' out/kitchen --include=*.html
           # govuk.content.warnings=no is silent; govuk.dates=updated shows the last revision only
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap \
+          tools/ci/dita --input fixtures/dita13-kitchen/kitchen.ditamap \
             --format govuk --output out/kitchen-quiet -Dgovuk.content.warnings=no -Dgovuk.dates=updated 2>&1 | tee kitchen-quiet.log
           absent -q 'GOVK006W' kitchen-quiet.log
           grep -q 'Last updated <time datetime="2026-09-07">7 September 2026</time>' out/kitchen-quiet/topics/reference-full.html
           absent -q 'Published' out/kitchen-quiet/topics/reference-full.html
           # #80: a reference outside the input directory is not inlined by default (warned),
           # inlined with govuk.inline.scope=any (still warned)
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/inline-scope/scope.ditamap \
+          tools/ci/dita --input fixtures/inline-scope/scope.ditamap \
             --format govuk --output out/inline-scope 2>&1 | tee inline-scope.log
           grep -q "\[GOVK005W\].*linked.svg.*not inlined" inline-scope.log
           # the diagram's own <title> text proves inlining; the page chrome has SVG icons of its own
           absent -q 'Clickable diagram' "$(find out/inline-scope -name outside.html)"
           grep -q 'svgref' "$(find out/inline-scope -name outside.html)"
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/inline-scope/scope.ditamap \
+          tools/ci/dita --input fixtures/inline-scope/scope.ditamap \
             --format govuk --output out/inline-scope-any -Dgovuk.inline.scope=any 2>&1 | tee inline-scope-any.log
           grep -q "\[GOVK005W\].*linked.svg.*inlined (govuk.inline.scope=any)" inline-scope-any.log
           grep -q 'Clickable diagram' "$(find out/inline-scope-any -name outside.html)"
           # #60 + #82 + #61 on the manual: sitemap and robots, a CSP meta on every page
           # whose hash matches the one inline script, dates on (no manual topic has any)
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-csp -Dgovuk.site.url=https://example.org/manual \
             -Dgovuk.csp=meta -Dgovuk.dates=both -Dgovuk.print=yes
           python3 -c "import xml.dom.minidom; xml.dom.minidom.parse('out/manual-csp/sitemap.xml')"
@@ -879,8 +957,8 @@ jobs:
           test ! -f out/manual/sitemap.xml
           test ! -f out/manual/robots.txt
           absent -q 'Content-Security-Policy' out/manual/index.html
-          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-sitemap -Dgovuk.sitemap=yes; then echo "govuk.sitemap=yes without a URL should fail"; exit 1; fi
-          if "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-csp -Dgovuk.csp=bogus; then echo "govuk.csp=bogus should fail"; exit 1; fi
+          if tools/ci/dita --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-sitemap -Dgovuk.sitemap=yes; then echo "govuk.sitemap=yes without a URL should fail"; exit 1; fi
+          if tools/ci/dita --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-csp -Dgovuk.csp=bogus; then echo "govuk.csp=bogus should fail"; exit 1; fi
           # Every branding mode is same-origin only, so 'self' policies hold in all of them:
           # logos are inline SVG or copied assets, fonts and the (suppressed) crest are
           # root-relative paths the publisher hosts; nothing is fetched from gov.uk or nhs.uk
@@ -901,7 +979,7 @@ jobs:
           set -o pipefail
           absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
           has() { grep -qF "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
-          dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --format govuk -Dgovuk.search=no "$@"; }
+          dita() { tools/ci/dita --format govuk -Dgovuk.search=no "$@"; }
           # every tag, from where design 14 says it comes
           dita --input fixtures/metadata/metadata.ditamap --output out/metadata -Dgovuk.print=yes \
             -Dgovuk.site.url=https://example.org/metadata -Dgovuk.dates=both \
@@ -977,10 +1055,10 @@ jobs:
           python3 tools/check_metadata.py --level no out/metadata-no
           # no stylesheet names a scheme: a row added to a table is a tag
           t="dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata/dublincore.xml"
-          cp "$t" metadata-table.orig
+          cp -p "$t" metadata-table.orig
           sed -i 's#</kind>#  <property term="dct:spatial" as="DC.coverage"/>\n  </kind>#' "$t"
           dita --input fixtures/metadata/metadata.ditamap --output out/metadata-row > /dev/null
-          cp metadata-table.orig "$t"
+          cp -p metadata-table.orig "$t"
           has out/metadata-row/topics/check.html '<meta name="DC.coverage" content="http://statistics.data.gov.uk/id/statistical-geography/E92000001">'
           absent -rEq 'opengraph|dublincore|og:|DC\.' org.istanduk.gov-uk/xsl --include='*.xsl'
 
@@ -1033,6 +1111,7 @@ jobs:
       - name: Check output
         run: |
           set -e
+          absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
           # the vendored govuk-frontend release: written once, in VERSION.txt (#162)
           gf=$(tr -d '[:space:]' < org.istanduk.gov-uk/resource/govuk-frontend/VERSION.txt)
           page=out/manual/topics/introduction.html
@@ -1057,7 +1136,7 @@ jobs:
           # mainbooktitle only (F1); svgref renders as img without link class (F2);
           # keyref xrefs resolve; column spans and chunked headings survive
           grep -q '>ORUK Mini Test</a>' out/oruk-mini/item.html
-          ! grep -q 'booktitlealt\|long abstract' out/oruk-mini/item.html
+          absent -q 'booktitlealt\|long abstract' out/oruk-mini/item.html
           grep -q '<svg [^>]*role="img"' out/oruk-mini/class-page.html
           test -f out/oruk-mini/images/sample.svg
           grep -q 'colspan="3"' out/oruk-mini/item.html
@@ -1070,7 +1149,7 @@ jobs:
           grep -q 'app-attribution' out/manual/index.html
           grep -q 'govuk-body-l' out/oruk-mini/index.html
           grep -q 'app-attribution' out/oruk-mini/index.html
-          ! grep -q 'commonltr' out/manual/index.html
+          absent -q 'commonltr' out/manual/index.html
           test ! -f out/manual/commonltr.css
           # Navigation enhancement shipped (#9 / FR-N2, FR-N4)
           test -f out/manual/govuk/plugin.js
@@ -1090,7 +1169,7 @@ jobs:
           grep -q 'data-pagefind-body' out/manual/topics/introduction.html
           grep -q '<script src="govuk/search.js">' out/manual/search.html
           grep -q 'PagefindUI' out/manual/govuk/search.js
-          ! grep -q 'search.html' out/oruk-mini/item.html
+          absent -q 'search.html' out/oruk-mini/item.html
           test ! -d out/oruk-mini/pagefind
           # Landing-page layouts (#14 / D-13)
           grep -q 'app-entry__heading' out/manual/index.html
@@ -1100,7 +1179,7 @@ jobs:
           grep -q 'govuk-accordion__section' out/manual-accordion/index.html
           # govuk.homepage.depth=1: entry headings only, no child lists
           grep -q 'app-entry__heading' out/manual-depth1/index.html
-          ! grep -q 'app-group-list' out/manual-depth1/index.html
+          absent -q 'app-group-list' out/manual-depth1/index.html
           # Phase banner (govuk.phase, FR-T3/#49): shown on every page when set,
           # with the tag capitalised and the feedback link; absent by default
           grep -q 'govuk-phase-banner' out/manual-depth1/index.html
@@ -1108,7 +1187,7 @@ jobs:
           grep -q 'govuk-phase-banner' out/manual-depth1/glossary.html
           grep -q 'phase-banner__content__tag">Beta<' out/manual-depth1/index.html
           grep -q 'href="https://example.org/feedback"' out/manual-depth1/topics/introduction.html
-          ! grep -q 'govuk-phase-banner' out/manual/topics/introduction.html
+          absent -q 'govuk-phase-banner' out/manual/topics/introduction.html
           grep -q 'app-group-list' out/manual-grid/index.html
           # Manual documents the layouts with screenshots of itself
           grep -q 'homepage-grid.png' out/manual/topics/layouts.html
@@ -1117,26 +1196,26 @@ jobs:
           grep -q 'app-masthead__search' out/manual/topics/introduction.html
           grep -q 'app-masthead__search' out/manual/index.html
           grep -q 'govuk-footer__inline-list' out/manual/topics/introduction.html
-          ! grep -q 'app-masthead__search' out/oruk-mini/item.html
+          absent -q 'app-masthead__search' out/oruk-mini/item.html
           # Bookmap metadata in the footer on every page type (#42)
           grep -q '© 2026 iStandUK' out/manual/topics/introduction.html
           grep -q '© 2026 iStandUK' out/manual/index.html
           grep -q '© 2026 iStandUK' out/manual/glossary.html
           # author == owner: no redundant attribution line
-          ! grep -q 'app-footer__attribution' out/manual/topics/introduction.html
+          absent -q 'app-footer__attribution' out/manual/topics/introduction.html
           # author distinct from owner surfaces as a footer attribution (oruk-mini)
           grep -q '© The Open Referral Initiative' out/oruk-mini/item.html
           grep -q '© The Open Referral Initiative' out/oruk-mini/index.html
           grep -q 'By Open Referral' out/oruk-mini/item.html
           # plain map (no bookmeta) keeps the service-name fallback, no copyright
-          ! grep -q 'app-footer__attribution' out/kitchen/topics/blocks.html
-          ! grep -q '©' out/kitchen/topics/blocks.html
+          absent -q 'app-footer__attribution' out/kitchen/topics/blocks.html
+          absent -q '©' out/kitchen/topics/blocks.html
           # Glossary and index (#17, #18 / FR-G, FR-X)
           grep -q 'app-az-letter' out/manual/glossary.html
           grep -q '(DITA)' out/manual/glossary.html
           # glossary is self-contained: full definitions inline, no links to
           # per-entry pages (which do not exist for resource-only glossentries) (#34)
-          ! grep -q 'href="glossary/' out/manual/glossary.html
+          absent -q 'href="glossary/' out/manual/glossary.html
           # glossgroup members are harvested, not just standalone glossentry topics (#34)
           grep -q '>Saxon<' out/manual/glossary.html
           grep -q '>Pagefind<' out/manual/glossary.html
@@ -1149,7 +1228,7 @@ jobs:
           test -f out/manual/topics/accessibility.html
           grep -q 'Publishing your accessibility statement' out/manual/topics/accessibility.html
           grep -q 'accessibility.html' out/manual/index.html
-          ! grep -q 'glossary.html' out/oruk-mini/item.html
+          absent -q 'glossary.html' out/oruk-mini/item.html
           test ! -f out/oruk-mini/glossary.html
           test ! -f out/oruk-mini/index-page.html
           # Figure list / table list from bookmap booklists (#33 / FR-X)
@@ -1165,7 +1244,7 @@ jobs:
           # only generated when the bookmap requests them (oruk-mini booklists has toc only)
           test ! -f out/oruk-mini/figurelist.html
           test ! -f out/oruk-mini/tablelist.html
-          ! grep -q 'figurelist.html' out/oruk-mini/item.html
+          absent -q 'figurelist.html' out/oruk-mini/item.html
           # bookmap appendix builds and groups on the home page (auto layout, #33)
           test -f out/manual/topics/legal.html
           grep -q 'Licensing and legal' out/manual/index.html
@@ -1184,7 +1263,7 @@ jobs:
           grep -q '<object ' out/kitchen/topics/media.html
           # ditavalref branch filter removes only its subtree's excluded content
           grep -q 'Common content' out/kitchen/topics/branch.html
-          ! grep -q 'Draft-only' out/kitchen/topics/branch.html
+          absent -q 'Draft-only' out/kitchen/topics/branch.html
           # RTL: @dir and @xml:lang propagate to the page
           grep -q 'lang="ar"' out/kitchen/topics/rtl.html
           grep -q 'dir="rtl"' out/kitchen/topics/rtl.html
@@ -1195,7 +1274,7 @@ jobs:
           grep -q 'href="topics/blocks.html"' out/kitchen/index.html
           grep -q 'app-group-list' out/kitchen/index.html
           grep -q 'app-hazard__banner' out/kitchen/topics/hazard.html
-          ! grep -q 'govuk-warning-text"' out/kitchen/topics/hazard.html
+          absent -q 'govuk-warning-text"' out/kitchen/topics/hazard.html
           grep -q 'choicetable govuk-table' out/kitchen/topics/task-full.html
           # Task labels, troubleshooting labels, ui-d, dl/lq styling (#30, #31)
           grep -q '<h2 class="sectiontitle tasklabel">Procedure' out/kitchen/topics/task-full.html
@@ -1209,11 +1288,11 @@ jobs:
           grep -q '<svg ' out/kitchen/topics/media.html
           grep -Eq 'xlink:href="blocks.html"|href="blocks.html"' out/kitchen/topics/media.html
           grep -Eq 'xlink:href="reference-full.html"|href="reference-full.html"' out/kitchen/topics/media.html
-          ! grep -q '<img class="xref svgref"' out/kitchen/topics/media.html
-          ! grep -Eq 'cellpadding|cellspacing|choicetableborder' out/kitchen/topics/task-full.html out/kitchen/topics/reference-full.html
+          absent -q '<img class="xref svgref"' out/kitchen/topics/media.html
+          absent -Eq 'cellpadding|cellspacing|choicetableborder' out/kitchen/topics/task-full.html out/kitchen/topics/reference-full.html
           # Plugin CSS never names the restricted typeface; the tile wrapper ships
-          ! grep -q 'GDS Transport' out/manual/govuk/plugin.css
-          ! grep -q 'GDS Transport' out/manual/govuk/overlay-istanduk.css
+          absent -q 'GDS Transport' out/manual/govuk/plugin.css
+          absent -q 'GDS Transport' out/manual/govuk/overlay-istanduk.css
           grep -q 'app-tile' out/manual-grid/index.html
           # a grid row per three tiles, so uneven heights cannot pull a tile
           # into the row above (#202)
@@ -1229,17 +1308,17 @@ jobs:
           grep -q 'overlay-istanduk.css' out/manual-istanduk/topics/introduction.html
           grep -q 'istanduk-logo.svg' out/manual-istanduk/topics/introduction.html
           test -f out/manual-istanduk/govuk/istanduk-logo.svg
-          ! grep -q 'overlay-istanduk.css' out/manual/topics/introduction.html
+          absent -q 'overlay-istanduk.css' out/manual/topics/introduction.html
           test -z "$(find out/manual-istanduk -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # NHS branding (govuk.branding=nhs, #47): recoloured base CSS, no neutral overlay,
           # on topic pages AND the generated cover (both build their own CSS links)
           grep -q "govuk-frontend-${gf}-nhs.min.css" out/manual-nhs/topics/introduction.html
           grep -q "govuk-frontend-${gf}-nhs.min.css" out/manual-nhs/index.html
-          ! grep -q 'overlay-neutral.css' out/manual-nhs/topics/introduction.html
-          ! grep -q 'overlay-neutral.css' out/manual-nhs/index.html
+          absent -q 'overlay-neutral.css' out/manual-nhs/topics/introduction.html
+          absent -q 'overlay-neutral.css' out/manual-nhs/index.html
           grep -q '#005eb8' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
           grep -q 'Frutiger W01' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
-          ! grep -q 'GDS Transport' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
+          absent -q 'GDS Transport' "out/manual-nhs/govuk/govuk-frontend-${gf}-nhs.min.css"
           # NHS header identity (G3) and footer overlay (G4)
           test -f out/manual-nhs/govuk/overlay-nhs.css
           grep -q 'overlay-nhs.css' out/manual-nhs/topics/introduction.html
@@ -1247,14 +1326,14 @@ jobs:
           grep -q 'app-masthead__nhs-logo' out/manual-nhs/index.html
           grep -q 'aria-label="NHS"' out/manual-nhs/index.html
           # other brands never load the NHS overlay
-          ! grep -q 'overlay-nhs.css' out/manual/topics/introduction.html
-          ! grep -q 'overlay-nhs.css' out/manual-istanduk/topics/introduction.html
+          absent -q 'overlay-nhs.css' out/manual/topics/introduction.html
+          absent -q 'overlay-nhs.css' out/manual-istanduk/topics/introduction.html
           # NHS mode bundles no restricted font/crown assets either
           test -z "$(find out/manual-nhs -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
           # Official GOV.UK branding (govuk.branding=official, #47/#20): stock CSS
           # (the GOV.UK palette), the crown+wordmark header, OGL/crown-copyright footer
           grep -q "govuk-frontend-${gf}.min.css" out/manual-official/index.html
-          ! grep -q 'overlay-neutral.css' out/manual-official/index.html
+          absent -q 'overlay-neutral.css' out/manual-official/index.html
           grep -q 'overlay-official.css' out/manual-official/topics/introduction.html
           grep -q 'app-masthead__govuk-logo' out/manual-official/index.html
           grep -q 'aria-label="GOV.UK"' out/manual-official/index.html
@@ -1263,8 +1342,8 @@ jobs:
           # official ships no restricted font/crest asset (GDS Transport self-supplied;
           # the footer crest image is suppressed, not bundled)
           test -z "$(find out/manual-official -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
-          ! grep -q 'overlay-official.css' out/manual/topics/introduction.html
-          ! grep -q 'overlay-official.css' out/manual-nhs/topics/introduction.html
+          absent -q 'overlay-official.css' out/manual/topics/introduction.html
+          absent -q 'overlay-official.css' out/manual-nhs/topics/introduction.html
           # FR-T3 furniture params (#49): service URL, favicon, footer links/licence
           grep -q 'app-masthead__title" href="https://example.gov.uk"' out/manual-frt3/index.html
           grep -q 'app-masthead__title" href="https://example.gov.uk"' out/manual-frt3/topics/introduction.html
@@ -1275,13 +1354,13 @@ jobs:
           grep -q 'href="https://example.gov.uk/contact">Contact</a>' out/manual-frt3/glossary.html
           grep -q 'licence-description">© 2026 Example Service' out/manual-frt3/topics/introduction.html
           # defaults: none of these appear in a plain build
-          ! grep -q '<link rel="icon"' out/manual/topics/introduction.html
-          ! grep -q 'Example Service' out/manual/topics/introduction.html
+          absent -q '<link rel="icon"' out/manual/topics/introduction.html
+          absent -q 'Example Service' out/manual/topics/introduction.html
           # FR-T1: neutral builds ship no restricted assets and load no external
           # resources (external hyperlinks in content are fine; external assets are not)
           test -z "$(find out/manual out/oruk-mini -name '*.woff*' -o -name '*crest*' -o -name '*crown*')"
-          ! grep -Eroh 'src="https?://' out/manual out/oruk-mini --include='*.html'
-          ! grep -Eroh '<link[^>]*href="https?://' out/manual out/oruk-mini --include='*.html'
+          absent -Eroh 'src="https?://' out/manual out/oruk-mini --include='*.html'
+          absent -Eroh '<link[^>]*href="https?://' out/manual out/oruk-mini --include='*.html'
           echo "All output checks passed"
 
       # Verification NFRs (#35)
@@ -1300,10 +1379,10 @@ jobs:
 
       - name: Build determinism (FR-B6)
         run: |
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/det-a -Dgovuk.search=no -Dgovuk.print=yes \
             -Dgovuk.site.url=https://example.org/manual/ -Dgovuk.dates=both
-          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
+          tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/det-b -Dgovuk.search=no -Dgovuk.print=yes \
             -Dgovuk.site.url=https://example.org/manual/ -Dgovuk.dates=both
           diff -r out/det-a out/det-b && echo "double build is byte-identical"
@@ -1352,6 +1431,21 @@ jobs:
         with:
           name: manual-site-${{ env.DITA_OT_VERSION }}
           path: out/manual
+
+      # #217: how many builds were made ahead and used, and, the first time this
+      # workflow runs green, the manifest the next run makes its builds from
+      - name: Builds made ahead
+        if: always()
+        run: tools/ci/dita --report
+      - name: Keep the manifest of builds
+        if: success() && steps.manifest.outputs.cache-hit != 'true'
+        run: mkdir -p prebuild-manifest && cp "$PREBUILD_DIR/manifest.tsv" prebuild-manifest/manifest.tsv
+      - name: Save the manifest of builds
+        if: success() && steps.manifest.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: prebuild-manifest
+          key: ${{ steps.manifest.outputs.cache-primary-key }}
 
   # DesignSystemPDF (epic #105, D-23, D-25): the second product, built and
   # tested on its own. Its distribution carries an LGPL engine and open fonts
@@ -1688,11 +1782,39 @@ jobs:
           failed=0; count=0; ua2pass=0
           # the plugin's builds (govuk.pdf.command, govuk.pdf=auto, each branding
           # and option above), and the integration tests' renders
-          while IFS= read -r pdf; do
+          mapfile -t pdfs < <(find ./out/pdf ./designsystempdf/target/it -name '*.pdf' -not -path './out/pdf/pdf-ua-negative/*' | sort)
+          # One veraPDF run per flavour over every PDF, not three runs per PDF
+          # (#215): each file's verdict and failed rules are split out of the
+          # batch, matched by its exact path. A PDF the batch gives no verdict
+          # for is checked on its own, as before, so a surprise in the output
+          # costs time, never a wrong answer.
+          batch() { # flavour
+            local dir="$RUNNER_TEMP/vera-$1"
+            rm -rf "$dir" && mkdir -p "$dir"
+            verapdf --flavour "$1" --format text -v "${pdfs[@]}" 2> "$dir/err" | awk -v dir="$dir" -v list="$(printf '%s\n' "${pdfs[@]#./}")" '
+              BEGIN { n = split(list, p, "\n"); for (i = 1; i <= n; i++) if (p[i] != "") want[p[i]] = i }
+              /^(PASS|FAIL) / {
+                cur = ""
+                for (f = 2; f <= NF; f++) for (q in want)
+                  if ($f == q || (length($f) > length(q) && substr($f, length($f) - length(q)) == "/" q)) cur = want[q]
+              }
+              cur != "" { print > (dir "/" cur ".txt") }' || true
+          }
+          verdict() { # flavour, index, pdf
+            local f="$RUNNER_TEMP/vera-$1/$2.txt"
+            if [ -s "$f" ] && head -1 "$f" | grep -Eq '^(PASS|FAIL) '; then cat "$f"
+            else echo "veraPDF's batch gave no $1 verdict for $3; checking it on its own" >&2; vera --flavour "$1" --format text -v "$3"; fi
+          }
+          batch ua1
+          batch ua2
+          verapdf --flavour ua1 --format html "${pdfs[@]}" > pdf-ua-reports/pdf-ua-1.html 2> /dev/null \
+            || echo "::warning::veraPDF's HTML report could not be written; the text reports are complete"
+          i=0
+          for pdf in "${pdfs[@]}"; do
+            i=$((i + 1))
             name=$(printf '%s' "${pdf#./}" | tr '/' '_'); name=${name%.pdf}
-            vera --flavour ua1 --format html "$pdf" > "pdf-ua-reports/${name}.html"
-            ua1=$(vera --flavour ua1 --format text -v "$pdf")
-            ua2=$(vera --flavour ua2 --format text -v "$pdf")
+            ua1=$(verdict ua1 "$i" "$pdf")
+            ua2=$(verdict ua2 "$i" "$pdf")
             printf '%s\n' "$ua1" > "pdf-ua-reports/${name}.txt"
             printf '%s\n' "$ua2" > "pdf-ua-reports/${name}.ua2.txt"
             if printf '%s\n' "$ua1" | grep -q '^PASS '; then
@@ -1710,7 +1832,7 @@ jobs:
             fi
             echo "| \`${pdf#./}\` | ${one} | ${two} |" >> pdf-ua-reports/summary.md
             count=$((count + 1))
-          done < <(find ./out/pdf ./designsystempdf/target/it -name '*.pdf' -not -path './out/pdf/pdf-ua-negative/*' | sort)
+          done
           echo >> pdf-ua-reports/summary.md
           echo "${ua2pass} of ${count} would also meet PDF/UA-2." >> pdf-ua-reports/summary.md
           cat pdf-ua-reports/summary.md >> "$GITHUB_STEP_SUMMARY"

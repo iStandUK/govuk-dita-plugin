@@ -38,7 +38,9 @@ names (`feature/print-document`, `hotfix/1.0.1`).
    squash-merged (one commit per change); release and hotfix branches are merged with a
    merge commit so `main` and `dev` share history. With a single active maintainer the
    maintainer may merge their own pull request once `ci` is green; the repository rules
-   record any bypass of the review requirement.
+   record any bypass of the review requirement. When the merge queue is on for `dev`,
+   add the pull request to the queue rather than updating its branch by hand: the queue
+   tests `dev` with the queued changes applied and merges exactly what passed (#214).
 
 ## Commits
 
@@ -163,6 +165,15 @@ A self-hosted runner needs:
 - **Passwordless `sudo` for the runner's user,** for its `apt-get` installs: any of those tools that are missing, and Chromium's libraries for the accessibility checks. Java, Node, Maven and DITA-OT are fetched by the workflow.
 - **Room for about 3 GB** under the runner's work folder.
 - **Nothing it should not share.** Its jobs run this repository's code with the runner user's rights. Keep it separate from runners of private repositories, and from any credentials on the machine.
+
+Merge-queue runs use the self-hosted runner too. A pull request reaches the queue only when a maintainer adds it, so its code has been reviewed by then, fork or not.
+
+### How CI saves time (epic #220)
+
+- **No second test of the same files (#213).** A push to `dev` whose files were already tested passes at once: the merge queue tested that very commit, or the pull request it came from passed with its head holding exactly those files on top of the previous `dev`. In any doubt the full run goes ahead. Pushes to `main`, release and hotfix branches, and tags always run in full.
+- **Builds made ahead (#217).** The steps run DITA-OT through `tools/ci/dita`. The builds a run makes are noted in a manifest, cached under the workflow's hash; the next run makes them all ahead, a few at a time, and each step uses its build's result. A result is used only when it is certainly the same build (arguments, folder, `PATH`, Java options) and nothing it reads has changed since; otherwise the step builds live. After a change to the workflow, the first green run builds everything live and saves the manifest. A step that must build live, such as the read-only toolkit, calls DITA-OT directly.
+- **Faster JVM start-up (#218).** DITA-OT runs with `ANT_OPTS="-XX:TieredStopAtLevel=1 -XX:+UseSerialGC"`, which roughly halves a small build and leaves the output byte-identical; the determinism step checks that.
+- **PDF/UA in one pass per profile (#215)** and **accessibility pages checked a few at a time (#216)**: the same files and rules, fewer start-ups.
 
 ## Releases
 
