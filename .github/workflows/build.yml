@@ -85,6 +85,7 @@ jobs:
               if p.get("merge_commit_sha") == os.environ["GITHUB_SHA"] and p["base"]["ref"] == "dev":
                   print(p["number"], p["head"]["sha"]); break' 2> /dev/null) || full "the pull request could not be read"
           [ -n "$pr" ] || full "no pull request merged as this commit"
+          # shellcheck disable=SC2086 # split "number head-sha" into $1 and $2
           set -- $pr
           git fetch -q origin "pull/$1/head" || full "pull request #$1's head could not be fetched"
           git merge-base --is-ancestor HEAD^ "$2" || full "#$1's head did not contain the dev it was merged into"
@@ -1381,12 +1382,16 @@ jobs:
       - name: Page-weight budget (NFR-P2)
         run: python3 tools/page_weight.py --report --budget-kb 300 out/manual out/kitchen out/oruk-mini
 
+      # The second build calls DITA-OT directly, so it always runs live and
+      # later than the first, which is usually made ahead. Two builds made
+      # side by side in the prebuild could share a clock reading, and then a
+      # build that wrote the time into its output would still match.
       - name: Build determinism (FR-B6)
         run: |
           tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/det-a -Dgovuk.search=no -Dgovuk.print=yes \
             -Dgovuk.site.url=https://example.org/manual/ -Dgovuk.dates=both
-          tools/ci/dita --input docs/manual/manual.ditamap \
+          "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/det-b -Dgovuk.search=no -Dgovuk.print=yes \
             -Dgovuk.site.url=https://example.org/manual/ -Dgovuk.dates=both
           diff -r out/det-a out/det-b && echo "double build is byte-identical"
