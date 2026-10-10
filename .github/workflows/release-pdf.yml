@@ -71,14 +71,14 @@ jobs:
 
       - name: The asset unpacks, runs and renders
         run: |
-          rm -rf /tmp/dist && mkdir /tmp/dist && unzip -q "target/$ASSET" -d /tmp/dist
-          dspdf="/tmp/dist/designsystempdf-${VERSION}/bin/designsystempdf"
-          "$dspdf" --version | tee /tmp/version.txt
-          grep -q "^DesignSystemPDF ${VERSION}$" /tmp/version.txt
-          "$dspdf" --in src/test/resources/org/istanduk/designsystempdf/sample-print.html --out /tmp/sample.pdf | tee /tmp/sample.log
-          grep -q 'tagged PDF/UA-1' /tmp/sample.log
+          rm -rf "$RUNNER_TEMP/dist" && mkdir "$RUNNER_TEMP/dist" && unzip -q "target/$ASSET" -d "$RUNNER_TEMP/dist"
+          dspdf="$RUNNER_TEMP/dist/designsystempdf-${VERSION}/bin/designsystempdf"
+          "$dspdf" --version | tee "$RUNNER_TEMP/version.txt"
+          grep -q "^DesignSystemPDF ${VERSION}$" "$RUNNER_TEMP/version.txt"
+          "$dspdf" --in src/test/resources/org/istanduk/designsystempdf/sample-print.html --out "$RUNNER_TEMP/sample.pdf" | tee "$RUNNER_TEMP/sample.log"
+          grep -q 'tagged PDF/UA-1' "$RUNNER_TEMP/sample.log"
           # the launcher and the tests make the same file from the same document
-          cmp /tmp/sample.pdf target/it/sample.pdf
+          cmp "$RUNNER_TEMP/sample.pdf" target/it/sample.pdf
           echo "unpacked, ran and rendered $ASSET"
 
       # What the released zip renders passes veraPDF's own command line as well
@@ -90,11 +90,11 @@ jobs:
         run: |
           # veraPDF now and then fails to run at all: only a verdict counts
           for _ in 1 2 3; do
-            verapdf --flavour ua1 --format text -v /tmp/sample.pdf > /tmp/sample-ua.txt || true
-            grep -Eq '^(PASS|FAIL) ' /tmp/sample-ua.txt && break
+            verapdf --flavour ua1 --format text -v "$RUNNER_TEMP/sample.pdf" > "$RUNNER_TEMP/sample-ua.txt" || true
+            grep -Eq '^(PASS|FAIL) ' "$RUNNER_TEMP/sample-ua.txt" && break
           done
-          cat /tmp/sample-ua.txt
-          grep -q '^PASS ' /tmp/sample-ua.txt || { echo "the sample rendered by the released zip is not PDF/UA-1"; exit 1; }
+          cat "$RUNNER_TEMP/sample-ua.txt"
+          grep -q '^PASS ' "$RUNNER_TEMP/sample-ua.txt" || { echo "the sample rendered by the released zip is not PDF/UA-1"; exit 1; }
 
       - name: Keep the built assets with the run
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

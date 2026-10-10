@@ -1430,8 +1430,8 @@ jobs:
           grep -q "$NOTO_FONTS_COMMIT" fonts/README.md || { echo "fonts/README.md does not name commit $NOTO_FONTS_COMMIT"; exit 1; }
           for f in fonts/*.ttf; do
             n=$(basename "$f"); family=${n%%-*}
-            curl -sSfL -o "/tmp/$n" "https://raw.githubusercontent.com/notofonts/notofonts.github.io/${NOTO_FONTS_COMMIT}/fonts/${family}/hinted/ttf/${n}"
-            cmp "$f" "/tmp/$n" || { echo "vendored $n differs from its upstream at $NOTO_FONTS_COMMIT"; exit 1; }
+            curl -sSfL -o "$RUNNER_TEMP/$n" "https://raw.githubusercontent.com/notofonts/notofonts.github.io/${NOTO_FONTS_COMMIT}/fonts/${family}/hinted/ttf/${n}"
+            cmp "$f" "$RUNNER_TEMP/$n" || { echo "vendored $n differs from its upstream at $NOTO_FONTS_COMMIT"; exit 1; }
           done
           # no restricted typeface, ever
           if printf '%s\n' fonts/* | grep -Ei 'transport|frutiger'; then echo "a restricted typeface is in fonts/"; exit 1; fi
@@ -1482,8 +1482,8 @@ jobs:
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' pom.xml | head -1)
           zip="target/designsystempdf-${version}.zip"
           test -f "$zip"
-          rm -rf /tmp/dist && mkdir /tmp/dist && unzip -q "$zip" -d /tmp/dist
-          root="/tmp/dist/designsystempdf-${version}"
+          rm -rf "$RUNNER_TEMP/dist" && mkdir "$RUNNER_TEMP/dist" && unzip -q "$zip" -d "$RUNNER_TEMP/dist"
+          root="$RUNNER_TEMP/dist/designsystempdf-${version}"
           for f in bin/designsystempdf bin/designsystempdf.bat "lib/designsystempdf-${version}.jar" \
                    LICENSE THIRD-PARTY-NOTICES licenses/LGPL-2.1.txt fonts/OFL.txt fonts/README.md fonts/SHA256SUMS \
                    README.md CHANGELOG.md; do
@@ -1515,8 +1515,8 @@ jobs:
             grep -q "lib/${stem}-" THIRD-PARTY-NOTICES || [ "$stem" = designsystempdf ] || { echo "$n is not named in THIRD-PARTY-NOTICES"; exit 1; }
           done
           # the launcher runs with only its own lib/ on the class path
-          "$root/bin/designsystempdf" --version | tee /tmp/version.txt
-          grep -q "^DesignSystemPDF ${version}$" /tmp/version.txt
+          "$root/bin/designsystempdf" --version | tee "$RUNNER_TEMP/version.txt"
+          grep -q "^DesignSystemPDF ${version}$" "$RUNNER_TEMP/version.txt"
           echo "distribution verified: $(du -h "$zip" | cut -f1)"
 
       # The unpacked distribution, through its launcher, as a publisher runs it:
@@ -1526,19 +1526,19 @@ jobs:
         run: |
           . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' pom.xml | head -1)
-          dspdf="/tmp/dist/designsystempdf-${version}/bin/designsystempdf"
-          "$dspdf" --in "$GITHUB_WORKSPACE/out/pdf/manual/print.html" --out /tmp/manual.pdf 2>&1 | tee /tmp/manual.log
-          absent -q 'DSPDF' /tmp/manual.log
-          grep -q 'tagged PDF/UA-1' /tmp/manual.log
-          pages=$(sed -n 's/.* written, \([0-9]*\) pages.*/\1/p' /tmp/manual.log)
+          dspdf="$RUNNER_TEMP/dist/designsystempdf-${version}/bin/designsystempdf"
+          "$dspdf" --in "$GITHUB_WORKSPACE/out/pdf/manual/print.html" --out "$RUNNER_TEMP/manual.pdf" 2>&1 | tee "$RUNNER_TEMP/manual.log"
+          absent -q 'DSPDF' "$RUNNER_TEMP/manual.log"
+          grep -q 'tagged PDF/UA-1' "$RUNNER_TEMP/manual.log"
+          pages=$(sed -n 's/.* written, \([0-9]*\) pages.*/\1/p' "$RUNNER_TEMP/manual.log")
           test "${pages:-0}" -ge 40 || { echo "the manual should run to 40 pages or more, was: ${pages:-none}"; exit 1; }
-          cmp /tmp/manual.pdf target/it/manual-print.html.pdf
+          cmp "$RUNNER_TEMP/manual.pdf" target/it/manual-print.html.pdf
           # a contract this release does not know is refused, and nothing is written
-          sed 's/govuk-print-contract" content="1"/govuk-print-contract" content="2"/' "$GITHUB_WORKSPACE/out/pdf/manual/print.html" > /tmp/future.html
-          rc=0; "$dspdf" --in /tmp/future.html --out /tmp/future.pdf 2> /tmp/future.log || rc=$?
+          sed 's/govuk-print-contract" content="1"/govuk-print-contract" content="2"/' "$GITHUB_WORKSPACE/out/pdf/manual/print.html" > "$RUNNER_TEMP/future.html"
+          rc=0; "$dspdf" --in "$RUNNER_TEMP/future.html" --out "$RUNNER_TEMP/future.pdf" 2> "$RUNNER_TEMP/future.log" || rc=$?
           test "$rc" = 3 || { echo "expected exit code 3 for an unknown contract, was $rc"; exit 1; }
-          grep -q '^\[DSPDF002E\]' /tmp/future.log
-          test ! -e /tmp/future.pdf
+          grep -q '^\[DSPDF002E\]' "$RUNNER_TEMP/future.log"
+          test ! -e "$RUNNER_TEMP/future.pdf"
           echo "the launcher rendered the manual: $pages pages"
 
       # The two products together, as the manual tells a publisher to use them:
@@ -1550,11 +1550,11 @@ jobs:
           set -o pipefail
           . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
-          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          export PATH="$RUNNER_TEMP/dist/designsystempdf-${version}/bin:$PATH"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
             --output out/pdf/manual-site -Dgovuk.print=yes -Dgovuk.search=no \
-            -Dgovuk.pdf.command=designsystempdf 2>&1 | tee /tmp/manual-site.log
-          absent -Eq 'GOVK008W|DSPDF' /tmp/manual-site.log
+            -Dgovuk.pdf.command=designsystempdf 2>&1 | tee "$RUNNER_TEMP/manual-site.log"
+          absent -Eq 'GOVK008W|DSPDF' "$RUNNER_TEMP/manual-site.log"
           pdf=out/pdf/manual-site/manual.pdf
           test -f "$pdf"
           bytes=$(stat -c %s "$pdf")
@@ -1568,15 +1568,15 @@ jobs:
           # made — and a run with nothing to say (the manual, above) adds nothing. The
           # kitchen-sink fixture has Arabic text the bundled fonts cannot draw (the known
           # defect #153), so the generator warns; the PDF is still made and linked.
-          absent -q 'the PDF command reported' /tmp/manual-site.log
+          absent -q 'the PDF command reported' "$RUNNER_TEMP/manual-site.log"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/dita13-kitchen/kitchen.ditamap --format govuk \
             --output out/pdf/kitchen-site -Dgovuk.print=yes -Dgovuk.search=no \
-            -Dgovuk.pdf.command=designsystempdf 2>&1 | tee /tmp/kitchen-site.log
-          grep -q 'govuk: the PDF was written, and the PDF command reported:' /tmp/kitchen-site.log
-          grep -q '\[DSPDF004W\]: .*ARABIC LETTER' /tmp/kitchen-site.log
+            -Dgovuk.pdf.command=designsystempdf 2>&1 | tee "$RUNNER_TEMP/kitchen-site.log"
+          grep -q 'govuk: the PDF was written, and the PDF command reported:' "$RUNNER_TEMP/kitchen-site.log"
+          grep -q '\[DSPDF004W\]: .*ARABIC LETTER' "$RUNNER_TEMP/kitchen-site.log"
           # ... and the right-to-left text is reported for what it is (#153)
-          grep -q '\[DSPDF010W\]: the document has text in a right-to-left script' /tmp/kitchen-site.log
-          absent -q 'GOVK008W' /tmp/kitchen-site.log
+          grep -q '\[DSPDF010W\]: the document has text in a right-to-left script' "$RUNNER_TEMP/kitchen-site.log"
+          absent -q 'GOVK008W' "$RUNNER_TEMP/kitchen-site.log"
           test -f out/pdf/kitchen-site/kitchen.pdf
           grep -q 'href="kitchen.pdf">Whole publication (PDF, ' out/pdf/kitchen-site/index.html
 
@@ -1590,31 +1590,31 @@ jobs:
           set -o pipefail
           . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
-          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          export PATH="$RUNNER_TEMP/dist/designsystempdf-${version}/bin:$PATH"
           dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk -Dgovuk.search=no --verbose "$@"; }
-          dita --output out/pdf/manual-auto -Dgovuk.print=yes -Dgovuk.pdf.paper=A5 -Dgovuk.print.toc.depth=8 2>&1 | tee /tmp/manual-auto.log
-          grep -q 'govuk: PDF enabled (DesignSystemPDF found: designsystempdf)' /tmp/manual-auto.log
-          grep -q 'with: designsystempdf --paper "A5" --orientation portrait --toc-depth 6$' /tmp/manual-auto.log
-          absent -Eq 'GOVK008W|DSPDF' /tmp/manual-auto.log
+          dita --output out/pdf/manual-auto -Dgovuk.print=yes -Dgovuk.pdf.paper=A5 -Dgovuk.print.toc.depth=8 2>&1 | tee "$RUNNER_TEMP/manual-auto.log"
+          grep -q 'govuk: PDF enabled (DesignSystemPDF found: designsystempdf)' "$RUNNER_TEMP/manual-auto.log"
+          grep -q 'with: designsystempdf --paper "A5" --orientation portrait --toc-depth 6$' "$RUNNER_TEMP/manual-auto.log"
+          absent -Eq 'GOVK008W|DSPDF' "$RUNNER_TEMP/manual-auto.log"
           test -f out/pdf/manual-auto/manual.pdf
           grep -q 'href="manual.pdf">Whole publication (PDF, ' out/pdf/manual-auto/index.html
-          dita --output out/pdf/manual-auto-no -Dgovuk.print=yes -Dgovuk.pdf=no 2>&1 | tee /tmp/manual-auto-no.log
-          grep -q 'govuk: PDF disabled (govuk.pdf=no)' /tmp/manual-auto-no.log
+          dita --output out/pdf/manual-auto-no -Dgovuk.print=yes -Dgovuk.pdf=no 2>&1 | tee "$RUNNER_TEMP/manual-auto-no.log"
+          grep -q 'govuk: PDF disabled (govuk.pdf=no)' "$RUNNER_TEMP/manual-auto-no.log"
           test ! -e out/pdf/manual-auto-no/manual.pdf
           absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/pdf/manual-auto-no --include='*.html'
-          dita --output out/pdf/manual-auto-noprint 2>&1 | tee /tmp/manual-auto-noprint.log
-          grep -q "govuk: PDF disabled (DesignSystemPDF found, but govuk.print is not 'yes')" /tmp/manual-auto-noprint.log
+          dita --output out/pdf/manual-auto-noprint 2>&1 | tee "$RUNNER_TEMP/manual-auto-noprint.log"
+          grep -q "govuk: PDF disabled (DesignSystemPDF found, but govuk.print is not 'yes')" "$RUNNER_TEMP/manual-auto-noprint.log"
           test ! -e out/pdf/manual-auto-noprint/manual.pdf
           # yes needs the print document
-          if dita --output out/pdf/manual-auto-bad -Dgovuk.pdf=yes > /tmp/manual-auto-bad.log 2>&1; then
+          if dita --output out/pdf/manual-auto-bad -Dgovuk.pdf=yes > "$RUNNER_TEMP/manual-auto-bad.log" 2>&1; then
             echo "govuk.pdf=yes without govuk.print=yes should have failed the build"; exit 1
           fi
-          grep -q 'govuk.pdf=yes needs govuk.print=yes' /tmp/manual-auto-bad.log
+          grep -q 'govuk.pdf=yes needs govuk.print=yes' "$RUNNER_TEMP/manual-auto-bad.log"
           # #174: above the topic ceiling there is no print document, so no PDF,
           # and the build says why in so many words, with the limit in force
-          dita --output out/pdf/manual-auto-ceiling -Dgovuk.print=yes -Dgovuk.print.max-topics=3 2>&1 | tee /tmp/manual-auto-ceiling.log > /dev/null
-          grep -q '\[GOVK003W\]' /tmp/manual-auto-ceiling.log
-          grep -qF '[GOVK008W]: no PDF was made, because no print document was written. It is skipped when the publication has more topic files than govuk.print.max-topics=3' /tmp/manual-auto-ceiling.log
+          dita --output out/pdf/manual-auto-ceiling -Dgovuk.print=yes -Dgovuk.print.max-topics=3 2>&1 | tee "$RUNNER_TEMP/manual-auto-ceiling.log" > /dev/null
+          grep -q '\[GOVK003W\]' "$RUNNER_TEMP/manual-auto-ceiling.log"
+          grep -qF '[GOVK008W]: no PDF was made, because no print document was written. It is skipped when the publication has more topic files than govuk.print.max-topics=3' "$RUNNER_TEMP/manual-auto-ceiling.log"
           test ! -e out/pdf/manual-auto-ceiling/manual.pdf
           absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-->|application/pdf' out/pdf/manual-auto-ceiling --include='*.html'
 
@@ -1627,41 +1627,41 @@ jobs:
           set -o pipefail
           . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
-          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          export PATH="$RUNNER_TEMP/dist/designsystempdf-${version}/bin:$PATH"
           dita() { "dita-ot-${DITA_OT_VERSION}/bin/dita" --format govuk -Dgovuk.search=no -Dgovuk.print=yes "$@"; }
           made() { # output folder, PDF name, log
             test -f "$1/$2.pdf" || { echo "no PDF in $1"; exit 1; }
             absent -q 'GOVK008W' "$3"
           }
           for b in istanduk nhs official; do
-            dita --input docs/manual/manual.ditamap --output "out/pdf/manual-$b" "-Dgovuk.branding=$b" 2>&1 | tee "/tmp/manual-$b.log" > /dev/null
-            made "out/pdf/manual-$b" manual "/tmp/manual-$b.log"
+            dita --input docs/manual/manual.ditamap --output "out/pdf/manual-$b" "-Dgovuk.branding=$b" 2>&1 | tee "$RUNNER_TEMP/manual-$b.log" > /dev/null
+            made "out/pdf/manual-$b" manual "$RUNNER_TEMP/manual-$b.log"
           done
           # the manual's own sample publisher stylesheet (#142)
           dita --input docs/manual/manual.ditamap --output out/pdf/manual-custom \
-            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes 2>&1 | tee /tmp/manual-custom.log > /dev/null
-          made out/pdf/manual-custom manual /tmp/manual-custom.log
+            -Dargs.css=custom.css "-Dargs.cssroot=$PWD/docs/manual/samples" -Dargs.copycss=yes 2>&1 | tee "$RUNNER_TEMP/manual-custom.log" > /dev/null
+          made out/pdf/manual-custom manual "$RUNNER_TEMP/manual-custom.log"
           # the generator's options: mirrored narrow margins, and A5 landscape with one level of bookmarks
           dita --input fixtures/dita13-kitchen/kitchen.ditamap --output out/pdf/kitchen-double \
-            "-Dgovuk.pdf.command=designsystempdf --sides double --margins narrow" 2>&1 | tee /tmp/kitchen-double.log > /dev/null
-          made out/pdf/kitchen-double kitchen /tmp/kitchen-double.log
+            "-Dgovuk.pdf.command=designsystempdf --sides double --margins narrow" 2>&1 | tee "$RUNNER_TEMP/kitchen-double.log" > /dev/null
+          made out/pdf/kitchen-double kitchen "$RUNNER_TEMP/kitchen-double.log"
           dita --input docs/manual/manual.ditamap --output out/pdf/manual-a5 \
-            -Dgovuk.pdf.paper=A5 -Dgovuk.pdf.orientation=landscape -Dgovuk.print.toc.depth=1 2>&1 | tee /tmp/manual-a5.log > /dev/null
-          made out/pdf/manual-a5 manual /tmp/manual-a5.log
+            -Dgovuk.pdf.paper=A5 -Dgovuk.pdf.orientation=landscape -Dgovuk.print.toc.depth=1 2>&1 | tee "$RUNNER_TEMP/manual-a5.log" > /dev/null
+          made out/pdf/manual-a5 manual "$RUNNER_TEMP/manual-a5.log"
           # the linked topics printed beneath the ones that link to them (#176)
           dita --input fixtures/print-scope/scope.ditamap --output out/pdf/print-scope-linked \
-            -Dgovuk.print.scope=linked 2>&1 | tee /tmp/print-scope-linked.log > /dev/null
-          made out/pdf/print-scope-linked scope /tmp/print-scope-linked.log
+            -Dgovuk.print.scope=linked 2>&1 | tee "$RUNNER_TEMP/print-scope-linked.log" > /dev/null
+          made out/pdf/print-scope-linked scope "$RUNNER_TEMP/print-scope-linked.log"
           # several books from one map (#178): a PDF of the whole set and one per
           # book, each linked with its size from the home page and the book's pages
-          dita --input fixtures/books-omnibus/library.ditamap --output out/pdf/books-omnibus 2>&1 | tee /tmp/books-omnibus.log > /dev/null
-          for n in library library-alpha library-beta; do made out/pdf/books-omnibus "$n" /tmp/books-omnibus.log; done
+          dita --input fixtures/books-omnibus/library.ditamap --output out/pdf/books-omnibus 2>&1 | tee "$RUNNER_TEMP/books-omnibus.log" > /dev/null
+          for n in library library-alpha library-beta; do made out/pdf/books-omnibus "$n" "$RUNNER_TEMP/books-omnibus.log"; done
           grep -Eq 'href="library-alpha.pdf">The alpha book \(PDF, [0-9.]+ [KM]B\)</a>' out/pdf/books-omnibus/index.html
           grep -Eq 'href="../library-beta.pdf">The beta book \(PDF, [0-9.]+ [KM]B\)</a>' out/pdf/books-omnibus/beta/b1.html
           absent -rEq 'GOVUK_PDF_SIZE|govuk-pdf-|govuk-book' out/pdf/books-omnibus --include='*.html'
           dita --input fixtures/books-parts/volumes.ditamap --output out/pdf/books-parts -Dgovuk.print.books=parts \
-            2>&1 | tee /tmp/books-parts.log > /dev/null
-          for n in volumes volumes-planning volumes-building; do made out/pdf/books-parts "$n" /tmp/books-parts.log; done
+            2>&1 | tee "$RUNNER_TEMP/books-parts.log" > /dev/null
+          for n in volumes volumes-planning volumes-building; do made out/pdf/books-parts "$n" "$RUNNER_TEMP/books-parts.log"; done
           echo "made the PDF in three brandings, with a publisher stylesheet, and with the generator's options"
 
       # #164: every PDF this job makes, by any route, is checked with veraPDF's
@@ -1690,10 +1690,10 @@ jobs:
           vera() {
             local out rc _
             for _ in 1 2 3; do
-              out=$(verapdf "$@" 2> /tmp/vera.err) && rc=0 || rc=$?
+              out=$(verapdf "$@" 2> "$RUNNER_TEMP/vera.err") && rc=0 || rc=$?
               if printf '%s\n' "$out" | grep -Eq '^(PASS|FAIL) |</html>'; then break; fi
               echo "veraPDF gave no verdict (exit $rc) on $*; trying again" >&2
-              grep -m1 -E 'Exception|Error' /tmp/vera.err >&2 || true
+              grep -m1 -E 'Exception|Error' "$RUNNER_TEMP/vera.err" >&2 || true
             done
             printf '%s\n' "$out"
           }
@@ -1737,21 +1737,21 @@ jobs:
         run: |
           set -o pipefail
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' designsystempdf/pom.xml | head -1)
-          export PATH="/tmp/dist/designsystempdf-${version}/bin:$PATH"
+          export PATH="$RUNNER_TEMP/dist/designsystempdf-${version}/bin:$PATH"
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input fixtures/pdf-ua-negative/negative.ditamap --format govuk \
-            --output out/pdf/pdf-ua-negative -Dgovuk.print=yes -Dgovuk.search=no 2>&1 | tee /tmp/negative.log
-          grep -q '\[DSPDF009W\]: 1 image with no alternative text' /tmp/negative.log
+            --output out/pdf/pdf-ua-negative -Dgovuk.print=yes -Dgovuk.search=no 2>&1 | tee "$RUNNER_TEMP/negative.log"
+          grep -q '\[DSPDF009W\]: 1 image with no alternative text' "$RUNNER_TEMP/negative.log"
           pdf=out/pdf/pdf-ua-negative/negative.pdf
           test -f "$pdf"
           # only a verdict counts: a run that fails to run at all is tried again
           for _ in 1 2 3; do
-            rc=0; verapdf --flavour ua1 --format text -v "$pdf" > /tmp/negative-ua.txt || rc=$?
-            grep -Eq '^(PASS|FAIL) ' /tmp/negative-ua.txt && break
+            rc=0; verapdf --flavour ua1 --format text -v "$pdf" > "$RUNNER_TEMP/negative-ua.txt" || rc=$?
+            grep -Eq '^(PASS|FAIL) ' "$RUNNER_TEMP/negative-ua.txt" && break
           done
-          cat /tmp/negative-ua.txt
+          cat "$RUNNER_TEMP/negative-ua.txt"
           test "$rc" = 1 || { echo "veraPDF should exit 1 for a non-compliant PDF, was $rc"; exit 1; }
-          grep -q '^FAIL ' /tmp/negative-ua.txt
-          grep -q 'FAIL 7.3-1' /tmp/negative-ua.txt
+          grep -q '^FAIL ' "$RUNNER_TEMP/negative-ua.txt"
+          grep -q 'FAIL 7.3-1' "$RUNNER_TEMP/negative-ua.txt"
           echo "the inaccessible PDF was rejected"
 
       - name: Upload the distribution
