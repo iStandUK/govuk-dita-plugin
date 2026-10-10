@@ -88,8 +88,8 @@ jobs:
         run: |
           (cd designsystempdf && mvn -B -ntp --strict-checksums -DskipTests package)
           zip=$(ls designsystempdf/target/designsystempdf-*.zip)
-          rm -rf /tmp/dist && mkdir /tmp/dist && unzip -q "$zip" -d /tmp/dist
-          bin=$(ls -d /tmp/dist/designsystempdf-*/bin)
+          rm -rf "$RUNNER_TEMP/dist" && mkdir "$RUNNER_TEMP/dist" && unzip -q "$zip" -d "$RUNNER_TEMP/dist"
+          bin=$(ls -d "$RUNNER_TEMP/dist/designsystempdf-"*/bin)
           echo "$bin" >> "$GITHUB_PATH"
           "$bin/designsystempdf" --version
 
@@ -105,8 +105,8 @@ jobs:
           absent() { if grep "$@"; then echo "unexpected match: $*"; exit 1; fi; }
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap --format govuk \
             --output "out/$MANUAL" -Dgovuk.branding=istanduk -Dgovuk.print=yes -Dgovuk.pdf=yes \
-            -Dgovuk.search=yes "-Dgovuk.pdf.name=$MANUAL" 2>&1 | tee /tmp/manual.log
-          absent -Eq 'GOVK008W|DSPDF' /tmp/manual.log
+            -Dgovuk.search=yes "-Dgovuk.pdf.name=$MANUAL" 2>&1 | tee "$RUNNER_TEMP/manual.log"
+          absent -Eq 'GOVK008W|DSPDF' "$RUNNER_TEMP/manual.log"
           site="out/$MANUAL"
           for f in index.html print.html "$MANUAL.pdf" pagefind/pagefind.js; do
             test -f "$site/$f" || { echo "the released manual has no $f"; exit 1; }
@@ -119,20 +119,20 @@ jobs:
           # and its PDF meets PDF/UA-1
           # veraPDF now and then fails to run at all: only a verdict counts
           for _ in 1 2 3; do
-            verapdf --flavour ua1 --format text -v "$site/$MANUAL.pdf" > /tmp/manual-ua.txt || true
-            grep -Eq '^(PASS|FAIL) ' /tmp/manual-ua.txt && break
+            verapdf --flavour ua1 --format text -v "$site/$MANUAL.pdf" > "$RUNNER_TEMP/manual-ua.txt" || true
+            grep -Eq '^(PASS|FAIL) ' "$RUNNER_TEMP/manual-ua.txt" && break
           done
-          cat /tmp/manual-ua.txt
-          grep -q '^PASS ' /tmp/manual-ua.txt || { echo "the manual's PDF is not PDF/UA-1"; exit 1; }
+          cat "$RUNNER_TEMP/manual-ua.txt"
+          grep -q '^PASS ' "$RUNNER_TEMP/manual-ua.txt" || { echo "the manual's PDF is not PDF/UA-1"; exit 1; }
 
       - name: Package the manual and its checksums
         run: |
           cp "out/$MANUAL/$MANUAL.pdf" "$MANUAL.pdf"
           # the site as one folder, entries sorted and stamped with the commit's
           # date, so the same tag gives the same zip
-          rm -rf "/tmp/$MANUAL" && cp -r "out/$MANUAL" "/tmp/$MANUAL"
-          find "/tmp/$MANUAL" -exec touch -h -d "@${SOURCE_DATE_EPOCH}" {} +
-          (cd /tmp && find "$MANUAL" -print | LC_ALL=C sort | TZ=UTC zip -qX "$GITHUB_WORKSPACE/$MANUAL.zip" -@)
+          rm -rf "${RUNNER_TEMP:?}/${MANUAL:?}" && cp -r "out/$MANUAL" "$RUNNER_TEMP/$MANUAL"
+          find "$RUNNER_TEMP/$MANUAL" -exec touch -h -d "@${SOURCE_DATE_EPOCH}" {} +
+          (cd "$RUNNER_TEMP" && find "$MANUAL" -print | LC_ALL=C sort | TZ=UTC zip -qX "$GITHUB_WORKSPACE/$MANUAL.zip" -@)
           unzip -Z1 "$MANUAL.zip" | grep -x "${MANUAL}/index.html" > /dev/null
           for f in "$MANUAL.pdf" "$MANUAL.zip"; do sha256sum "$f" > "$f.sha256"; cat "$f.sha256"; done
 
