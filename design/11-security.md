@@ -53,6 +53,7 @@ Every branding mode references no other origin in HTML or CSS; the CSP build is 
 
 - **DITA-OT's parser** and preprocessing (XXE, DTD resolution, chunking) are the toolkit's; the plugin documents the boundary and routes reports.
 - **Hosts without header control** get a `<meta>` policy, which cannot express `frame-ancestors`; the manual says so.
+- **Framed pages** (`govuk.embed`, #201): a host that frames its own pages relaxes `frame-ancestors 'none'` to `'self'` or the framing origin; the manual says so. The embedded view adds a same-origin script file, not an inline script, so the published hash is unchanged.
 - **Publisher-hosted fonts on another origin** need a literal policy; `meta` is same-origin by design.
 - **Dates and authorship** come from the source; the plugin shows them only when asked (#61).
 - **Third-party runtime code** (govuk-frontend, Pagefind UI) is pinned and self-hosted, not audited by this project; Dependabot and the release-zip guard notice changes, they do not judge them.

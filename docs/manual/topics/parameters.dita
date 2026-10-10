@@ -70,6 +70,15 @@
                 ships no favicon.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.css.assets</codeph></entry>
+              <entry>a folder; empty by default</entry>
+              <entry>A folder of files the <codeph>args.css</codeph> stylesheet refers to with
+                <codeph>url()</codeph>, such as fonts and images. Its contents are copied, with
+                their subfolders, beside the stylesheet (into <codeph>args.csspath</codeph>).
+                Empty copies nothing; a name that is not a folder gives
+                <codeph>GOVK013W</codeph>. See <xref keyref="custom-css"/>.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.footer.links</codeph></entry>
               <entry>text</entry>
               <entry>Extra footer links as a <codeph>;</codeph>-separated list of
@@ -266,6 +275,15 @@
                 value is emitted as given. Content the policy would block is reported
                 (<codeph>GOVK007W</codeph>). Hosts that can set headers should prefer a
                 header, which can also carry <codeph>frame-ancestors</codeph>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.embed</codeph></entry>
+              <entry><codeph>no</codeph> (default) or <codeph>yes</codeph></entry>
+              <entry><codeph>yes</codeph> lets a page that the publisher frames, opened with
+                <codeph>?embed=1</codeph>, show its content only, and keeps the reader's links
+                inside the frame. Ignored, with <codeph>GOVK014W</codeph>, under the
+                <codeph>official</codeph> and <codeph>nhs</codeph> branding. See
+                <xref keyref="embedding"/>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.site.url</codeph></entry>
