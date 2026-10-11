@@ -613,3 +613,39 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 **Rejected:** (b) reproduces the old behaviour exactly but conflicts with the strict policy the plugin publishes and puts untested code on every page. (c) leaves the problem where it was.
 
 **Consequences:** FR-N9. NFR-A3 holds (without JavaScript the page is complete); NFR-S3 holds (no inline script; framing remains the host's `frame-ancestors` choice, which the manual explains). An SVG shown through DITA's `<object>` keeps its own targets; the page cannot reach into it.
+
+---
+
+## D-29 · Navigation shows titles; a description is text on the page, never a hover tooltip
+
+**Date:** 2026-10-09. Sponsor's decision, from moving the contsys.org publication off Oxygen WebHelp. WebHelp's contents tree showed each topic's short description in a tooltip on mouse hover; the plugin's sidebar shows none.
+
+**Options:**
+
+- (a) The target's short description as a `title` attribute on sidebar, contents-list and home-page links.
+- (b) A tooltip or toggletip of the plugin's own. It would have to appear on focus as well as on hover, be dismissible with Escape, stay put while pointed at (WCAG 2.2 SC 1.4.13), and work on touch screens.
+- (c) No tooltips on navigation. The link text is the title, and a description is visible text wherever the plugin shows one.
+
+**Decision:** (c).
+
+**Rationale:**
+
+- **(a) puts the description where many readers can't reach it.** The Design System has no tooltip component, and its team's position is not to rely on `title` tooltips ([alphagov/govuk-design-system#1289](https://github.com/alphagov/govuk-design-system/issues/1289)):
+  - they can't be used on touch screens;
+  - they ignore page zoom and text customisation;
+  - screen readers either read them verbosely or ignore them.
+
+  Browsers also don't show a `title` on keyboard focus.
+- **(b) would make the plugin the author of a component the Design System has chosen not to provide**, for a convenience: the same words are on the page the link leads to.
+- **On a large tree the cost is real.** A 172-concept publication has 194 sidebar links on every page, and each would gain a sentence for screen-reader users to hear.
+- **Where a description helps a reader choose, the plugin already shows it as text:**
+  - beneath each entry on the home page (`govuk.homepage.layout`, `govuk.homepage.depth`);
+  - in a topic's list of its children;
+  - under every topic's own title.
+
+**Consequences:**
+
+- Sidebar, contents-list and home-page links carry no `title`.
+- Publishers moving from WebHelp lose its hover descriptions in the contents tree. The manual's navigation topic says so, and where the descriptions appear instead.
+- **Not changed:** two `title` tooltips are inherited from the toolkit and supplement the linked page rather than replace it: the one DITA-OT puts on in-text cross-references (the target's short description), and the glossary's definition tooltip (FR-G2). Whether to remove them is a separate question.
+- **Revisit** if the Design System publishes a tooltip or toggletip component.

@@ -18,6 +18,10 @@ then:
 
 Build determinism (FR-B6) is checked in CI by building twice and comparing byte-for-byte.
 
+`ci/assert.sh` holds the workflow's negative check, `absent GREP-ARGS...`: grep must find no
+match, and a missing file fails as well. Steps source it (`. "$GITHUB_WORKSPACE/tools/ci/assert.sh"`)
+because bash -e ignores a negated `! grep` (#209).
+
 The accessibility tools need their dependencies once:
 
 ```
