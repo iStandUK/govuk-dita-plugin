@@ -25,7 +25,7 @@ Both therefore treat Open Graph plus JSON-LD as the baseline, with the JSON-LD t
 - **Google recommends JSON-LD** and accepts microdata and RDFa equally; markup must be valid and reflect visible content. **Article** structured data (headline, image, `datePublished`, `dateModified`, author) is used for article results and "last updated" signals; **BreadcrumbList** is used to render breadcrumb trails in results; **Organization** (logo, `sameAs`) feeds knowledge panels; **Dataset** feeds Dataset Search.
 - **HowTo** rich results were deprecated in September 2023 and the documentation removed. **FAQ** rich results were restricted to authoritative government and health sites in August 2023, deprecated in May 2026 and the documentation removed. The **sitelinks search box** (`WebSite` + `SearchAction`) was withdrawn in 2024 and its documentation removed. The vocabularies remain valid schema.org and other consumers may read them, but no search feature rewards them now.
 - **Open Graph** and `twitter:card` drive the link preview in Teams, Slack, LinkedIn, X, Mastodon, WhatsApp and most chat and mail clients — the place a government publication is most often shared. Without them a shared link shows a bare URL or a scraped first paragraph.
-- **AI crawlers** read JSON-LD and `description`; the `llms.txt` convention (a plain-text index at the site root) is gaining adoption and already has a DITA-OT plugin in the registry. It is an adjacent opportunity, not part of this proposal (see R9's notes).
+- **AI crawlers** read JSON-LD and `description`; the `llms.txt` convention (a plain-text index at the site root) is gaining adoption and already has a DITA-OT plugin in the registry. It is an adjacent opportunity, not part of this proposal; Section 5c records what the plugin does about it (D-30).
 - **Dublin Core** (`DC.*`/`DCTERMS.*` metas) is read by library, repository and some government metadata harvesters; cheap to emit alongside, and the toolkit already knows the fields.
 
 ## 5. Mapping DITA to schema.org and Open Graph
@@ -131,6 +131,23 @@ A DITA **specialisation** (a `dcat`/`adms` metadata domain with named elements i
 ### What the plugin would emit for them
 
 Beyond Section 5a's `dcat.jsonld`/`dcat.ttl`: one SKOS file per concept scheme (`vocab/<scheme>.ttl` and `.jsonld`) harvested the way the glossary already is; `schema:DefinedTermSet` JSON-LD in the glossary page and `schema:DefinedTerm` per definition page for web search; `org:Organization` records in the register's JSON-LD; `<link rel="alternate">` from each page to the RDF that describes it. A static site cannot negotiate content, but stable file paths and alternate links are enough for harvesters and for people. Estimated effort on top of 5a: SKOS from glossary and subjectScheme **S**; ADMS typing from categories **S**; register and `DataService` catalogue **M** — each a separate, opt-in step once the DCAT record exists.
+
+## 5c. `llms.txt` — an index for language models (D-30, epic #116)
+
+**What it is.** A Markdown file at the site root ([llmstxt.org](https://llmstxt.org/)): the publication's name as an H1, a one-paragraph summary as a quote, then H2 sections listing pages as `- [title](URL): notes`. A section named `Optional` holds links a reader short of room may skip. The aim is that a language model, or an agent reading the site, gets a short curated index instead of crawling.
+
+**What is known about it (checked October 2026).** Estimates of how many sites publish one range from about 10% to 28%. Server-log studies find the main AI crawlers rarely or never request it, and no major AI provider has said its production systems read it. Google has said it does not use it for search. The readers that do use it are coding agents and documentation tools, which fetch it when pointed at a site. It is a courtesy that costs little, not a feature with a measured payoff, and the manual says so.
+
+**Shape decided (D-30):**
+
+- **The plugin writes it**, from the same pages as `sitemap.xml`, rather than pointing publishers at the registry plugin (`fox.jason.llms.txt`). That plugin is a separate Markdown transform. Its index links Markdown files the GOV.UK site does not serve, and a publisher would run a second build to get it.
+- **`llms.txt` only; no `llms-full.txt`.** A whole-publication text file is a second copy of the site with no documented consumer, and the print document already serves whole-publication reading. [#119](https://github.com/iStandUK/govuk-dita-plugin/issues/119) is closed as not planned and can be reopened if publishers ask.
+- **`govuk.llms` = `auto` (default) | `yes` | `no`**, as `govuk.sitemap`: written when `govuk.site.url` is set, because its links must be absolute. `yes` without the URL fails the build.
+- **Content.** H1: the publication title the home page shows. Quote: the publication's description (`dct:description`: the map's `shortdesc`, else `booktitlealt`), omitted when there is none. A section per top-level map entry, with the entry's navigation title as heading, listing its pages in reading order. Bookmap front and back matter and topic groups have no title, so the entries inside them count as top level. Top-level pages with no page beneath them share one section with the localised "Contents" heading. Each page is listed once, at its first place in reading order, with the title and short description the home page shows. The glossary, index, figure and table lists go in `Optional`.
+- **Exclusions:** the sitemap's. Resource-only and `toc="no"` topics, the search page and the print document are left out.
+- **Links go to the HTML pages.** The convention prefers Markdown copies of pages; the plugin publishes none, and a page's HTML is what the publisher has decided to publish.
+
+**What it is not.** It is not a consent or a licence, and leaving it out does not keep a site's content out of training data. A publisher who does not want their content used that way needs `robots.txt` rules for the crawlers concerned (the plugin writes no such rules) and a licence that says so. `llms.txt` exposes nothing the site does not already publish.
 
 ## 6. Serialisation and constraints
 

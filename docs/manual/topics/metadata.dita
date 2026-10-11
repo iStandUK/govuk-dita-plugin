@@ -152,5 +152,44 @@
         source. The repository's <filepath>tools/check_metadata.py</filepath> checks a built
         site against the same tables offline.</p>
     </section>
+    <section id="llms-txt">
+      <title>An index for language models: llms.txt</title>
+      <p><indexterm>llms.txt</indexterm><indexterm>language models</indexterm>When
+        <codeph>govuk.site.url</codeph> is set, the build writes <filepath>llms.txt</filepath>
+        at the site root beside <filepath>sitemap.xml</filepath>. It follows the
+        <xref href="https://llmstxt.org/" format="html" scope="external">llms.txt
+        convention</xref>: a short Markdown index that a language model, or an agent reading the
+        site, can use instead of crawling it. <codeph>govuk.llms=no</codeph> turns it off.</p>
+      <p>It holds the publication's title and description, then a section for each top-level
+        entry in the map, listing its pages with the titles and short descriptions the home
+        page shows, each linked by its full address. The pages are the sitemap's: topics that
+        are resource-only or <codeph>toc="no"</codeph>, the search page and the print document
+        are left out. The glossary, index and list pages come last, under
+        <codeph>Optional</codeph>, which a reader short of room may skip.</p>
+      <codeblock outputclass="language-markdown"># GOV.UK DITA plugin manual
+
+&gt; How to install and use org.istanduk.gov-uk, …
+
+## Getting started
+
+- [Installing the plugin](https://example.org/manual/topics/install.html): Install the plugin …</codeblock>
+      <p><b>What it does and does not do.</b> A minority of sites publish one, and as of October 2026 no
+        major AI company says its systems read it; the main web crawlers rarely ask for it.
+        The tools that do read it are mostly coding assistants and documentation tools that
+        are pointed at a site. The plugin writes it because it costs nothing and lists only
+        what the site already publishes, not because it is known to help.</p>
+      <p><indexterm>robots.txt</indexterm><b>If you do not want your content used to train AI
+        models</b>, <filepath>llms.txt</filepath> is the wrong tool: leaving it out does not
+        keep a site out of training data, and publishing it gives no permission. Set
+        <codeph>Disallow</codeph> rules in <filepath>robots.txt</filepath> for the crawlers you
+        want to exclude (each AI company documents its crawler's name), and say what reuse you
+        allow in your licence. The <filepath>robots.txt</filepath> the plugin writes beside the
+        sitemap allows every crawler; ship your own in the output folder and the plugin leaves
+        it alone.</p>
+      <p>The convention also suggests a Markdown copy of every page, and a full-text
+        <filepath>llms-full.txt</filepath>. The plugin writes neither: its pages are HTML, and
+        the print document already holds the whole publication. A separate toolkit plugin,
+        <codeph>fox.jason.llms.txt</codeph>, makes Markdown output if you need it.</p>
+    </section>
   </conbody>
 </concept>

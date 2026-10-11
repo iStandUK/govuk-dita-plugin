@@ -859,7 +859,7 @@ jobs:
 
       # Content reaching readers (epic #77: #78 #79 #80 #81 #82 #59 #60 #61). Every
       # behaviour is a publisher parameter; every finding is a warning, never an error.
-      - name: Content policy, SVG sanitising, dates, sitemap and CSP (#77)
+      - name: Content policy, SVG sanitising, dates, sitemap, llms.txt and CSP (#77)
         run: |
           set -o pipefail
           . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
@@ -940,6 +940,17 @@ jobs:
           grep -q '<loc>https://example.org/manual/glossary.html</loc>' out/manual-csp/sitemap.xml
           absent -Eq '<loc>https://example.org/manual/(search|print).html</loc>' out/manual-csp/sitemap.xml
           grep -q 'Sitemap: https://example.org/manual/sitemap.xml' out/manual-csp/robots.txt
+          # #118 + D-30: llms.txt beside the sitemap, the same pages, linked by absolute URL
+          grep -qx '# GOV.UK DITA plugin manual' out/manual-csp/llms.txt
+          grep -qxF -e '- [Installing the plugin](https://example.org/manual/topics/install.html): Install the plugin into a DITA Open Toolkit with a single command; there are no other dependencies.' out/manual-csp/llms.txt
+          grep -qx '## Optional' out/manual-csp/llms.txt
+          grep -qxF -e '- [Glossary](https://example.org/manual/glossary.html)' out/manual-csp/llms.txt
+          absent -Eq 'example\.org/manual/(search|print)\.html' out/manual-csp/llms.txt
+          absent -q 'llms' out/manual-csp/sitemap.xml out/manual-csp/robots.txt
+          # each rule on a small map, byte for byte (fixtures/llms/README.md)
+          tools/ci/dita --input fixtures/llms/llms.ditamap --format govuk --output out/llms \
+            -Dgovuk.site.url=https://example.org/llms/
+          diff fixtures/llms/expected-llms.txt out/llms/llms.txt
           grep -q '<meta name="robots" content="noindex"' out/manual-csp/print.html
           for f in out/manual-csp/index.html out/manual-csp/search.html out/manual-csp/glossary.html out/manual-csp/topics/install.html out/manual-csp/print.html; do
             grep -q "Content-Security-Policy\" content=\"default-src 'self'; script-src 'self' 'sha256-" "$f" || { echo "no CSP meta in $f"; exit 1; }
@@ -961,8 +972,10 @@ jobs:
           # the default build: no sitemap, no robots, no CSP; bad values fail the build
           test ! -f out/manual/sitemap.xml
           test ! -f out/manual/robots.txt
+          test ! -f out/manual/llms.txt
           absent -q 'Content-Security-Policy' out/manual/index.html
           if tools/ci/dita --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-sitemap -Dgovuk.sitemap=yes; then echo "govuk.sitemap=yes without a URL should fail"; exit 1; fi
+          if tools/ci/dita --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-llms -Dgovuk.llms=yes; then echo "govuk.llms=yes without a URL should fail"; exit 1; fi
           if tools/ci/dita --input fixtures/oruk-mini/oruk.ditamap --format govuk --output out/x-csp -Dgovuk.csp=bogus; then echo "govuk.csp=bogus should fail"; exit 1; fi
           # Every branding mode is same-origin only, so 'self' policies hold in all of them:
           # logos are inline SVG or copied assets, fonts and the (suppressed) crest are

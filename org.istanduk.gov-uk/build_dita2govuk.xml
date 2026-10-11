@@ -582,6 +582,35 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     </condition>
     <echo level="info" unless:set="govuk.sitemap.on"
           message="govuk: sitemap.xml not written (govuk.sitemap=${govuk.sitemap}; set govuk.site.url to the published base URL to generate one)"/>
+    <!-- llms.txt (#118, D-30): like the sitemap, auto writes it when the
+         site's base URL is known -->
+    <property name="govuk.llms" value="auto"/>
+    <fail message="govuk.llms must be 'auto', 'yes' or 'no', was: ${govuk.llms}">
+      <condition><not><or>
+        <equals arg1="${govuk.llms}" arg2="auto"/>
+        <equals arg1="${govuk.llms}" arg2="yes"/>
+        <equals arg1="${govuk.llms}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <fail message="govuk.llms=yes needs govuk.site.url (the published base URL) for the absolute links in llms.txt">
+      <condition>
+        <and>
+          <equals arg1="${govuk.llms}" arg2="yes"/>
+          <not><isset property="govuk.site.url.set"/></not>
+        </and>
+      </condition>
+    </fail>
+    <condition property="govuk.llms.enabled" value="yes" else="no">
+      <and>
+        <not><equals arg1="${govuk.llms}" arg2="no"/></not>
+        <isset property="govuk.site.url.set"/>
+      </and>
+    </condition>
+    <condition property="govuk.llms.on">
+      <equals arg1="${govuk.llms.enabled}" arg2="yes"/>
+    </condition>
+    <echo level="info" unless:set="govuk.llms.on"
+          message="govuk: llms.txt not written (govuk.llms=${govuk.llms}; set govuk.site.url to the published base URL to generate one)"/>
     <!-- the vendored govuk-frontend version, for init.js -->
     <loadfile property="govuk.frontend.version"
               srcfile="${dita.plugin.org.istanduk.gov-uk.dir}/resource/govuk-frontend/VERSION.txt">
@@ -656,6 +685,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-CSP" expression="${govuk.csp}"/>
       <param name="GOVUK-EMBED" expression="yes" if:set="govuk.embed.on"/>
       <param name="GOVUK-SITEMAP" expression="${govuk.sitemap.enabled}"/>
+      <param name="GOVUK-LLMS" expression="${govuk.llms.enabled}"/>
       <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
       <param name="GOVUK-DATES" expression="${govuk.dates}"/>
       <param name="GOVUK-METADATA" expression="${govuk.metadata}"/>
