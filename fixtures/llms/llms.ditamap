@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map xml:lang="en-GB">
+  <title>An index for language models</title>
+  <topicmeta>
+    <shortdesc>The fixture for llms.txt: its sections, its exclusions and its escaping.</shortdesc>
+  </topicmeta>
+  <keydef keys="library" href="library.dita" processing-role="resource-only"/>
+  <topicref href="start.dita"/>
+  <topichead navtitle="Planning">
+    <topicref href="survey.dita"/>
+    <topicref href="hidden.dita" toc="no"/>
+  </topichead>
+  <topicref href="building.dita">
+    <topicref href="walls.dita"/>
+    <topicref href="survey.dita"/>
+  </topicref>
+  <topicref href="library.dita" processing-role="resource-only"/>
+  <topicref href="close.dita"/>
+</map>

@@ -649,3 +649,31 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 - Publishers moving from WebHelp lose its hover descriptions in the contents tree. The manual's navigation topic says so, and where the descriptions appear instead.
 - **Not changed:** two `title` tooltips are inherited from the toolkit and supplement the linked page rather than replace it: the one DITA-OT puts on in-text cross-references (the target's short description), and the glossary's definition tooltip (FR-G2). Whether to remove them is a separate question.
 - **Revisit** if the Design System publishes a tooltip or toggletip component.
+
+---
+
+## D-30 · `llms.txt`: the plugin writes the index, like the sitemap; no full-text copy
+
+**Date:** 2026-10-11. Sponsor's decisions on [#117](https://github.com/iStandUK/govuk-dita-plugin/issues/117), epic [#116](https://github.com/iStandUK/govuk-dita-plugin/issues/116). Split out of the structured-data work by D-24 (decision 5). Shape and evidence in [12-structured-data.md](12-structured-data.md) §5c.
+
+**Options:**
+
+- **Who writes it:** (a) the plugin, from the map, beside `sitemap.xml`; (b) no code, with the manual recommending the registry plugin `fox.jason.llms.txt`.
+- **`llms-full.txt`:** (c) not offered; (d) offered as `govuk.llms=full`, from the print document's reading order and under its topic ceiling.
+- **Default:** (e) `auto`, written whenever `govuk.site.url` is set, as the sitemap is; (f) off, with publishers opting in.
+
+**Decision:** (a), (c) and (e).
+
+**Rationale:**
+
+- **(a) over (b).** The registry plugin is a separate Markdown transform. Its index links Markdown files the GOV.UK site does not serve, with relative paths, and a publisher would need a second build to get it. Written by the cover transform, the index links the site's own pages by absolute URL and leaves out what the sitemap leaves out.
+- **(c) over (d).** The full text would be a second copy of the site, with no documented consumer, and the print document already serves reading the whole publication.
+- **(e) over (f).** The file is an index of pages the site already publishes, with no visible effect, like `sitemap.xml`. A publisher who sets `govuk.site.url` gets both, and `govuk.llms=no` turns it off.
+- **The evidence is weak, and the record says so.** As of October 2026 no major AI provider has said its production systems read `llms.txt`, and server logs show the main crawlers rarely request it; coding agents and documentation tools are its readers. It is a low-cost courtesy, not a feature with a measured payoff.
+
+**Consequences:**
+
+- `govuk.llms` = `auto` (default) | `yes` | `no`. `yes` without `govuk.site.url` fails the build; `auto` without it writes nothing and says so at info level, as the sitemap does. Requirement **FR-D5**.
+- The entries are the sitemap's pages, with the titles and short descriptions the home page shows, grouped by top-level map entry; the glossary, index and list pages go in the convention's `Optional` section.
+- **`llms.txt` is not a consent mechanism.** The manual tells a publisher who does not want their content used for training to look at `robots.txt` and licensing, and does not present publishing an index as advice.
+- [#119](https://github.com/iStandUK/govuk-dita-plugin/issues/119) (`llms-full.txt`) is closed as not planned. **Revisit** if publishers ask for it, or if a major consumer documents reading either file.

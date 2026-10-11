@@ -203,8 +203,9 @@ Status as of v0.1.0: ✅ implemented · ⬜ planned (each arrives with its featu
 | `govuk.content.warnings` | `yes` (default) \| `no` | #81 — report script-scheme links, remote images/objects, embeds (`GOVK006W`) | ✅ (#77) |
 | `govuk.content.policy` | `warn` (default) \| `strip` | #81 — render as authored, or replace with a placeholder | ✅ (#77) |
 | `govuk.csp` | `no` (default) \| `meta` \| policy | #82 — Content-Security-Policy meta; conflicts warned (`GOVK007W`) | ✅ (#77) |
-| `govuk.site.url` | URL | #60 — published base URL for `sitemap.xml` | ✅ (#77) |
+| `govuk.site.url` | URL | #60 — published base URL for `sitemap.xml` and `llms.txt` | ✅ (#77) |
 | `govuk.sitemap` | `auto` (default) \| `yes` \| `no` | #60 — `sitemap.xml` + `robots.txt`; search page and print document excluded | ✅ (#77) |
+| `govuk.llms` | `auto` (default) \| `yes` \| `no` | #118, D-30 — `llms.txt`, an index for language models: the sitemap's pages with their short descriptions, absolute links | ✅ |
 | `govuk.dates` | `no` (default) \| `updated` \| `both` | #61 — critdates as a metadata line; sitemap `lastmod` | ✅ (#77) |
 | `govuk.footer.links` | `label\|url;label\|url` | Extra footer links | ✅ (#49) |
 | `govuk.footer.licence` | text | Footer licence/credit line (neutral, iStandUK, NHS; official keeps the OGL) | ✅ (#49) |

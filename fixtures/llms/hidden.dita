@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="hidden">
+  <title>Hidden from the contents</title>
+  <shortdesc>Built and linkable, but not in the contents.</shortdesc>
+  <body><p>Hidden from the contents.</p></body>
+</topic>

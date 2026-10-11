@@ -1,0 +1,17 @@
+# An index for language models
+
+> The fixture for llms.txt: its sections, its exclusions and its escaping.
+
+## Contents
+
+- [Start here](https://example.org/llms/start.html): What the publication covers.
+- [Closing notes](https://example.org/llms/close.html): What to do afterwards.
+
+## Planning
+
+- [Survey the \[site\] first](https://example.org/llms/survey.html): Measure before you build.
+
+## Building
+
+- [Building](https://example.org/llms/building.html): The work itself.
+- [Walls](https://example.org/llms/walls.html)

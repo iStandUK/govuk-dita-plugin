@@ -290,7 +290,8 @@
               <entry>URL</entry>
               <entry>The published base URL, for example
                 <codeph>https://example.org/manual/</codeph>. Needed for
-                <filepath>sitemap.xml</filepath>, whose entries must be absolute; the print
+                <filepath>sitemap.xml</filepath> and <filepath>llms.txt</filepath>, whose
+                entries must be absolute; the print
                 document's cover gives it as where the current version is.</entry>
             </row>
             <row>
@@ -302,6 +303,16 @@
                 print document — and a <filepath>robots.txt</filepath> pointing at it unless
                 one already exists. <codeph>auto</codeph> writes it when
                 <codeph>govuk.site.url</codeph> is set.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.llms</codeph></entry>
+              <entry><codeph>auto</codeph> (default), <codeph>yes</codeph>,
+                <codeph>no</codeph></entry>
+              <entry>Write <filepath>llms.txt</filepath>, an index of the publication for
+                language models: its title and description, then the sitemap's pages with their
+                short descriptions. <codeph>auto</codeph> writes it when
+                <codeph>govuk.site.url</codeph> is set. It is not a way to allow or refuse use
+                for AI training; see <xref keyref="metadata"/>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.dates</codeph></entry>
