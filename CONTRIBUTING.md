@@ -79,6 +79,9 @@ python3 tools/page_weight.py --report --budget-kb 300 out/manual
 (cd tools/a11y && npm ci && npx playwright install chromium)
 node tools/a11y/run.mjs out/manual
 node tools/a11y/print-smoke.mjs out/manual/print.html out/manual.pdf --paper A4
+
+# the workflows: actionlint runs ShellCheck over every run: block when it is on the PATH
+actionlint
 ```
 
 On Windows, run the toolkit's `dita.bat` rather than the `dita` shell script, even from a
@@ -163,6 +166,8 @@ A self-hosted runner needs:
 - **Passwordless `sudo` for the runner's user,** for its `apt-get` installs: any of those tools that are missing, and Chromium's libraries for the accessibility checks. Java, Node, Maven and DITA-OT are fetched by the workflow.
 - **Room for about 3 GB** under the runner's work folder.
 - **Nothing it should not share.** Its jobs run this repository's code with the runner user's rights. Keep it separate from runners of private repositories, and from any credentials on the machine.
+
+A self-hosted runner keeps its machine between runs, so a step leaves nothing behind it: scratch files go under `$RUNNER_TEMP`, which the runner empties at the end of each job, never under `/tmp`; and nothing is installed globally (such as `npm -g`).
 
 ## Releases
 
