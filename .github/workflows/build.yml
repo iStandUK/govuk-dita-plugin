@@ -178,7 +178,7 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "20"
           cache: npm
@@ -1443,13 +1443,13 @@ jobs:
           node tools/a11y/snapshot.mjs out/manual-istanduk out/snapshots/istanduk
 
       - name: Upload visual snapshots
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: visual-snapshots-${{ env.DITA_OT_VERSION }}
           path: out/snapshots
 
       - name: Upload site artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: manual-site-${{ env.DITA_OT_VERSION }}
           path: out/manual
@@ -1889,7 +1889,7 @@ jobs:
           echo "the inaccessible PDF was rejected"
 
       - name: Upload the distribution
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: designsystempdf
           path: |
@@ -1898,14 +1898,14 @@ jobs:
 
       - name: Upload the rendered PDFs
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: designsystempdf-pdfs
           path: designsystempdf/target/it/*.pdf
 
       - name: Upload the PDF/UA reports
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pdf-ua-reports
           path: pdf-ua-reports/
