@@ -11,15 +11,15 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ runner.temp }}/verapdf
-        key: verapdf-1.30.2-6cc6341cb1af644044054b81f00a6590a7918abb18f762243de115258bcad838
+        key: verapdf-1.30.3-b512bf24945503a33fc10738ecffc1f2dccaaf8593a448e94ee9ac86a9559a59
 
     - name: Install veraPDF
       shell: bash
       env:
         # the signed greenfield release (README.md); the version must be the one
         # DesignSystemPDF's tests use, verapdf.version in designsystempdf/pom.xml
-        VERAPDF_VERSION: "1.30.2"
-        VERAPDF_SHA256: "6cc6341cb1af644044054b81f00a6590a7918abb18f762243de115258bcad838"
+        VERAPDF_VERSION: "1.30.3"
+        VERAPDF_SHA256: "b512bf24945503a33fc10738ecffc1f2dccaaf8593a448e94ee9ac86a9559a59"
         TARGET: ${{ runner.temp }}/verapdf
         SELECTION: ${{ github.action_path }}/auto-install.xml
       run: |
