@@ -377,13 +377,10 @@ the once-per-build checks).
         <xsl:if test="$GOVUK-METADATA-PERSONS = 'yes'">
           <xsl:sequence select="for $a in $prolog/*[contains(@class, ' topic/author ')] return govuk:md-p('dct:creator', govuk:md-text($a))"/>
         </xsl:if>
-        <!-- The topic's own dates only: the toolkit replaces them with the
-             map's when bookmeta has critdates, and those date the book -->
+        <!-- The topic's own dates only, never the book's (#189) -->
         <xsl:if test="$GOVUK-DATES ne 'no'">
-          <xsl:variable name="critdates" select="$prolog/*[contains(@class, ' topic/critdates ')]
-                                                 [not(@xtrf) or not($topic/@xtrf) or @xtrf = $topic/@xtrf]"/>
-          <xsl:sequence select="govuk:md-p('dct:issued', govuk:md-iso-date(($critdates/*[contains(@class, ' topic/created ')]/@date)[1])),
-                                govuk:md-p('dct:modified', govuk:md-iso-date(($critdates/*[contains(@class, ' topic/revised ')]/@modified)[last()]))"/>
+          <xsl:sequence select="govuk:md-p('dct:issued', govuk:md-iso-date(govuk:own-date($topic, 'created'))),
+                                govuk:md-p('dct:modified', govuk:md-iso-date(govuk:own-date($topic, 'revised')))"/>
         </xsl:if>
       </xsl:if>
       <xsl:sequence select="govuk:md-data((reverse($chain)/*[contains(@class, ' map/topicmeta ')], $prolog))"/>

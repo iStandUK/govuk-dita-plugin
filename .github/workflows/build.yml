@@ -596,10 +596,23 @@ jobs:
           # The worked example of docs/SOURCE-SYSTEMS.md, the guide for systems
           # that generate DITA: valid, and built without a single warning
           tools/ci/dita --input fixtures/source-system/dictionary.ditamap \
-            --format govuk --output out/source-system -Dgovuk.print=yes -Dgovuk.search=no -Dgovuk.dates=both 2>&1 | tee source-system.log
+            --format govuk --output out/source-system -Dgovuk.print=yes -Dgovuk.search=no -Dgovuk.dates=both \
+            -Dgovuk.site.url=https://example.org/dictionary/ 2>&1 | tee source-system.log
           absent -Eq 'Warning|Error|GOVK|DOT[XJ]' source-system.log
           test "$(heads out/source-system/print.html)" = "h2 Contents|h2 About this dictionary|h2 Data elements|h3 Person birth date|h4 Where used|h3 Person stated gender code (retired)|h2 Submit a return|h2 data element|h2 Glossary|h3 D|h4 data element|h2 Index|h3 D"
           grep -q 'alt="A return contains records' out/source-system/about.html
+          # #189: bookmeta's critdates reach every topic's prolog in place of the
+          # topic's own. A page shows its own dates, in the dates line, the
+          # sitemap and the print document; a page with none shows none, never
+          # the book's; the print cover keeps the book's.
+          s=out/source-system
+          grep -qF 'Published <time datetime="2024-04-01">1 April 2024</time>' $s/elements/person-birth-date.html
+          grep -qF 'Last updated <time datetime="2026-06-12">12 June 2026</time>' $s/elements/person-birth-date.html
+          absent -q 'app-page-dates' $s/about.html $s/elements/person-stated-gender-code.html $s/using/submit-a-return.html
+          test "$(grep -c '<lastmod>' $s/sitemap.xml)" = 1
+          grep -A1 -F '<loc>https://example.org/dictionary/elements/person-birth-date.html</loc>' $s/sitemap.xml | grep -qF '<lastmod>2026-06-12</lastmod>'
+          test "$(grep -c 'app-page-dates"' $s/print.html)" = 1
+          grep -qF '<li><span class="app-page-dates__item">Published <time datetime="2026-01-15">15 January 2026</time></span></li>' $s/print.html
           # #179: a DITA-OT project file passes each input map as a file: URI.
           # Built from a folder whose name has a space, so the URI is escaped.
           proj="$RUNNER_TEMP/with space"
@@ -1046,8 +1059,11 @@ jobs:
           has out/metadata/index.html '<link rel="next" href="https://example.org/metadata/topics/check.html">'
           absent -q 'article:' out/metadata/index.html
           # the book's dates are not a page's: the toolkit gives every topic
-          # bookmeta's critdates, so a page with none of its own has none
-          absent -q 'article:published_time' out/source-system/elements/person-birth-date.html
+          # bookmeta's critdates, so a page's own are read from its source and
+          # a page with none of its own has none (#189)
+          has out/source-system/elements/person-birth-date.html '<meta property="article:published_time" content="2024-04-01">'
+          has out/source-system/elements/person-birth-date.html '<meta property="article:modified_time" content="2026-06-12">'
+          absent -q 'article:published_time' out/source-system/about.html
           # without a site URL, nothing URL-valued; persons only when asked
           dita --input fixtures/metadata/metadata.ditamap --output out/metadata-plain \
             -Dgovuk.metadata.persons=yes > /dev/null
@@ -1069,7 +1085,8 @@ jobs:
           # one checker for every table: each page against the enabled tables,
           # and no print document carrying any of it
           python3 tools/check_metadata.py --site-url https://example.org/metadata out/metadata
-          python3 tools/check_metadata.py out/metadata-plain out/manual out/manual-official out/kitchen out/manual-print out/source-system
+          python3 tools/check_metadata.py out/metadata-plain out/manual out/manual-official out/kitchen out/manual-print
+          python3 tools/check_metadata.py --site-url https://example.org/dictionary/ out/source-system
           python3 tools/check_metadata.py --level no out/metadata-no
           # no stylesheet names a scheme: a row added to a table is a tag
           t="dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata/dublincore.xml"
