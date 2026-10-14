@@ -323,7 +323,9 @@
                 <codeph>created</codeph> date when there is none), or both. The date shown
                 is only as good as its source — publications whose dates are batch-stamped
                 by tooling should leave this off. When on, revised dates also become
-                <codeph>lastmod</codeph> in the sitemap.</entry>
+                <codeph>lastmod</codeph> in the sitemap. Only the topic's own dates are
+                shown: dates in a bookmap's <codeph>bookmeta</codeph> date the book and go on
+                the print cover, never on a page.</entry>
             </row>
             <row>
               <entry><codeph>govuk.metadata</codeph></entry>

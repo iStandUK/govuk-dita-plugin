@@ -53,11 +53,9 @@ good as its source. govuk.dates = no | updated | both.
   <!-- The base drops the prolog; render its dates here when asked -->
   <xsl:template match="*[contains(@class, ' topic/prolog ')]" priority="5">
     <xsl:if test="$GOVUK-DATES = ('updated', 'both')">
-      <xsl:variable name="critdates" select="*[contains(@class, ' topic/critdates ')]"/>
-      <xsl:variable name="created" as="xs:string"
-                    select="normalize-space(string(($critdates/*[contains(@class, ' topic/created ')]/@date)[1]))"/>
-      <xsl:variable name="revised" as="xs:string"
-                    select="normalize-space(string(($critdates/*[contains(@class, ' topic/revised ')]/@modified)[last()]))"/>
+      <!-- the topic's own dates, never the book's (#189) -->
+      <xsl:variable name="created" as="xs:string" select="govuk:own-date(.., 'created')"/>
+      <xsl:variable name="revised" as="xs:string" select="govuk:own-date(.., 'revised')"/>
       <xsl:choose>
         <xsl:when test="$GOVUK-DATES = 'both' and ($created ne '' or $revised ne '')">
           <p class="govuk-body-s app-page-dates">

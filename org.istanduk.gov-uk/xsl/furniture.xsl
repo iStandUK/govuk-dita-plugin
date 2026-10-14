@@ -154,6 +154,44 @@ template, the cover, and the generated utility pages.
     <xsl:sequence select="if ($count gt 0 and $count le $ceiling) then 'yes' else 'no'"/>
   </xsl:function>
 
+  <!-- ===== A topic's own dates (#189) =====
+       When a bookmap's bookmeta has critdates, the toolkit copies them into
+       every topic's prolog in place of the topic's own; their xtrf then names
+       the map, not the topic's file. Those date the book, so they are never a
+       page's: the topic's own critdates are read from its source file (the
+       topic's xtrf) instead, and a topic with none there has none. Used by
+       the dates line, sitemap.xml and the page metadata, which ask only when
+       govuk.dates is on. -->
+  <xsl:function name="govuk:own-critdates" as="element()*">
+    <xsl:param name="topic" as="element()?"/>
+    <xsl:variable name="here" select="$topic/*[contains(@class, ' topic/prolog ')]/*[contains(@class, ' topic/critdates ')]"/>
+    <xsl:variable name="own" select="$here[not(@xtrf) or not($topic/@xtrf) or @xtrf = $topic/@xtrf]"/>
+    <xsl:variable name="src" select="string($topic/@xtrf)"/>
+    <xsl:choose>
+      <xsl:when test="exists($own) or empty($here) or $src = '' or not(doc-available($src))">
+        <xsl:sequence select="$own"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <!-- the source as written, which may have been read without its DTD:
+             by class where there is one, else by element name -->
+        <xsl:sequence select="(doc($src)//*[@id = $topic/@id]
+                                /*[contains(@class, ' topic/prolog ') or (not(@class) and local-name() = 'prolog')])[1]
+                                /*[contains(@class, ' topic/critdates ') or (not(@class) and local-name() = 'critdates')]"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
+
+  <!-- A topic's own first created or last revised date, as written, or ''
+       when it has none. which: 'created' | 'revised' -->
+  <xsl:function name="govuk:own-date" as="xs:string">
+    <xsl:param name="topic" as="element()?"/>
+    <xsl:param name="which" as="xs:string"/>
+    <xsl:variable name="dates" select="govuk:own-critdates($topic)/*[contains(@class, concat(' topic/', $which, ' '))
+                                         or (not(@class) and local-name() = $which)]"/>
+    <xsl:sequence select="normalize-space(string(if ($which = 'created') then ($dates/@date)[1]
+                                                 else ($dates/@modified)[last()]))"/>
+  </xsl:function>
+
   <!-- ===== Footer metadata from bookmap bookmeta (#42) =====
        Read from the input map's own URL so topic pages get the copyright and
        attribution too, not just the cover (which already sees the map as its

@@ -66,7 +66,8 @@
               <entry>The topic's own <codeph>critdates</codeph>, only when
                 <codeph>govuk.dates</codeph> shows dates. Dates in a bookmap's
                 <codeph>bookmeta</codeph> date the book: the toolkit copies them to every
-                topic, so they are not used for a page.</entry>
+                topic in place of the topic's own, so the plugin reads the topic's own from
+                its source file, and a page with none has none.</entry>
             </row>
             <row>
               <entry><codeph>DC.publisher</codeph></entry>

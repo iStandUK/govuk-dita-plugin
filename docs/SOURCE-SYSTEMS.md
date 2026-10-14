@@ -194,7 +194,7 @@ Publication-wide facts go in `bookmeta` (or the `topicmeta` of a plain map). Top
 
 The licence, the site's address and the organisation's URL are the **publisher's** build parameters, not the source system's. Do not hard-code them in the DITA.
 
-**Caution: dates in `bookmeta` replace the topics' own.** DITA-OT copies `bookmeta`'s `critdates` into every topic, over the topic's own. The page metadata then gives those pages no dates rather than the book's, but the dates line shows the book's dates on every page (#189). Until that is fixed, a source system with true dates per topic should choose one: per-topic dates (leave `critdates` out of `bookmeta`), or publication dates on the print cover.
+**Dates in `bookmeta` and in topics can both be given.** DITA-OT copies `bookmeta`'s `critdates` into every topic, over the topic's own. The plugin reads each topic's own `critdates` from its source file instead, so the dates line, `sitemap.xml` and the page metadata give a page its own dates, and a page with none has none, never the book's (#189, next release). The print cover keeps the book's. A topic written in Markdown has no `critdates` of its own. Releases up to 1.2.0 show the book's dates on every page: with those, give dates either per topic or in `bookmeta`, not both.
 
 ## 7. Any other property: `data` (**Now**, from the next release; the catalogue schemes that read most terms are **Planned**)
 

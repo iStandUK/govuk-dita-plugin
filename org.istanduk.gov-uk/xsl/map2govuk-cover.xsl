@@ -197,10 +197,7 @@ map transformation with the plugin's values.
                 <xsl:variable name="uri" select="resolve-uri(govuk:print-file(.), $govuk-map-base)"/>
                 <xsl:if test="doc-available($uri)">
                   <xsl:variable name="modified" as="xs:string"
-                                select="normalize-space(string(((doc($uri)//*[contains(@class, ' topic/topic ')])[1]
-                                                                 /*[contains(@class, ' topic/prolog ')]
-                                                                 /*[contains(@class, ' topic/critdates ')]
-                                                                 /*[contains(@class, ' topic/revised ')]/@modified)[last()]))"/>
+                                select="govuk:own-date((doc($uri)//*[contains(@class, ' topic/topic ')])[1], 'revised')"/>
                   <xsl:if test="substring($modified, 1, 10) castable as xs:date">
                     <lastmod><xsl:value-of select="substring($modified, 1, 10)"/></lastmod>
                   </xsl:if>
