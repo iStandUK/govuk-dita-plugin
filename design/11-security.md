@@ -43,6 +43,7 @@ Every behaviour that touches content risk is a **parameter with a safe default**
 | `govuk.content.policy` | `warn` | render as authored, or `strip` to a placeholder | — |
 | `govuk.csp` | `no` | `meta` emits a policy the pages satisfy; a literal policy passes through | `GOVK007W` |
 | `govuk.site.url`, `govuk.sitemap` | `auto` | `sitemap.xml` + `robots.txt`; print document excluded and `noindex` | — |
+| `govuk.llms` | `auto` | `llms.txt`: titles, short descriptions and absolute links of pages the site already publishes; nothing new is exposed. Not a consent mechanism (D-30) | — |
 | `govuk.dates` | `no` | critdates as a metadata line (date quality is the source's) | — |
 
 ## 5. What CI proves on every run
@@ -53,6 +54,7 @@ Every branding mode references no other origin in HTML or CSS; the CSP build is 
 
 - **DITA-OT's parser** and preprocessing (XXE, DTD resolution, chunking) are the toolkit's; the plugin documents the boundary and routes reports.
 - **Hosts without header control** get a `<meta>` policy, which cannot express `frame-ancestors`; the manual says so.
+- **Framed pages** (`govuk.embed`, #201): a host that frames its own pages relaxes `frame-ancestors 'none'` to `'self'` or the framing origin; the manual says so. The embedded view adds a same-origin script file, not an inline script, so the published hash is unchanged.
 - **Publisher-hosted fonts on another origin** need a literal policy; `meta` is same-origin by design.
 - **Dates and authorship** come from the source; the plugin shows them only when asked (#61).
 - **Third-party runtime code** (govuk-frontend, Pagefind UI) is pinned and self-hosted, not audited by this project; Dependabot and the release-zip guard notice changes, they do not judge them.

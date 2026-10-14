@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+HTML link relations: the page's own address, its neighbours in reading order
+and its licence. Every value is a URL, so nothing here is written without
+govuk.site.url. The table format is described in design 14, section 7.
+-->
+<scheme id="links" syntax="link">
+  <kind record="page">
+    <property term="@id" as="canonical" format="uri" required="yes"/>
+    <relation name="previous" as="prev"/>
+    <relation name="next" as="next"/>
+    <property term="dct:license" as="license" format="uri"/>
+  </kind>
+</scheme>

@@ -3,9 +3,9 @@
  * Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
  *
  * iStandUK theme (govuk.branding=istanduk), loaded after overlay-neutral.css
- * so the neutral guarantees (no GDS Transport, no crown) still hold. Colours
- * and header treatment follow the iStandUK brand reference in the
- * adoption-tracker repository (design/brand): Pantone 072 -> #003888, Arial
+ * so the neutral guarantees (no restricted GOV.UK typeface, no crown) still
+ * hold. Colours and header treatment follow the iStandUK brand reference in
+ * the adoption-tracker repository (design/brand): Pantone 072 -> #003888, Arial
  * for text (Rockwell appears only inside the outlined logo artwork), and a
  * white header bar with the logo above a brand-blue rule.
  */

@@ -18,5 +18,6 @@ we do not override keeps its default html5 rendering.
   <xsl:import href="content-policy.xsl"/>
   <xsl:import href="dates.xsl"/>
   <xsl:import href="search.xsl"/>
+  <xsl:import href="metadata.xsl"/>
 
 </xsl:stylesheet>

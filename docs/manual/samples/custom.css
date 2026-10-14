@@ -6,6 +6,9 @@
  *   dita --input=guide.ditamap --format=govuk --output=out/site \
  *        -Dargs.css=custom.css -Dargs.cssroot=/path/to/folder -Dargs.copycss=yes
  *
+ * Font and image files it refers to go in a folder of their own, named with
+ * -Dgovuk.css.assets=/path/to/folder/assets: the build copies them beside it.
+ *
  * It is linked after the Design System's and the plugin's stylesheets on every
  * page, so a rule here wins over one of equal weight in theirs.
  */
@@ -105,16 +108,16 @@
   width: 40px;                    /* change me: the logo's size */
   height: 40px;
   /* change me: the logo. Written into the stylesheet as a data: URL it needs
-   * no second file. To use a file instead, write url("logo.svg") and copy
-   * logo.svg into the output beside this stylesheet after the build. */
+   * no second file. To use a file instead, write url("logo.svg") and put
+   * logo.svg in the folder named by govuk.css.assets. */
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='19' fill='%23fff'/%3E%3Cpath d='M11 21l6.5 6.5L29.5 14' fill='none' stroke='%2300594f' stroke-width='4.5'/%3E%3C/svg%3E") no-repeat center / contain;
 }
 
 /* ===== 5. A font you host yourself (optional) ===== */
 
-/* Uncomment, name the family first in --brand-font, and copy the font files
- * into the output beside this stylesheet after the build. Use only a font
- * whose licence lets you publish it on the web.
+/* Uncomment, name the family first in --brand-font, and put the font files in
+ * the folder named by govuk.css.assets, which the build copies beside this
+ * stylesheet. Use only a font whose licence lets you publish it on the web.
 
 @font-face {
   font-family: "Your Font";

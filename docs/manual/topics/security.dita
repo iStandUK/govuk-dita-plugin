@@ -27,6 +27,10 @@
         <li><b>No cookies, no third-party requests, no restricted assets bundled.</b></li>
         <li><b>Valid, accessible output</b>, checked on every build with the Nu HTML checker
           and axe-core at WCAG 2.2 AA.</li>
+        <li><b>Nothing extra in the index files.</b> <filepath>sitemap.xml</filepath> and
+          <filepath>llms.txt</filepath> list only pages the site already publishes, with
+          their titles and short descriptions; they leave out resource-only and
+          <codeph>toc="no"</codeph> topics, the search page and the print document.</li>
       </ul>
     </section>
     <section id="headers">
@@ -35,7 +39,10 @@
         plugin's pages are known to satisfy; they are also what
         <codeph>govuk.csp=meta</codeph> writes into each page for hosts that cannot set
         headers (see <xref keyref="parameters"/>), except that
-        <codeph>frame-ancestors</codeph> only works as a header.</p>
+        <codeph>frame-ancestors</codeph> only works as a header. A host that shows its own
+        pages inside a frame (<xref keyref="embedding"/>) sets
+        <codeph>frame-ancestors 'self'</codeph>, or names the framing site, in place of
+        <codeph>'none'</codeph>.</p>
       <table frame="all" id="header-table">
         <title>Recommended response headers</title>
         <tgroup cols="2">

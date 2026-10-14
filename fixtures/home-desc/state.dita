@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="state">
+  <title>health state</title>
+  <shortdesc>overall level of <xref keyref="health"/> of a <xref keyref="subject"/></shortdesc>
+  <conbody><p>health state.</p></conbody>
+</concept>

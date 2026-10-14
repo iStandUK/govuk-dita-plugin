@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="elements" xml:lang="en-GB">
+  <title>Data elements</title>
+  <shortdesc>Every data element in the dictionary, live and retired.</shortdesc>
+  <refbody>
+    <section>
+      <ul>
+        <li><xref keyref="person-birth-date"/></li>
+        <li><xref keyref="person-stated-gender-code"/></li>
+      </ul>
+    </section>
+  </refbody>
+</reference>

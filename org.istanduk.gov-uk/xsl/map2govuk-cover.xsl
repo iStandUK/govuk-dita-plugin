@@ -18,6 +18,7 @@ map transformation with the plugin's values.
   <xsl:import href="plugin:org.dita.html5:xsl/map2html5-cover.xsl"/>
   <xsl:import href="furniture.xsl"/>
   <xsl:import href="utility-pages.xsl"/>
+  <xsl:import href="metadata.xsl"/>
 
   <xsl:output method="html"
               include-content-type="no"
@@ -26,6 +27,8 @@ map transformation with the plugin's values.
 
   <!-- sitemap.xml is plain XML: no doctype, its own declaration -->
   <xsl:output name="govuk-sitemap" method="xml" encoding="UTF-8" indent="yes" omit-xml-declaration="no"/>
+  <!-- llms.txt is Markdown: plain text -->
+  <xsl:output name="govuk-llms" method="text" encoding="UTF-8"/>
 
   <xsl:param name="GOVUK-HOMEPAGE-LAYOUT" select="'auto'"/>
   <xsl:param name="GOVUK-HOMEPAGE-DEPTH" select="'2'"/>
@@ -54,7 +57,16 @@ map transformation with the plugin's values.
   <!-- sitemap.xml (#60): yes when the Ant build resolved govuk.sitemap and a
        base URL is known -->
   <xsl:param name="GOVUK-SITEMAP" select="'no'"/>
+  <!-- llms.txt (#118, D-30): yes when the Ant build resolved govuk.llms and a
+       base URL is known -->
+  <xsl:param name="GOVUK-LLMS" select="'no'"/>
   <xsl:param name="GOVUK-SITE-URL" select="''"/>
+
+  <!-- govuk.site.url with one trailing slash, for the absolute addresses of
+       sitemap.xml and llms.txt -->
+  <xsl:variable name="govuk-site-base" as="xs:string"
+                select="if (ends-with(normalize-space($GOVUK-SITE-URL), '/')) then normalize-space($GOVUK-SITE-URL)
+                        else concat(normalize-space($GOVUK-SITE-URL), '/')"/>
   <xsl:param name="GOVUK-DATES" select="'no'"/>
 
   <!-- Whether print.html is produced for this publication (FR-P2): the same
@@ -147,6 +159,9 @@ map transformation with the plugin's values.
 
   <xsl:template name="chapter-setup">
     <xsl:call-template name="govuk-check-map"/>
+    <xsl:call-template name="govuk-md-check">
+      <xsl:with-param name="cover" select="$govuk-md-cover"/>
+    </xsl:call-template>
     <html class="govuk-template">
       <xsl:call-template name="setTopicLanguage"/>
       <xsl:call-template name="chapterHead"/>
@@ -158,6 +173,7 @@ map transformation with the plugin's values.
     <xsl:call-template name="govuk-figurelist-page"/>
     <xsl:call-template name="govuk-tablelist-page"/>
     <xsl:call-template name="govuk-sitemap"/>
+    <xsl:call-template name="govuk-llms"/>
   </xsl:template>
 
   <!-- ===== sitemap.xml (#60) =====
@@ -169,9 +185,7 @@ map transformation with the plugin's values.
        date is only as good as its source (#61). -->
   <xsl:template name="govuk-sitemap">
     <xsl:if test="$GOVUK-SITEMAP = 'yes' and normalize-space($GOVUK-SITE-URL) ne ''">
-      <xsl:variable name="base" as="xs:string"
-                    select="if (ends-with(normalize-space($GOVUK-SITE-URL), '/')) then normalize-space($GOVUK-SITE-URL)
-                            else concat(normalize-space($GOVUK-SITE-URL), '/')"/>
+      <xsl:variable name="base" as="xs:string" select="$govuk-site-base"/>
       <xsl:result-document href="sitemap.xml" format="govuk-sitemap">
         <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
           <url><loc><xsl:value-of select="concat($base, 'index', $OUTEXT)"/></loc></url>
@@ -183,10 +197,7 @@ map transformation with the plugin's values.
                 <xsl:variable name="uri" select="resolve-uri(govuk:print-file(.), $govuk-map-base)"/>
                 <xsl:if test="doc-available($uri)">
                   <xsl:variable name="modified" as="xs:string"
-                                select="normalize-space(string(((doc($uri)//*[contains(@class, ' topic/topic ')])[1]
-                                                                 /*[contains(@class, ' topic/prolog ')]
-                                                                 /*[contains(@class, ' topic/critdates ')]
-                                                                 /*[contains(@class, ' topic/revised ')]/@modified)[last()]))"/>
+                                select="govuk:own-date((doc($uri)//*[contains(@class, ' topic/topic ')])[1], 'revised')"/>
                   <xsl:if test="substring($modified, 1, 10) castable as xs:date">
                     <lastmod><xsl:value-of select="substring($modified, 1, 10)"/></lastmod>
                   </xsl:if>
@@ -203,10 +214,163 @@ map transformation with the plugin's values.
     </xsl:if>
   </xsl:template>
 
+  <!-- ===== llms.txt (#118, D-30) =====
+       An index of the publication for language models and agents, in the
+       llmstxt.org shape: the title as an H1, the publication's description as
+       a quote, then a section per top-level entry of the map listing its
+       pages as "- [title](absolute URL): description". Top-level pages with
+       nothing beneath them share one Contents section. The pages are the
+       sitemap's: each navigable topic page once, at its first place in
+       reading order; not the search page or the print document. The
+       glossary, index and list pages go in the convention's "Optional"
+       section, which a reader short of room may skip. Titles and
+       descriptions are the ones the home page shows. -->
+  <xsl:template name="govuk-llms">
+    <xsl:if test="$GOVUK-LLMS = 'yes' and normalize-space($GOVUK-SITE-URL) ne ''">
+      <xsl:variable name="pages" as="element()*">
+        <xsl:for-each-group select="govuk:print-topicrefs($govuk-norm-map[1])"
+                            group-by="govuk:print-page(govuk:print-file(.))">
+          <xsl:sequence select="current-group()[1]"/>
+        </xsl:for-each-group>
+      </xsl:variable>
+      <xsl:variable name="contents" as="xs:string">
+        <xsl:call-template name="govuk-llms-string">
+          <xsl:with-param name="id" select="'govuk-dita.contents'"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="description" as="xs:string"
+                    select="normalize-space(string($govuk-md-publication/govuk:p[@term = 'dct:description']/@value))"/>
+      <xsl:result-document href="llms.txt" format="govuk-llms">
+        <xsl:value-of select="concat('# ', $govuk-cover-title, '&#10;')"/>
+        <xsl:if test="$description ne ''">
+          <xsl:value-of select="concat('&#10;&gt; ', $description, '&#10;')"/>
+        </xsl:if>
+        <xsl:for-each-group select="$pages" group-by="govuk:llms-section(., $pages)">
+          <xsl:variable name="head" as="element()?"
+                        select="if (current-grouping-key() eq '') then ()
+                                else (current-group()[1]/ancestor-or-self::*[generate-id() eq current-grouping-key()])[1]"/>
+          <xsl:variable name="heading" as="xs:string">
+            <xsl:choose>
+              <xsl:when test="exists($head)">
+                <xsl:variable name="title"><xsl:apply-templates select="$head" mode="get-navtitle"/></xsl:variable>
+                <xsl:sequence select="normalize-space($title)"/>
+              </xsl:when>
+              <xsl:otherwise><xsl:sequence select="$contents"/></xsl:otherwise>
+            </xsl:choose>
+          </xsl:variable>
+          <xsl:value-of select="concat('&#10;## ', $heading, '&#10;&#10;')"/>
+          <xsl:for-each select="current-group()">
+            <xsl:variable name="title"><xsl:apply-templates select="." mode="get-navtitle"/></xsl:variable>
+            <xsl:call-template name="govuk-llms-item">
+              <xsl:with-param name="title" select="normalize-space($title)"/>
+              <xsl:with-param name="page" select="govuk:print-page(govuk:print-file(.))"/>
+              <xsl:with-param name="description" select="dita-ot:govuk-desc(.)"
+                              xmlns:dita-ot="http://dita-ot.sourceforge.net/ns/201007/dita-ot"/>
+            </xsl:call-template>
+          </xsl:for-each>
+        </xsl:for-each-group>
+        <xsl:if test="exists(($govuk-gloss, $govuk-ix, $govuk-figs, $govuk-tables))">
+          <xsl:value-of select="'&#10;## Optional&#10;&#10;'"/>
+          <xsl:for-each select="('glossary', 'index-page', 'figurelist', 'tablelist')
+                                [. eq 'glossary' and exists($govuk-gloss) or . eq 'index-page' and exists($govuk-ix)
+                                 or . eq 'figurelist' and exists($govuk-figs) or . eq 'tablelist' and exists($govuk-tables)]">
+            <xsl:variable name="page" select="."/>
+            <xsl:call-template name="govuk-llms-item">
+              <xsl:with-param name="title" as="xs:string">
+                <xsl:call-template name="govuk-llms-string">
+                  <xsl:with-param name="id"
+                                  select="map{'glossary': 'govuk-dita.glossary', 'index-page': 'govuk-dita.index',
+                                              'figurelist': 'govuk-dita.figures', 'tablelist': 'govuk-dita.tables'}($page)"/>
+                </xsl:call-template>
+              </xsl:with-param>
+              <xsl:with-param name="page" select="concat($page, '.html')"/>
+              <xsl:with-param name="description" select="''"/>
+            </xsl:call-template>
+          </xsl:for-each>
+        </xsl:if>
+      </xsl:result-document>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- The section a page is listed in: the generated id of its top-level map
+       entry, or '' for a top-level page with no page beneath it. Bookmap
+       front and back matter and topic groups have no title of their own, so
+       the entries inside them count as top level. -->
+  <xsl:function name="govuk:llms-section" as="xs:string">
+    <xsl:param name="ref" as="element()"/>
+    <xsl:param name="pages" as="element()*"/>
+    <xsl:variable name="head" as="element()"
+                  select="($ref/ancestor-or-self::*[contains(@class, ' map/topicref ')]
+                                                  [not(contains(@class, ' bookmap/frontmatter ')
+                                                       or contains(@class, ' bookmap/backmatter ')
+                                                       or contains(@class, ' mapgroup-d/topicgroup '))])[1]"/>
+    <xsl:sequence select="if ($head is $ref and empty($pages[ancestor::* intersect $ref])) then ''
+                          else generate-id($head)"/>
+  </xsl:function>
+
+  <!-- One list item: "- [title](URL): description", the title escaped for
+       link text and the address absolute and safe inside the parentheses -->
+  <xsl:template name="govuk-llms-item">
+    <xsl:param name="title" as="xs:string"/>
+    <xsl:param name="page" as="xs:string"/>
+    <xsl:param name="description" as="xs:string"/>
+    <xsl:variable name="url"
+                  select="replace(replace(iri-to-uri(concat($govuk-site-base, $page)), '\(', '%28'), '\)', '%29')"/>
+    <xsl:value-of select="concat('- [', replace($title, '([\\\[\]])', '\\$1'), '](', $url, ')',
+                                 if (normalize-space($description) ne '') then concat(': ', normalize-space($description)) else '',
+                                 '&#10;')"/>
+  </xsl:template>
+
+  <!-- A localised string; getVariable reads the language from a node, so the
+       map stands in when the caller's context is a plain value -->
+  <xsl:template name="govuk-llms-string" as="xs:string">
+    <xsl:param name="id" as="xs:string"/>
+    <xsl:variable name="text">
+      <xsl:for-each select="$govuk-norm-map[1]">
+        <xsl:call-template name="getVariable">
+          <xsl:with-param name="id" select="$id"/>
+        </xsl:call-template>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:sequence select="normalize-space($text)"/>
+  </xsl:template>
+
   <xsl:template name="gen-user-head">
     <xsl:call-template name="govuk-csp-meta"/>
+    <xsl:call-template name="govuk-embed-script"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <xsl:call-template name="govuk-md-head">
+      <xsl:with-param name="record" select="$govuk-md-cover"/>
+    </xsl:call-template>
     <xsl:apply-templates select="." mode="gen-user-head"/>
+  </xsl:template>
+
+  <!-- The cover's metadata record (design 14): the publication's title and
+       description, the first page next -->
+  <xsl:variable name="govuk-md-cover" as="element()">
+    <xsl:call-template name="govuk-md-page">
+      <xsl:with-param name="role" select="'cover'"/>
+      <xsl:with-param name="path" select="concat('index', $OUTEXT)"/>
+      <xsl:with-param name="title" select="$govuk-cover-title"/>
+      <xsl:with-param name="description" select="string($govuk-md-publication/govuk:p[@term = 'dct:description']/@value)"/>
+      <xsl:with-param name="next" select="govuk:md-reading(/)[1]"/>
+    </xsl:call-template>
+  </xsl:variable>
+
+  <!-- A generated page's metadata record: its title, and the rest from the
+       publication -->
+  <xsl:template name="govuk-md-utility-head">
+    <xsl:param name="file" as="xs:string"/>
+    <xsl:param name="page-title" as="xs:string"/>
+    <xsl:call-template name="govuk-md-head">
+      <xsl:with-param name="record" as="element()">
+        <xsl:call-template name="govuk-md-page">
+          <xsl:with-param name="role" select="'utility'"/>
+          <xsl:with-param name="path" select="$file"/>
+          <xsl:with-param name="title" select="$page-title"/>
+        </xsl:call-template>
+      </xsl:with-param>
+    </xsl:call-template>
   </xsl:template>
 
   <!-- Kept in step with template.xsl's generateCssLinks; the cover is at the site
@@ -261,7 +425,77 @@ map transformation with the plugin's values.
   <xsl:function name="dita-ot:govuk-desc" as="xs:string"
                 xmlns:dita-ot="http://dita-ot.sourceforge.net/ns/201007/dita-ot">
     <xsl:param name="ref" as="element()"/>
-    <xsl:sequence select="normalize-space(string(($ref/*[contains(@class, ' map/topicmeta ')]/*[contains(@class, ' map/shortdesc ')])[1]))"/>
+    <xsl:variable name="text" as="xs:string*">
+      <xsl:apply-templates mode="govuk-desc-text"
+                           select="($ref/*[contains(@class, ' map/topicmeta ')]/*[contains(@class, ' map/shortdesc ')])[1]/node()"/>
+    </xsl:variable>
+    <xsl:sequence select="normalize-space(string-join($text, ''))"/>
+  </xsl:function>
+
+  <!-- A description's words as a reader sees them on the topic's own page
+       (#200). The map's copy of a short description is taken before DITA-OT
+       fills in the text of empty cross-references, so that is done here, the
+       same way: the target's title. Text a page never shows is left out. -->
+  <xsl:template match="text()" mode="govuk-desc-text">
+    <xsl:sequence select="string(.)"/>
+  </xsl:template>
+
+  <xsl:template match="*" mode="govuk-desc-text">
+    <xsl:apply-templates mode="govuk-desc-text"/>
+  </xsl:template>
+
+  <xsl:template match="processing-instruction() | comment()
+                       | *[contains(@class, ' topic/indexterm ') or contains(@class, ' topic/desc ')
+                           or contains(@class, ' topic/draft-comment ') or contains(@class, ' topic/required-cleanup ')
+                           or contains(@class, ' topic/data ')]"
+                mode="govuk-desc-text"/>
+
+  <xsl:template match="*[contains(@class, ' topic/xref ')]" mode="govuk-desc-text">
+    <xsl:variable name="own" as="xs:string*">
+      <xsl:apply-templates mode="govuk-desc-text"/>
+    </xsl:variable>
+    <xsl:sequence select="if (normalize-space(string-join($own, '')) ne '') then $own
+                          else govuk:link-text(.)"/>
+  </xsl:template>
+
+  <!-- The text DITA-OT gives a cross-reference with none of its own: the
+       target's title; failing that, the navigation title of the map entry
+       for the same file; failing that, the file's name, so that no word is
+       silently dropped. Links outside the publication show their address. -->
+  <xsl:function name="govuk:link-text" as="xs:string">
+    <xsl:param name="xref" as="element()"/>
+    <xsl:variable name="href" select="normalize-space($xref/@href)"/>
+    <xsl:variable name="file" select="substring-before(concat($href, '#'), '#')"/>
+    <xsl:variable name="ids" select="tokenize(substring-after($href, '#'), '/')"/>
+    <xsl:variable name="local" as="xs:boolean"
+                  select="$file ne '' and not($xref/@scope = ('external', 'peer'))
+                          and (not($xref/@format) or $xref/@format = 'dita')"/>
+    <xsl:variable name="uri" select="if ($local) then string(resolve-uri($file, $govuk-map-base)) else ''"/>
+    <xsl:variable name="topic" as="element()?"
+                  select="if ($uri ne '' and doc-available($uri))
+                          then (doc($uri)//*[contains(@class, ' topic/topic ')]
+                                              [empty($ids[1]) or $ids[1] = '' or @id = $ids[1]])[1]
+                          else ()"/>
+    <xsl:variable name="target" as="element()?"
+                  select="if (exists($ids[2])) then ($topic//*[@id = $ids[2]])[1] else $topic"/>
+    <xsl:variable name="title" as="xs:string*">
+      <xsl:apply-templates mode="govuk-desc-text"
+                           select="($target/*[contains(@class, ' topic/title ')])[1]/node()"/>
+    </xsl:variable>
+    <xsl:variable name="entry" as="element()?"
+                  select="if ($local)
+                          then ($govuk-norm-map//*[contains(@class, ' map/topicref ')]
+                                                  [substring-before(concat(@href, '#'), '#') = $file])[1]
+                          else ()"/>
+    <xsl:variable name="navtitle" as="xs:string*">
+      <xsl:if test="exists($entry)">
+        <xsl:apply-templates select="$entry" mode="get-navtitle"/>
+      </xsl:if>
+    </xsl:variable>
+    <xsl:sequence select="(normalize-space(string-join($title, '')),
+                           normalize-space(string-join($navtitle, '')),
+                           if ($local) then replace(tokenize($file, '/')[last()], '\.[^.]*$', '') else $href)
+                          [. ne ''][1]"/>
   </xsl:function>
 
   <!-- A linked (or plain) entry heading with optional description -->
@@ -422,22 +656,28 @@ map transformation with the plugin's values.
                 </xsl:when>
                 <xsl:when test="$layout = 'grid'">
                   <xsl:call-template name="govuk-contents-heading"/>
-                  <div class="govuk-grid-row app-topic-grid">
-                    <xsl:for-each select="$entries">
-                      <div class="govuk-grid-column-one-third">
-                        <!-- Unstyled by default; themes may tint it (D-14) -->
-                        <div class="app-tile">
-                          <xsl:apply-templates select="." mode="govuk-entry"/>
-                          <xsl:call-template name="govuk-child-list">
-                            <xsl:with-param name="children"
-                                            select="*[contains(@class, ' map/topicref ')]
-                                                    [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
-                            <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
-                          </xsl:call-template>
+                  <!-- A row per three tiles, as the Design System's grid
+                       examples do: columns float, and only a row clears, so
+                       one row of every tile let a short tile's gap take the
+                       next row's first tile (#202) -->
+                  <xsl:for-each-group select="$entries" group-adjacent="(position() - 1) idiv 3">
+                    <div class="govuk-grid-row app-topic-grid">
+                      <xsl:for-each select="current-group()">
+                        <div class="govuk-grid-column-one-third">
+                          <!-- Unstyled by default; themes may tint it (D-14) -->
+                          <div class="app-tile">
+                            <xsl:apply-templates select="." mode="govuk-entry"/>
+                            <xsl:call-template name="govuk-child-list">
+                              <xsl:with-param name="children"
+                                              select="*[contains(@class, ' map/topicref ')]
+                                                      [not(@processing-role = 'resource-only')][not(@toc = 'no')]"/>
+                              <xsl:with-param name="levels" select="$govuk-homepage-depth - 1"/>
+                            </xsl:call-template>
+                          </div>
                         </div>
-                      </div>
-                    </xsl:for-each>
-                  </div>
+                      </xsl:for-each>
+                    </div>
+                  </xsl:for-each-group>
                 </xsl:when>
                 <xsl:when test="$layout = 'grouped'">
                   <xsl:call-template name="govuk-contents-heading"/>
@@ -573,8 +813,13 @@ map transformation with the plugin's values.
         <head>
           <meta charset="UTF-8"/>
           <xsl:call-template name="govuk-csp-meta"/>
+          <xsl:call-template name="govuk-embed-script"/>
           <meta name="viewport" content="width=device-width, initial-scale=1"/>
           <title><xsl:value-of select="concat($search-label, ' — ', $govuk-cover-title)"/></title>
+          <xsl:call-template name="govuk-md-utility-head">
+            <xsl:with-param name="file" select="'search.html'"/>
+            <xsl:with-param name="page-title" select="string($search-label)"/>
+          </xsl:call-template>
           <xsl:call-template name="generateCssLinks"/>
           <link rel="stylesheet" href="pagefind/pagefind-ui.css"/>
         </head>

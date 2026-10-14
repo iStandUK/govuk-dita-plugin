@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossentry PUBLIC "-//OASIS//DTD DITA Glossary Entry//EN" "glossentry.dtd">
+<glossentry id="term-data-element" xml:lang="en-GB">
+  <glossterm>data element</glossterm>
+  <glossdef>A single item of data with a defined meaning, format and set of permitted values.</glossdef>
+</glossentry>

@@ -77,28 +77,24 @@ element-level typography.
 
   <!-- Previous/next pagination (FR-N5, #32): adjacent navigable topics in the
        map's linear reading order, which also surfaces collection-type=sequence. -->
+  <xsl:variable name="govuk-reading" as="element()*" select="govuk:md-reading($input.map)"/>
+  <!-- Match the current page by its resolved href rather than nav.xsl's
+       $current-topicref, which for keyref maps can resolve to the
+       resource-only keydef (excluded from the reading order). -->
+  <xsl:variable name="govuk-reading-pos" as="xs:integer?"
+                select="(for $i in 1 to count($govuk-reading)
+                         return $i[dita-ot:get-path($PATH2PROJ, $govuk-reading[$i]) = $current-file])[1]"/>
+
   <xsl:template name="govuk-pagination">
-    <xsl:variable name="reading" as="element()*"
-                  select="$input.map//*[contains(@class, ' map/topicref ')]
-                          [normalize-space(@href)]
-                          [not(@processing-role = 'resource-only')]
-                          [not(@scope = 'external')]
-                          [not(@format) or @format = 'dita']"/>
-    <!-- Match the current page by its resolved href rather than nav.xsl's
-         $current-topicref, which for keyref maps can resolve to the
-         resource-only keydef (excluded from $reading). -->
-    <xsl:variable name="pos" as="xs:integer*"
-                  select="for $i in 1 to count($reading)
-                          return $i[dita-ot:get-path($PATH2PROJ, $reading[$i]) = $current-file]"/>
-    <xsl:if test="exists($pos)">
-      <xsl:variable name="i" select="$pos[1]" as="xs:integer"/>
-      <xsl:variable name="prev" select="$reading[$i - 1]" as="element()?"/>
-      <xsl:variable name="next" select="$reading[$i + 1]" as="element()?"/>
+    <xsl:if test="exists($govuk-reading-pos)">
+      <xsl:variable name="i" select="$govuk-reading-pos" as="xs:integer"/>
+      <xsl:variable name="prev" select="$govuk-reading[$i - 1]" as="element()?"/>
+      <xsl:variable name="next" select="$govuk-reading[$i + 1]" as="element()?"/>
       <xsl:if test="exists($prev) or exists($next)">
         <nav class="govuk-pagination govuk-pagination--block" aria-label="Pagination">
           <xsl:if test="exists($prev)">
             <div class="govuk-pagination__prev">
-              <a class="govuk-pagination__link" rel="prev">
+              <a class="govuk-link govuk-pagination__link" rel="prev">
                 <xsl:attribute name="href"><xsl:apply-templates select="$prev" mode="govuk-page-href"/></xsl:attribute>
                 <svg class="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
                   <path d="m6.5938-0.0078125-6.7266 6.7266 6.7441 6.4062 1.377-1.449-4.1856-3.9768h12.896v-2h-12.984l4.2931-4.293-1.3888-1.3852z"></path>
@@ -111,7 +107,7 @@ element-level typography.
           </xsl:if>
           <xsl:if test="exists($next)">
             <div class="govuk-pagination__next">
-              <a class="govuk-pagination__link" rel="next">
+              <a class="govuk-link govuk-pagination__link" rel="next">
                 <xsl:attribute name="href"><xsl:apply-templates select="$next" mode="govuk-page-href"/></xsl:attribute>
                 <svg class="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
                   <path d="m8.107-0.0078125-1.4136 1.414 4.3021 4.2949h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7295-6.7285z"></path>
@@ -150,8 +146,38 @@ element-level typography.
   <!-- Responsive viewport (html5 base emits none) -->
   <xsl:template name="gen-user-head">
     <xsl:call-template name="govuk-csp-meta"/>
+    <xsl:call-template name="govuk-embed-script">
+      <xsl:with-param name="prefix" select="string($govuk-root)"/>
+    </xsl:call-template>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <xsl:call-template name="govuk-md-head">
+      <xsl:with-param name="record" as="element()?">
+        <xsl:call-template name="govuk-md-topic"/>
+      </xsl:with-param>
+    </xsl:call-template>
     <xsl:apply-templates select="." mode="gen-user-head"/>
+  </xsl:template>
+
+  <!-- This page's metadata record (design 14): the topic, the map entry that
+       makes it a page, and its neighbours in reading order -->
+  <xsl:template name="govuk-md-topic" as="element()?">
+    <xsl:variable name="topic" as="element()?"
+                  select="(/dita/*[contains(@class, ' topic/topic ')], /*[contains(@class, ' topic/topic ')])[1]"/>
+    <xsl:variable name="ref" as="element()?"
+                  select="($current-topicrefs[not(@processing-role = 'resource-only')], $current-topicrefs)[1]"/>
+    <xsl:if test="exists($topic) and exists($govuk-md-schemes)">
+      <xsl:call-template name="govuk-md-page">
+        <xsl:with-param name="role" select="'topic'"/>
+        <xsl:with-param name="path"
+                        select="(govuk:md-ref-path($ref)[. ne ''],
+                                 concat(if (normalize-space($FILEDIR) = ('', '.')) then '' else concat($FILEDIR, '/'),
+                                        replace(string($FILENAME), '\.[^.]*$', $OUTEXT)))[1]"/>
+        <xsl:with-param name="topic" select="$topic"/>
+        <xsl:with-param name="ref" select="$ref"/>
+        <xsl:with-param name="previous" select="$govuk-reading[$govuk-reading-pos - 1]"/>
+        <xsl:with-param name="next" select="$govuk-reading[$govuk-reading-pos + 1]"/>
+      </xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <!-- Brand-recoloured base stylesheet: NHS uses a Sass-recompiled govuk-frontend

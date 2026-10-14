@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="embedding" xml:lang="en-GB">
+  <title>Showing pages inside another page</title>
+  <shortdesc>If you show the publication's pages inside a frame on a page of your own, such
+    as a presentation screen or a guided tour, the embedded view shows each page's content
+    without its masthead, contents, pagination or footer.</shortdesc>
+  <conbody>
+    <p><indexterm>embedded view</indexterm><indexterm>iframe</indexterm><indexterm>govuk.embed</indexterm>Some
+      publishers place their own pages inside another page they control: a kiosk, a guided
+      tour, a lecture theatre that shows a page on its projection screen. There the page's
+      furniture works against the reader, and a link that leaves the frame replaces the
+      page around it. Build with <codeph>-Dgovuk.embed=yes</codeph>, frame a page with
+      <codeph>?embed=1</codeph> after its address, and the page shows its content
+      only.</p>
+    <codeblock>&lt;iframe title="Installing the plugin, from the manual"
+        src="/manual/topics/install.html?embed=1">&lt;/iframe></codeblock>
+    <section id="what">
+      <title>What changes, and what does not</title>
+      <ul>
+        <li>The masthead, phase banner, contents, previous and next links and footer are
+          hidden, and the content takes the width they used.</li>
+        <li>A link to another page of the same site keeps <codeph>embed=1</codeph>, so the
+          reader stays in the embedded view inside the frame. A link opened in a new tab,
+          and a link to another site, behave as usual.</li>
+        <li>Links in diagrams that are drawn into the page lose a <codeph>target</codeph> of
+          <codeph>_top</codeph> or <codeph>_parent</codeph>. Diagrams made to be shown as an
+          <codeph>&lt;object></codeph> often carry one so that a click leaves the object;
+          drawn into the page, it would replace the page around the frame. A diagram shown
+          with DITA's <codeph>&lt;object></codeph> element keeps its own links.</li>
+        <li>The view applies only inside a frame. The same address opened in a browser
+          window, or with JavaScript turned off, shows the full page, so a copied link never
+          leads to a page with no way on.</li>
+        <li>Without the parameter nothing changes: no page loads the script.</li>
+      </ul>
+      <p>The view does not exist with <codeph>govuk.branding=official</codeph> or
+        <codeph>nhs</codeph>: those identities' header and footer belong on every page.
+        The build ignores the parameter and says so (<codeph>GOVK014W</codeph>).</p>
+    </section>
+    <section id="host">
+      <title>What the framing page must do</title>
+      <ul>
+        <li>Give the <codeph>iframe</codeph> a <codeph>title</codeph> that says what it
+          holds; it is the frame's name for screen readers.</li>
+        <li>Allow the framing. The headers in <xref keyref="security"/> include
+          <codeph>frame-ancestors 'none'</codeph>, which forbids any framing. A host that
+          frames its own pages sets <codeph>frame-ancestors 'self'</codeph>, or names the
+          framing site, in its place. A <codeph>&lt;meta></codeph> policy cannot set this;
+          it has to be a header.</li>
+      </ul>
+    </section>
+    <section id="style">
+      <title>Styling the embedded view</title>
+      <p>In the embedded view the page's <codeph>html</codeph> element has the class
+        <codeph>app-embed</codeph>. Your own stylesheet (<xref keyref="custom-css"/>) can use
+        it, for example to set larger type for a screen read from across a room, or to hide
+        links that would lead back to the framing page:</p>
+      <codeblock>.app-embed body { font-size: 125%; }
+.app-embed .related-links { display: none; }</codeblock>
+    </section>
+  </conbody>
+</concept>

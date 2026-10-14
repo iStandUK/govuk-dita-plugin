@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="person-birth-date" xml:lang="en-GB">
+  <title>Person birth date</title>
+  <shortdesc>The date on which a person was born or is officially deemed to have been born.</shortdesc>
+  <prolog>
+    <critdates>
+      <created date="2024-04-01"/>
+      <revised modified="2026-06-12"/>
+    </critdates>
+    <metadata>
+      <audience type="user" job="using"/>
+      <category>Data element</category>
+      <keywords>
+        <!-- real alternative names only: never the title's own words -->
+        <keyword>date of birth</keyword>
+        <keyword>DOB</keyword>
+        <indexterm>dates<indexterm>of birth</indexterm></indexterm>
+      </keywords>
+    </metadata>
+    <!-- an identifier that stays the same from release to release -->
+    <resourceid appname="dictionary" appid="DE-000123"/>
+    <data name="dct:conformsTo" value="https://www.iso.org/standard/70907.html"/>
+  </prolog>
+  <refbody>
+    <table>
+      <title>Format</title>
+      <tgroup cols="2">
+        <thead>
+          <row><entry>Property</entry><entry>Value</entry></row>
+        </thead>
+        <tbody>
+          <row><entry>Format</entry><entry><codeph>CCYY-MM-DD</codeph></entry></row>
+          <row><entry>Length</entry><entry>10</entry></row>
+        </tbody>
+      </tgroup>
+    </table>
+    <section outputclass="search-ignore">
+      <title>Where used</title>
+      <p><xref keyref="submit-a-return"/></p>
+    </section>
+  </refbody>
+</reference>

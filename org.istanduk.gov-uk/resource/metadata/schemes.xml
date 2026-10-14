@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+The mapping tables (design 14, D-26), in the order their output is written,
+and the govuk.metadata levels that enable each. A scheme is a table; adding
+one, or a row to one, needs no stylesheet change.
+-->
+<schemes>
+  <scheme href="links.xml" levels="basic"/>
+  <scheme href="opengraph.xml" levels="basic"/>
+  <scheme href="dublincore.xml" levels="basic"/>
+</schemes>

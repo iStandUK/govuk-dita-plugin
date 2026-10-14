@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="matter">
+  <title>health matter</title>
+  <shortdesc>circumstance<draft-comment>check the wording</draft-comment> contributing to the <xref href="concepts/actor.dita"/> as seen by <xref keyref="actor">the care actor</xref> under <keyword keyref="iso"/></shortdesc>
+  <conbody><p>health matter.</p></conbody>
+</concept>

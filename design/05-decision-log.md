@@ -532,7 +532,7 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 1. **`govuk.metadata=basic` is on by default** — canonical link, Open Graph, social card, `prev`/`next` and Dublin Core on every page. It changes no visible page and adds only tags derived from content that already exists, so a publisher gets working link previews without asking. `full` adds the schema.org JSON-LD; `no` emits nothing.
 2. **Personal authors never appear by default.** `author` and `publisher` are the organisation (bookmeta `organization`, else `govuk.organisation`, else the service name); prolog authors become `Person` only under `govuk.metadata.persons=yes`.
 3. **`HowTo` (tasks) and `DefinedTermSet` (glossary) are emitted**, although no search feature currently rewards them: the vocabularies are valid, cheap to derive and read by consumers other than search engines. **`FAQPage` is not emitted** — no DITA construct maps to it and the rich result has been withdrawn.
-4. **Open — but constrained (see below).** How a publication declares a dataset, standard, data service or code list.
+4. **Decided 2026-10-05 as D-26:** a branch declares itself with `<data name="rdf:type" value="…"/>` in its topicmeta (option (a) below, generalised). Was open, but constrained (see below): how a publication declares a dataset, standard, data service or code list.
 5. **`llms.txt` follows separately**, as its own epic ([#116](https://github.com/iStandUK/govuk-dita-plugin/issues/116)), not part of the structured-data epic.
 6. **DCAT keeps its own switch** rather than riding on `govuk.metadata=full`: a catalogue record is a publishing act with legal and stewardship weight, and a publisher should turn it on deliberately. The checker enforces **data.gov.uk's mandatory set by default** (the harvester most UK publishers will meet first), with the Cross-Government Metadata Exchange Model's shapes available as an **optional SHACL validation in CI only** — never in a publisher's build. The switch's *values* depend on decision 4.
 7. **Conventions first, specialisation later.** `data` elements in map `topicmeta`, `prolog/metadata/category`, `glossentry`/`glossgroup`, `subjectScheme` maps, `properties` tables, `resourceid` and `related-links` carry the semantics; a `dcat`/`adms` DITA specialisation may follow once the convention has proved itself, because a specialisation costs every generator and author a DTD dependency.
@@ -561,3 +561,119 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 **Rationale:** every acceptance criterion in [10](10-pdf-css.md) §9 and [13](13-print-page-numbers.md) §6a was met on the real print document rather than a hand-assembled sample; the gaps found are small, are closed without touching the plugin or the print contract, and are recorded with the limits that remain (right-to-left and complex scripts, small MathML, PDF/UA-1 without PDF/A, TrueType only). The fork is active — six releases in the month to 26 September 2026, 51 pull requests merged since July from 14 authors — though most of the work is one maintainer's, which is why the fallback is named.
 
 **Consequences:** the print contract stays at 1; DesignSystemPDF needs Java 17, as the toolkit does; veraPDF is a pinned test-scope dependency from Maven Central rather than an installer fetched in CI; the distribution is about 12 MB (11 MB of jars, 3.6 MB of fonts before compression). The scaffold ([#110](https://github.com/iStandUK/govuk-dita-plugin/issues/110)), command line ([#111](https://github.com/iStandUK/govuk-dita-plugin/issues/111)) and release workflow ([#112](https://github.com/iStandUK/govuk-dita-plugin/issues/112)) proceed from the spike's code. For the core ([#113](https://github.com/iStandUK/govuk-dita-plugin/issues/113)): pass the paper parameters and a date derived from the source, and give the contents entries for the glossary and index the page label the others have.
+
+## D-26 · Metadata: one model, mapping tables and three writers; assets declared with `data` (closes OQ-13)
+
+**Date:** 2026-10-05. From a design review of [12-structured-data.md](12-structured-data.md) before any code, recorded as [14-metadata-model.md](14-metadata-model.md); sponsor's decisions. Epic [#97](https://github.com/iStandUK/govuk-dita-plugin/issues/97); decision issue [#98](https://github.com/iStandUK/govuk-dita-plugin/issues/98).
+
+**Context:** the epic as written would build about ten separate emitters (Open Graph, Dublin Core, four JSON-LD shapes, `Dataset`, DCAT and SKOS in two syntaxes each, ADMS), each restating the same precedence and gating rules, three with their own checker, on top of six places that already read book and prolog metadata. The real corpora carry little metadata, so a missing value is the normal case.
+
+**Decisions:**
+
+1. **One harvest, mapping tables, three writers.** The DITA is read once into neutral records (publication, asset, page, scheme, term, step, file, agent) whose properties use Dublin Core terms. Each scheme is an XML mapping table, not a transform. Output is written per syntax: `meta`/`link`, JSON-LD, Turtle. The precedence and the gates (dates, persons, licence, site URL) are applied once, in the harvest. A `required` column drives one checker for every scheme.
+2. **`data` carries any property.** `<data name="prefix:term" value="…"/>` in bookmeta, a map's or topicref's topicmeta, or a topic's prolog reaches every scheme whose table maps the term. An unmapped term is a warning.
+3. **A branch declares a data asset with `<data name="rdf:type" value="…"/>` in its topicmeta** (D-24's decision 4, OQ-13). Rejected: an `outputclass` token (untyped, collides with styling); a `subjectScheme` binding (cannot carry identifiers or other properties); a manifest map (a second source of truth).
+4. **A keyword that only repeats a word of the page's title is not published as a tag.**
+5. **A publisher's own mapping table is a later step**; the table format allows for it.
+
+**Unchanged from D-24:** `basic` on by default; no persons by default; `HowTo` and `DefinedTermSet` emitted, `FAQPage` not; DCAT keeps its own switch and data.gov.uk's mandatory set; conventions before any specialisation.
+
+**Consequences:** #102, #122 and #123 are unblocked. #99 grows (it carries the harvest, the first writer, the checker and three tables) and the rest shrink to tables and harvesters; the `Dataset`/DCAT agreement test in #122 is unnecessary, since both read one record. The six existing harvests (footer, covers, books, dates, search) stay as they are until there is a reason to touch them. A generator gains most by writing `category`, `data`, `resourceid` and true `keywords` (14 §9).
+
+---
+
+## D-27 · Stylesheet assets: an opt-in folder, not the whole of `args.cssroot`
+
+**Date:** 2026-10-09. Issue [#197](https://github.com/iStandUK/govuk-dita-plugin/issues/197), from theming contsys.org with a self-hosted typeface.
+
+**Context:** FR-T4 lets a publisher append a stylesheet with the toolkit's `args.css`, but `args.copycss=yes` copies that one file. Fonts and images it names with `url()` had to be copied after every build. Under `govuk.csp=meta` a self-hosted font is the only route to a brand typeface (`font-src 'self'` blocks fonts from `data:` URLs and other sites), and when the files are missing the reader quietly gets the fallback face.
+
+**Options:** (a) a new parameter naming a folder of assets; (b) copy the whole `args.cssroot` folder when `args.copycss=yes`; (c) leave it to the publisher's build script.
+
+**Decision:** (a). `govuk.css.assets` names a folder whose contents, subfolders included, are copied to where DITA-OT copies the stylesheet (`args.csspath`, or the site root), so a `url()` resolves as written. Empty by default. Everything in the folder is copied (Ant's default excludes aside), not a list of file types: the folder exists for this purpose, and a type list would silently drop formats it did not foresee. A name that is not a folder, or an `args.csspath` on another site, is a warning (`GOVK013W`), never a failure.
+
+**Rejected:** (b) changes what an existing toolkit parameter does and would publish whatever else sits beside the stylesheet (sources, notes, licences). (c) is the status quo each publisher had to rediscover.
+
+**Consequences:** FR-T4 is complete for fonts and images. The print document links the same stylesheet, so the same files serve it. DesignSystemPDF could later look in this folder for TrueType fonts when `govuk.pdf.fonts` is empty; that is a separate change.
+
+---
+
+## D-28 · Embedded view: a query switch the plugin implements, not a head-fragment hook
+
+**Date:** 2026-10-09. Issue [#201](https://github.com/iStandUK/govuk-dita-plugin/issues/201), from contsys.org's companion site, which frames concept pages on a screen in a walk-through hospital.
+
+**Context:** some publishers show their own pages inside a frame on a page they control. There the masthead, contents, pagination and footer work against the reader, and diagram links with `target="_top"` replace the page around the frame. The WebHelp build did this with a publisher head fragment and inline script; the GOV.UK build has no such hook, and `govuk.csp=meta` allows no publisher inline script.
+
+**Options:** (a) the plugin implements an opt-in view, switched on per page by `?embed=1`; (b) a general head-fragment hook for publisher scripts; (c) nothing, leaving publishers to restyle framed pages without a way to tell them apart.
+
+**Decision:** (a). `govuk.embed=yes` (default `no`) links `govuk/embed.js` in every page's head: a same-origin file, so `'self'` covers it and the published hash is unchanged, not deferred so the furniture never shows first. When the page is inside a frame and its address has `embed=1`, the script marks `<html>` with `app-embed`; `plugin.css` hides the furniture; same-site links keep `embed=1`. `_top` and `_parent` targets are dropped from inlined SVG links at build time, which needs no script. The view applies only in a frame, so a copied `?embed=1` link opened in a window shows the full page.
+
+**Not offered with `official` or `nhs` branding** (`GOVK014W`): the Design System puts the GOV.UK header and footer on every page of a GOV.UK service, and the NHS identity has the same expectation. In `neutral` and `istanduk` the masthead and footer are the publisher's own.
+
+**Rejected:** (b) reproduces the old behaviour exactly but conflicts with the strict policy the plugin publishes and puts untested code on every page. (c) leaves the problem where it was.
+
+**Consequences:** FR-N9. NFR-A3 holds (without JavaScript the page is complete); NFR-S3 holds (no inline script; framing remains the host's `frame-ancestors` choice, which the manual explains). An SVG shown through DITA's `<object>` keeps its own targets; the page cannot reach into it.
+
+---
+
+## D-29 · Navigation shows titles; a description is text on the page, never a hover tooltip
+
+**Date:** 2026-10-09. Sponsor's decision, from moving the contsys.org publication off Oxygen WebHelp. WebHelp's contents tree showed each topic's short description in a tooltip on mouse hover; the plugin's sidebar shows none.
+
+**Options:**
+
+- (a) The target's short description as a `title` attribute on sidebar, contents-list and home-page links.
+- (b) A tooltip or toggletip of the plugin's own. It would have to appear on focus as well as on hover, be dismissible with Escape, stay put while pointed at (WCAG 2.2 SC 1.4.13), and work on touch screens.
+- (c) No tooltips on navigation. The link text is the title, and a description is visible text wherever the plugin shows one.
+
+**Decision:** (c).
+
+**Rationale:**
+
+- **(a) puts the description where many readers can't reach it.** The Design System has no tooltip component, and its team's position is not to rely on `title` tooltips ([alphagov/govuk-design-system#1289](https://github.com/alphagov/govuk-design-system/issues/1289)):
+  - they can't be used on touch screens;
+  - they ignore page zoom and text customisation;
+  - screen readers either read them verbosely or ignore them.
+
+  Browsers also don't show a `title` on keyboard focus.
+- **(b) would make the plugin the author of a component the Design System has chosen not to provide**, for a convenience: the same words are on the page the link leads to.
+- **On a large tree the cost is real.** A 172-concept publication has 194 sidebar links on every page, and each would gain a sentence for screen-reader users to hear.
+- **Where a description helps a reader choose, the plugin already shows it as text:**
+  - beneath each entry on the home page (`govuk.homepage.layout`, `govuk.homepage.depth`);
+  - in a topic's list of its children;
+  - under every topic's own title.
+
+**Consequences:**
+
+- Sidebar, contents-list and home-page links carry no `title`.
+- Publishers moving from WebHelp lose its hover descriptions in the contents tree. The manual's navigation topic says so, and where the descriptions appear instead.
+- **Not changed:** two `title` tooltips are inherited from the toolkit and supplement the linked page rather than replace it: the one DITA-OT puts on in-text cross-references (the target's short description), and the glossary's definition tooltip (FR-G2). Whether to remove them is a separate question.
+- **Revisit** if the Design System publishes a tooltip or toggletip component.
+
+---
+
+## D-30 · `llms.txt`: the plugin writes the index, like the sitemap; no full-text copy
+
+**Date:** 2026-10-11. Sponsor's decisions on [#117](https://github.com/iStandUK/govuk-dita-plugin/issues/117), epic [#116](https://github.com/iStandUK/govuk-dita-plugin/issues/116). Split out of the structured-data work by D-24 (decision 5). Shape and evidence in [12-structured-data.md](12-structured-data.md) §5c.
+
+**Options:**
+
+- **Who writes it:** (a) the plugin, from the map, beside `sitemap.xml`; (b) no code, with the manual recommending the registry plugin `fox.jason.llms.txt`.
+- **`llms-full.txt`:** (c) not offered; (d) offered as `govuk.llms=full`, from the print document's reading order and under its topic ceiling.
+- **Default:** (e) `auto`, written whenever `govuk.site.url` is set, as the sitemap is; (f) off, with publishers opting in.
+
+**Decision:** (a), (c) and (e).
+
+**Rationale:**
+
+- **(a) over (b).** The registry plugin is a separate Markdown transform. Its index links Markdown files the GOV.UK site does not serve, with relative paths, and a publisher would need a second build to get it. Written by the cover transform, the index links the site's own pages by absolute URL and leaves out what the sitemap leaves out.
+- **(c) over (d).** The full text would be a second copy of the site, with no documented consumer, and the print document already serves reading the whole publication.
+- **(e) over (f).** The file is an index of pages the site already publishes, with no visible effect, like `sitemap.xml`. A publisher who sets `govuk.site.url` gets both, and `govuk.llms=no` turns it off.
+- **The evidence is weak, and the record says so.** As of October 2026 no major AI provider has said its production systems read `llms.txt`, and server logs show the main crawlers rarely request it; coding agents and documentation tools are its readers. It is a low-cost courtesy, not a feature with a measured payoff.
+
+**Consequences:**
+
+- `govuk.llms` = `auto` (default) | `yes` | `no`. `yes` without `govuk.site.url` fails the build; `auto` without it writes nothing and says so at info level, as the sitemap does. Requirement **FR-D5**.
+- The entries are the sitemap's pages, with the titles and short descriptions the home page shows, grouped by top-level map entry; the glossary, index and list pages go in the convention's `Optional` section.
+- **`llms.txt` is not a consent mechanism.** The manual tells a publisher who does not want their content used for training to look at `robots.txt` and licensing, and does not present publishing an index as advice.
+- [#119](https://github.com/iStandUK/govuk-dita-plugin/issues/119) (`llms-full.txt`) is closed as not planned. **Revisit** if publishers ask for it, or if a major consumer documents reading either file.

@@ -47,6 +47,12 @@
             <codeph>theme</codeph>. Left out, the stylesheet sits at the top of the output,
             beside <filepath>index.html</filepath>.</stentry>
         </strow>
+        <strow>
+          <stentry><codeph>govuk.css.assets</codeph></stentry>
+          <stentry>Optional: a folder of files the stylesheet refers to, such as fonts and
+            images. Its contents are copied, with their subfolders, to where the stylesheet
+            goes. See <xref href="#custom-css/files"/>.</stentry>
+        </strow>
       </simpletable>
       <p>Every page then links the stylesheet after the Design System's stylesheet, the
         plugin's own, and the overlay of whichever branding mode is in use. That covers
@@ -144,13 +150,27 @@
             before you publish; <xref keyref="accessibility"/> describes what remains the
             publisher's responsibility.</dd>
         </dlentry>
-        <dlentry>
+        <dlentry id="files">
           <dt>Files your stylesheet refers to</dt>
-          <dd>The toolkit copies the stylesheet and nothing else. A logo or font file named
-            in a <codeph>url()</codeph> is looked for relative to the stylesheet in the
-            output, so copy those files there after the build. A logo written into the
-            stylesheet as a <codeph>data:</codeph> URL, as in the sample, needs no second
-            file.</dd>
+          <dd>
+            <p>The toolkit copies the stylesheet and nothing else. A logo or font file named
+              in a <codeph>url()</codeph> is looked for relative to the stylesheet in the
+              output, so keep those files in a folder of their own and name it in
+              <codeph>govuk.css.assets</codeph>. Everything in it is copied, subfolders
+              included, beside the stylesheet, so <codeph>url("fonts/brand.woff2")</codeph>
+              finds <filepath>fonts/brand.woff2</filepath> from that folder:</p>
+            <codeblock>-Dargs.css=custom.css -Dargs.cssroot=/home/me/guide/theme -Dargs.copycss=yes
+-Dargs.csspath=theme -Dgovuk.css.assets=/home/me/guide/theme/assets</codeblock>
+            <p>Name a folder that holds only what you mean to publish, not the folder your
+              sources are in. If the name is not a folder, the build warns
+              (<codeph>GOVK013W</codeph>) and the site is built without the files, so a font
+              you host falls back to the next one in the stack. Nothing is copied when
+              <codeph>args.csspath</codeph> is an address on another site: the files belong
+              beside the stylesheet there.</p>
+            <p>A logo written into the stylesheet as a <codeph>data:</codeph> URL, as in the
+              sample, needs no second file. A font cannot be written that way under
+              <codeph>govuk.csp=meta</codeph>, which loads fonts from the site only.</p>
+          </dd>
         </dlentry>
         <dlentry>
           <dt>Fonts and logos you may use</dt>
