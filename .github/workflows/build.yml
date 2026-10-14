@@ -1085,7 +1085,8 @@ jobs:
           # one checker for every table: each page against the enabled tables,
           # and no print document carrying any of it
           python3 tools/check_metadata.py --site-url https://example.org/metadata out/metadata
-          python3 tools/check_metadata.py out/metadata-plain out/manual out/manual-official out/kitchen out/manual-print out/source-system
+          python3 tools/check_metadata.py out/metadata-plain out/manual out/manual-official out/kitchen out/manual-print
+          python3 tools/check_metadata.py --site-url https://example.org/dictionary/ out/source-system
           python3 tools/check_metadata.py --level no out/metadata-no
           # no stylesheet names a scheme: a row added to a table is a tag
           t="dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata/dublincore.xml"
