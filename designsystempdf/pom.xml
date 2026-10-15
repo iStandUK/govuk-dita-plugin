@@ -18,7 +18,7 @@ licence texts.
 
   <groupId>org.istanduk</groupId>
   <artifactId>designsystempdf</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <packaging>jar</packaging>
 
   <name>DesignSystemPDF</name>
@@ -37,16 +37,16 @@ licence texts.
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <!-- Reproducible build: the same tree gives the same jar and zip, byte for byte -->
-    <project.build.outputTimestamp>2026-10-04T00:00:00Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-10-15T00:00:00Z</project.build.outputTimestamp>
 
     <!-- The engine: Open HTML to PDF (LGPL-2.1-or-later), shipped unmodified in lib/ -->
-    <openhtmltopdf.version>1.1.87</openhtmltopdf.version>
+    <openhtmltopdf.version>1.1.94</openhtmltopdf.version>
     <!-- One Batik version throughout: the MathML drawer would otherwise bring an older batik-svg-dom -->
     <batik.version>1.17</batik.version>
 
     <!-- Test only; never in the distribution -->
     <junit.version>6.1.3</junit.version>
-    <verapdf.version>1.30.2</verapdf.version>
+    <verapdf.version>1.30.3</verapdf.version>
   </properties>
 
   <dependencyManagement>
