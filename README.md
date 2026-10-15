@@ -3,7 +3,16 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: v1.2.0 — released** —
+**Status: v1.3.0 — released** —
+[v1.3.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.3.0) writes **metadata in every
+page's head**, read from the DITA: the canonical, previous, next and licence links, Open Graph and
+Dublin Core tags (`govuk.metadata=basic`, the default; D-26, #190), with
+[a guide for systems that generate DITA](docs/SOURCE-SYSTEMS.md) (#188). Beside the sitemap it
+writes **`llms.txt`**, an index of the publication for language models (`govuk.llms`, D-30, #116). A
+page the publisher frames can show its content alone (`govuk.embed`, #201), and `args.css` can
+bring a folder of fonts and images (`govuk.css.assets`, #197). Topic dates are a page's own, never
+the book's (#189); builds no longer fail from a toolkit the user cannot write to (#198), and Java 17
+installs the plugin on Windows (#199).
 [v1.2.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.2.0) prints **several
 books from one map**: a print document and PDF for each bookmap a map references, and for each
 part of a bookmap with `govuk.print.books=parts`, beside the whole (#178). It can print **the
@@ -46,7 +55,7 @@ dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 
 (The first command resolves the name through the DITA-OT plugin registry; a release zip URL —
-`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.2.0/org.istanduk.gov-uk-1.2.0.zip`
+`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.3.0/org.istanduk.gov-uk-1.3.0.zip`
 — works in the same place for an offline or pinned install.)
 
 Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. Optionally,

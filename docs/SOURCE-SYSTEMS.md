@@ -8,7 +8,7 @@ Everything here is standard DITA 1.3. There is no specialisation and no DTD to i
 
 Each rule is marked:
 
-- **Now**: the plugin acts on it today (v1.2.0, or the next release where it says so).
+- **Now**: the plugin acts on it today (v1.3.0).
 - **Planned**: designed and decided ([design 14](../design/14-metadata-model.md), D-26), not yet built. Write it now: it is valid DITA, it is ignored until then, and nothing will need regenerating.
 
 ## 1. The ten things that matter most
@@ -150,15 +150,15 @@ Metadata goes in the topic's `prolog`. The order of the elements is fixed by the
 
 | Element | Write | Now | Planned |
 |---|---|---|---|
-| `category` | The kind of thing: *Data element*, *Class*, *Attribute*, *Data set*, *Guidance*. One controlled list per publication. | A search filter; a tag in the page's metadata (next release) | The page's subject in the catalogue schemes |
-| `keywords/keyword` | Real alternative names, abbreviations and former names. **Never the title split into words**: that adds nothing to search and pollutes the tags. | Searchable aliases; tags in the page's metadata, where a keyword that only repeats a word of the title is dropped (next release) | Subjects in the catalogue schemes |
+| `category` | The kind of thing: *Data element*, *Class*, *Attribute*, *Data set*, *Guidance*. One controlled list per publication. | A search filter; a tag in the page's metadata | The page's subject in the catalogue schemes |
+| `keywords/keyword` | Real alternative names, abbreviations and former names. **Never the title split into words**: that adds nothing to search and pollutes the tags. | Searchable aliases; tags in the page's metadata, where a keyword that only repeats a word of the title is dropped | Subjects in the catalogue schemes |
 | `audience` | Who it is for, if the publication distinguishes | A search filter | Audience |
-| `critdates` | `created` and `revised`, **only if true**. A batch-stamped date on every topic is worse than none. See the caution below on dates in `bookmeta`. | The dates line, when the publisher sets `govuk.dates`; published and modified dates in the page's metadata, on the same switch (next release) | — |
+| `critdates` | `created` and `revised`, **only if true**. A batch-stamped date on every topic is worse than none. See the caution below on dates in `bookmeta`. | The dates line, when the publisher sets `govuk.dates`; published and modified dates in the page's metadata, on the same switch | — |
 | `resourceid` | The identifier the source system uses, stable across releases | — | The page's identifier in catalogue records |
 | `importance="obsolete"` (on the topic) | Retired or superseded items | Demoted in search | Status |
 | `<data name="adms:status" value="retired"/>` | The same fact for catalogues | — | `adms:status` |
-| `author` | An organisation. A person's name is published only if the publisher opts in. | Footer credits (from the map); the creator in the page's metadata, when the publisher sets `govuk.metadata.persons=yes` (next release) | — |
-| `<data name="prefix:term" value="…"/>` | Any other property (Section 7) | Read; written where a table maps the term (next release) | More schemes that know the term |
+| `author` | An organisation. A person's name is published only if the publisher opts in. | Footer credits (from the map); the creator in the page's metadata, when the publisher sets `govuk.metadata.persons=yes` | — |
+| `<data name="prefix:term" value="…"/>` | Any other property (Section 7) | Read; written where a table maps the term | More schemes that know the term |
 
 ## 6. Metadata in the root map
 
@@ -186,17 +186,17 @@ Publication-wide facts go in `bookmeta` (or the `topicmeta` of a plain map). Top
 
 | Element | Now | Planned |
 |---|---|---|
-| `organization` (publisher, owner), `author` | Footer credits; the home page; the print cover; the publisher in every page's metadata (next release) | — |
+| `organization` (publisher, owner), `author` | Footer credits; the home page; the print cover; the publisher in every page's metadata | — |
 | `critdates` | "Published" and "Last updated" on the print cover | Issued and modified |
 | `bookid/edition`, `isbn`, `booknumber` | Edition and reference on the print cover | Version, identifier |
-| `bookrights` (`copyrfirst`, `bookowner`, `summary`) | Copyright line; the rights statement in the imprint; rights in every page's metadata (next release) | — |
-| `data` | Read, and taken by every page that does not state the property itself (next release) | Catalogue properties (Section 7) |
+| `bookrights` (`copyrfirst`, `bookowner`, `summary`) | Copyright line; the rights statement in the imprint; rights in every page's metadata | — |
+| `data` | Read, and taken by every page that does not state the property itself | Catalogue properties (Section 7) |
 
 The licence, the site's address and the organisation's URL are the **publisher's** build parameters, not the source system's. Do not hard-code them in the DITA.
 
-**Dates in `bookmeta` and in topics can both be given.** DITA-OT copies `bookmeta`'s `critdates` into every topic, over the topic's own. The plugin reads each topic's own `critdates` from its source file instead, so the dates line, `sitemap.xml` and the page metadata give a page its own dates, and a page with none has none, never the book's (#189, next release). The print cover keeps the book's. A topic written in Markdown has no `critdates` of its own. Releases up to 1.2.0 show the book's dates on every page: with those, give dates either per topic or in `bookmeta`, not both.
+**Dates in `bookmeta` and in topics can both be given.** DITA-OT copies `bookmeta`'s `critdates` into every topic, over the topic's own. The plugin reads each topic's own `critdates` from its source file instead, so the dates line, `sitemap.xml` and the page metadata give a page its own dates, and a page with none has none, never the book's (#189, from 1.3.0). The print cover keeps the book's. A topic written in Markdown has no `critdates` of its own. Releases up to 1.2.0 show the book's dates on every page: with those, give dates either per topic or in `bookmeta`, not both.
 
-## 7. Any other property: `data` (**Now**, from the next release; the catalogue schemes that read most terms are **Planned**)
+## 7. Any other property: `data` (**Now**; the catalogue schemes that read most terms are **Planned**)
 
 `<data name="…" value="…"/>` is DITA's own extension point. It is allowed in `bookmeta`, in the `topicmeta` of a map or topicref, and in a topic's `prolog`. Write the name as a **prefixed term** from a standard vocabulary:
 
