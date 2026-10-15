@@ -79,7 +79,10 @@ release pull request.
 ## Afterwards
 
 - [ ] Merge `main` back into `dev` (pull request `main` → `dev`, merge commit) so `dev`
-      carries the version bump and the tag's history
+      carries the version bump and the tag's history. Not through the merge queue: it
+      squashes, and a squash gives `dev` the files but not the tag's history (as v1.3.0's
+      #234 did). Merge it directly with **Create a merge commit**, bypassing the queue rule,
+      and check afterwards that `git merge-base --is-ancestor vx.y.z origin/dev` succeeds
 - [ ] Delete the release branch
 - [ ] Close the issues the release delivered; update epic checklists
 
@@ -149,7 +152,8 @@ need one of these, nor the other way round; when the print contract changes, rel
 
 ## Afterwards
 
-- [ ] Merge `main` back into `dev` (pull request `main` → `dev`, merge commit)
+- [ ] Merge `main` back into `dev` (pull request `main` → `dev`, merge commit, not through
+      the merge queue, as for the plugin above)
 - [ ] Where the plugin's CI pins a DesignSystemPDF release (version and SHA-256 in
       `.github/workflows/build.yml`), move the pin to the new release in a pull request of
       its own, so the join is proved against what publishers will install
