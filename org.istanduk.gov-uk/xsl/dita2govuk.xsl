@@ -16,6 +16,7 @@ we do not override keeps its default html5 rendering.
   <xsl:import href="blocks.xsl"/>
   <xsl:import href="foreign.xsl"/>
   <xsl:import href="content-policy.xsl"/>
+  <xsl:import href="keyrefs.xsl"/>
   <xsl:import href="dates.xsl"/>
   <xsl:import href="search.xsl"/>
   <xsl:import href="metadata.xsl"/>

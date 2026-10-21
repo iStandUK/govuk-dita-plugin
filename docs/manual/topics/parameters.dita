@@ -248,7 +248,9 @@
               <entry><codeph>input</codeph> (default), <codeph>any</codeph></entry>
               <entry>Where inlined SVG and MathML may come from: only under the input
                 directory, or anywhere the reference points. A reference outside the
-                input directory is reported (<codeph>GOVK005W</codeph>).</entry>
+                input directory is reported (<codeph>GOVK005W</codeph>). The input directory
+                is the root map's folder, or the folder given with
+                <codeph>args.input.dir</codeph>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.content.warnings</codeph></entry>

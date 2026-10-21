@@ -406,6 +406,78 @@ jobs:
           grep -q '<span>Group</span>' out/keyref-nest/ov.html
           grep -q 'href="ov.html">Overview T</a>' out/keyref-nest-href/t1.html
 
+      # Key references in topic content (#244): DITA-OT writes an unresolved one as an
+      # empty element and says nothing at its default log level. The plugin names each
+      # one (GOVK015W), once, leaves an image with no source out, keeps the author's
+      # own fallback text, and stays silent for keys that resolved and for the manual.
+      - name: Build keyref-unresolved fixture (GOVK015W, #244)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          tools/ci/dita --input fixtures/keyref-unresolved/keys.ditamap \
+            --format govuk --output out/keyref-unresolved -Dgovuk.print=yes 2>&1 | tee keyref-unresolved.log
+          # one warning for each of the five, naming the key, and the print document adds none
+          test "$(grep -c 'GOVK015W' keyref-unresolved.log)" = 5
+          for k in k-wrod k-uii k-nope k-topci k-imgg; do grep -q "GOVK015W.*'$k'" keyref-unresolved.log; done
+          grep -q "GOVK015W.*'k-imgg' on the image element.*left out" keyref-unresolved.log
+          # fallback text is the author's own, and resolved keys are quiet
+          absent -Eq "GOVK015W.*'(k-wrod2|k-topci2|k-word|k-ui|k-img|k-topic)'" keyref-unresolved.log
+          for f in out/keyref-unresolved/topics/refs.html out/keyref-unresolved/print.html; do
+            grep -q 'fallback keyword' "$f"
+            grep -q 'fallback link text' "$f"
+            grep -q 'alt="A dot"' "$f"
+            # the unresolved image is left out, not written as an img with no src
+            test "$(grep -o '<img' "$f" | wc -l | tr -d ' ')" = 1
+          done
+          # DITA-OT 4.4.1 gives no scoped key to a copy-to: the kitchen's three are that case
+          test "$(grep -c 'GOVK015W' kitchen.log)" = 3
+          test "$(grep -c "GOVK015W.*'prodname'" kitchen.log)" = 3
+          # nothing else the CI builds reports one
+          absent -q "GOVK015W" manual-build.log keyref-nest.log keyref-nest-href.log
+
+      # Where the root map sits (#239). A root map below the top of its tree makes DITA-OT
+      # report DOTJ036W and leaves the plugin's own links relative to the wrong folder:
+      # it is said once (GOVK016W), with the remedy. args.input.dir widens the plugin's
+      # inline scope, which is its own, but not the toolkit's test or the layout. The
+      # layout the manual asks for is quiet, and its links and print paths resolve.
+      - name: Build subfolder-root fixture (GOVK016W, args.input.dir, #239)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          tools/ci/dita --input fixtures/subfolder-root/maps/book.ditamap \
+            --format govuk --output out/subfolder-root 2>&1 | tee subfolder-root.log
+          test "$(grep -c 'GOVK016W' subfolder-root.log)" = 1
+          grep -q "GOVK016W.*the first being '../topics/first.dita'" subfolder-root.log
+          grep -q 'GOVK005W.*diagram.svg.*not inlined' subfolder-root.log
+          grep -q 'DOTJ036W' subfolder-root.log
+          grep -q 'class="xref svgref"' out/subfolder-root/topics/first.html
+          # args.input.dir, as an absolute path and relative to the working folder: the diagram
+          # is inlined and GOVK005W goes; the toolkit's DOTJ036W and the layout's GOVK016W stay
+          tools/ci/dita --input fixtures/subfolder-root/maps/book.ditamap --format govuk \
+            --output out/subfolder-root-abs --args.input.dir="$PWD/fixtures/subfolder-root" 2>&1 | tee subfolder-root-abs.log
+          tools/ci/dita --input fixtures/subfolder-root/maps/book.ditamap --format govuk \
+            --output out/subfolder-root-rel --args.input.dir=fixtures/subfolder-root 2>&1 | tee subfolder-root-rel.log
+          for v in abs rel; do
+            absent -q '\[GOVK005W\]' subfolder-root-$v.log
+            grep -q 'DOTJ036W' subfolder-root-$v.log
+            grep -q 'GOVK016W' subfolder-root-$v.log
+            grep -q '<svg [^>]*role="img"' out/subfolder-root-$v/topics/first.html
+            absent -q 'class="xref svgref"' out/subfolder-root-$v/topics/first.html
+          done
+          # an input directory that is not there is ignored, and the build still succeeds
+          tools/ci/dita --input fixtures/subfolder-root/maps/book.ditamap --format govuk \
+            --output out/subfolder-root-gone --args.input.dir=fixtures/no-such-folder 2>&1 | tee subfolder-root-gone.log
+          grep -q 'GOVK005W.*diagram.svg.*not inlined' subfolder-root-gone.log
+          # the layout the manual asks for: root map at the top, the subfolder map by mapref href
+          tools/ci/dita --input fixtures/subfolder-root/top.ditamap --format govuk \
+            --output out/subfolder-root-top -Dgovuk.print=yes 2>&1 | tee subfolder-root-top.log
+          absent -Eq '\[(GOVK016W|GOVK005W|DOTJ036W)\]' subfolder-root-top.log
+          grep -q '<svg [^>]*role="img"' out/subfolder-root-top/topics/first.html
+          python3 tools/check_links.py out/subfolder-root-top
+          grep -q 'src="images/pixel.png"' out/subfolder-root-top/print.html
+          # nothing else the CI builds reports GOVK016W
+          absent -q "GOVK016W" manual-build.log kitchen.log keyref-unresolved.log keyref-nest.log keyref-nest-href.log
+
       # A toolkit installed where the user cannot write, as under C:\Program Files
       # (#198): the build must write nothing into the DITA-OT folder, and the
       # unknown-parameter check must still work.
@@ -1088,6 +1160,20 @@ jobs:
           python3 tools/check_metadata.py out/metadata-plain out/manual out/manual-official out/kitchen out/manual-print
           python3 tools/check_metadata.py --site-url https://example.org/dictionary/ out/source-system
           python3 tools/check_metadata.py --level no out/metadata-no
+          # the checker finds the tables wherever it is kept, not only in a checkout (#243)
+          lone="$(mktemp -d)"; cp tools/check_metadata.py "$lone/"
+          # the toolkit of the dita command on the PATH (CI does not put it there itself)
+          PATH="$PWD/dita-ot-${DITA_OT_VERSION}/bin:$PATH" python3 "$lone/check_metadata.py" --level no out/metadata-no | grep -q ' 0 findings'
+          python3 "$lone/check_metadata.py" --dita-dir "dita-ot-${DITA_OT_VERSION}" out/kitchen | grep -q ' 0 findings'
+          py="$(command -v python3)"
+          env DITA_HOME="$PWD/dita-ot-${DITA_OT_VERSION}" PATH=/usr/bin:/bin "$py" "$lone/check_metadata.py" out/kitchen | grep -q ' 0 findings'
+          python3 "$lone/check_metadata.py" --tables "dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata" out/kitchen | grep -q ' 0 findings'
+          # and says so, with its exit status, when it cannot
+          rc=0; env -u DITA_HOME PATH=/usr/bin:/bin "$py" "$lone/check_metadata.py" out/kitchen > lone.log 2>&1 || rc=$?
+          test "$rc" = 2
+          grep -q 'cannot find the plugin.s mapping tables' lone.log
+          grep -q -- '--tables' lone.log
+          absent -q 'Traceback' lone.log
           # no stylesheet names a scheme: a row added to a table is a tag
           t="dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata/dublincore.xml"
           cp -p "$t" metadata-table.orig
@@ -1135,7 +1221,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/keyref-unresolved out/subfolder-root-top
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -1324,6 +1410,22 @@ jobs:
           grep -Eq 'xlink:href="blocks.html"|href="blocks.html"' out/kitchen/topics/media.html
           grep -Eq 'xlink:href="reference-full.html"|href="reference-full.html"' out/kitchen/topics/media.html
           absent -q '<img class="xref svgref"' out/kitchen/topics/media.html
+          # an inlined SVG's ARIA idrefs follow their ids, on the page and in the print document (#240)
+          for f in out/kitchen/topics/media.html out/kitchen-print/print.html; do
+            refs=$(grep -o 'aria-\(labelledby\|describedby\)="[^"]*"' "$f" | sed 's/^[^=]*="//; s/"$//' | tr ' ' '\n')
+            test -n "$refs" || { echo "$f: no aria idrefs found, the fixture is not being exercised"; exit 1; }
+            for id in $refs; do
+              grep -q "id=\"$id\"" "$f" || { echo "$f: aria idref '$id' names no element"; exit 1; }
+            done
+          done
+          # a diagram with links is a group named by its title, one without stays an image (#241)
+          grep -Eq '<svg [^>]*role="group" aria-labelledby="svg[a-z0-9]+-steps-title" aria-describedby="svg[a-z0-9]+-steps-desc"' out/kitchen/topics/media.html
+          # a title with no id is given one, which the idref check above has already resolved
+          grep -Eq '<svg [^>]*role="group" aria-labelledby="svg[a-z0-9]+--title"' out/kitchen/topics/media.html
+          grep -Eq '<svg [^>]*role="img" aria-labelledby="svg[a-z0-9]+-diagram-title"' out/kitchen/topics/media.html
+          test "$(grep -o '<svg [^>]*role="img"' out/kitchen/topics/media.html | wc -l | tr -d ' ')" = 1
+          # two related links on one page, so the axe gate keeps exercising their target size (#242)
+          test "$(grep -o '<li class="linklist">' out/kitchen/topics/task-full.html | wc -l | tr -d ' ')" = 2
           absent -Eq 'cellpadding|cellspacing|choicetableborder' out/kitchen/topics/task-full.html out/kitchen/topics/reference-full.html
           # Plugin CSS never names the restricted typeface; the tile wrapper ships
           absent -q 'GDS Transport' out/manual/govuk/plugin.css
