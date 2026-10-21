@@ -62,7 +62,8 @@
           </row>
           <row>
             <entry><codeph>GOVK005W</codeph></entry>
-            <entry>An SVG or MathML reference points outside the input directory. Under
+            <entry>An SVG or MathML reference points outside the input directory (the root
+              map's folder, or <codeph>args.input.dir</codeph> when given). Under
               <codeph>govuk.inline.scope=input</codeph> (the default) the file is not read and
               the reference renders as an image; under <codeph>any</codeph> it is
               inlined.</entry>
@@ -161,6 +162,18 @@
               view.</entry>
             <entry>Leave the parameter out, or use the neutral or istanduk branding. See
               <xref keyref="embedding"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK016W</codeph></entry>
+            <entry>The root map is below the top of its folder tree: some of its topic
+              references begin <codeph>../</codeph>. DITA-OT reports
+              <codeph>DOTJ036W</codeph> for each, and the stylesheets, scripts and links
+              between pages that the plugin writes are relative to the map's folder, where
+              nothing is. One warning, naming the first reference.</entry>
+            <entry>Move the root map to the top of the publication's folder tree and include
+              maps kept in subfolders with <codeph>&lt;mapref href&gt;</codeph>. See
+              <xref keyref="build"/>. <codeph>args.input.dir</codeph> widens only the
+              plugin's inline scope, so it clears <codeph>GOVK005W</codeph> but not this.</entry>
           </row>
           <row>
             <entry><codeph>GOVK015W</codeph></entry>
