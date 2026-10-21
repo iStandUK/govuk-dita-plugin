@@ -1162,7 +1162,8 @@ jobs:
           python3 tools/check_metadata.py --level no out/metadata-no
           # the checker finds the tables wherever it is kept, not only in a checkout (#243)
           lone="$(mktemp -d)"; cp tools/check_metadata.py "$lone/"
-          python3 "$lone/check_metadata.py" --level no out/metadata-no | grep -q ' 0 findings'
+          # the toolkit of the dita command on the PATH (CI does not put it there itself)
+          PATH="$PWD/dita-ot-${DITA_OT_VERSION}/bin:$PATH" python3 "$lone/check_metadata.py" --level no out/metadata-no | grep -q ' 0 findings'
           python3 "$lone/check_metadata.py" --dita-dir "dita-ot-${DITA_OT_VERSION}" out/kitchen | grep -q ' 0 findings'
           py="$(command -v python3)"
           env DITA_HOME="$PWD/dita-ot-${DITA_OT_VERSION}" PATH=/usr/bin:/bin "$py" "$lone/check_metadata.py" out/kitchen | grep -q ' 0 findings'
