@@ -234,6 +234,20 @@ links and interactivity inside diagrams working.
     <xsl:attribute name="id" select="concat($token, '-', .)"/>
   </xsl:template>
 
+  <!-- ARIA idref attributes (#240): each token names an id in the same file,
+       so each gets the prefix its target has just been given. Without this a
+       diagram's aria-labelledby points at an id that no longer exists in the
+       page, and the accessible name the author chose is lost. -->
+  <xsl:template match="@aria-labelledby | @aria-describedby | @aria-owns | @aria-controls
+                       | @aria-flowto | @aria-activedescendant | @aria-details
+                       | @aria-errormessage"
+                mode="govuk-svg-inline">
+    <xsl:param name="token" tunnel="yes"/>
+    <xsl:attribute name="{name()}"
+                   select="string-join(for $t in tokenize(normalize-space(.), ' ')[. ne '']
+                                       return concat($token, '-', $t), ' ')"/>
+  </xsl:template>
+
   <!-- Local fragment links: #foo -> #token-foo (internal), rewrite id-space;
        leave cross-document / external hrefs untouched -->
   <xsl:template match="@xlink:href | @href" mode="govuk-svg-inline">

@@ -21,6 +21,21 @@
       accessible name derived from the figure title, the caption is numbered automatically,
       and the diagram never overflows the content column. Set
       <codeph>govuk.svg.inline=no</codeph> to keep the plain image rendering instead.</p>
+    <section id="diagram-names">
+      <title>How an inlined diagram is named</title>
+      <p>A diagram with a <codeph>title</codeph> is named by it, and a
+        <codeph>desc</codeph> describes it. An author may point at them explicitly with
+        <codeph>aria-labelledby</codeph> and <codeph>aria-describedby</codeph> on the root
+        <codeph>svg</codeph>. Inlining gives every <codeph>id</codeph> in the file a prefix
+        that is unique to that instance, so several diagrams can share a page; the plugin
+        gives the same prefix to every token in <codeph>aria-labelledby</codeph>,
+        <codeph>aria-describedby</codeph>, <codeph>aria-owns</codeph>,
+        <codeph>aria-controls</codeph>, <codeph>aria-flowto</codeph>,
+        <codeph>aria-activedescendant</codeph>, <codeph>aria-details</codeph> and
+        <codeph>aria-errormessage</codeph>, so each still names the element the author meant.
+        A diagram with no <codeph>title</codeph> takes an <codeph>aria-label</codeph> from
+        the figure title.</p>
+    </section>
       <section>
       <title>Diagrams and the content policy</title>
       <p>An inlined diagram becomes part of the page, so it is treated as code, not as an

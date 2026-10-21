@@ -1324,6 +1324,14 @@ jobs:
           grep -Eq 'xlink:href="blocks.html"|href="blocks.html"' out/kitchen/topics/media.html
           grep -Eq 'xlink:href="reference-full.html"|href="reference-full.html"' out/kitchen/topics/media.html
           absent -q '<img class="xref svgref"' out/kitchen/topics/media.html
+          # an inlined SVG's ARIA idrefs follow their ids, on the page and in the print document (#240)
+          for f in out/kitchen/topics/media.html out/kitchen-print/print.html; do
+            refs=$(grep -o 'aria-\(labelledby\|describedby\)="[^"]*"' "$f" | sed 's/^[^=]*="//; s/"$//' | tr ' ' '\n')
+            test -n "$refs" || { echo "$f: no aria idrefs found, the fixture is not being exercised"; exit 1; }
+            for id in $refs; do
+              grep -q "id=\"$id\"" "$f" || { echo "$f: aria idref '$id' names no element"; exit 1; }
+            done
+          done
           absent -Eq 'cellpadding|cellspacing|choicetableborder' out/kitchen/topics/task-full.html out/kitchen/topics/reference-full.html
           # Plugin CSS never names the restricted typeface; the tile wrapper ships
           absent -q 'GDS Transport' out/manual/govuk/plugin.css
