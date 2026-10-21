@@ -16,6 +16,12 @@ then:
 | `a11y/run.mjs` | axe-core at WCAG 2.2 AA over every page (NFR-A1) | `node tools/a11y/run.mjs out/manual [...]` |
 | `a11y/snapshot.mjs` | Full-page PNGs for eyeballing a govuk-frontend upgrade (NFR-M2) | `node tools/a11y/snapshot.mjs out/manual out/snapshots` |
 
+`check_metadata.py` needs the plugin's mapping tables and finds them wherever it is kept, so a
+checker fetched from a release tag works beside a build that has nothing else of this repository.
+In order it uses `--tables DIR` (the plugin's `resource/metadata` folder), the plugin installed in
+`--dita-dir DIR`, the repository layout, `$DITA_HOME`, and the toolkit of the `dita` command on the
+`PATH`. If none has `schemes.xml` it prints where it looked and exits with status 2.
+
 Build determinism (FR-B6) is checked in CI by building twice and comparing byte-for-byte.
 
 `ci/assert.sh` holds the workflow's negative check, `absent GREP-ARGS...`: grep must find no

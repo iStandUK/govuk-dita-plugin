@@ -24,8 +24,12 @@ import argparse
 import html.parser
 import os
 import re
+import shutil
 import sys
 import xml.etree.ElementTree as ET
+
+PLUGIN = "org.istanduk.gov-uk"
+TABLES = ("resource", "metadata")
 
 UTILITY = {"glossary.html", "index-page.html", "figurelist.html", "tablelist.html", "search.html"}
 
@@ -47,6 +51,38 @@ class Head(html.parser.HTMLParser):
         elif tag == "link" and a.get("rel"):
             for rel in a["rel"].split():
                 self.links.append((rel, a.get("href") or ""))
+
+
+def has_tables(directory):
+    return bool(directory) and os.path.isfile(os.path.join(directory, "schemes.xml"))
+
+
+def find_tables(explicit, dita_dir):
+    """Where the mapping tables are, wherever the checker itself is kept (#243).
+
+    In order: --tables; the plugin installed in --dita-dir; this repository's
+    layout (the checker sits in tools/ beside the plugin); the plugin installed
+    in DITA_HOME; the plugin installed in the toolkit the `dita` command on the
+    PATH belongs to. Returns (directory, places looked in).
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    installed = lambda home: os.path.join(home, "plugins", PLUGIN, *TABLES)
+    candidates = []
+    if explicit:
+        # a path the caller named is the only one used
+        return explicit, [explicit]
+    if dita_dir:
+        candidates.append(installed(dita_dir))
+    candidates.append(os.path.join(here, "..", PLUGIN, *TABLES))
+    if os.environ.get("DITA_HOME"):
+        candidates.append(installed(os.environ["DITA_HOME"]))
+    command = shutil.which("dita")
+    if command:
+        candidates.append(installed(os.path.dirname(os.path.dirname(os.path.realpath(command)))))
+    for directory in candidates:
+        if has_tables(directory):
+            return directory, candidates
+    return None, candidates
 
 
 def load_tables(directory, level):
@@ -143,9 +179,13 @@ def check_print(path, rel, names, what="the print document"):
 
 
 def main():
-    here = os.path.dirname(os.path.abspath(__file__))
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--tables", default=os.path.join(here, "..", "org.istanduk.gov-uk", "resource", "metadata"))
+    parser.add_argument("--tables", default="",
+                        help="the plugin's resource/metadata folder; found for you when the checker "
+                             "is in a checkout of the repository or the plugin is installed")
+    parser.add_argument("--dita-dir", default="",
+                        help="a DITA-OT installation to take the plugin's tables from "
+                             "(else DITA_HOME, else the toolkit of the dita command on the PATH)")
     parser.add_argument("--level", default="basic", help="the govuk.metadata level the sites were built with")
     parser.add_argument("--site-url", default="", help="the govuk.site.url the sites were built with")
     parser.add_argument("sites", nargs="+")
@@ -153,8 +193,17 @@ def main():
     site_url = args.site_url
     if site_url and not site_url.endswith("/"):
         site_url += "/"
-    tables = load_tables(args.tables, args.level) if args.level != "no" else []
-    names = all_names(args.tables)
+    directory, looked = find_tables(args.tables, args.dita_dir)
+    if not has_tables(directory):
+        print("check_metadata: cannot find the plugin's mapping tables (schemes.xml)"
+              + (f": there is none in {args.tables}." if args.tables
+                 else ". Looked in:\n  " + "\n  ".join(os.path.normpath(d) for d in looked))
+              + "\nGive the folder with --tables, usually "
+              f"<DITA-OT>/plugins/{PLUGIN}/resource/metadata, or the toolkit with --dita-dir.",
+              file=sys.stderr)
+        return 2
+    tables = load_tables(directory, args.level) if args.level != "no" else []
+    names = all_names(directory)
     findings, pages = [], 0
     for site in args.sites:
         for root, _, files in os.walk(site):

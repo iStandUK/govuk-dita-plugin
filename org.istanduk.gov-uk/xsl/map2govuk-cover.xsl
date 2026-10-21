@@ -157,8 +157,29 @@ map transformation with the plugin's values.
     </xsl:for-each>
   </xsl:template>
 
+  <!-- A root map below the top of the folder tree its topics are in (#239): the
+       merged map then names topics as ../topics/x.dita. DITA-OT reports DOTJ036W
+       for each and writes the topics relative to the tree's top, while the pages
+       and assets this plugin writes at the output root link to each other
+       relative to the map's folder, so stylesheets, scripts and links between
+       pages do not resolve. Said once, with the remedy. -->
+  <xsl:template name="govuk-check-root-map">
+    <xsl:variable name="above" as="element()*"
+                  select="//*[contains(@class, ' map/topicref ')]
+                          [starts-with(normalize-space(@href), '../')]
+                          [not(@scope = ('external', 'peer'))]
+                          [not(@format) or @format = ('dita', 'markdown')]"/>
+    <xsl:if test="exists($above)">
+      <xsl:call-template name="output-message">
+        <xsl:with-param name="id" select="'GOVK016W'"/>
+        <xsl:with-param name="msgparams">%1=<xsl:value-of select="count($above)"/>;%2=<xsl:value-of select="translate(normalize-space($above[1]/@href), ';', ',')"/></xsl:with-param>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
   <xsl:template name="chapter-setup">
     <xsl:call-template name="govuk-check-map"/>
+    <xsl:call-template name="govuk-check-root-map"/>
     <xsl:call-template name="govuk-md-check">
       <xsl:with-param name="cover" select="$govuk-md-cover"/>
     </xsl:call-template>

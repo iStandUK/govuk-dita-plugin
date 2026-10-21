@@ -9,12 +9,15 @@ pages use, whose whole output is the print document. Kept out of the cover
 run so builds without govuk.print load no topics twice.
 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                version="3.0">
+                xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                version="3.0"
+                exclude-result-prefixes="xs">
 
   <xsl:import href="map2govuk-cover.xsl"/>
   <xsl:import href="blocks.xsl"/>
   <xsl:import href="foreign.xsl"/>
   <xsl:import href="content-policy.xsl"/>
+  <xsl:import href="keyrefs.xsl"/>
   <xsl:import href="dates.xsl"/>
   <xsl:import href="print-document.xsl"/>
 
@@ -24,6 +27,9 @@ run so builds without govuk.print load no topics twice.
               include-content-type="no"
               omit-xml-declaration="yes"
               indent="no"/>
+
+  <!-- the page pass has reported unresolved key references in these topics already (#244) -->
+  <xsl:variable name="govuk-keyref-report" as="xs:string" select="'no'"/>
 
   <xsl:template name="chapter-setup">
     <xsl:call-template name="govuk-print-document"/>
