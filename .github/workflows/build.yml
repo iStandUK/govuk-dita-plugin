@@ -1338,6 +1338,8 @@ jobs:
           grep -Eq '<svg [^>]*role="group" aria-labelledby="svg[a-z0-9]+--title"' out/kitchen/topics/media.html
           grep -Eq '<svg [^>]*role="img" aria-labelledby="svg[a-z0-9]+-diagram-title"' out/kitchen/topics/media.html
           test "$(grep -o '<svg [^>]*role="img"' out/kitchen/topics/media.html | wc -l | tr -d ' ')" = 1
+          # two related links on one page, so the axe gate keeps exercising their target size (#242)
+          test "$(grep -o '<li class="linklist">' out/kitchen/topics/task-full.html | wc -l | tr -d ' ')" = 2
           absent -Eq 'cellpadding|cellspacing|choicetableborder' out/kitchen/topics/task-full.html out/kitchen/topics/reference-full.html
           # Plugin CSS never names the restricted typeface; the tile wrapper ships
           absent -q 'GDS Transport' out/manual/govuk/plugin.css

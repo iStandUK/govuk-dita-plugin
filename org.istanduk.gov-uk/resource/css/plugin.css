@@ -285,6 +285,15 @@ li.olchildlink {
   text-decoration: none;
 }
 
+/* Related links stand on lines of their own, so each is a target in its own right:
+   at least 24x24px (WCAG 2.2 target-size, #242) */
+.linklist a,
+.related-links a {
+  display: inline-block;
+  min-height: 24px;
+  padding-block: 2px;
+}
+
 /* ===== Utility navigation (search, glossary, index links) ===== */
 
 .app-search-link,
