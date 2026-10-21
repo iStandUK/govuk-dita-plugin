@@ -147,8 +147,8 @@ jobs:
       GOVUK_FRONTEND_SHA256: "ac64b3abdb8af98624c8c0b8eabf78c894eb9da4d3b268544d0120f15abafc7a"
       # the published DesignSystemPDF release a publisher installs, which the
       # plugin must find and work with (#113, D-23); move it with each pdf-v* release
-      DSPDF_RELEASE: "0.1.1"
-      DSPDF_RELEASE_SHA256: "32dbdf04260f8035e756be5fc0b7a635565ab1d91b59cbbb48cbf4ca4871c664"
+      DSPDF_RELEASE: "0.1.2"
+      DSPDF_RELEASE_SHA256: "f586ad513738c32bf66f3822527c02c2438afe1fa38cd9c9978b0c0fdde1948b"
       # Most of a DITA-OT build in CI is the JVM starting; these options
       # roughly halve that and leave the output byte-identical (#218; the
       # determinism step checks it). They reach DITA-OT only, through its launcher.
