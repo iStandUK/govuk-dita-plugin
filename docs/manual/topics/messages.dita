@@ -162,6 +162,20 @@
             <entry>Leave the parameter out, or use the neutral or istanduk branding. See
               <xref keyref="embedding"/>.</entry>
           </row>
+          <row>
+            <entry><codeph>GOVK015W</codeph></entry>
+            <entry>A key reference in topic content names no key that resolves. A
+              <codeph>keyword</codeph>, <codeph>ph</codeph>, <codeph>uicontrol</codeph>,
+              <codeph>term</codeph>, <codeph>cite</codeph>, <codeph>xref</codeph> or
+              <codeph>link</codeph> with nothing in it is written empty. An
+              <codeph>image</codeph> with no source is left out. Text written inside the
+              element is DITA's fallback for a missing key, is kept, and is not reported.
+              One warning for each element, naming the key and the line. The toolkit
+              reports this only at its verbose log level, as <codeph>DOTJ047I</codeph>.</entry>
+            <entry>Check the key's spelling and that the map, or a key map it includes,
+              defines it. A key defined only inside a key scope is not seen in a copy made
+              with <codeph>copy-to</codeph>; see <xref keyref="troubleshooting"/>.</entry>
+          </row>
         </tbody>
       </tgroup>
     </table>

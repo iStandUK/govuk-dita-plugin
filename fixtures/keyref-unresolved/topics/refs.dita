@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="refs" xml:lang="en-GB">
+  <title>Key references</title>
+  <shortdesc>Keys that resolve, keys that do not, and keys that do not with text of the author's own.</shortdesc>
+  <body>
+    <p>Resolved: <keyword keyref="k-word"/>, <uicontrol keyref="k-ui"/>, <ph keyref="k-word"/>,
+      <xref keyref="k-topic"/>, <image keyref="k-img" placement="inline"/>.</p>
+    <p>Unresolved, written empty: <keyword keyref="k-wrod"/>, <uicontrol keyref="k-uii"/>,
+      <ph keyref="k-nope"/>, <xref keyref="k-topci"/>.</p>
+    <p>Unresolved, with fallback text: <keyword keyref="k-wrod2">fallback keyword</keyword>,
+      <xref keyref="k-topci2">fallback link text</xref>.</p>
+    <p>Unresolved image: <image keyref="k-imgg" placement="inline"/> follows.</p>
+  </body>
+</topic>

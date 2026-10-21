@@ -406,6 +406,35 @@ jobs:
           grep -q '<span>Group</span>' out/keyref-nest/ov.html
           grep -q 'href="ov.html">Overview T</a>' out/keyref-nest-href/t1.html
 
+      # Key references in topic content (#244): DITA-OT writes an unresolved one as an
+      # empty element and says nothing at its default log level. The plugin names each
+      # one (GOVK015W), once, leaves an image with no source out, keeps the author's
+      # own fallback text, and stays silent for keys that resolved and for the manual.
+      - name: Build keyref-unresolved fixture (GOVK015W, #244)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          tools/ci/dita --input fixtures/keyref-unresolved/keys.ditamap \
+            --format govuk --output out/keyref-unresolved -Dgovuk.print=yes 2>&1 | tee keyref-unresolved.log
+          # one warning for each of the five, naming the key, and the print document adds none
+          test "$(grep -c 'GOVK015W' keyref-unresolved.log)" = 5
+          for k in k-wrod k-uii k-nope k-topci k-imgg; do grep -q "GOVK015W.*'$k'" keyref-unresolved.log; done
+          grep -q "GOVK015W.*'k-imgg' on the image element.*left out" keyref-unresolved.log
+          # fallback text is the author's own, and resolved keys are quiet
+          absent -Eq "GOVK015W.*'(k-wrod2|k-topci2|k-word|k-ui|k-img|k-topic)'" keyref-unresolved.log
+          for f in out/keyref-unresolved/topics/refs.html out/keyref-unresolved/print.html; do
+            grep -q 'fallback keyword' "$f"
+            grep -q 'fallback link text' "$f"
+            grep -q 'alt="A dot"' "$f"
+            # the unresolved image is left out, not written as an img with no src
+            test "$(grep -o '<img' "$f" | wc -l | tr -d ' ')" = 1
+          done
+          # DITA-OT 4.4.1 gives no scoped key to a copy-to: the kitchen's three are that case
+          test "$(grep -c 'GOVK015W' kitchen.log)" = 3
+          test "$(grep -c "GOVK015W.*'prodname'" kitchen.log)" = 3
+          # nothing else the CI builds reports one
+          absent -q "GOVK015W" manual-build.log keyref-nest.log keyref-nest-href.log
+
       # A toolkit installed where the user cannot write, as under C:\Program Files
       # (#198): the build must write nothing into the DITA-OT folder, and the
       # unknown-parameter check must still work.
@@ -1148,7 +1177,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/keyref-unresolved
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
