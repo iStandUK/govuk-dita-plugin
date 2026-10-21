@@ -35,6 +35,17 @@
         <codeph>aria-errormessage</codeph>, so each still names the element the author meant.
         A diagram with no <codeph>title</codeph> takes an <codeph>aria-label</codeph> from
         the figure title.</p>
+      <p>The role depends on what the diagram holds. A diagram without links is a picture:
+        it gets <codeph>role="img"</codeph>, and its <codeph>title</codeph> and
+        <codeph>desc</codeph> serve as its name and description. A diagram with links is
+        not, because an image has no children a reader can reach and axe-core reports
+        links nested in one. It gets <codeph>role="group"</codeph> instead, named by its
+        <codeph>title</codeph> through <codeph>aria-labelledby</codeph> and described by its
+        <codeph>desc</codeph> through <codeph>aria-describedby</codeph>; the plugin gives
+        either one an id when the file has none. An <codeph>aria-labelledby</codeph> or
+        <codeph>aria-label</codeph> the author wrote is left as written. Give a linked
+        diagram a <codeph>title</codeph>, and list its links in the text as well, so that
+        readers who do not use the diagram reach the same pages.</p>
     </section>
       <section>
       <title>Diagrams and the content policy</title>
