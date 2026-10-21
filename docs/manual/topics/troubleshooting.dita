@@ -9,7 +9,8 @@
     <p><indexterm>troubleshooting</indexterm><indexterm>DITA-OT<indexterm>known
       limitations</indexterm></indexterm>The first three sections were characterised on a
       real publication of about ten thousand topics during the plugin's live trials; the
-      last was found building the plugin's own fixtures on Windows. None of it
+      fourth was found building the plugin's own fixtures on Windows and the fifth on the
+      same fixtures on every platform. None of it
       is caused by the plugin, and none of it can be fixed by the plugin, because it happens
       in the toolkit's start-up or preprocessing before any rendering; a plain
       <codeph>html5</codeph> build shows the same results. The plugin's part is to say so
@@ -117,6 +118,28 @@ java.lang.ClassNotFoundException: com.elovirta.dita.markdown.MarkdownReader</cod
         for a topic that <codeph>chunk="to-content"</codeph> has merged into another page,
         for example, reports <codeph>DOTX023W</codeph> and <codeph>DOTX027W</codeph> with a
         hashed name, on Linux as on Windows.</p>
+    </section>
+    <section id="keyscope-copy-to">
+      <title>A key's text is missing from a page: copy-to under a key scope</title>
+      <p><indexterm>keys<indexterm>key scopes with copy-to</indexterm></indexterm><indexterm>GOVK015W</indexterm>A
+        topic published more than once with <codeph>copy-to</codeph>, each copy under its own
+        <codeph>keyscope</codeph> so that it can say a different product name, does not get
+        the scope's keys on DITA-OT 4.4.1. A <codeph>&lt;ph keyref="prodname"/&gt;</codeph>
+        that depends on a key defined inside the scope is written empty in every copy, and
+        the page reads "This page documents ." with nothing after it. The same
+        <codeph>topicref</codeph> with a <codeph>keyscope</codeph> and a key definition
+        inside it, but no <codeph>copy-to</codeph>, resolves. The toolkit says nothing at
+        its default log level.</p>
+      <p>The plugin does, for every key reference in content that resolved to nothing
+        (<codeph>GOVK015W</codeph>), whatever the cause: a misspelt key as well as this one.
+        There is one warning for each element in each copy.</p>
+      <codeblock>Warning: [GOVK015W]: The key reference 'prodname' on the ph element does not
+resolve: no key of that name is defined, so the element is written empty.</codeblock>
+      <p>Text written inside the element is DITA's fallback for a missing key, so
+        <codeph>&lt;ph keyref="prodname"&gt;the product&lt;/ph&gt;</codeph> keeps the page
+        readable while the key is missing, and is not reported. To publish one topic under
+        several names, build once for each with conditional processing
+        (<codeph>--filter</codeph>), or define the key where every copy can see it.</p>
     </section>
   </conbody>
 </concept>

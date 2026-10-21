@@ -469,7 +469,37 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <equals arg1="${govuk.inline.scope}" arg2="any"/>
       </or></not></condition>
     </fail>
-    <!-- the input directory as a URL, for the scope check -->
+    <!-- The folder inlining is limited to, as a URL, for the scope check (#239): the
+         input directory the publisher named with args.input.dir (a path, or a file:
+         URI from a project file), else the root map's folder. DITA-OT's own
+         DOTJ036W test ignores args.input.dir and keeps to the root map's folder;
+         this one is the plugin's, so it can follow the publisher. The scans above
+         stay in the root map's folder. -->
+    <condition property="govuk.scope.named">
+      <and>
+        <isset property="args.input.dir"/>
+        <not><equals arg1="${args.input.dir}" arg2="" trim="true"/></not>
+      </and>
+    </condition>
+    <condition property="govuk.scope.is-uri">
+      <and>
+        <isset property="govuk.scope.named"/>
+        <matches pattern="^file:" string="${args.input.dir}"/>
+      </and>
+    </condition>
+    <condition property="govuk.scope.is-abs">
+      <and>
+        <isset property="govuk.scope.named"/>
+        <matches pattern="^(/|[A-Za-z]:[\\/]|\\\\)" string="${args.input.dir}"/>
+      </and>
+    </condition>
+    <property name="govuk.input.dir.url" value="${args.input.dir}" if:set="govuk.scope.is-uri"/>
+    <!-- a relative path is the working directory's, which Ant's own base is not -->
+    <property name="govuk.scope.path" value="${args.input.dir}" if:set="govuk.scope.is-abs"/>
+    <property name="govuk.scope.path" value="${user.dir}/${args.input.dir}" if:set="govuk.scope.named"/>
+    <available file="${govuk.scope.path}" type="dir" property="govuk.scope.exists"/>
+    <makeurl property="govuk.input.dir.url" file="${govuk.scope.path}" if:set="govuk.scope.exists"/>
+    <!-- else the root map's folder: a folder that is not there never fails the build -->
     <makeurl property="govuk.input.dir.url" file="${govuk.input.dir}"/>
     <property name="govuk.content.warnings" value="yes"/>
     <fail message="govuk.content.warnings must be 'yes' or 'no', was: ${govuk.content.warnings}">

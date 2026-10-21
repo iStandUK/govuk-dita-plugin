@@ -47,4 +47,12 @@ DITA-OT convention: four letters, three digits, severity (I/W/E/F).
     <reason>Navigation entry '%1' has keyref='%2' that was not resolved, so it is rendered without a link and without children.</reason>
     <response>DITA-OT does not resolve keys inside a map that is itself included with &lt;mapref keyref="..."&gt;. Include that submap with &lt;mapref href="..."&gt; instead, or check that the key is defined.</response>
   </message>
+  <message id="GOVK015W" type="WARN">
+    <reason>The key reference '%1' on the %2 element does not resolve: no key of that name is defined, so the element is %3.</reason>
+    <response>Check the spelling of the key, and that the map, or a key map it includes, defines it. Text written inside the element is kept as the fallback, so giving the element content leaves the page readable while the key is missing. DITA-OT itself reports this only at its verbose log level, as DOTJ047I.</response>
+  </message>
+  <message id="GOVK016W" type="WARN">
+    <reason>The root map is below the top of its folder tree: %1 of its topic references reach above its folder, the first being '%2'.</reason>
+    <response>DITA-OT reports DOTJ036W for each, and the stylesheets, scripts and links between pages that this plugin writes are relative to the map's folder, where nothing is. Move the root map to the top of the publication's folder tree, with topics, images, diagrams and key maps beneath it, and include maps kept in subfolders with &lt;mapref href&gt;. Setting args.input.dir widens the plugin's own inline scope (GOVK005W) but not these.</response>
+  </message>
 </messages>
