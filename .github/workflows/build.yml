@@ -1332,6 +1332,14 @@ jobs:
               grep -q "id=\"$id\"" "$f" || { echo "$f: aria idref '$id' names no element"; exit 1; }
             done
           done
+          # a diagram with links is a group named by its title, one without stays an image (#241)
+          grep -Eq '<svg [^>]*role="group" aria-labelledby="svg[a-z0-9]+-steps-title" aria-describedby="svg[a-z0-9]+-steps-desc"' out/kitchen/topics/media.html
+          # a title with no id is given one, which the idref check above has already resolved
+          grep -Eq '<svg [^>]*role="group" aria-labelledby="svg[a-z0-9]+--title"' out/kitchen/topics/media.html
+          grep -Eq '<svg [^>]*role="img" aria-labelledby="svg[a-z0-9]+-diagram-title"' out/kitchen/topics/media.html
+          test "$(grep -o '<svg [^>]*role="img"' out/kitchen/topics/media.html | wc -l | tr -d ' ')" = 1
+          # two related links on one page, so the axe gate keeps exercising their target size (#242)
+          test "$(grep -o '<li class="linklist">' out/kitchen/topics/task-full.html | wc -l | tr -d ' ')" = 2
           absent -Eq 'cellpadding|cellspacing|choicetableborder' out/kitchen/topics/task-full.html out/kitchen/topics/reference-full.html
           # Plugin CSS never names the restricted typeface; the tile wrapper ships
           absent -q 'GDS Transport' out/manual/govuk/plugin.css

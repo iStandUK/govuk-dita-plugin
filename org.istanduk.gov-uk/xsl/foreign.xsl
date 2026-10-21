@@ -170,22 +170,63 @@ links and interactivity inside diagrams working.
     </xsl:choose>
   </xsl:template>
 
-  <!-- The root svg element: add accessibility + a viewBox if missing -->
+  <!-- The root svg element: add accessibility + a viewBox if missing.
+       A diagram without links is a picture: role="img", named and described by
+       its title and desc. A diagram with links is not (#241): role="img" makes
+       its children presentational, so the links inside are interactive content
+       nested in an image and assistive technology is told there is nothing to
+       reach. It becomes a group named by its title, and its links stay
+       reachable. An author's own aria-labelledby or aria-label is kept. -->
   <xsl:template match="svg:svg" mode="govuk-svg-inline">
     <xsl:param name="token" tunnel="yes"/>
     <xsl:param name="alt" tunnel="yes" select="''"/>
+    <xsl:variable name="linked" as="xs:boolean"
+                  select="exists(descendant::svg:a[@href or @xlink:href])"/>
+    <xsl:variable name="title" select="svg:title[normalize-space(.) ne ''][1]"/>
+    <xsl:variable name="desc" select="svg:desc[normalize-space(.) ne ''][1]"/>
+    <!-- the id each will carry after inlining; one is made when the file gave none -->
+    <xsl:variable name="title-id" as="xs:string?"
+                  select="if (not($linked) or empty($title)) then ()
+                          else if ($title/@id) then concat($token, '-', $title/@id)
+                          else concat($token, '--title')"/>
+    <xsl:variable name="desc-id" as="xs:string?"
+                  select="if (not($linked) or empty($desc)) then ()
+                          else if ($desc/@id) then concat($token, '-', $desc/@id)
+                          else concat($token, '--desc')"/>
     <svg xmlns="http://www.w3.org/2000/svg">
       <xsl:apply-templates select="@* except (@id | @width | @height)" mode="govuk-svg-inline"/>
       <xsl:if test="not(@viewBox) and @width and @height">
         <xsl:attribute name="viewBox"
                        select="concat('0 0 ', replace(@width, '[^0-9.]', ''), ' ', replace(@height, '[^0-9.]', ''))"/>
       </xsl:if>
-      <xsl:attribute name="role">img</xsl:attribute>
+      <xsl:attribute name="role" select="if ($linked) then 'group' else 'img'"/>
+      <xsl:if test="exists($title-id) and not(@aria-labelledby or @aria-label)">
+        <xsl:attribute name="aria-labelledby" select="$title-id"/>
+      </xsl:if>
+      <xsl:if test="exists($desc-id) and not(@aria-describedby)">
+        <xsl:attribute name="aria-describedby" select="$desc-id"/>
+      </xsl:if>
       <xsl:if test="$alt ne '' and not(svg:title)">
         <xsl:attribute name="aria-label" select="$alt"/>
       </xsl:if>
-      <xsl:apply-templates select="node()" mode="govuk-svg-inline"/>
+      <xsl:apply-templates select="node()" mode="govuk-svg-inline">
+        <xsl:with-param name="title-id" select="if (empty($title/@id)) then $title-id else ()" tunnel="yes"/>
+        <xsl:with-param name="desc-id" select="if (empty($desc/@id)) then $desc-id else ()" tunnel="yes"/>
+      </xsl:apply-templates>
     </svg>
+  </xsl:template>
+
+  <!-- A title or desc that the root now points at gets an id when the file gave it none -->
+  <xsl:template match="svg:svg/svg:title[not(@id)] | svg:svg/svg:desc[not(@id)]" mode="govuk-svg-inline">
+    <xsl:param name="title-id" tunnel="yes" as="xs:string?" select="()"/>
+    <xsl:param name="desc-id" tunnel="yes" as="xs:string?" select="()"/>
+    <xsl:variable name="id" select="if (self::svg:title) then $title-id else $desc-id"/>
+    <xsl:element name="{local-name()}" namespace="http://www.w3.org/2000/svg">
+      <xsl:if test="exists($id) and . is (parent::svg:svg/*[local-name() = local-name(current())][normalize-space(.) ne ''])[1]">
+        <xsl:attribute name="id" select="$id"/>
+      </xsl:if>
+      <xsl:apply-templates select="@* | node()" mode="#current"/>
+    </xsl:element>
   </xsl:template>
 
   <!-- Attributes that only ever arrive as SVG 1.1 DTD defaults when the file

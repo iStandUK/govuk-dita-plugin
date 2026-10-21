@@ -113,7 +113,7 @@ requirements govern its behaviour.
 
 | ID | Requirement | Priority | Status |
 |---|---|---|---|
-| NFR-A1 | Generated sites conform to **WCAG 2.2 AA**. Everything govuk-frontend provides (contrast, focus states, touch targets) is preserved; everything the plugin adds (nav tree, glossary, index, search page) is built and tested to the same standard | M | ✅ CI runs axe-core at WCAG 2.2 AA over the manual, kitchen and iStandUK sites (#35); found and fixed object accessible-name, scrollable-`pre` keyboard access, and nav/letter-nav target-size |
+| NFR-A1 | Generated sites conform to **WCAG 2.2 AA**. Everything govuk-frontend provides (contrast, focus states, touch targets) is preserved; everything the plugin adds (nav tree, glossary, index, search page) is built and tested to the same standard | M | ✅ CI runs axe-core at WCAG 2.2 AA over the manual, kitchen and iStandUK sites (#35); found and fixed object accessible-name, scrollable-`pre` keyboard access, and nav/letter-nav and related-link target-size (#242) |
 | NFR-A2 | Output is valid HTML5 (checked in CI with the Nu validator) with a single `h1` per page and a correct heading hierarchy | M | ✅ in CI on both fixtures |
 | NFR-A3 | Full functionality except search is available with JavaScript disabled | M | ✅ |
 | NFR-P1 | Sites are fully self-contained: **no CDN, no external requests** of any kind at runtime | M | ✅ asserted in CI |
