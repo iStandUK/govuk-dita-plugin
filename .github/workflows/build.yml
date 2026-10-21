@@ -144,7 +144,7 @@ jobs:
       DITA_OT_VERSION: ${{ matrix.dita-ot.version }}
       DITA_OT_SHA256: ${{ matrix.dita-ot.sha256 }}
       # govuk-frontend GitHub release zip for the vendored version (VERSION.txt)
-      GOVUK_FRONTEND_SHA256: "ac64b3abdb8af98624c8c0b8eabf78c894eb9da4d3b268544d0120f15abafc7a"
+      GOVUK_FRONTEND_SHA256: "b16863fd096a4363a3f6b8dd2397b02aea86bcc3785cfeda3ae56396aa8e804d"
       # the published DesignSystemPDF release a publisher installs, which the
       # plugin must find and work with (#113, D-23); move it with each pdf-v* release
       DSPDF_RELEASE: "0.1.2"
