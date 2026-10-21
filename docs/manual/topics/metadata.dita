@@ -151,7 +151,12 @@
         per build for all such pages (<codeph>GOVK012W</codeph>). To look at a published page
         as a link preview will, use a social network's sharing debugger, or read the page's
         source. The repository's <filepath>tools/check_metadata.py</filepath> checks a built
-        site against the same tables offline.</p>
+        site against the same tables offline. It runs from wherever it is kept: it takes the
+        tables from the plugin installed in the toolkit the <codeph>dita</codeph> command
+        belongs to, from <codeph>DITA_HOME</codeph>, or from the toolkit named with
+        <codeph>--dita-dir</codeph>; <codeph>--tables</codeph> names the plugin's
+        <filepath>resource/metadata</filepath> folder directly. When it cannot find them it
+        says where it looked and exits with status 2.</p>
     </section>
     <section id="llms-txt">
       <title>An index for language models: llms.txt</title>

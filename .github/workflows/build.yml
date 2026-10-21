@@ -1088,6 +1088,19 @@ jobs:
           python3 tools/check_metadata.py out/metadata-plain out/manual out/manual-official out/kitchen out/manual-print
           python3 tools/check_metadata.py --site-url https://example.org/dictionary/ out/source-system
           python3 tools/check_metadata.py --level no out/metadata-no
+          # the checker finds the tables wherever it is kept, not only in a checkout (#243)
+          lone="$(mktemp -d)"; cp tools/check_metadata.py "$lone/"
+          python3 "$lone/check_metadata.py" --level no out/metadata-no | grep -q ' 0 findings'
+          python3 "$lone/check_metadata.py" --dita-dir "dita-ot-${DITA_OT_VERSION}" out/kitchen | grep -q ' 0 findings'
+          py="$(command -v python3)"
+          env DITA_HOME="$PWD/dita-ot-${DITA_OT_VERSION}" PATH=/usr/bin:/bin "$py" "$lone/check_metadata.py" out/kitchen | grep -q ' 0 findings'
+          python3 "$lone/check_metadata.py" --tables "dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata" out/kitchen | grep -q ' 0 findings'
+          # and says so, with its exit status, when it cannot
+          rc=0; env -u DITA_HOME PATH=/usr/bin:/bin "$py" "$lone/check_metadata.py" out/kitchen > lone.log 2>&1 || rc=$?
+          test "$rc" = 2
+          grep -q 'cannot find the plugin.s mapping tables' lone.log
+          grep -q -- '--tables' lone.log
+          absent -q 'Traceback' lone.log
           # no stylesheet names a scheme: a row added to a table is a tag
           t="dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata/dublincore.xml"
           cp -p "$t" metadata-table.orig
