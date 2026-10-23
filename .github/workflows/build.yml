@@ -1469,7 +1469,7 @@ jobs:
           absent -Eq 'GOVK02[12]W' vocab.log
           # a vocabulary for the glossary, for the glossgroup and for the subject scheme, each in both forms
           for v in glossary clinical colours; do test -f out/vocab/vocab/$v.ttl && test -f out/vocab/vocab/$v.jsonld; done
-          test "$(ls out/vocab/vocab | wc -l | tr -d ' ')" = 6
+          test "$(find out/vocab/vocab -type f | wc -l | tr -d ' ')" = 6
           python3 tools/check_metadata.py --site-url https://example.org/v/ out/vocab
           rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/vocab/vocab/*.ttl out/vocab/vocab/*.jsonld
           python3 - <<'PY'
