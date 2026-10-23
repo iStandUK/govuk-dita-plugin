@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+SKOS (https://www.w3.org/TR/skos-reference/), the vocabulary for the controlled
+lists a publication holds: its glossary, each glossgroup, and each subjectScheme
+map. govuk.skos=yes writes each as vocab/<name>.ttl and vocab/<name>.jsonld, from
+one graph, so they are the same vocabulary.
+
+A scheme and its concepts. A concept's other names are alternative labels, its
+nesting in a subject scheme is broader and narrower, and the page it is
+described on, if it has one, is linked as its primary topic. A retired concept
+carries its ADMS status. Text carries the language of the thing it labels
+(lang="yes"). The table format is described in design 14, section 7.
+-->
+<scheme id="skos" syntax="rdf">
+  <prefix name="skos" uri="http://www.w3.org/2004/02/skos/core#"/>
+  <prefix name="dct" uri="http://purl.org/dc/terms/"/>
+  <prefix name="foaf" uri="http://xmlns.com/foaf/0.1/"/>
+  <prefix name="adms" uri="http://www.w3.org/ns/adms#"/>
+
+  <kind record="scheme" type="skos:ConceptScheme">
+    <property term="dct:title" as="dct:title" lang="yes" required="yes"/>
+    <property term="dct:description" as="dct:description" lang="yes"/>
+    <property term="dct:license" as="dct:license" format="uri" node="yes"/>
+    <property term="foaf:isPrimaryTopicOf" as="foaf:isPrimaryTopicOf" format="uri" node="yes"/>
+    <relation name="topConcept" as="skos:hasTopConcept"/>
+  </kind>
+
+  <kind record="term" type="skos:Concept">
+    <property term="dct:title" as="skos:prefLabel" lang="yes" required="yes"/>
+    <property term="dct:description" as="skos:definition" lang="yes"/>
+    <property term="dct:alternative" as="skos:altLabel" lang="yes" repeat="yes"/>
+    <property term="skos:notation" as="skos:notation"/>
+    <relation name="inScheme" as="skos:inScheme"/>
+    <relation name="topConceptOf" as="skos:topConceptOf"/>
+    <relation name="broader" as="skos:broader"/>
+    <relation name="narrower" as="skos:narrower"/>
+    <relation name="related" as="skos:related"/>
+    <property term="foaf:isPrimaryTopicOf" as="foaf:isPrimaryTopicOf" format="uri" node="yes"/>
+    <property term="adms:status" as="adms:status" format="uri" node="yes"
+              map="retired=http://purl.org/adms/status/Withdrawn"/>
+  </kind>
+</scheme>

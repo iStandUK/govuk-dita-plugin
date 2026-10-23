@@ -43,6 +43,8 @@ the once-per-build checks).
   <!-- no | yes (#102): the DCAT catalogue record, its own switch -->
   <xsl:param name="GOVUK-DCAT" select="'no'"/>
   <xsl:param name="GOVUK-CONTACT-EMAIL" select="''"/>
+  <!-- no | yes (#103): the glossary and subject schemes as SKOS vocabularies, its own switch -->
+  <xsl:param name="GOVUK-SKOS" select="'no'"/>
   <xsl:param name="GOVUK-DATES" select="'no'"/>
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>

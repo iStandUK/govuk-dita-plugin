@@ -1452,6 +1452,96 @@ jobs:
             -Dgovuk.dcat=yes -Dgovuk.site.url=https://example.org/data -Dgovuk.csp=meta \
             -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ > /dev/null
 
+      # Vocabularies (#103, D-26): the glossary, each glossgroup and each subjectScheme map as SKOS,
+      # in two serialisations from one graph, read back by a parser that is not ours
+      - name: Vocabularies (#103)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          has() { grep -qF "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
+          vocab() { tools/ci/dita --format govuk -Dgovuk.search=no -Dgovuk.skos=yes -Dgovuk.site.url=https://example.org/v "$@"; }
+          if [ ! -x "$RUNNER_TEMP/rdf/bin/python" ]; then
+            python3 -m venv "$RUNNER_TEMP/rdf"
+            "$RUNNER_TEMP/rdf/bin/pip" install -q --require-hashes --only-binary :all: -r tools/ci/requirements-rdf.txt
+          fi
+          rdf() { "$RUNNER_TEMP/rdf/bin/python" tools/check_rdf.py "$@"; }
+          vocab --input fixtures/vocab/vocab.ditamap --output out/vocab 2>&1 | tee vocab.log
+          absent -Eq 'GOVK02[12]W' vocab.log
+          # a vocabulary for the glossary, for the glossgroup and for the subject scheme, each in both forms
+          for v in glossary clinical colours; do test -f out/vocab/vocab/$v.ttl && test -f out/vocab/vocab/$v.jsonld; done
+          test "$(ls out/vocab/vocab | wc -l | tr -d ' ')" = 6
+          python3 tools/check_metadata.py --site-url https://example.org/v/ out/vocab
+          rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/vocab/vocab/*.ttl out/vocab/vocab/*.jsonld
+          python3 - <<'PY'
+          import json, re
+          base = "https://example.org/v/"
+          def load(stem):
+              g = json.load(open(f"out/vocab/vocab/{stem}.jsonld"))["@graph"]
+              return {n["@id"]: n for n in g}
+          label = lambda n: n["skos:prefLabel"]["@value"]
+          ref = lambda i: {"@id": i}
+          # a subject scheme: its hierarchy from both ends, a notation from the key, an address the map states,
+          # an address in the file otherwise, and a retired term in ADMS's own vocabulary
+          c = load("colours"); f = base + "vocab/colours.ttl#"
+          assert c[f + "scheme"]["@type"] == "skos:ConceptScheme" and c[f + "scheme"]["skos:hasTopConcept"] == ref(f + "colour")
+          assert c[f + "colour"]["skos:topConceptOf"] == ref(f + "scheme") and "skos:broader" not in c[f + "colour"]
+          assert c[f + "warm"]["skos:broader"] == ref(f + "colour")
+          assert c[f + "warm"]["skos:narrower"] == [ref(f + "red"), ref("https://example.org/colours/orange")]
+          assert c[f + "red"]["skos:definition"] == {"@value": "The colour of blood.", "@language": "en-GB"}
+          assert c[f + "red"]["skos:notation"] == "red" and label(c[f + "red"]) == "Red"
+          assert c["https://example.org/colours/orange"]["skos:broader"] == ref(f + "warm")
+          assert c[f + "cool"]["adms:status"] == ref("http://purl.org/adms/status/Withdrawn")
+          assert all("adms:status" not in n for k, n in c.items() if not k.endswith("#cool"))
+          # the glossary: an address the source states (with the page it is described on), the page's own
+          # address, otherwise an anchor on the glossary page; names, relations and status
+          g = load("glossary")
+          assert g[base + "glossary.html"]["@type"] == "skos:ConceptScheme"
+          care = g["https://example.org/concept/care_plan"]
+          assert label(care) == "Care plan" and care["foaf:isPrimaryTopicOf"] == ref(base + "terms/standalone.html")
+          bp = g["https://example.org/vocab/blood-pressure"]
+          assert [a["@value"] for a in bp["skos:altLabel"]] == ["BP", "arterial pressure"]
+          assert bp["skos:related"] == ref(base + "glossary.html#gl-pulse") and bp["skos:inScheme"] == ref(base + "glossary.html")
+          assert label(g[base + "glossary.html#gl-referral"]) == "Referral"
+          assert g[base + "glossary.html#gl-old-term"]["adms:status"] == ref("http://purl.org/adms/status/Withdrawn")
+          # a group is a scheme of its own entries, which are in no other scheme there
+          k = load("clinical")
+          assert k[f.replace("colours", "clinical") + "scheme"]["dct:title"]["@value"] == "Clinical terms"
+          assert {label(n) for n in k.values() if n["@type"] == "skos:Concept"} == {"Blood pressure", "Pulse", "Heart rate (old)"}
+          assert all(n["skos:inScheme"] == ref(base + "vocab/clinical.ttl#scheme") for n in k.values() if n["@type"] == "skos:Concept")
+          # every anchor a vocabulary names is on the glossary page, and the print-ready ids stay unique
+          page = open("out/vocab/glossary.html", encoding="utf-8").read()
+          ids = re.findall(r' id="([^"]+)"', page)
+          assert len(ids) == len(set(ids)), "duplicate ids on the glossary page"
+          for node in list(g) + list(k):
+              if node.startswith(base + "glossary.html#"):
+                  assert node.split("#")[1] in ids, node
+          PY
+          # the glossary page and a glossary entry's page link the glossary's files
+          has out/vocab/glossary.html '<link rel="alternate" type="text/turtle" href="vocab/glossary.ttl">'
+          has out/vocab/glossary.html '<link rel="alternate" type="application/ld+json" href="vocab/glossary.jsonld">'
+          has out/vocab/terms/standalone.html '<link rel="alternate" type="text/turtle" href="../vocab/glossary.ttl">'
+          # two terms that state one address are named; nothing to publish is said; a bad switch is refused
+          vocab --input fixtures/vocab/duplicate.ditamap --output out/vocab-dup 2>&1 | tee vocab-dup.log
+          grep -q 'GOVK021W.*care_plan.*2 terms' vocab-dup.log
+          vocab --input fixtures/catalogue/none.ditamap --output out/vocab-none 2>&1 | tee vocab-none.log
+          grep -q 'GOVK022W' vocab-none.log
+          test ! -e out/vocab-none/vocab
+          if tools/ci/dita --input fixtures/vocab/vocab.ditamap --format govuk --output out/x-skos -Dgovuk.skos=yes; then echo "govuk.skos=yes without a URL should fail"; exit 1; fi
+          if tools/ci/dita --input fixtures/vocab/vocab.ditamap --format govuk --output out/x-skos -Dgovuk.skos=maybe; then echo "govuk.skos=maybe should fail"; exit 1; fi
+          # off by default: no files and no links; the manual's own glossary, groups and all, is a vocabulary too
+          tools/ci/dita --input fixtures/vocab/vocab.ditamap --format govuk --output out/vocab-off -Dgovuk.search=no -Dgovuk.site.url=https://example.org/v > /dev/null
+          test ! -e out/vocab-off/vocab
+          absent -q 'rel="alternate"' out/vocab-off/glossary.html
+          vocab --input docs/manual/manual.ditamap --output out/manual-vocab > /dev/null
+          vocab --input fixtures/source-system/dictionary.ditamap --output out/source-system-vocab > /dev/null
+          for site in out/manual-vocab out/source-system-vocab; do
+            python3 tools/check_metadata.py --site-url https://example.org/v/ "$site"
+            rdf --expect-type skos:Concept --expect-type skos:ConceptScheme "$site"/vocab/glossary.ttl "$site"/vocab/glossary.jsonld
+          done
+          # the same site twice, byte for byte
+          vocab --input fixtures/vocab/vocab.ditamap --output out/vocab-again > /dev/null
+          diff -r out/vocab out/vocab-again && echo "the vocabularies are byte-identical"
+
       - name: Branding CSS is current
         run: |
           (cd tools/branding && npm ci && npm run build)
@@ -1490,7 +1580,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/metadata-full out/metadata-full-official out/catalogue out/catalogue-single out/dictionary out/datasets out/dataset out/keyref-unresolved out/subfolder-root-top
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/metadata-full out/metadata-full-official out/catalogue out/catalogue-single out/dictionary out/datasets out/dataset out/vocab out/keyref-unresolved out/subfolder-root-top
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
