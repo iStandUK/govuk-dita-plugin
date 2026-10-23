@@ -213,9 +213,9 @@ The licence, the site's address and the organisation's URL are the **publisher's
 - A name that is not a term of these vocabularies is reported as a warning (`GOVK011W`) and left out, so a misspelling is not silent. A correct term that no enabled table writes yet is kept quietly for the schemes to come.
 - Values are published. Do not write anything internal, and do not name people.
 
-## 8. Declaring a data asset (**Planned**)
+## 8. Declaring a data asset (**Now**: `govuk.dcat=yes` writes the catalogue record)
 
-A publication often holds several catalogue-worthy things: a logical model, each data set specification, a code list, an API. The **branch of the map** that documents one declares it, in the `topicmeta` of the submap or of the topicref that heads the branch:
+A publication often holds several catalogue-worthy things: a logical model, each data set specification, a code list, an API. The **branch of the map** that documents one declares it, in the `topicmeta` of the topicref, `topichead` or `topicgroup` that heads the branch:
 
 ```xml
 <chapter href="elements/index.dita" keys="elements">
@@ -235,9 +235,11 @@ A publication often holds several catalogue-worthy things: a logical model, each
 | Actual data, with the files in the publication | `dcat:Dataset` |
 
 - **Be honest about the type.** Documentation of data is a standard, not a dataset. Declare `dcat:Dataset` only where the publication ships or links the data itself.
-- The branch's title and description come from its first topic. Other properties it does not state are inherited from the root map.
-- The files that are the asset's distributions (a schema, a CSV, an OpenAPI file) are referenced from the branch as resource-only, with their `format`:
-  `<keydef keys="schema" href="schemas/return.schema.json" format="json" processing-role="resource-only"/>`.
+- **A submap is declared by wrapping its `mapref`** in a `topicgroup` (or a `topichead`) that carries the `topicmeta`. DITA-OT drops the `topicmeta` of the `mapref` itself, and of the submap file's root, when it resolves the reference, so a declaration written there is never seen.
+- The branch's title and description come from the entry, else from its first topic. Other properties it does not state are inherited from the root map.
+- **The asset's identifier** is the address you give as `dct:identifier`, so that the catalogue and everything else that names the asset agree. Without one it is the address of the branch's first page.
+- The files that are the asset's distributions (a schema, a CSV, an OpenAPI file) are referenced from **inside the branch** as resource-only, with their `format`; the build publishes each at the same path, and the catalogue links it there:
+  `<topicref href="schemas/return.schema.json" format="json" processing-role="resource-only"/>` (a `keydef` in the branch works the same way).
 - Declare nothing where nothing applies. The type is a statement the publisher stands behind, and it is never inferred.
 
 ## 9. Terms and code lists

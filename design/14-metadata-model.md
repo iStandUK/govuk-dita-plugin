@@ -227,3 +227,19 @@ What building the second writer settled:
 - **The checker reads the same rows.** `tools/check_metadata.py` parses the block and checks, for each kind of the table, that its object exists, that its `required` rows are present, that addresses are absolute and under the site URL, and that a list's positions run from 1 and end at the page. A second check is that a page has at most one block and the print document none.
 - **The levels.** `basic` and `full` both enable the three `meta`/`link` tables; `full` adds `schemaorg`. A `data` property reaches the block only through a row that maps it.
 
+## 14. As built: assets, the graph writer and `govuk.dcat` (#102)
+
+What building the catalogue settled, where the sections above left it open or a real build showed otherwise:
+
+- **A submap cannot carry the declaration.** DITA-OT drops the `topicmeta` of a `mapref`, and of the submap file's root, when it resolves the reference; only the submap's entries remain. A declaration lives on a topicref, a `topichead` or a `topicgroup`, so a submap is declared by wrapping its `mapref` in a `topicgroup`. (Section 6 said "the submap or the topicref".)
+- **The title and description fall back to the landing page's** when the entry has none, so a wrapper needs neither.
+- **An asset's identifier is the address it states as `dct:identifier`, else its landing page's.** This is the rule #103 extends to terms.
+- **A distribution is a resource-only reference inside the branch** whose file has a known data type, taken from its extension, else its `format`. DITA-OT copies such a file to the output at its path, which is the download address. A reference to a file above the map (`../`) is left out.
+- **A table of syntax `rdf` is walked into subjects, then written twice.** The walker follows a table's rows for a record and for every record the rows nest or relate, and yields a list of subjects whose values are literals (with a datatype) or references. JSON-LD and Turtle are small serialisers over that list, so they cannot differ. An independent RDF library reads both and finds the same graph (68 triples for the fixture).
+- **Tables merge.** Every `rdf` table gives a subject its values, so ADMS (#123) writes into the same files without a second writer. `schemes.xml` enables `dcat` by `levels="dcat"`, switched on by `govuk.dcat` and not by `govuk.metadata`.
+- **The catalogue is the publication when there are several assets** (the `publication` record carries `assets="many"`), and the asset alone when there is one.
+- **Three new rows:** `node="yes"` makes a value a reference by address, `datatype` types a literal, and `nested` and a relation add what they name to the graph.
+- **Messages:** `GOVK017W` (a type the record cannot write), `GOVK018W` (nothing declared), `GOVK019W` (a required property empty). The message template reads its context node, so the findings are elements, not strings.
+- **Not built:** SHACL validation against the Cross-Government Metadata Exchange Model's shapes. The mandatory set is checked from the table's `required` rows, in the build and in `tools/check_metadata.py`, and the parse and agreement of the two serialisations in `tools/check_rdf.py`. SHACL would add a dependency for a check the table already makes; revisit if a target catalogue publishes shapes beyond the mandatory set.
+- **Text has no language tag.** DCAT harvesters prefer one; the record is written without, as the first delivery.
+

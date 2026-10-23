@@ -40,6 +40,9 @@ the once-per-build checks).
   <xsl:param name="GOVUK-OG-IMAGE" select="''"/>
   <xsl:param name="GOVUK-LICENCE-URL" select="''"/>
   <xsl:param name="GOVUK-METADATA-PERSONS" select="'no'"/>
+  <!-- no | yes (#102): the DCAT catalogue record, its own switch -->
+  <xsl:param name="GOVUK-DCAT" select="'no'"/>
+  <xsl:param name="GOVUK-CONTACT-EMAIL" select="''"/>
   <xsl:param name="GOVUK-DATES" select="'no'"/>
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>
@@ -730,5 +733,9 @@ the once-per-build checks).
       </xsl:for-each-group>
     </xsl:if>
   </xsl:template>
+
+  <!-- The harvesters for data assets, and the writers for graphs (#102) -->
+  <xsl:include href="metadata-assets.xsl"/>
+  <xsl:include href="metadata-rdf.xsl"/>
 
 </xsl:stylesheet>

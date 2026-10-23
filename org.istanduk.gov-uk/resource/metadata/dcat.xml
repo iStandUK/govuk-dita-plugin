@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+DCAT 3 (https://www.w3.org/TR/vocab-dcat-3/), the vocabulary data catalogues
+exchange, enabled by govuk.dcat=yes and written as dcat.jsonld and dcat.ttl at
+the site root. The publisher declares what is an asset, and of what type, in the
+map (a data element named rdf:type); the type is never inferred. A publication
+that declares one asset is that asset; one that declares several is a catalogue
+of them; one that declares none has no record.
+
+required rows are data.gov.uk's mandatory set (D-24 decision 6): a title, a
+description, a stable identifier and a licence. A record missing one is still
+written and the build says which (GOVK019W).
+
+A row with node="yes" is a reference to another thing by address; datatype types
+a literal; a relation or nested="kind" makes the thing it names part of the
+graph. The table format is described in design 14, section 7.
+-->
+<scheme id="dcat" syntax="rdf">
+  <prefix name="dcat" uri="http://www.w3.org/ns/dcat#"/>
+  <prefix name="dct" uri="http://purl.org/dc/terms/"/>
+  <prefix name="foaf" uri="http://xmlns.com/foaf/0.1/"/>
+  <prefix name="vcard" uri="http://www.w3.org/2006/vcard/ns#"/>
+  <prefix name="adms" uri="http://www.w3.org/ns/adms#"/>
+  <prefix name="rdf" uri="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+  <prefix name="xsd" uri="http://www.w3.org/2001/XMLSchema#"/>
+
+  <!-- several assets: the publication is their catalogue -->
+  <kind record="publication" when="@assets = 'many'" type="dcat:Catalog">
+    <property term="dct:title" as="dct:title" required="yes"/>
+    <property term="dct:description" as="dct:description" required="yes"/>
+    <property term="@id" as="dct:identifier" required="yes"/>
+    <property term="dcat:landingPage" as="dcat:landingPage" format="uri" node="yes"/>
+    <property term="dct:license" as="dct:license" format="uri" node="yes" required="yes"/>
+    <property term="dct:language" as="dct:language"/>
+    <property term="dct:publisher" as="dct:publisher" nested="agent"/>
+    <property term="dcat:contactPoint" as="dcat:contactPoint" nested="contact"/>
+    <property term="dct:issued" as="dct:issued" format="date" datatype="xsd:date"/>
+    <property term="dct:modified" as="dct:modified" format="date" datatype="xsd:date"/>
+    <property term="dcat:version" as="dcat:version"/>
+    <relation name="hasPart" target="asset" as="dcat:resource"/>
+  </kind>
+
+  <!-- an asset: the type is the one the map declares -->
+  <kind record="asset">
+    <property term="rdf:type" as="@type" repeat="yes" node="yes"/>
+    <property term="dct:title" as="dct:title" required="yes"/>
+    <property term="dct:description" as="dct:description" required="yes"/>
+    <property term="@id" as="dct:identifier" required="yes"/>
+    <property term="dcat:landingPage" as="dcat:landingPage" format="uri" node="yes"/>
+    <property term="dct:license" as="dct:license" format="uri" node="yes" required="yes"/>
+    <property term="dct:language" as="dct:language"/>
+    <property term="dct:publisher" as="dct:publisher" nested="agent"/>
+    <property term="dcat:contactPoint" as="dcat:contactPoint" nested="contact"/>
+    <property term="dct:issued" as="dct:issued" format="date" datatype="xsd:date"/>
+    <property term="dct:modified" as="dct:modified" format="date" datatype="xsd:date"/>
+    <property term="dcat:version" as="dcat:version"/>
+    <property term="dct:subject" as="dcat:keyword" repeat="yes"/>
+    <property term="dcat:theme" as="dcat:theme" format="uri" node="yes" repeat="yes"/>
+    <property term="dct:spatial" as="dct:spatial" format="uri" node="yes" repeat="yes"/>
+    <property term="dct:temporal" as="dct:temporal"/>
+    <property term="dct:accrualPeriodicity" as="dct:accrualPeriodicity" format="uri" node="yes"/>
+    <property term="dct:conformsTo" as="dct:conformsTo" format="uri" node="yes" repeat="yes"/>
+    <relation name="hasPart" target="file" as="dcat:distribution"/>
+  </kind>
+
+  <kind record="file" type="dcat:Distribution">
+    <property term="dct:title" as="dct:title"/>
+    <property term="dcat:downloadURL" as="dcat:downloadURL" format="uri" node="yes"/>
+    <property term="dcat:mediaType" as="dcat:mediaType" format="uri" node="yes"/>
+    <property term="dct:format" as="dct:format"/>
+    <property term="dct:conformsTo" as="dct:conformsTo" format="uri" node="yes" repeat="yes"/>
+  </kind>
+
+  <kind record="agent" type="foaf:Organization">
+    <property term="dct:title" as="foaf:name"/>
+    <property term="foaf:homepage" as="foaf:homepage" format="uri" node="yes"/>
+  </kind>
+
+  <kind record="contact" type="vcard:Kind">
+    <property term="dct:title" as="vcard:fn"/>
+    <property term="vcard:hasEmail" as="vcard:hasEmail" format="uri" node="yes"/>
+  </kind>
+</scheme>

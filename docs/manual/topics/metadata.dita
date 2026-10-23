@@ -173,6 +173,73 @@
         types a search engine rewards changes, so treat it as a description of the page, not
         as a way to change how it appears.</p>
     </section>
+    <section id="catalogue">
+      <title>A catalogue record for data publications: govuk.dcat</title>
+      <p><indexterm>DCAT</indexterm><indexterm>catalogue record</indexterm><indexterm>data.gov.uk</indexterm>A
+        publication that documents data, such as a data dictionary or a data standard, can
+        also describe that data to the catalogues that harvest it. With
+        <codeph>govuk.dcat=yes</codeph> (and <codeph>govuk.site.url</codeph>) the build writes
+        <filepath>dcat.jsonld</filepath> and <filepath>dcat.ttl</filepath> at the site root:
+        the same <xref href="https://www.w3.org/TR/vocab-dcat-3/" format="html"
+        scope="external">DCAT 3</xref> record in two serialisations, written from one graph so
+        they are the same record. The home page links both and holds the record in its head.
+        It is off by default, because a catalogue record is a publishing act, and the
+        publisher turns it on.</p>
+      <p><b>The map says what is an asset.</b> A branch of the map declares itself with a data
+        element named <codeph>rdf:type</codeph> in the <codeph>topicmeta</codeph> of the
+        topicref, <codeph>topichead</codeph> or <codeph>topicgroup</codeph> that heads it. The
+        type is the publisher's statement and is never inferred.</p>
+      <codeblock>&lt;topicref href="elements/index.dita"&gt;
+  &lt;topicmeta&gt;
+    &lt;data name="rdf:type" value="dct:Standard"/&gt;
+    &lt;data name="dct:identifier" value="https://example.org/dictionary/elements"/&gt;
+    &lt;data name="dct:conformsTo" value="https://example.org/model"/&gt;
+  &lt;/topicmeta&gt;
+  &lt;!-- a distribution: a data file the site ships, inside the branch --&gt;
+  &lt;topicref href="schemas/return.schema.json" format="json" processing-role="resource-only"/&gt;
+&lt;/topicref&gt;</codeblock>
+      <ul>
+        <li>The type is a class of a vocabulary the plugin knows (<codeph>dcat:Dataset</codeph>,
+          <codeph>dcat:DataService</codeph>, <codeph>dct:Standard</codeph>,
+          <codeph>adms:Asset</codeph>) or an absolute address. One that is neither is reported
+          (<codeph>GOVK017W</codeph>) and the entry is left out.</li>
+        <li><b>A submap is declared by wrapping its <codeph>mapref</codeph></b> in a
+          <codeph>topicgroup</codeph> that carries the <codeph>topicmeta</codeph>. DITA-OT
+          drops the <codeph>topicmeta</codeph> of the <codeph>mapref</codeph> itself, and of the
+          submap file's root, when it resolves the reference.</li>
+        <li>The asset's landing page is its entry's first page. Its title and description are
+          the entry's, else that page's. Its identifier is the address given as
+          <codeph>dct:identifier</codeph>, else its landing page's address. The publisher,
+          licence, language, rights and contact come from the publication unless the entry says
+          otherwise. Any other property is a <codeph>data</codeph> element
+          (<codeph>dct:spatial</codeph>, <codeph>dct:temporal</codeph>,
+          <codeph>dct:accrualPeriodicity</codeph>, <codeph>dcat:theme</codeph> and so on) with
+          the address or value the target catalogue expects.</li>
+        <li>A resource-only reference inside the branch to a file of a data type (JSON, CSV,
+          Turtle, YAML, XML, a spreadsheet, a zip) is the asset's distribution. The build
+          publishes the file at its path, and the record links it there with its media type
+          and format.</li>
+        <li>One declared asset gives that asset, with no catalogue around it. Several give a
+          catalogue of them. None gives no record, and the build says so
+          (<codeph>GOVK018W</codeph>).</li>
+        <li><codeph>govuk.contact.email</codeph> adds an organisational contact point. It is
+          never a person by default.</li>
+      </ul>
+      <p><b>What data.gov.uk expects.</b> A title, a description, a stable identifier and a
+        licence. A record that lacks one is still written, and the build names the property
+        and the record (<codeph>GOVK019W</codeph>), so the harvester will not be the first to
+        say so.</p>
+      <p><b>Model honestly.</b> A documentation site describes data; it is not the data. A data
+        standard, a logical model or a data set specification is a <codeph>dct:Standard</codeph>.
+        An interface is a <codeph>dcat:DataService</codeph>. Declare
+        <codeph>dcat:Dataset</codeph> only for a branch that ships or links the data itself,
+        and give it the files as distributions. A dictionary that holds many specifications is
+        a catalogue of standards, not a dataset.</p>
+      <p>To check a built site, <filepath>tools/check_metadata.py</filepath> verifies the
+        mandatory properties and that every reference in the record names a record in it, and
+        <filepath>tools/check_rdf.py</filepath> parses both files with an independent RDF
+        library and confirms they are the same graph.</p>
+    </section>
     <section>
       <title>Any other property: data elements</title>
       <p><indexterm>metadata<indexterm>data element</indexterm></indexterm>A

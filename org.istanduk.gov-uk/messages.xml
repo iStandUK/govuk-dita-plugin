@@ -55,4 +55,16 @@ DITA-OT convention: four letters, three digits, severity (I/W/E/F).
     <reason>The root map is below the top of its folder tree: %1 of its topic references reach above its folder, the first being '%2'.</reason>
     <response>DITA-OT reports DOTJ036W for each, and the stylesheets, scripts and links between pages that this plugin writes are relative to the map's folder, where nothing is. Move the root map to the top of the publication's folder tree, with topics, images, diagrams and key maps beneath it, and include maps kept in subfolders with &lt;mapref href&gt;. Setting args.input.dir widens the plugin's own inline scope (GOVK005W) but not these.</response>
   </message>
+  <message id="GOVK017W" type="WARN">
+    <reason>The type '%1' declared on '%2' is not one the catalogue record can write, so the entry is left out of it.</reason>
+    <response>A declared type is a term of a vocabulary the plugin knows (the prefixes are %3), such as dcat:Dataset, dcat:DataService or dct:Standard, or an absolute http(s) or urn address.</response>
+  </message>
+  <message id="GOVK018W" type="WARN">
+    <reason>govuk.dcat=yes, but no entry of the map declares a data asset, so no catalogue record was written.</reason>
+    <response>Declare an asset with a data element named rdf:type in the topicmeta of the topicref, or submap, that heads it, for example value="dct:Standard". The type is the publisher's statement and is never inferred.</response>
+  </message>
+  <message id="GOVK019W" type="WARN">
+    <reason>The catalogue record for '%1' has no %2, which the %3 table marks as required (data.gov.uk expects it of a record); the record is written without it (%4).</reason>
+    <response>Give the asset the value it comes from: the entry's title and short description, a licence (govuk.licence.url, or official branding), and an address (govuk.site.url).</response>
+  </message>
 </messages>

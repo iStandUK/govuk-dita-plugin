@@ -195,6 +195,7 @@ map transformation with the plugin's values.
     <xsl:call-template name="govuk-tablelist-page"/>
     <xsl:call-template name="govuk-sitemap"/>
     <xsl:call-template name="govuk-llms"/>
+    <xsl:call-template name="govuk-dcat"/>
   </xsl:template>
 
   <!-- ===== sitemap.xml (#60) =====
@@ -363,6 +364,7 @@ map transformation with the plugin's values.
     <xsl:call-template name="govuk-md-head">
       <xsl:with-param name="record" select="$govuk-md-cover"/>
     </xsl:call-template>
+    <xsl:call-template name="govuk-md-dcat-head"/>
     <xsl:apply-templates select="." mode="gen-user-head"/>
   </xsl:template>
 

@@ -1244,6 +1244,105 @@ jobs:
           has out/metadata-row/topics/check.html '<meta name="DC.coverage" content="http://statistics.data.gov.uk/id/statistical-geography/E92000001">'
           absent -rEq 'opengraph|dublincore|schemaorg|og:|DC\.|TechArticle|BreadcrumbList|WebSite|HowTo|DefinedTerm' org.istanduk.gov-uk/xsl --include='*.xsl'
 
+      # The catalogue record (#102, D-24 decision 6, D-26): a publication declares its data
+      # assets in the map, and govuk.dcat=yes writes them as DCAT 3, in two serialisations
+      # from one graph. An independent RDF library reads both, and says they are the same.
+      - name: Catalogue record (#102)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          has() { grep -qF "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
+          dcat() { tools/ci/dita --format govuk -Dgovuk.search=no -Dgovuk.dcat=yes -Dgovuk.site.url=https://example.org/data "$@"; }
+          dcat --input fixtures/catalogue/catalogue.ditamap --output out/catalogue \
+            -Dgovuk.organisation="Example Body" -Dgovuk.organisation.url=https://example.org/ \
+            -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ \
+            -Dgovuk.contact.email=data@example.org 2>&1 | tee catalogue.log
+          # an entry whose type nobody can write is named, once; nothing else is wrong
+          test "$(grep -c 'GOVK017W' catalogue.log)" = 1
+          grep -q "GOVK017W.*type 'Dataset' declared on 'A page with a type nobody can write'" catalogue.log
+          absent -Eq 'GOVK018W|GOVK019W' catalogue.log
+          # both files, linked from the cover, which also holds the record
+          test -f out/catalogue/dcat.jsonld
+          test -f out/catalogue/dcat.ttl
+          has out/catalogue/index.html '<link rel="alternate" type="application/ld+json" href="dcat.jsonld">'
+          has out/catalogue/index.html '<link rel="alternate" type="text/turtle" href="dcat.ttl">'
+          python3 tools/check_metadata.py --site-url https://example.org/data/ out/catalogue
+          python3 - <<'PY'
+          import json
+          base = "https://example.org/data/"
+          nodes = {n["@id"]: n for n in json.load(open("out/catalogue/dcat.jsonld"))["@graph"]}
+          ref = lambda *ids: [{"@id": i} for i in ids] if len(ids) > 1 else {"@id": ids[0]}
+          catalogue = nodes[base]
+          assert catalogue["@type"] == "dcat:Catalog" and catalogue["dct:title"] == "Example data catalogue"
+          standard, dataset, service = "https://example.org/id/standard", base + "topics/dataset.html", base + "topics/service.html"
+          assert catalogue["dcat:resource"] == ref(standard, dataset, service), catalogue["dcat:resource"]
+          # a stated identifier is the asset's own; the page is its landing page
+          std = nodes[standard]
+          assert std["@type"] == "dct:Standard" and std["dct:identifier"] == standard
+          assert std["dcat:landingPage"] == ref(base + "topics/standard.html")
+          assert std["dct:conformsTo"] == ref("https://example.org/model")
+          assert std["dcat:distribution"] == ref(base + "data/schema.json", base + "data/openapi.yaml")
+          assert nodes[base + "data/schema.json"]["dcat:mediaType"] == ref("https://www.iana.org/assignments/media-types/application/json")
+          assert nodes[base + "data/openapi.yaml"]["dcat:mediaType"] == ref("https://www.iana.org/assignments/media-types/application/yaml")
+          assert nodes[base + "data/openapi.yaml"]["dcat:downloadURL"] == ref(base + "data/openapi.yaml")
+          # the catalogue properties a harvester expects, typed
+          ds = nodes[dataset]
+          assert ds["@type"] == "dcat:Dataset" and ds["dct:identifier"] == dataset
+          assert ds["dct:issued"] == {"@value": "2026-01-15", "@type": "xsd:date"}
+          assert ds["dct:temporal"] == "2025-04-01/2026-03-31"
+          assert ds["dct:spatial"] == ref("http://statistics.data.gov.uk/id/statistical-geography/E92000001")
+          assert ds["dct:accrualPeriodicity"] == ref("http://publications.europa.eu/resource/authority/frequency/ANNUAL")
+          assert nodes[base + "data/table.csv"]["dcat:mediaType"] == ref("https://www.iana.org/assignments/media-types/text/csv")
+          # an asset declared on a submap, through a wrapper, with the wrapper's page as its title
+          assert nodes[service]["@type"] == "dcat:DataService" and nodes[service]["dct:title"] == "Example lookup service"
+          # shared from the publication, once each
+          assert nodes["https://example.org/"] == {"@id": "https://example.org/", "@type": "foaf:Organization",
+                                                   "foaf:name": "Example Body", "foaf:homepage": ref("https://example.org/")}
+          assert nodes[base + "#contact"]["vcard:hasEmail"] == ref("mailto:data@example.org")
+          for n in (std, ds, nodes[service], catalogue):
+              assert n["dct:license"] == ref("https://creativecommons.org/licenses/by/4.0/")
+              assert n["dct:publisher"] == ref("https://example.org/") and n["dcat:contactPoint"] == ref(base + "#contact")
+          assert not [n for n in nodes.values() if n.get("dct:title") == "A page with a type nobody can write"]
+          PY
+          # a parser that is not ours reads both files, and they are the same graph; one that is not RDF is found
+          python3 -m venv "$RUNNER_TEMP/rdf"
+          "$RUNNER_TEMP/rdf/bin/pip" install -q --require-hashes --only-binary :all: -r tools/ci/requirements-rdf.txt
+          rdf() { "$RUNNER_TEMP/rdf/bin/python" tools/check_rdf.py "$@"; }
+          rdf --expect-type dcat:Catalog --expect-type dct:Standard --expect-type dcat:Dataset \
+              --expect-type dcat:DataService --expect-type dcat:Distribution --expect-type foaf:Organization \
+              out/catalogue/dcat.ttl out/catalogue/dcat.jsonld
+          cp out/catalogue/dcat.ttl "$RUNNER_TEMP/broken.ttl"; printf 'dct:title "unterminated .\n' >> "$RUNNER_TEMP/broken.ttl"
+          if rdf "$RUNNER_TEMP/broken.ttl"; then echo "check_rdf passed a Turtle file that is not Turtle"; exit 1; fi
+          # exactly one declared asset is that asset, with no catalogue around it
+          dcat --input fixtures/catalogue/single.ditamap --output out/catalogue-single -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ > /dev/null
+          absent -q 'dcat:Catalog' out/catalogue-single/dcat.ttl
+          has out/catalogue-single/dcat.ttl 'a dct:Standard'
+          rdf --expect-type dct:Standard out/catalogue-single/dcat.ttl out/catalogue-single/dcat.jsonld
+          python3 tools/check_metadata.py --site-url https://example.org/data/ out/catalogue-single
+          # none declared: nothing written, and the build says why
+          dcat --input fixtures/catalogue/none.ditamap --output out/catalogue-none 2>&1 | tee catalogue-none.log
+          grep -q 'GOVK018W' catalogue-none.log
+          absent -rq 'dcat' out/catalogue-none --include='*.html'
+          test ! -e out/catalogue-none/dcat.jsonld && test ! -e out/catalogue-none/dcat.ttl
+          # a record without a licence is written, and the build names what is missing
+          dcat --input fixtures/catalogue/single.ditamap --output out/catalogue-nolicence 2>&1 | tee catalogue-nolicence.log
+          grep -q "GOVK019W.*'Example data standard' has no dct:license" catalogue-nolicence.log
+          test -f out/catalogue-nolicence/dcat.ttl
+          # off by default, and the parameters are checked
+          absent -rEq 'dcat' out/manual/index.html out/metadata/index.html
+          test ! -e out/manual/dcat.jsonld
+          if tools/ci/dita --input fixtures/catalogue/single.ditamap --format govuk --output out/x-dcat -Dgovuk.dcat=yes; then echo "govuk.dcat=yes without a URL should fail"; exit 1; fi
+          if tools/ci/dita --input fixtures/catalogue/single.ditamap --format govuk --output out/x-dcat -Dgovuk.dcat=maybe; then echo "govuk.dcat=maybe should fail"; exit 1; fi
+          if dcat --input fixtures/catalogue/single.ditamap --output out/x-dcat -Dgovuk.contact.email=nobody; then echo "a contact email without an @ should fail"; exit 1; fi
+          # the same page twice, byte for byte; and under a strict policy the cover's block is not a violation
+          dcat --input fixtures/catalogue/catalogue.ditamap --output out/catalogue-again \
+            -Dgovuk.organisation="Example Body" -Dgovuk.organisation.url=https://example.org/ \
+            -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ -Dgovuk.contact.email=data@example.org > /dev/null
+          diff -r out/catalogue out/catalogue-again && echo "the catalogue is byte-identical"
+          tools/ci/dita --input fixtures/catalogue/catalogue.ditamap --format govuk --output out/catalogue-csp \
+            -Dgovuk.dcat=yes -Dgovuk.site.url=https://example.org/data -Dgovuk.csp=meta \
+            -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ > /dev/null
+
       - name: Branding CSS is current
         run: |
           (cd tools/branding && npm ci && npm run build)
@@ -1282,7 +1381,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/metadata-full out/metadata-full-official out/keyref-unresolved out/subfolder-root-top
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/metadata-full out/metadata-full-official out/catalogue out/catalogue-single out/keyref-unresolved out/subfolder-root-top
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -1601,7 +1700,9 @@ jobs:
       # served over HTTP (a policy's 'self' is an origin), every page loaded, and a
       # search run so Pagefind's WebAssembly and fetches are exercised under it
       - name: Content-Security-Policy check (#82)
-        run: node tools/a11y/csp-check.mjs out/manual-csp --query plugin
+        run: |
+          node tools/a11y/csp-check.mjs out/manual-csp --query plugin
+          node tools/a11y/csp-check.mjs out/catalogue-csp --query catalogue
 
       # #201: a kitchen page framed with ?embed=1 under govuk.csp=meta shows content only,
       # passes axe and the policy, and its diagram and text links stay in the frame; at
