@@ -203,6 +203,14 @@
               <codeph>govuk.site.url</codeph>.</entry>
           </row>
           <row>
+            <entry><codeph>GOVK020W</codeph></entry>
+            <entry>The glossary has more than 500 terms, so the glossary page has no
+              <codeph>DefinedTermSet</codeph> in its structured data. The page itself still
+              lists every term. Only with <codeph>govuk.metadata=full</codeph>.</entry>
+            <entry>Nothing needs doing. A partial set would be wrong, and one for every term
+              would roughly double the page. See <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
             <entry><codeph>GOVK015W</codeph></entry>
             <entry>A key reference in topic content names no key that resolves. A
               <codeph>keyword</codeph>, <codeph>ph</codeph>, <codeph>uicontrol</codeph>,

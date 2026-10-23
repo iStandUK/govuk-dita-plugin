@@ -1220,6 +1220,26 @@ jobs:
           hostile = graph("topics/escape.html")["TechArticle"]
           assert hostile["headline"] == 'Tom & Jerry\'s "guide" \\ </script><b> \U0001F600', repr(hostile["headline"])
           assert "<script>alert(1)</script>" in hostile["description"] and hostile["description"].endswith("back\\slash.")
+          # #101: a task is a how-to of its steps (the command names, the information tells), a glossary
+          # entry's page is one defined term, the generated glossary is the set of them, and a page
+          # that is neither has no main entity
+          assert "mainEntity" not in graph("topics/escape.html")["TechArticle"]
+          assert [x["name"] for x in graph("topics/check.html")["TechArticle"]["mainEntity"]["step"]] == ["Examine the baby."]
+          howto = graph("topics/measure.html")["TechArticle"]["mainEntity"]
+          assert howto["@type"] == "HowTo" and howto["name"] == "Measure a baby's length"
+          assert [(x["@type"], x["name"], x["text"]) for x in howto["step"]] == [
+              ("HowToStep", "Lay the baby on the mat.", "Keep the head against the board."),
+              ("HowToStep", "Straighten the legs.", "Straighten the legs."),
+              ("HowToStep", 'Read the scale "to the nearest" mm & write it down.', "Read it at eye level.")], howto["step"]
+          term = graph("topics/term-bmi.html")["TechArticle"]["mainEntity"]
+          assert term == {"@type": "DefinedTerm", "name": "Body mass index",
+                          "description": "A measure of weight relative to height.", "alternateName": ["BMI"]}, term
+          glossary = graph("glossary.html")
+          assert list(glossary) == ["WebPage", "BreadcrumbList"], list(glossary)
+          termset = glossary["WebPage"]["mainEntity"]
+          assert termset["@type"] == "DefinedTermSet" and termset["name"] == "Glossary"
+          assert [t["name"] for t in termset["hasDefinedTerm"]] == ["Body mass index", "Body surface area"]
+          assert "alternateName" not in termset["hasDefinedTerm"][1]
           PY
           absent -q 'ld+json' out/metadata-full/print.html
           # the metadata tags are still there beside it, and the other levels have no block
@@ -1235,6 +1255,27 @@ jobs:
             -Dgovuk.site.url=https://example.org/metadata -Dgovuk.metadata=full -Dgovuk.organisation="Example Department" > /dev/null
           has out/metadata-full-official/index.html '"@type": "GovernmentOrganization"'
           absent -q '"@type": "Organization"' out/metadata-full-official/index.html
+          # a glossary too large for a page's data is left out whole and said so; the glossary itself is whole
+          python3 - <<'PY'
+          import os
+          d = os.path.join(os.environ["RUNNER_TEMP"], "big")
+          os.makedirs(d + "/t", exist_ok=True)
+          refs = []
+          for n in range(501):
+              with open(f"{d}/t/g{n}.dita", "w") as f:
+                  f.write('<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE glossentry PUBLIC "-//OASIS//DTD DITA Glossary Entry//EN" "glossentry.dtd">\n'
+                          f'<glossentry id="g{n}"><glossterm>Term {n:04d}</glossterm><glossdef>Definition {n}.</glossdef></glossentry>\n')
+              refs.append(f'  <topicref href="t/g{n}.dita" processing-role="resource-only"/>')
+          with open(d + "/big.ditamap", "w") as f:
+              f.write('<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">\n'
+                      '<map xml:lang="en-GB"><title>Big glossary</title>\n' + "\n".join(refs) + "\n</map>\n")
+          PY
+          dita --input "$RUNNER_TEMP/big/big.ditamap" --output out/glossary-big -Dgovuk.metadata=full \
+            -Dgovuk.site.url=https://example.org/big 2>&1 | tee glossary-big.log
+          grep -q 'GOVK020W.*501 terms.*500' glossary-big.log
+          has out/glossary-big/glossary.html 'Term 0500'
+          absent -q 'DefinedTermSet' out/glossary-big/glossary.html
+          python3 tools/check_metadata.py --level full --site-url https://example.org/big out/glossary-big
           # no stylesheet names a scheme: a row added to a table is a tag
           t="dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata/dublincore.xml"
           cp -p "$t" metadata-table.orig

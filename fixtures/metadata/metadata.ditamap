@@ -2,8 +2,9 @@
 <!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
 <!-- Page metadata (#99, design 14): the keyword filter, data terms that are
      mapped, known but unmapped, misspelt and unprefixed, and a plain map's
-     own facts, and a page whose title and description hold characters a script
-     element or a JSON string must escape (#100). CI builds it with and without
+     own facts, a page whose title and description hold characters a script
+     element or a JSON string must escape (#100), a task with steps and two
+     glossary entries (#101). CI builds it with and without
      govuk.site.url. -->
 <map xml:lang="en-GB">
   <title>Metadata fixture</title>
@@ -14,4 +15,7 @@
     <topicref href="topics/retired.dita"/>
   </topicref>
   <topicref href="topics/escape.dita"/>
+  <topicref href="topics/measure.dita"/>
+  <topicref href="topics/term-bmi.dita"/>
+  <topicref href="topics/term-bsa.dita"/>
 </map>

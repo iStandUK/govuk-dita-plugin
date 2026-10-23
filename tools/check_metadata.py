@@ -203,7 +203,7 @@ def check_jsonld(rel, head, table, role, site_url):
             for row in rows:
                 key = row.get("as")
                 for v in jsonld_values(obj, key):
-                    if row.tag == "list":
+                    if row.tag == "list" or row.get("nested"):
                         continue
                     if is_uri(row) and not re.match(r"^[A-Za-z][A-Za-z0-9+.\-]*:\S+$", v):
                         found.append(f"{rel}: {label} {kind.get('type')} {key} is not an absolute URL: {v}")

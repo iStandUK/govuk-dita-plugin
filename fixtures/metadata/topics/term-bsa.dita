@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossentry PUBLIC "-//OASIS//DTD DITA Glossary Entry//EN" "glossentry.dtd">
+<glossentry id="term-bsa" xml:lang="en-GB">
+  <glossterm>Body surface area</glossterm>
+  <glossdef>The total surface of the body, estimated from height and weight.</glossdef>
+</glossentry>

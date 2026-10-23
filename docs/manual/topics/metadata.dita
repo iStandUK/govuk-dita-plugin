@@ -144,8 +144,24 @@
                 them, the publication it is part of, and the publisher.</entry>
             </row>
             <row>
+              <entry>A task page</entry>
+              <entry>The <codeph>TechArticle</codeph> also names a <codeph>HowTo</codeph> as its
+                main entity: the task's title and description, and a
+                <codeph>HowToStep</codeph> for each step, named by its
+                <codeph>cmd</codeph> and told by its <codeph>info</codeph> (the command again
+                when there is no information).</entry>
+            </row>
+            <row>
+              <entry>A glossary entry's page</entry>
+              <entry>The <codeph>TechArticle</codeph> also names a <codeph>DefinedTerm</codeph>
+                as its main entity: the term, its definition, and its acronyms,
+                abbreviations, short forms and synonyms as alternative names.</entry>
+            </row>
+            <row>
               <entry>A generated page (glossary, index, lists)</entry>
-              <entry>A <codeph>WebPage</codeph>, with the same facts.</entry>
+              <entry>A <codeph>WebPage</codeph>, with the same facts. On the glossary page,
+                a <codeph>DefinedTermSet</codeph> of every term in the glossary is its main
+                entity.</entry>
             </row>
             <row>
               <entry>Every page below the home page</entry>
@@ -156,6 +172,13 @@
           </tbody>
         </tgroup>
       </table>
+      <p>Two limits. A glossary of more than 500 terms has no <codeph>DefinedTermSet</codeph>:
+        the glossary page already lists every term, and a block as large again would double
+        it, so the set is left out whole (a partial set would be wrong) and the build says so
+        (<codeph>GOVK020W</codeph>). And no search engine currently rewards
+        <codeph>HowTo</codeph>: Google withdrew its how-to results in 2023. The block is
+        written because it describes the page accurately for tools that read it, not for
+        how a page appears in results.</p>
       <p>The publisher is an <codeph>Organization</codeph>, or a
         <codeph>GovernmentOrganization</codeph> for the official and NHS brandings, named as
         <codeph>govuk.organisation</codeph> or the bookmap says. Every value comes from the

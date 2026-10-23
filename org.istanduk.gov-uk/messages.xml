@@ -67,4 +67,8 @@ DITA-OT convention: four letters, three digits, severity (I/W/E/F).
     <reason>The catalogue record for '%1' has no %2, which the %3 table marks as required (data.gov.uk expects it of a record); the record is written without it (%4).</reason>
     <response>Give the asset the value it comes from: the entry's title and short description, a licence (govuk.licence.url, or official branding), and an address (govuk.site.url).</response>
   </message>
+  <message id="GOVK020W" type="WARN">
+    <reason>The glossary has %1 terms, more than the %2 a page's structured data holds, so its DefinedTermSet is left out of the glossary page.</reason>
+    <response>The glossary itself is unaffected. The page already lists every term; structured data for all of them would roughly double its size. A partial set would be wrong, so none is written.</response>
+  </message>
 </messages>

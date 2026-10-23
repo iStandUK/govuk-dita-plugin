@@ -243,3 +243,13 @@ What building the catalogue settled, where the sections above left it open or a 
 - **Not built:** SHACL validation against the Cross-Government Metadata Exchange Model's shapes. The mandatory set is checked from the table's `required` rows, in the build and in `tools/check_metadata.py`, and the parse and agreement of the two serialisations in `tools/check_rdf.py`. SHACL would add a dependency for a check the table already makes; revisit if a target catalogue publishes shapes beyond the mandatory set.
 - **Text has no language tag.** DCAT harvesters prefer one; the record is written without, as the first delivery.
 
+## 15. As built: steps, terms and the main entity (#101)
+
+- **A page's main entity is a relation.** A page record gains `mainEntity`: a how-to for a task, a term for a glossary entry, the scheme of its terms for the generated glossary. The `schemaorg` table nests it with `<relation name="mainEntity" target="…" nested="yes"/>`, so `HowTo`, `DefinedTerm` and `DefinedTermSet` are rows of the table and no new writer.
+- **Two small writer changes.** A relation row may now nest what it names (it could only reference it), and a `repeat="yes"` row is always an array, even of one, because consumers of `step` and `hasDefinedTerm` expect a list. `keywords` is therefore an array even for one keyword.
+- **Steps.** A step's name is its `cmd`, its text its `info`, else the command. A task with no step has no how-to. Only `task` topics, by their own type; a specialisation is not.
+- **Terms.** A term is a `glossentry`'s term and definition, with the acronym, abbreviation, short form and synonym as alternative names (`dct:alternative`). It has an address only when it has a page of its own, so the terms on the generated glossary page have none; #103 decides identifiers, for SKOS.
+- **A ceiling of 500 terms.** The generated glossary already shows every term, so a block of them roughly doubles the page. Above 500 the set is left out whole, because a partial set would be wrong, and `GOVK020W` says so. The constant is in the stylesheet; make it a parameter if a publisher asks.
+- **`HowTo` is written for its accuracy, not for results.** Google withdrew its how-to results in 2023; no search feature currently rewards it. The manual says so.
+- **The title of the set is the page's**, so it follows the language of the build.
+
