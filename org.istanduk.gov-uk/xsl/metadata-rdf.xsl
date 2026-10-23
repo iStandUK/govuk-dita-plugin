@@ -8,9 +8,9 @@ metadata.xsl. A table whose syntax is rdf describes records as subjects of a
 graph; the graph is then written twice, as JSON-LD and as Turtle, from one
 intermediate form, so the two cannot differ.
 
-  Walk   govuk:md-rdf-subjects follows a table's rows for a record and for
-         every record the rows nest or relate, and yields govuk:s elements:
-         a subject (its address) holding govuk:v values. A value is a literal
+  Walk   govuk:md-rdf-graph takes every record reachable from some roots, and
+         govuk:md-rdf-subjects describes each by every table with a kind for it,
+         as a govuk:s: a subject (its address) holding govuk:v values. A value is a literal
          (lit, with a datatype in dt) or a reference (iri). The type of a
          subject is a value of p="@type".
   Write  govuk:md-rdf-jsonld and govuk:md-rdf-turtle serialise the subjects.
@@ -36,68 +36,81 @@ the graph. The tables never name the syntax they are written in.
                                        [tokenize(@levels) = 'dcat']
                              return doc(resolve-uri($s/@href, $govuk-md-dir))/scheme[@syntax = 'rdf']"/>
 
+  <!-- The tables of the vocabulary files (#103), switched on by govuk.skos -->
+  <xsl:variable name="govuk-md-skos-schemes" as="element()*"
+                select="if ($GOVUK-SKOS ne 'yes') then ()
+                        else for $s in doc(resolve-uri('schemes.xml', $govuk-md-dir))/schemes/scheme
+                                       [tokenize(@levels) = 'skos']
+                             return doc(resolve-uri($s/@href, $govuk-md-dir))/scheme[@syntax = 'rdf']"/>
+
   <!-- ===== Walk ===== -->
 
-  <xsl:function name="govuk:md-rdf-subjects" as="element(govuk:s)*">
+  <!-- What one kind of a table says about a record: its values -->
+  <xsl:function name="govuk:md-rdf-kind" as="element(govuk:rows)">
+    <xsl:param name="kind" as="element()"/>
+    <xsl:param name="record" as="element(govuk:record)"/>
+    <govuk:rows>
+      <xsl:for-each select="tokenize(normalize-space($kind/@type))">
+        <govuk:v p="@type" iri="{.}"/>
+      </xsl:for-each>
+      <xsl:for-each select="$kind/*">
+        <xsl:variable name="row" select="."/>
+        <xsl:choose>
+          <xsl:when test="$row/@nested or local-name($row) = 'relation'">
+            <xsl:for-each select="(if ($row/@nested and local-name($row) != 'relation')
+                                   then $record/govuk:p[@term = $row/@term]/govuk:record
+                                   else $record/govuk:rel[@name = $row/@name]/govuk:record[not($row/@target) or @kind = $row/@target]
+                                  )[normalize-space(@id) ne '']">
+              <govuk:v p="{$row/@as}" iri="{@id}"/>
+            </xsl:for-each>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:for-each select="govuk:md-values($row, $kind, $record)">
+              <govuk:v p="{$row/@as}">
+                <xsl:attribute name="{if ($row/@node = 'yes') then 'iri' else 'lit'}" select="."/>
+                <xsl:if test="not($row/@node = 'yes') and ($row/@datatype or $row/@format = 'date')">
+                  <xsl:attribute name="dt" select="($row/@datatype, 'xsd:date')[1]"/>
+                </xsl:if>
+                <xsl:if test="not($row/@node = 'yes') and $row/@lang = 'yes' and normalize-space($record/govuk:p[@term = 'dct:language'][1]/@value) ne ''">
+                  <xsl:attribute name="lang" select="normalize-space($record/govuk:p[@term = 'dct:language'][1]/@value)"/>
+                </xsl:if>
+              </govuk:v>
+            </xsl:for-each>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:for-each>
+    </govuk:rows>
+  </xsl:function>
+
+  <!-- A record as a subject, by every kind of a table that describes it (a table
+       may say more about a thing in a second kind, as the ADMS table does of an
+       asset the DCAT table has already described). Nothing when no kind applies. -->
+  <xsl:function name="govuk:md-rdf-subjects" as="element(govuk:s)?">
     <xsl:param name="scheme" as="element()"/>
     <xsl:param name="record" as="element(govuk:record)"/>
-    <xsl:variable name="kind" select="($scheme/kind[govuk:md-applies(., $record)])[1]"/>
-    <xsl:if test="exists($kind) and normalize-space($record/@id) ne ''">
-      <!-- the things the rows nest or relate, row by row, in order -->
-      <xsl:variable name="parts" as="element(govuk:part)*">
-        <xsl:for-each select="$kind/*">
-          <xsl:variable name="row" select="."/>
-          <xsl:variable name="things" as="element(govuk:record)*"
-                        select="if ($row/@nested) then $record/govuk:p[@term = $row/@term]/govuk:record
-                                else if (local-name($row) = 'relation')
-                                then $record/govuk:rel[@name = $row/@name]/govuk:record[not($row/@target) or @kind = $row/@target]
-                                else ()"/>
-          <govuk:part>
-            <xsl:sequence select="$things"/>
-          </govuk:part>
-        </xsl:for-each>
-      </xsl:variable>
+    <xsl:variable name="rows" as="element(govuk:rows)*"
+                  select="$scheme/kind[govuk:md-applies(., $record)] ! govuk:md-rdf-kind(., $record)"/>
+    <xsl:if test="exists($rows) and normalize-space($record/@id) ne ''">
       <govuk:s id="{$record/@id}">
-        <xsl:for-each select="tokenize(normalize-space($kind/@type))">
-          <govuk:v p="@type" iri="{.}"/>
-        </xsl:for-each>
-        <xsl:for-each select="$kind/*">
-          <xsl:variable name="row" select="."/>
-          <xsl:variable name="i" select="position()"/>
-          <xsl:choose>
-            <xsl:when test="$row/@nested or local-name($row) = 'relation'">
-              <xsl:for-each select="$parts[$i]/govuk:record[normalize-space(@id) ne '']">
-                <govuk:v p="{$row/@as}" iri="{@id}"/>
-              </xsl:for-each>
-            </xsl:when>
-            <xsl:otherwise>
-              <xsl:for-each select="govuk:md-values($row, $kind, $record)">
-                <govuk:v p="{$row/@as}">
-                  <xsl:attribute name="{if ($row/@node = 'yes') then 'iri' else 'lit'}" select="."/>
-                  <xsl:if test="not($row/@node = 'yes') and ($row/@datatype or $row/@format = 'date')">
-                    <xsl:attribute name="dt" select="($row/@datatype, 'xsd:date')[1]"/>
-                  </xsl:if>
-                </govuk:v>
-              </xsl:for-each>
-            </xsl:otherwise>
-          </xsl:choose>
-        </xsl:for-each>
+        <xsl:sequence select="$rows/govuk:v"/>
       </govuk:s>
-      <xsl:sequence select="for $r in $parts/govuk:record return govuk:md-rdf-subjects($scheme, $r)"/>
     </xsl:if>
   </xsl:function>
 
-  <!-- The graph of some root records under every table: each subject once, in
-       the order first reached, with the values every table gives it -->
+  <!-- The graph of some root records under every table: every record reachable from
+       them (nested or related, at any depth), each described by every table that has
+       a kind for it, each subject once, in the order first reached, with the values
+       every table gives it. A table need not know how the records are connected. -->
   <xsl:function name="govuk:md-rdf-graph" as="element(govuk:s)*">
     <xsl:param name="schemes" as="element()*"/>
     <xsl:param name="roots" as="element(govuk:record)*"/>
     <xsl:variable name="all" as="element(govuk:s)*"
-                  select="for $scheme in $schemes, $r in $roots return govuk:md-rdf-subjects($scheme, $r)"/>
+                  select="for $r in $roots/descendant-or-self::govuk:record, $scheme in $schemes
+                          return govuk:md-rdf-subjects($scheme, $r)"/>
     <xsl:for-each-group select="$all" group-by="@id">
       <govuk:s id="{current-grouping-key()}">
         <xsl:for-each-group select="current-group()/govuk:v"
-                            group-by="string-join((@p, @iri, @lit, @dt), '|')">
+                            group-by="string-join((@p, @iri, @lit, @dt, @lang), '|')">
           <xsl:sequence select="current-group()[1]"/>
         </xsl:for-each-group>
       </govuk:s>
@@ -116,8 +129,8 @@ the graph. The tables never name the syntax they are written in.
   <xsl:function name="govuk:md-rdf-missing" as="xs:string*">
     <xsl:param name="scheme" as="element()"/>
     <xsl:param name="record" as="element(govuk:record)"/>
-    <xsl:variable name="kind" select="($scheme/kind[govuk:md-applies(., $record)])[1]"/>
-    <xsl:sequence select="for $row in $kind/*[@required = 'yes']
+    <xsl:sequence select="for $kind in $scheme/kind[govuk:md-applies(., $record)],
+                              $row in $kind/*[@required = 'yes']
                           return if (empty(govuk:md-values($row, $kind, $record))) then string($row/@as) else ()"/>
   </xsl:function>
 
@@ -139,6 +152,8 @@ the graph. The tables never name the syntax they are written in.
                           else if ($v/@iri) then concat('{ &quot;@id&quot;: ', govuk:md-json-string(string($v/@iri)), ' }')
                           else if ($v/@dt) then concat('{ &quot;@value&quot;: ', govuk:md-json-string(string($v/@lit)),
                                                        ', &quot;@type&quot;: ', govuk:md-json-string(string($v/@dt)), ' }')
+                          else if ($v/@lang) then concat('{ &quot;@value&quot;: ', govuk:md-json-string(string($v/@lit)),
+                                                         ', &quot;@language&quot;: ', govuk:md-json-string(string($v/@lang)), ' }')
                           else govuk:md-json-string(string($v/@lit))"/>
   </xsl:function>
 
@@ -210,6 +225,7 @@ the graph. The tables never name the syntax they are written in.
     <xsl:sequence select="if ($v/@iri) then (if (govuk:md-rdf-prefixed($prefixes, string($v/@iri))) then string($v/@iri)
                                              else govuk:md-ttl-iri(string($v/@iri)))
                           else if ($v/@dt) then concat(govuk:md-ttl-string(string($v/@lit)), '^^', $v/@dt)
+                          else if ($v/@lang) then concat(govuk:md-ttl-string(string($v/@lit)), '@', $v/@lang)
                           else govuk:md-ttl-string(string($v/@lit))"/>
   </xsl:function>
 
@@ -310,6 +326,15 @@ the graph. The tables never name the syntax they are written in.
         <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate(string(@title), ';', ',')"/>;%2=<xsl:value-of select="@row"/>;%3=<xsl:value-of select="@table"/>;%4=<xsl:value-of select="@id"/></xsl:with-param>
       </xsl:call-template>
     </xsl:for-each>
+  </xsl:template>
+
+  <!-- On the glossary page and a glossary entry's page: the glossary vocabulary, as its two files (#103) -->
+  <xsl:template name="govuk-md-skos-head">
+    <xsl:param name="prefix" as="xs:string" select="''"/>
+    <xsl:if test="$GOVUK-SKOS = 'yes' and $govuk-md-base ne ''">
+      <link rel="alternate" type="text/turtle" href="{$prefix}vocab/glossary.ttl"/>
+      <link rel="alternate" type="application/ld+json" href="{$prefix}vocab/glossary.jsonld"/>
+    </xsl:if>
   </xsl:template>
 
 </xsl:stylesheet>

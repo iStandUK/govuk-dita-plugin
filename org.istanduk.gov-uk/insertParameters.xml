@@ -37,6 +37,7 @@ unaffected.
   <param name="GOVUK-PDF-NAME" expression="${govuk.pdf.name}.pdf" if:set="govuk.pdf.on"/>
   <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
   <param name="GOVUK-DCAT" expression="${govuk.dcat}" if:set="govuk.dcat"/>
+  <param name="GOVUK-SKOS" expression="${govuk.skos}" if:set="govuk.skos"/>
   <param name="GOVUK-CONTACT-EMAIL" expression="${govuk.contact.email}" if:set="govuk.contact.email"/>
   <param name="GOVUK-METADATA" expression="${govuk.metadata}" if:set="govuk.metadata"/>
   <param name="GOVUK-METADATA-PERSONS" expression="${govuk.metadata.persons}" if:set="govuk.metadata.persons"/>

@@ -29,7 +29,7 @@ indexterm markup. Imported by map2govuk-cover.xsl.
        term, acronym and definition inline, so entries are not linked out to a
        per-topic page — those pages do not exist for resource-only glossentries
        or for the members of a glossgroup. -->
-  <xsl:variable name="govuk-gloss" as="element()*">
+  <xsl:variable name="govuk-gloss-sources" as="element()*">
     <xsl:for-each-group select="$govuk-norm-map//*[contains(@class, ' map/topicref ')]
                                 [@href][not(@scope = 'external')]
                                 [not(@format) or @format = 'dita']"
@@ -37,23 +37,38 @@ indexterm markup. Imported by map2govuk-cover.xsl.
       <xsl:variable name="uri" select="resolve-uri(current-grouping-key(), $govuk-map-base)"/>
       <xsl:if test="doc-available($uri)">
         <xsl:variable name="root" select="doc($uri)/*"/>
-        <xsl:variable name="glossentries" as="element()*"
-                      select="if (contains($root/@class, ' glossentry/glossentry '))
-                              then $root
+        <xsl:sequence select="if (contains($root/@class, ' glossentry/glossentry ')) then $root
                               else if (contains($root/@class, ' glossgroup/glossgroup '))
                               then $root//*[contains(@class, ' glossentry/glossentry ')]
                               else ()"/>
-        <xsl:for-each select="$glossentries">
-          <xsl:element name="entry">
-            <xsl:attribute name="term"
-                           select="normalize-space(string((*[contains(@class, ' glossentry/glossterm ')])[1]))"/>
-            <xsl:attribute name="acronym"
-                           select="normalize-space(string((.//*[contains(@class, ' glossentry/glossAcronym ')])[1]))"/>
-            <xsl:value-of select="normalize-space(string((*[contains(@class, ' glossentry/glossdef ')])[1]))"/>
-          </xsl:element>
-        </xsl:for-each>
       </xsl:if>
     </xsl:for-each-group>
+  </xsl:variable>
+
+  <!-- An anchor for each entry, to link to it from outside the page (#103): gl- and
+       the entry's id, and, for an id a second entry has too, a number after it.
+       The same list names the term in the vocabulary file, so the two agree. -->
+  <xsl:variable name="govuk-gloss-anchors" as="xs:string*">
+    <xsl:for-each select="$govuk-gloss-sources">
+      <xsl:variable name="n" select="position()"/>
+      <xsl:variable name="id" select="concat('gl-', replace(string(@id), '[^A-Za-z0-9_.\-]', '-'))"/>
+      <xsl:variable name="earlier" select="count($govuk-gloss-sources[position() lt $n][concat('gl-', replace(string(@id), '[^A-Za-z0-9_.\-]', '-')) = $id])"/>
+      <xsl:sequence select="if ($earlier = 0) then $id else concat($id, '-', $earlier + 1)"/>
+    </xsl:for-each>
+  </xsl:variable>
+
+  <xsl:variable name="govuk-gloss" as="element()*">
+    <xsl:for-each select="$govuk-gloss-sources">
+      <xsl:variable name="i" select="position()"/>
+      <xsl:element name="entry">
+        <xsl:attribute name="term"
+                       select="normalize-space(string((*[contains(@class, ' glossentry/glossterm ')])[1]))"/>
+        <xsl:attribute name="acronym"
+                       select="normalize-space(string((.//*[contains(@class, ' glossentry/glossAcronym ')])[1]))"/>
+        <xsl:attribute name="anchor" select="$govuk-gloss-anchors[$i]"/>
+        <xsl:value-of select="normalize-space(string((*[contains(@class, ' glossentry/glossdef ')])[1]))"/>
+      </xsl:element>
+    </xsl:for-each>
   </xsl:variable>
 
   <!-- Whether the bookmap explicitly requests each list of items -->
@@ -260,7 +275,7 @@ indexterm markup. Imported by map2govuk-cover.xsl.
         <xsl:value-of select="current-grouping-key()"/>
       </h2>
       <xsl:for-each select="current-group()">
-        <h3 class="govuk-heading-s app-entry__heading">
+        <h3 class="govuk-heading-s app-entry__heading" id="{@anchor}">
           <xsl:value-of select="@term"/>
           <xsl:if test="@acronym ne ''">
             <xsl:text> (</xsl:text><xsl:value-of select="@acronym"/><xsl:text>)</xsl:text>

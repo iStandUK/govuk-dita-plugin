@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE task PUBLIC "-//OASIS//DTD DITA Task//EN" "task.dtd">
+<!-- A task for the how-to (#101): a step with further information, one without, and a
+     step whose text has characters a JSON string must escape. -->
+<task id="measure" xml:lang="en-GB">
+  <title>Measure a baby's length</title>
+  <shortdesc>How to take a baby's length at the six-to-eight-week check.</shortdesc>
+  <taskbody>
+    <steps>
+      <step>
+        <cmd>Lay the baby on the mat.</cmd>
+        <info>Keep the head against the board.</info>
+      </step>
+      <step>
+        <cmd>Straighten the legs.</cmd>
+      </step>
+      <step>
+        <cmd>Read the scale "to the nearest" mm &amp; write it down.</cmd>
+        <info>Read it at eye level.</info>
+      </step>
+    </steps>
+  </taskbody>
+</task>
