@@ -391,16 +391,19 @@ the once-per-build checks).
       <xsl:sequence select="govuk:md-data((reverse($chain)/*[contains(@class, ' map/topicmeta ')], $prolog))"/>
     </xsl:variable>
     <!-- what the page is about: a task's how-to, a glossary entry's term, or, for
-         the generated glossary, the scheme of its terms (#101) -->
-    <xsl:variable name="main" as="element(govuk:record)?"
-                  select="if (exists($topic) and govuk:md-topic-type($topic) = 'task')
-                          then govuk:md-howto-record($topic, ($topic-title, $title)[. ne ''][1],
-                                 string($own[@term = 'dct:description']/@value))
-                          else if (exists($topic) and govuk:md-topic-type($topic) = 'glossentry')
-                          then govuk:md-term-record($topic, '')
-                          else if ($role = 'utility' and $path = 'glossary.html')
-                          then govuk:md-glossary-record($title)
-                          else ()"/>
+         the generated glossary, the scheme of its terms (#101); and, on the first
+         page of a data asset's branch, the asset (#122) -->
+    <xsl:variable name="main" as="element(govuk:record)*"
+                  select="(if (exists($topic) and govuk:md-topic-type($topic) = 'task')
+                           then govuk:md-howto-record($topic, ($topic-title, $title)[. ne ''][1],
+                                  string($own[@term = 'dct:description']/@value))
+                           else if (exists($topic) and govuk:md-topic-type($topic) = 'glossentry')
+                           then govuk:md-term-record($topic, '')
+                           else if ($role = 'utility' and $path = 'glossary.html')
+                           then govuk:md-glossary-record($title)
+                           else (),
+                           (: a data asset's landing page is about the asset (#122) :)
+                           if ($role = 'topic') then $govuk-md-assets[@path = $path] else ())"/>
     <govuk:record kind="page" role="{$role}" path="{$path}">
       <xsl:if test="govuk:md-id($path) ne ''">
         <xsl:attribute name="id" select="govuk:md-id($path)"/>

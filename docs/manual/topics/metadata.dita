@@ -152,6 +152,15 @@
                 when there is no information).</entry>
             </row>
             <row>
+              <entry>The landing page of a data asset declared a dataset</entry>
+              <entry>The <codeph>TechArticle</codeph> also names a <codeph>Dataset</codeph> as
+                its main entity: the asset's name, description, address, licence, publisher,
+                dates and version when it states them, its temporal coverage, and a
+                <codeph>DataDownload</codeph> for each of its files. See
+                <xref href="#metadata/catalogue"/>. A standard or a service is not a dataset and
+                gets none.</entry>
+            </row>
+            <row>
               <entry>A glossary entry's page</entry>
               <entry>The <codeph>TechArticle</codeph> also names a <codeph>DefinedTerm</codeph>
                 as its main entity: the term, its definition, and its acronyms,
@@ -172,6 +181,18 @@
           </tbody>
         </tgroup>
       </table>
+      <p>A <codeph>Dataset</codeph> is written only for a branch the map declares a dataset
+        (a <codeph>rdf:type</codeph> of <codeph>dcat:Dataset</codeph>), on that branch's first
+        page, with <codeph>govuk.metadata=full</codeph>. It does not need
+        <codeph>govuk.dcat</codeph>. It is built from the same record as the catalogue record,
+        so the two always say the same thing. For example, a branch that ships a table:</p>
+      <codeblock>&lt;topicref href="topics/annual-return.dita"&gt;
+  &lt;topicmeta&gt;
+    &lt;data name="rdf:type" value="dcat:Dataset"/&gt;
+    &lt;data name="dct:temporal" value="2025-04-01/2026-03-31"/&gt;
+  &lt;/topicmeta&gt;
+  &lt;topicref href="data/annual-return.csv" format="csv" processing-role="resource-only"/&gt;
+&lt;/topicref&gt;</codeblock>
       <p>Two limits. A glossary of more than 500 terms has no <codeph>DefinedTermSet</codeph>:
         the glossary page already lists every term, and a block as large again would double
         it, so the set is left out whole (a partial set would be wrong) and the build says so

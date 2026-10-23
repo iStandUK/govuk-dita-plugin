@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="dataset2" xml:lang="en-GB">
+  <title>Example monthly extract</title>
+  <shortdesc>A month of returns, published as a table and as JSON.</shortdesc>
+  <conbody><p>A month of returns, published as a table and as JSON.</p></conbody>
+</concept>

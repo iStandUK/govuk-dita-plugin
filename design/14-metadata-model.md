@@ -253,3 +253,12 @@ What building the catalogue settled, where the sections above left it open or a 
 - **`HowTo` is written for its accuracy, not for results.** Google withdrew its how-to results in 2023; no search feature currently rewards it. The manual says so.
 - **The title of the set is the page's**, so it follows the language of the build.
 
+## 16. As built: `Dataset` from the asset record (#122)
+
+- **Rows of the `schemaorg` table over the record `govuk.dcat` already reads.** A `kind record="asset" when="rdf:type = 'dcat:Dataset'"` gives `Dataset`, and a `file` kind gives `DataDownload`. No stylesheet change beyond attaching the asset to its landing page. The old "agree field for field" assertion is not needed, since the two read one record; CI still compares the two on a fixture, because that is the claim.
+- **Where it is written.** The asset is a main entity of the page at the asset's landing path, alongside a how-to or term the same page may have. A page whose asset is not a dataset (a standard, a service) gets none, because the kind's `when` does not apply.
+- **It does not need `govuk.dcat`.** `Dataset` belongs to `govuk.metadata=full`; the catalogue files belong to `govuk.dcat`. A publisher may want one without the other.
+- **A file states its media type twice**, as the address DCAT wants (`dcat:mediaType`) and as the text schema.org wants (`schema:encodingFormat`).
+- **An asset is part of the publication**: the record carries an `isPartOf` relation to it, which `Dataset.isPartOf` reads.
+- **Not mapped:** `spatialCoverage`. The declared `dct:spatial` is an address in a gazetteer, and schema.org expects a place. Revisit if a publication needs it.
+

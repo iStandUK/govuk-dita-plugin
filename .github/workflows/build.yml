@@ -1369,6 +1369,45 @@ jobs:
           dcat --input fixtures/catalogue/single.ditamap --output out/catalogue-nolicence 2>&1 | tee catalogue-nolicence.log
           grep -q "GOVK019W.*'Example data standard' has no dct:license" catalogue-nolicence.log
           test -f out/catalogue-nolicence/dcat.ttl
+          # #122: a declared dataset is also a schema.org Dataset, on its landing page. Both read the
+          # one record, so they agree; a standard is not a dataset, and nothing declared is nothing
+          full() { tools/ci/dita --format govuk -Dgovuk.search=no -Dgovuk.metadata=full -Dgovuk.site.url=https://example.org/data \
+                     -Dgovuk.organisation="Example Body" -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ "$@"; }
+          full --input fixtures/catalogue/datasets.ditamap --output out/datasets -Dgovuk.dcat=yes > /dev/null
+          full --input fixtures/catalogue/dataset.ditamap --output out/dataset > /dev/null
+          full --input fixtures/catalogue/none.ditamap --output out/datasets-none > /dev/null
+          python3 tools/check_metadata.py --level full --site-url https://example.org/data/ out/datasets out/dataset out/datasets-none
+          python3 - <<'PY'
+          import glob, json, os, re
+          def datasets(site):
+              found = {}
+              for path in sorted(glob.glob(site + "/**/*.html", recursive=True)):
+                  for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', open(path, encoding="utf-8").read(), re.S):
+                      for obj in json.loads(block)["@graph"]:
+                          main = obj.get("mainEntity") or []
+                          for e in (main if isinstance(main, list) else [main]):
+                              if e.get("@type") == "Dataset":
+                                  found[os.path.relpath(path, site)] = e
+              return found
+          base = "https://example.org/data/"
+          assert list(datasets("out/dataset")) == ["topics/dataset.html"]
+          assert datasets("out/datasets-none") == {}
+          several = datasets("out/datasets")
+          assert sorted(several) == ["topics/dataset.html", "topics/dataset2.html"], sorted(several)
+          nodes = {n["@id"]: n for n in json.load(open("out/datasets/dcat.jsonld"))["@graph"]}
+          for page, d in several.items():
+              node = nodes[d["@id"]]
+              assert d["@id"] == d["url"] == base + page
+              assert d["name"] == node["dct:title"] and d["description"] == node["dct:description"]
+              assert d["license"] == node["dct:license"]["@id"]
+              assert d["isPartOf"] == {"@id": base}
+              refs = node["dcat:distribution"]
+              refs = refs if isinstance(refs, list) else [refs]
+              assert [x["contentUrl"] for x in d["distribution"]] == [r["@id"] for r in refs], page
+              assert [x["@type"] for x in d["distribution"]] == ["DataDownload"] * len(d["distribution"])
+          assert [x["encodingFormat"] for x in several["topics/dataset2.html"]["distribution"]] == ["application/json", "text/csv"]
+          assert several["topics/dataset.html"]["publisher"] == {"@type": "Organization", "name": "Example Body"}
+          PY
           # off by default, and the parameters are checked
           absent -rEq 'dcat' out/manual/index.html out/metadata/index.html
           test ! -e out/manual/dcat.jsonld
@@ -1422,7 +1461,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/metadata-full out/metadata-full-official out/catalogue out/catalogue-single out/keyref-unresolved out/subfolder-root-top
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/metadata-full out/metadata-full-official out/catalogue out/catalogue-single out/datasets out/dataset out/keyref-unresolved out/subfolder-root-top
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }

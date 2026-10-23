@@ -119,6 +119,7 @@ The declaration is the publisher's statement and is never inferred.
                                 (govuk:md-ref-title($ref), replace($path, '^.*/', ''))[. ne ''][1]),
                               govuk:md-p('dcat:downloadURL', govuk:md-id($path)),
                               govuk:md-p('dcat:mediaType', concat('https://www.iana.org/assignments/media-types/', $type)),
+                              govuk:md-p('schema:encodingFormat', $type),
                               govuk:md-p('dct:format', upper-case((replace($path, '^.*\.', ''), $ref/@format)[1]))"/>
         <xsl:sequence select="govuk:md-data($ref/*[contains(@class, ' map/topicmeta ')])"/>
       </govuk:record>
@@ -182,6 +183,11 @@ The declaration is the publisher's statement and is never inferred.
       <xsl:sequence select="$govuk-md-shared[not(@term = $own/@term)]"/>
       <govuk:rel name="hasPart">
         <xsl:sequence select="govuk:md-file-refs($ref) ! govuk:md-file-record(.)"/>
+      </govuk:rel>
+      <govuk:rel name="isPartOf">
+        <govuk:record kind="publication" id="{$govuk-md-base}">
+          <xsl:sequence select="$govuk-md-publication/govuk:p[@term = 'dct:title']"/>
+        </govuk:record>
       </govuk:rel>
     </govuk:record>
   </xsl:function>
