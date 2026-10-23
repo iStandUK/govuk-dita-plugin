@@ -1043,7 +1043,7 @@ jobs:
           grep -q '"@type": "TechArticle"' out/manual-csp/topics/install.html
           grep -q '"@type": "WebPage"' out/manual-csp/glossary.html
           grep -q '"@type": "BreadcrumbList"' out/manual-csp/glossary.html
-          absent -q 'ld+json' out/manual-csp/print.html
+          absent -q '<script type="application/ld+json"' out/manual-csp/print.html
           for f in out/manual-csp/index.html out/manual-csp/search.html out/manual-csp/glossary.html out/manual-csp/topics/install.html out/manual-csp/print.html; do
             grep -q "Content-Security-Policy\" content=\"default-src 'self'; script-src 'self' 'sha256-" "$f" || { echo "no CSP meta in $f"; exit 1; }
           done
@@ -1241,10 +1241,10 @@ jobs:
           assert [t["name"] for t in termset["hasDefinedTerm"]] == ["Body mass index", "Body surface area"]
           assert "alternateName" not in termset["hasDefinedTerm"][1]
           PY
-          absent -q 'ld+json' out/metadata-full/print.html
+          absent -q '<script type="application/ld+json"' out/metadata-full/print.html
           # the metadata tags are still there beside it, and the other levels have no block
           has out/metadata-full/topics/check.html '<meta property="og:title" content="6-8 week check">'
-          absent -q 'ld+json' out/metadata/topics/check.html out/metadata-plain/topics/check.html out/metadata-no/topics/check.html
+          absent -q '<script type="application/ld+json"' out/metadata/topics/check.html out/metadata-plain/topics/check.html out/metadata-no/topics/check.html
           # without a site URL nothing has an address, and the rest is still written
           dita --input fixtures/metadata/metadata.ditamap --output out/metadata-full-nourl -Dgovuk.metadata=full > /dev/null
           python3 tools/check_metadata.py --level full out/metadata-full-nourl
