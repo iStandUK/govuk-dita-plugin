@@ -269,6 +269,19 @@
         <li><codeph>govuk.contact.email</codeph> adds an organisational contact point. It is
           never a person by default.</li>
       </ul>
+      <p><b>A dictionary or a model: ADMS.</b> A publication whose parts are not datasets, such
+        as a data dictionary with a logical model and the specifications that conform to it,
+        declares each part <codeph>adms:Asset</codeph> and says what kind it is with a
+        <codeph>dct:type</codeph> address from the publisher's own list. The catalogue then
+        holds each part as a member, typed <codeph>adms:Asset</codeph> and never a dataset, with
+        what the map states: <codeph>dct:conformsTo</codeph> (a specification to its model, by
+        the model's identifier), <codeph>dct:references</codeph>, and
+        <codeph>dct:isPartOf</codeph> the catalogue. Give the model an identifier with
+        <codeph>dct:identifier</codeph> so that every specification can point at it. A part
+        that is retired, by <codeph>importance="obsolete"</codeph> on its first topic or a
+        <codeph>retired</codeph> token on its outputclass, carries
+        <codeph>adms:status</codeph> Withdrawn; state <codeph>adms:status</codeph> yourself to
+        say something else.</p>
       <p><b>What data.gov.uk expects.</b> A title, a description, a stable identifier and a
         licence. A record that lacks one is still written, and the build names the property
         and the record (<codeph>GOVK019W</codeph>), so the harvester will not be the first to

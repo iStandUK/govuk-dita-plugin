@@ -333,7 +333,7 @@ def check_catalogue(site, tables):
                     found.append(f"dcat.jsonld: {ident} uses {key}, whose prefix the context does not declare")
                 for v in as_list(value):
                     if isinstance(v, dict) and set(v) == {"@id"} and v["@id"] not in nodes \
-                            and key in ("dcat:distribution", "dcat:resource", "dct:publisher", "dcat:contactPoint"):
+                            and key in ("dcat:distribution", "dcat:resource", "dct:publisher", "dcat:contactPoint", "dct:isPartOf"):
                         found.append(f"dcat.jsonld: {ident} {key} names {v['@id']}, which is not in the record")
     return found
 

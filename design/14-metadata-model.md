@@ -262,3 +262,12 @@ What building the catalogue settled, where the sections above left it open or a 
 - **An asset is part of the publication**: the record carries an `isPartOf` relation to it, which `Dataset.isPartOf` reads.
 - **Not mapped:** `spatialCoverage`. The declared `dct:spatial` is an address in a gazetteer, and schema.org expects a place. Revisit if a publication needs it.
 
+## 17. As built: ADMS, and a graph that does not need to know how it is connected (#123)
+
+- **A table says more about a record in a second kind.** The ADMS table does not repeat what the DCAT table has said of an asset; it adds `dct:type`, `adms:status`, `dct:references` in one kind, and `dct:isPartOf` the catalogue in another. The walker applies every kind of a table that applies to a record, not the first, and merges the values.
+- **The graph is every record reachable from the roots**, each described by every table that has a kind for it. The first version followed a table's own rows from record to record, so a table with no row from the catalogue to its members (the ADMS table) never reached them. A table now describes only the records it has kinds for, and needs no knowledge of how they connect.
+- **Retired is neutral in the harvest and ADMS's in the table.** An asset is retired when its entry or its first topic says so (`importance="obsolete"`, or a `retired` token on the outputclass); the record states `retired`, and the table's `map="retired=…/Withdrawn"` turns it into the ADMS status. A status the map states itself wins. `Withdrawn` is the choice for a retired part of a dictionary; `Deprecated` would say it is still valid but superseded, which is not what retired means there.
+- **`dct:isPartOf` only where there is a catalogue.** An asset says whether it is one of several (`members`), so a lone asset is part of nothing and no reference dangles.
+- **`dct:type` is an address,** from the publisher's own list of kinds (a logical model, a data set specification, a code list), because ADMS expects a concept; the table does not accept free text there.
+- **The shape of the NHS Data Model and Dictionary** is the fixture `dictionary.ditamap`: one catalogue, a logical model and specifications that conform to it, none a dataset, one retired.
+
