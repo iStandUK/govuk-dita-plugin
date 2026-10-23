@@ -333,8 +333,73 @@ def check_catalogue(site, tables):
                     found.append(f"dcat.jsonld: {ident} uses {key}, whose prefix the context does not declare")
                 for v in as_list(value):
                     if isinstance(v, dict) and set(v) == {"@id"} and v["@id"] not in nodes \
-                            and key in ("dcat:distribution", "dcat:resource", "dct:publisher", "dcat:contactPoint"):
+                            and key in ("dcat:distribution", "dcat:resource", "dct:publisher", "dcat:contactPoint", "dct:isPartOf"):
                         found.append(f"dcat.jsonld: {ident} {key} names {v['@id']}, which is not in the record")
+    return found
+
+
+def check_vocab(site, tables):
+    """The vocabularies govuk.skos=yes writes (#103): vocab/NAME.ttl and
+    vocab/NAME.jsonld for each, the glossary page linking the glossary's; in each
+    file every record has the properties the table marks required, every
+    reference names a record in the file, and broader and narrower agree.
+    Nothing is checked when the site has no vocab folder and links none."""
+    found = []
+    folder = os.path.join(site, "vocab")
+    glossary = os.path.join(site, "glossary.html")
+    head = Head()
+    if os.path.exists(glossary):
+        with open(glossary, encoding="utf-8") as f:
+            head.feed(f.read())
+    linked = sorted(h for r, h in head.links if r == "alternate" and h.startswith("vocab/"))
+    if not os.path.isdir(folder):
+        return [f"glossary.html: links {linked}, which the site does not have"] if linked else []
+    names = sorted(os.listdir(folder))
+    stems = sorted({os.path.splitext(n)[0] for n in names if n.endswith((".ttl", ".jsonld"))})
+    for stem in stems:
+        for ext in (".ttl", ".jsonld"):
+            if stem + ext not in names:
+                found.append(f"vocab/{stem + ext}: a vocabulary is written in both serialisations, and this one is missing")
+    if os.path.exists(glossary):
+        for want in ("vocab/glossary.ttl", "vocab/glossary.jsonld"):
+            if want not in linked:
+                found.append(f"glossary.html: no rel=alternate link to {want}")
+    table = next((t for t in tables if t.get("id") == "skos"), None)
+    required = {k.get("type"): [r.get("as") for r in k if r.get("required") == "yes"]
+                for k in (table.findall("kind") if table is not None else [])}
+    refs = ("skos:inScheme", "skos:topConceptOf", "skos:hasTopConcept", "skos:broader", "skos:narrower", "skos:related")
+    for stem in stems:
+        path = os.path.join(folder, stem + ".jsonld")
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                graph = json.load(f).get("@graph", [])
+        except (OSError, ValueError) as e:
+            found.append(f"vocab/{stem}.jsonld: cannot be read as JSON: {e}")
+            continue
+        nodes = {n.get("@id"): n for n in graph if isinstance(n, dict)}
+        for ident, node in nodes.items():
+            kind = next((t for t in as_list(node.get("@type")) if t in required), None)
+            if kind is None:
+                found.append(f"vocab/{stem}.jsonld: {ident} has the type {node.get('@type')}, which the table does not describe")
+                continue
+            for key in required[kind]:
+                if not as_list(node.get(key)):
+                    found.append(f"vocab/{stem}.jsonld: {kind} {ident} has no {key}")
+            for key in refs:
+                for v in as_list(node.get(key)):
+                    target = v.get("@id") if isinstance(v, dict) else None
+                    if key != "skos:related" and target not in nodes:
+                        found.append(f"vocab/{stem}.jsonld: {ident} {key} names {target}, which is not in the file")
+            if kind == "skos:Concept" and not as_list(node.get("skos:inScheme")):
+                found.append(f"vocab/{stem}.jsonld: {ident} is in no scheme")
+        # a hierarchy says the same thing from each end
+        for ident, node in nodes.items():
+            for v in as_list(node.get("skos:broader")):
+                parent = nodes.get(v.get("@id")) if isinstance(v, dict) else None
+                if parent is not None and {"@id": ident} not in as_list(parent.get("skos:narrower")):
+                    found.append(f"vocab/{stem}.jsonld: {ident} is narrower than {v['@id']}, which does not say so")
     return found
 
 
@@ -378,8 +443,10 @@ def main():
     names = all_names(directory)
     findings, pages = [], 0
     catalogue_tables = load_tables(directory, "dcat")
+    vocab_tables = load_tables(directory, "skos")
     for site in args.sites:
         findings += [f"{site}/{x}" for x in check_catalogue(site, catalogue_tables)]
+        findings += [f"{site}/{x}" for x in check_vocab(site, vocab_tables)]
         for root, _, files in os.walk(site):
             for name in sorted(files):
                 if not name.endswith(".html"):

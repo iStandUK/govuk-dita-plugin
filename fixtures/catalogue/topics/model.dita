@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="model" xml:lang="en-GB">
+  <title>Example logical model</title>
+  <shortdesc>The logical model every specification conforms to.</shortdesc>
+  <conbody><p>The logical model every specification conforms to.</p></conbody>
+</concept>

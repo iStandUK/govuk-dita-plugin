@@ -155,6 +155,11 @@ element-level typography.
         <xsl:call-template name="govuk-md-topic"/>
       </xsl:with-param>
     </xsl:call-template>
+    <xsl:if test="contains(((/dita/*[contains(@class, ' topic/topic ')], /*[contains(@class, ' topic/topic ')])[1])/@class, ' glossentry/glossentry ')">
+      <xsl:call-template name="govuk-md-skos-head">
+        <xsl:with-param name="prefix" select="string($govuk-root)"/>
+      </xsl:call-template>
+    </xsl:if>
     <xsl:apply-templates select="." mode="gen-user-head"/>
   </xsl:template>
 

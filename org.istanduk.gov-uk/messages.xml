@@ -71,4 +71,12 @@ DITA-OT convention: four letters, three digits, severity (I/W/E/F).
     <reason>The glossary has %1 terms, more than the %2 a page's structured data holds, so its DefinedTermSet is left out of the glossary page.</reason>
     <response>The glossary itself is unaffected. The page already lists every term; structured data for all of them would roughly double its size. A partial set would be wrong, so none is written.</response>
   </message>
+  <message id="GOVK021W" type="WARN">
+    <reason>The address %1 is stated for %2 terms (%3), so a vocabulary would say they are one concept.</reason>
+    <response>Give each term its own address in resourceid appid or a data element named dct:identifier, or leave it out to take the term's page or its place in the glossary.</response>
+  </message>
+  <message id="GOVK022W" type="WARN">
+    <reason>govuk.skos=yes, but the publication has no glossary entry and no subject scheme, so no vocabulary was written.</reason>
+    <response>A vocabulary is a glossary (glossentry topics, alone or in glossgroup topics, referenced from the map) or a subjectScheme map with subjectdef elements that have keys. See the manual's metadata topic.</response>
+  </message>
 </messages>
