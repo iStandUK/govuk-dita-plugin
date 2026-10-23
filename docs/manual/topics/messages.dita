@@ -176,6 +176,58 @@
               plugin's inline scope, so it clears <codeph>GOVK005W</codeph> but not this.</entry>
           </row>
           <row>
+            <entry><codeph>GOVK017W</codeph></entry>
+            <entry>An entry declares a data asset type (<codeph>rdf:type</codeph>) that the
+              catalogue record cannot write: it is not a term of a vocabulary the plugin knows,
+              and not an absolute http(s) or urn address. The entry is left out of the
+              catalogue. Only with <codeph>govuk.dcat=yes</codeph>.</entry>
+            <entry>Write a class such as <codeph>dcat:Dataset</codeph>,
+              <codeph>dcat:DataService</codeph> or <codeph>dct:Standard</codeph>, or its full
+              address. See <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK018W</codeph></entry>
+            <entry><codeph>govuk.dcat=yes</codeph>, but no entry of the map declares a data
+              asset, so no catalogue record is written.</entry>
+            <entry>Declare an asset with a data element named <codeph>rdf:type</codeph> in the
+              topicmeta of the topicref, topichead or topicgroup that heads it. The type is
+              never inferred.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK019W</codeph></entry>
+            <entry>A record in the catalogue lacks a property data.gov.uk expects of a
+              record: a title, a description, an identifier or a licence. The record is
+              written without it. One warning for each property of each record.</entry>
+            <entry>Give the asset the value it comes from: the entry's title and short
+              description, <codeph>govuk.licence.url</codeph> (or official branding), and
+              <codeph>govuk.site.url</codeph>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK020W</codeph></entry>
+            <entry>The glossary has more than 500 terms, so the glossary page has no
+              <codeph>DefinedTermSet</codeph> in its structured data. The page itself still
+              lists every term. Only with <codeph>govuk.metadata=full</codeph>.</entry>
+            <entry>Nothing needs doing. A partial set would be wrong, and one for every term
+              would roughly double the page. See <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK021W</codeph></entry>
+            <entry>Two or more terms state the same address, in <codeph>resourceid appid</codeph>
+              or a data element named <codeph>dct:identifier</codeph>, so a vocabulary would say
+              they are one concept. Only with <codeph>govuk.skos=yes</codeph>.</entry>
+            <entry>Give each term its own address, or leave it out to take its page's address or
+              its place in the glossary.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK022W</codeph></entry>
+            <entry><codeph>govuk.skos=yes</codeph>, but the publication has no glossary entry
+              and no subject scheme, so no vocabulary is written.</entry>
+            <entry>A vocabulary is a glossary (<codeph>glossentry</codeph> topics, alone or in a
+              <codeph>glossgroup</codeph>, referenced from the map) or a
+              <codeph>subjectScheme</codeph> map with <codeph>subjectdef</codeph> elements that
+              have keys. See <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
             <entry><codeph>GOVK015W</codeph></entry>
             <entry>A key reference in topic content names no key that resolves. A
               <codeph>keyword</codeph>, <codeph>ph</codeph>, <codeph>uicontrol</codeph>,

@@ -147,18 +147,27 @@ def values(head, table, row):
     return [c for a, n, c in head.metas if a == attr and n == row.get("as")]
 
 
-def jsonld_objects(head, rel, found):
-    """The objects of a page's JSON-LD block, in order. One block at most; it
-    must parse; an object is found in @graph or is the block itself."""
-    if len(head.jsonld) > 1:
-        found.append(f"{rel}: {len(head.jsonld)} JSON-LD blocks, not one")
-    objects = []
+def jsonld_blocks(head, rel, found):
+    """A page's JSON-LD blocks, parsed. Each must parse."""
+    blocks = []
     for text in head.jsonld:
         try:
-            data = json.loads(text)
+            blocks.append(json.loads(text))
         except ValueError as e:
             found.append(f"{rel}: JSON-LD does not parse: {e}")
-            continue
+    return blocks
+
+
+def jsonld_objects(head, rel, found):
+    """The objects of a page's schema.org block, in order: the blocks whose
+    @context is a name (a catalogue's is a table of prefixes). One such block at
+    most; an object is found in @graph or is the block itself."""
+    blocks = [b for b in jsonld_blocks(head, rel, found)
+              if not (isinstance(b, dict) and isinstance(b.get("@context"), dict))]
+    if len(blocks) > 1:
+        found.append(f"{rel}: {len(blocks)} schema.org JSON-LD blocks, not one")
+    objects = []
+    for data in blocks:
         graph = data.get("@graph", [data]) if isinstance(data, dict) else data
         objects += [o for o in graph if isinstance(o, dict)]
     return objects
@@ -194,7 +203,7 @@ def check_jsonld(rel, head, table, role, site_url):
             for row in rows:
                 key = row.get("as")
                 for v in jsonld_values(obj, key):
-                    if row.tag == "list":
+                    if row.tag == "list" or row.get("nested"):
                         continue
                     if is_uri(row) and not re.match(r"^[A-Za-z][A-Za-z0-9+.\-]*:\S+$", v):
                         found.append(f"{rel}: {label} {kind.get('type')} {key} is not an absolute URL: {v}")
@@ -261,12 +270,145 @@ def check_page(path, rel, tables, site_url):
     return found
 
 
+CATALOGUE_TYPED = ("dcat:Catalog", "dcat:Distribution", "foaf:Organization", "vcard:Kind")
+
+
+def as_list(v):
+    return v if isinstance(v, list) else [] if v is None else [v]
+
+
+def check_catalogue(site, tables):
+    """The catalogue record govuk.dcat=yes writes (#102): dcat.jsonld and
+    dcat.ttl at the site root, linked from the cover, whose head holds the same
+    record; every record has the properties the table marks required; every
+    reference in it is to a record that is in it. Nothing is checked when the
+    site has no catalogue and its cover does not link one."""
+    found = []
+    jpath, tpath = os.path.join(site, "dcat.jsonld"), os.path.join(site, "dcat.ttl")
+    cover = os.path.join(site, "index.html")
+    head = Head()
+    if os.path.exists(cover):
+        with open(cover, encoding="utf-8") as f:
+            head.feed(f.read())
+    linked = {t for r, h in head.links for t in [h] if r == "alternate" and h in ("dcat.jsonld", "dcat.ttl")}
+    if not os.path.exists(jpath) and not os.path.exists(tpath):
+        return [f"index.html: links {sorted(linked)}, which the site does not have"] if linked else []
+    for path in (jpath, tpath):
+        if not os.path.exists(path):
+            found.append(f"{os.path.basename(path)}: the catalogue is written in both serialisations, and this one is missing")
+        elif os.path.basename(path) not in linked:
+            found.append(f"index.html: no rel=alternate link to {os.path.basename(path)}")
+    try:
+        with open(jpath, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError) as e:
+        return found + [f"dcat.jsonld: cannot be read as JSON: {e}"]
+    blocks = [b for b in jsonld_blocks(head, "index.html", found)
+              if isinstance(b, dict) and isinstance(b.get("@context"), dict)]
+    if blocks != [data]:
+        found.append("index.html: the cover's head does not hold the record dcat.jsonld holds")
+    nodes = {n.get("@id"): n for n in data.get("@graph", []) if isinstance(n, dict)}
+    prefixes = data.get("@context", {})
+    for table in tables:
+        if table.get("syntax") != "rdf":
+            continue
+        kinds = {k.get("type"): k for k in table.findall("kind") if k.get("type")}
+        asset = next((k for k in table.findall("kind") if k.get("record") == "asset"), None)
+        for ident, node in nodes.items():
+            types = as_list(node.get("@type"))
+            kind = next((kinds[t] for t in types if t in kinds), asset)
+            if kind is None:
+                continue
+            what = "/".join(types) or "a record"
+            if not re.match(r"^[A-Za-z][A-Za-z0-9+.\-]*:\S+$", str(ident)):
+                found.append(f"dcat.jsonld: {what} has the address {ident!r}, which is not absolute")
+            for row in kind:
+                if row.get("required") == "yes" and row.get("as") != "@type" and not as_list(node.get(row.get("as"))) \
+                        and not (row.get("term") == "@id" and ident):
+                    found.append(f"dcat.jsonld: {what} {ident} has no {row.get('as')}")
+            for key, value in node.items():
+                if key.startswith("@"):
+                    continue
+                if key.partition(":")[0] not in prefixes:
+                    found.append(f"dcat.jsonld: {ident} uses {key}, whose prefix the context does not declare")
+                for v in as_list(value):
+                    if isinstance(v, dict) and set(v) == {"@id"} and v["@id"] not in nodes \
+                            and key in ("dcat:distribution", "dcat:resource", "dct:publisher", "dcat:contactPoint", "dct:isPartOf"):
+                        found.append(f"dcat.jsonld: {ident} {key} names {v['@id']}, which is not in the record")
+    return found
+
+
+def check_vocab(site, tables):
+    """The vocabularies govuk.skos=yes writes (#103): vocab/NAME.ttl and
+    vocab/NAME.jsonld for each, the glossary page linking the glossary's; in each
+    file every record has the properties the table marks required, every
+    reference names a record in the file, and broader and narrower agree.
+    Nothing is checked when the site has no vocab folder and links none."""
+    found = []
+    folder = os.path.join(site, "vocab")
+    glossary = os.path.join(site, "glossary.html")
+    head = Head()
+    if os.path.exists(glossary):
+        with open(glossary, encoding="utf-8") as f:
+            head.feed(f.read())
+    linked = sorted(h for r, h in head.links if r == "alternate" and h.startswith("vocab/"))
+    if not os.path.isdir(folder):
+        return [f"glossary.html: links {linked}, which the site does not have"] if linked else []
+    names = sorted(os.listdir(folder))
+    stems = sorted({os.path.splitext(n)[0] for n in names if n.endswith((".ttl", ".jsonld"))})
+    for stem in stems:
+        for ext in (".ttl", ".jsonld"):
+            if stem + ext not in names:
+                found.append(f"vocab/{stem + ext}: a vocabulary is written in both serialisations, and this one is missing")
+    if os.path.exists(glossary):
+        for want in ("vocab/glossary.ttl", "vocab/glossary.jsonld"):
+            if want not in linked:
+                found.append(f"glossary.html: no rel=alternate link to {want}")
+    table = next((t for t in tables if t.get("id") == "skos"), None)
+    required = {k.get("type"): [r.get("as") for r in k if r.get("required") == "yes"]
+                for k in (table.findall("kind") if table is not None else [])}
+    refs = ("skos:inScheme", "skos:topConceptOf", "skos:hasTopConcept", "skos:broader", "skos:narrower", "skos:related")
+    for stem in stems:
+        path = os.path.join(folder, stem + ".jsonld")
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                graph = json.load(f).get("@graph", [])
+        except (OSError, ValueError) as e:
+            found.append(f"vocab/{stem}.jsonld: cannot be read as JSON: {e}")
+            continue
+        nodes = {n.get("@id"): n for n in graph if isinstance(n, dict)}
+        for ident, node in nodes.items():
+            kind = next((t for t in as_list(node.get("@type")) if t in required), None)
+            if kind is None:
+                found.append(f"vocab/{stem}.jsonld: {ident} has the type {node.get('@type')}, which the table does not describe")
+                continue
+            for key in required[kind]:
+                if not as_list(node.get(key)):
+                    found.append(f"vocab/{stem}.jsonld: {kind} {ident} has no {key}")
+            for key in refs:
+                for v in as_list(node.get(key)):
+                    target = v.get("@id") if isinstance(v, dict) else None
+                    if key != "skos:related" and target not in nodes:
+                        found.append(f"vocab/{stem}.jsonld: {ident} {key} names {target}, which is not in the file")
+            if kind == "skos:Concept" and not as_list(node.get("skos:inScheme")):
+                found.append(f"vocab/{stem}.jsonld: {ident} is in no scheme")
+        # a hierarchy says the same thing from each end
+        for ident, node in nodes.items():
+            for v in as_list(node.get("skos:broader")):
+                parent = nodes.get(v.get("@id")) if isinstance(v, dict) else None
+                if parent is not None and {"@id": ident} not in as_list(parent.get("skos:narrower")):
+                    found.append(f"vocab/{stem}.jsonld: {ident} is narrower than {v['@id']}, which does not say so")
+    return found
+
+
 def check_print(path, rel, names, what="the print document"):
     head = Head()
     with open(path, encoding="utf-8") as f:
         head.feed(f.read())
     written = {("meta", n) for _, n, _ in head.metas} | {("link", r) for r, _ in head.links}
-    if head.jsonld:
+    if jsonld_objects(head, rel, []):
         return [f"{rel}: {what} carries a JSON-LD block"] + [f"{rel}: {what} carries {name}" for syntax, name in sorted(names)
                 if (syntax, name) in written]
     return [f"{rel}: {what} carries {name}" for syntax, name in sorted(names)
@@ -300,7 +442,11 @@ def main():
     tables = load_tables(directory, args.level) if args.level != "no" else []
     names = all_names(directory)
     findings, pages = [], 0
+    catalogue_tables = load_tables(directory, "dcat")
+    vocab_tables = load_tables(directory, "skos")
     for site in args.sites:
+        findings += [f"{site}/{x}" for x in check_catalogue(site, catalogue_tables)]
+        findings += [f"{site}/{x}" for x in check_vocab(site, vocab_tables)]
         for root, _, files in os.walk(site):
             for name in sorted(files):
                 if not name.endswith(".html"):

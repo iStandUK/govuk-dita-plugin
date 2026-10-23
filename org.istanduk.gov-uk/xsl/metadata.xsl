@@ -40,6 +40,11 @@ the once-per-build checks).
   <xsl:param name="GOVUK-OG-IMAGE" select="''"/>
   <xsl:param name="GOVUK-LICENCE-URL" select="''"/>
   <xsl:param name="GOVUK-METADATA-PERSONS" select="'no'"/>
+  <!-- no | yes (#102): the DCAT catalogue record, its own switch -->
+  <xsl:param name="GOVUK-DCAT" select="'no'"/>
+  <xsl:param name="GOVUK-CONTACT-EMAIL" select="''"/>
+  <!-- no | yes (#103): the glossary and subject schemes as SKOS vocabularies, its own switch -->
+  <xsl:param name="GOVUK-SKOS" select="'no'"/>
   <xsl:param name="GOVUK-DATES" select="'no'"/>
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>
@@ -387,6 +392,20 @@ the once-per-build checks).
       </xsl:if>
       <xsl:sequence select="govuk:md-data((reverse($chain)/*[contains(@class, ' map/topicmeta ')], $prolog))"/>
     </xsl:variable>
+    <!-- what the page is about: a task's how-to, a glossary entry's term, or, for
+         the generated glossary, the scheme of its terms (#101); and, on the first
+         page of a data asset's branch, the asset (#122) -->
+    <xsl:variable name="main" as="element(govuk:record)*"
+                  select="(if (exists($topic) and govuk:md-topic-type($topic) = 'task')
+                           then govuk:md-howto-record($topic, ($topic-title, $title)[. ne ''][1],
+                                  string($own[@term = 'dct:description']/@value))
+                           else if (exists($topic) and govuk:md-topic-type($topic) = 'glossentry')
+                           then govuk:md-term-record($topic, '')
+                           else if ($role = 'utility' and $path = 'glossary.html')
+                           then govuk:md-glossary-record($title)
+                           else (),
+                           (: a data asset's landing page is about the asset (#122) :)
+                           if ($role = 'topic') then $govuk-md-assets[@path = $path] else ())"/>
     <govuk:record kind="page" role="{$role}" path="{$path}">
       <xsl:if test="govuk:md-id($path) ne ''">
         <xsl:attribute name="id" select="govuk:md-id($path)"/>
@@ -404,6 +423,9 @@ the once-per-build checks).
         <govuk:rel name="section">
           <xsl:sequence select="govuk:md-ref-record(.)"/>
         </govuk:rel>
+      </xsl:for-each>
+      <xsl:for-each select="$main">
+        <govuk:rel name="mainEntity"><xsl:sequence select="."/></govuk:rel>
       </xsl:for-each>
       <xsl:for-each select="$previous">
         <govuk:rel name="previous"><xsl:sequence select="govuk:md-ref-record(.)"/></govuk:rel>
@@ -471,7 +493,14 @@ the once-per-build checks).
         </xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
-    <xsl:variable name="values" select="distinct-values(for $v in $raw return govuk:md-format($v, $format)[. ne ''])"/>
+    <!-- map="neutral=scheme-value ...": a value the harvest states neutrally (retired)
+         becomes the one the scheme uses; any other value passes unchanged -->
+    <xsl:variable name="map" as="xs:string*" select="tokenize(normalize-space($row/@map))"/>
+    <xsl:variable name="values"
+                  select="distinct-values(for $v in $raw
+                                          return govuk:md-format(
+                                            (for $m in $map[starts-with(., concat($v, '='))] return substring-after($m, '='), $v)[1],
+                                            $format)[. ne ''])"/>
     <xsl:sequence select="if ($row/@repeat = 'yes') then $values else $values[1]"/>
   </xsl:function>
 
@@ -534,9 +563,9 @@ the once-per-build checks).
   <!-- One or several values: a value, or an array of them -->
   <xsl:function name="govuk:md-json-values" as="xs:string?">
     <xsl:param name="values" as="xs:string*"/>
-    <xsl:param name="depth" as="xs:integer"/>
+    <xsl:param name="array" as="xs:boolean"/>
     <xsl:sequence select="if (empty($values)) then ()
-                          else if (count($values) = 1) then $values
+                          else if (count($values) = 1 and not($array)) then $values
                           else concat('[', string-join($values, ', '), ']')"/>
   </xsl:function>
 
@@ -592,15 +621,17 @@ the once-per-build checks).
             </xsl:when>
             <xsl:when test="$row/@nested">
               <xsl:sequence select="govuk:md-json-values(
-                for $r in $record/govuk:p[@term = $row/@term]/govuk:record
-                return govuk:md-json-nested($scheme, $r, $depth + 1), $depth)"/>
+                for $r in (if (local-name($row) = 'relation')
+                           then $record/govuk:rel[@name = $row/@name]/govuk:record[not($row/@target) or @kind = $row/@target]
+                           else $record/govuk:p[@term = $row/@term]/govuk:record)
+                return govuk:md-json-nested($scheme, $r, $depth + 1), $row/@repeat = 'yes')"/>
             </xsl:when>
             <xsl:otherwise>
               <xsl:sequence select="govuk:md-json-values(
                 for $v in govuk:md-values($row, $kind, $record)
                 return if ($row/@node = 'yes')
                        then concat('{ &quot;@id&quot;: ', govuk:md-json-string($v), ' }')
-                       else govuk:md-json-string($v), $depth)"/>
+                       else govuk:md-json-string($v), $row/@repeat = 'yes')"/>
             </xsl:otherwise>
           </xsl:choose>
         </xsl:variable>
@@ -716,6 +747,13 @@ the once-per-build checks).
           </xsl:if>
         </xsl:for-each-group>
       </xsl:variable>
+      <xsl:if test="exists($govuk-md-schemes[@syntax = 'json-ld'])
+                    and count($govuk-md-glossary-entries) gt $govuk-md-max-terms">
+        <xsl:call-template name="output-message">
+          <xsl:with-param name="id" select="'GOVK020W'"/>
+          <xsl:with-param name="msgparams">%1=<xsl:value-of select="count($govuk-md-glossary-entries)"/>;%2=<xsl:value-of select="$govuk-md-max-terms"/></xsl:with-param>
+        </xsl:call-template>
+      </xsl:if>
       <xsl:for-each-group select="$findings[self::govuk:unknown]" group-by="@name">
         <xsl:call-template name="output-message">
           <xsl:with-param name="id" select="'GOVK011W'"/>
@@ -730,5 +768,10 @@ the once-per-build checks).
       </xsl:for-each-group>
     </xsl:if>
   </xsl:template>
+
+  <!-- The harvesters for data assets, steps and terms, and the writers for graphs (#102, #101) -->
+  <xsl:include href="metadata-assets.xsl"/>
+  <xsl:include href="metadata-rdf.xsl"/>
+  <xsl:include href="metadata-terms.xsl"/>
 
 </xsl:stylesheet>

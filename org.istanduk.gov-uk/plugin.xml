@@ -153,6 +153,21 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <param name="govuk.licence.url"
            desc="The URL of the licence the content is published under, for metadata (rel=license). Official branding states the Open Government Licence without it."
            type="string"/>
+    <param name="govuk.dcat"
+           desc="Write a DCAT 3 catalogue record of the data assets the map declares (a data:name 'rdf:type' in a topicref's topicmeta): dcat.jsonld and dcat.ttl at the site root, a block and alternate links on the home page. 'no' (default) writes none. 'yes' needs govuk.site.url. A publication that declares one asset gives that asset; several give a catalogue of them; none gives nothing, with a warning."
+           type="enum">
+      <val default="true">no</val>
+      <val>yes</val>
+    </param>
+    <param name="govuk.skos"
+           desc="Write the glossary, each glossgroup and each subjectScheme map as a SKOS vocabulary: vocab/NAME.ttl and vocab/NAME.jsonld, with the glossary page and each glossary entry's page linking the glossary's. 'no' (default) writes none. 'yes' needs govuk.site.url."
+           type="enum">
+      <val default="true">no</val>
+      <val>yes</val>
+    </param>
+    <param name="govuk.contact.email"
+           desc="An organisational mailbox for the catalogue record's contact point (vcard:hasEmail). Never a person by default. Used only with govuk.dcat=yes."
+           type="string"/>
     <param name="govuk.metadata.persons"
            desc="Name the authors in metadata. 'no' (default) gives the organisation as the creator; 'yes' gives the author elements' names."
            type="enum">

@@ -544,6 +544,32 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <equals arg1="${govuk.metadata}" arg2="no"/>
       </or></not></condition>
     </fail>
+    <!-- DCAT catalogue record (#102, D-24 decision 6): its own switch, because a
+         catalogue record is a publishing act with legal and stewardship weight -->
+    <property name="govuk.dcat" value="no"/>
+    <fail message="govuk.dcat must be 'yes' or 'no', was: ${govuk.dcat}">
+      <condition><not><or>
+        <equals arg1="${govuk.dcat}" arg2="yes"/>
+        <equals arg1="${govuk.dcat}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <!-- SKOS vocabularies (#103): their own switch, apart from the catalogue, because a glossary
+         site wants vocabularies without declaring any asset -->
+    <property name="govuk.skos" value="no"/>
+    <fail message="govuk.skos must be 'yes' or 'no', was: ${govuk.skos}">
+      <condition><not><or>
+        <equals arg1="${govuk.skos}" arg2="yes"/>
+        <equals arg1="${govuk.skos}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <fail message="govuk.contact.email must look like an email address, was: ${govuk.contact.email}">
+      <condition>
+        <and>
+          <isset property="govuk.contact.email"/>
+          <not><matches pattern="^[^@\s]+@[^@\s]+$" string="${govuk.contact.email}"/></not>
+        </and>
+      </condition>
+    </fail>
     <property name="govuk.metadata.persons" value="no"/>
     <fail message="govuk.metadata.persons must be 'yes' or 'no', was: ${govuk.metadata.persons}">
       <condition><not><or>
@@ -640,6 +666,22 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <condition property="govuk.llms.on">
       <equals arg1="${govuk.llms.enabled}" arg2="yes"/>
     </condition>
+    <fail message="govuk.skos=yes needs govuk.site.url (the published base URL): every identifier in a vocabulary is an address">
+      <condition>
+        <and>
+          <equals arg1="${govuk.skos}" arg2="yes"/>
+          <not><isset property="govuk.site.url.set"/></not>
+        </and>
+      </condition>
+    </fail>
+    <fail message="govuk.dcat=yes needs govuk.site.url (the published base URL): every identifier and link in a catalogue record is an address">
+      <condition>
+        <and>
+          <equals arg1="${govuk.dcat}" arg2="yes"/>
+          <not><isset property="govuk.site.url.set"/></not>
+        </and>
+      </condition>
+    </fail>
     <echo level="info" unless:set="govuk.llms.on"
           message="govuk: llms.txt not written (govuk.llms=${govuk.llms}; set govuk.site.url to the published base URL to generate one)"/>
     <!-- the vendored govuk-frontend version, for init.js -->
@@ -719,6 +761,9 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-LLMS" expression="${govuk.llms.enabled}"/>
       <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
       <param name="GOVUK-DATES" expression="${govuk.dates}"/>
+      <param name="GOVUK-DCAT" expression="${govuk.dcat}"/>
+      <param name="GOVUK-SKOS" expression="${govuk.skos}"/>
+      <param name="GOVUK-CONTACT-EMAIL" expression="${govuk.contact.email}" if:set="govuk.contact.email"/>
       <param name="GOVUK-METADATA" expression="${govuk.metadata}"/>
       <param name="GOVUK-METADATA-PERSONS" expression="${govuk.metadata.persons}"/>
       <param name="GOVUK-ORGANISATION" expression="${govuk.organisation}" if:set="govuk.organisation"/>
