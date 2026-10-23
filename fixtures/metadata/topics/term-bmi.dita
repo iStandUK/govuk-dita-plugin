@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossentry PUBLIC "-//OASIS//DTD DITA Glossary Entry//EN" "glossentry.dtd">
+<glossentry id="term-bmi" xml:lang="en-GB">
+  <glossterm>Body mass index</glossterm>
+  <glossdef>A measure of weight relative to height.</glossdef>
+  <glossBody>
+    <glossAlt>
+      <glossAcronym>BMI</glossAcronym>
+    </glossAlt>
+  </glossBody>
+</glossentry>

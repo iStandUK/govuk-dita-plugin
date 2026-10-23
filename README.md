@@ -3,6 +3,12 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
+**Next release, on `dev`:** structured data from the same DITA, each opt-in. `govuk.metadata=full` adds
+schema.org JSON-LD to every page (`WebSite`, `TechArticle`, `BreadcrumbList`, a task's `HowTo`, a
+glossary's `DefinedTermSet`, a declared dataset's `Dataset`); `govuk.dcat` writes a DCAT 3 catalogue
+record and ADMS typing of the data assets a map declares (`dcat.jsonld`, `dcat.ttl`); `govuk.skos`
+writes the glossary, its groups and subject schemes as SKOS vocabularies. D-26, #100 to #103.
+
 **Status: v1.3.0 — released** —
 [v1.3.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.3.0) writes **metadata in every
 page's head**, read from the DITA: the canonical, previous, next and licence links, Open Graph and

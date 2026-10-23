@@ -213,9 +213,9 @@ The licence, the site's address and the organisation's URL are the **publisher's
 - A name that is not a term of these vocabularies is reported as a warning (`GOVK011W`) and left out, so a misspelling is not silent. A correct term that no enabled table writes yet is kept quietly for the schemes to come.
 - Values are published. Do not write anything internal, and do not name people.
 
-## 8. Declaring a data asset (**Planned**)
+## 8. Declaring a data asset (**Now**: `govuk.dcat=yes` writes the catalogue record)
 
-A publication often holds several catalogue-worthy things: a logical model, each data set specification, a code list, an API. The **branch of the map** that documents one declares it, in the `topicmeta` of the submap or of the topicref that heads the branch:
+A publication often holds several catalogue-worthy things: a logical model, each data set specification, a code list, an API. The **branch of the map** that documents one declares it, in the `topicmeta` of the topicref, `topichead` or `topicgroup` that heads the branch:
 
 ```xml
 <chapter href="elements/index.dita" keys="elements">
@@ -235,32 +235,36 @@ A publication often holds several catalogue-worthy things: a logical model, each
 | Actual data, with the files in the publication | `dcat:Dataset` |
 
 - **Be honest about the type.** Documentation of data is a standard, not a dataset. Declare `dcat:Dataset` only where the publication ships or links the data itself.
-- The branch's title and description come from its first topic. Other properties it does not state are inherited from the root map.
-- The files that are the asset's distributions (a schema, a CSV, an OpenAPI file) are referenced from the branch as resource-only, with their `format`:
-  `<keydef keys="schema" href="schemas/return.schema.json" format="json" processing-role="resource-only"/>`.
+- **A submap is declared by wrapping its `mapref`** in a `topicgroup` (or a `topichead`) that carries the `topicmeta`. DITA-OT drops the `topicmeta` of the `mapref` itself, and of the submap file's root, when it resolves the reference, so a declaration written there is never seen.
+- The branch's title and description come from the entry, else from its first topic. Other properties it does not state are inherited from the root map.
+- **The asset's identifier** is the address you give as `dct:identifier`, so that the catalogue and everything else that names the asset agree. Without one it is the address of the branch's first page.
+- The files that are the asset's distributions (a schema, a CSV, an OpenAPI file) are referenced from **inside the branch** as resource-only, with their `format`; the build publishes each at the same path, and the catalogue links it there:
+  `<topicref href="schemas/return.schema.json" format="json" processing-role="resource-only"/>` (a `keydef` in the branch works the same way).
 - Declare nothing where nothing applies. The type is a statement the publisher stands behind, and it is never inferred.
 
 ## 9. Terms and code lists
 
-- **A term with a definition** is a `glossentry`: `glossterm`, `glossdef`, and `glossAlt` with `glossAcronym` or `glossAbbreviation` for short forms. Reference the entries from the map (in a bookmap, inside `glossarylist`). The glossary page is generated; a `<term keyref="…"/>` in the text links to the definition. (**Now**)
-- **A code list or taxonomy** is a `subjectScheme` map: a `subjectdef` per value, nested for a hierarchy, with a `navtitle` for the label. (**Planned**: published as a SKOS vocabulary.)
+- **A term with a definition** is a `glossentry`: `glossterm`, `glossdef`, and `glossAlt` with `glossAcronym`, `glossAbbreviation`, `glossShortForm` or `glossSynonym` for other names. Reference the entries from the map (in a bookmap, inside `glossarylist`). The glossary page is generated; a `<term keyref="…"/>` in the text links to the definition. (**Now**)
+- **A code list or taxonomy** is a `subjectScheme` map: a `subjectdef` with `keys` per value, nested for a hierarchy, with a `navtitle` for the label and a `shortdesc` for the definition. Reference the map from the root map as a resource-only `mapref`. (**Now**)
 - Group the entries of one scheme together (one `glossgroup`, one `subjectScheme` map), so each scheme can be published as one vocabulary.
+- **`govuk.skos=yes` publishes them** (needs `govuk.site.url`) as `vocab/<name>.ttl` and `vocab/<name>.jsonld`: one for the whole glossary, one for each `glossgroup`, one for each `subjectScheme` map. The labels are the `glossterm` or `navtitle`, the definitions the `glossdef` or `shortdesc`, the other names `skos:altLabel`, the hierarchy `skos:broader` and `skos:narrower`, and the key `skos:notation`. A `related-links` link from one entry to another is `skos:related`. **A term retired** (`outputclass="retired"` on it, or on its `glossterm`) carries its status.
+- **A term's IRI** is, in this order: an absolute address you state, as `<resourceid appid="https://example.org/concept/care_plan"/>` in its `prolog` (or `<data name="dct:identifier" value="…"/>`); the address of its page, if it has one; an anchor on the glossary page; in a subject scheme, the key as a fragment of the vocabulary file. State the IRI a concept already has, so that links already made to it still mean it. The page it is described on is then its `foaf:isPrimaryTopicOf`. Two terms that state the same IRI are reported (`GOVK021W`).
 
 ### A concept system
 
-A concept system (a model of concepts with definitions, a hierarchy and named associations, such as ISO 13940) needs more than a glossary can hold: each concept has its own page, with its associations, a diagram and links. Write it as follows.
+A concept system (a model of concepts with definitions, a hierarchy and named associations, such as ISO 13940) needs more than a glossary can hold: each concept has its own page, with its associations, a diagram and links. Write it as follows. Publishing such a system as SKOS from its `concept` topics is not built yet ([#263](https://github.com/iStandUK/govuk-dita-plugin/issues/263)); a system whose concepts are `glossentry` topics, or `subjectdef`s, is published now (above).
 
 | What | Write | Mark |
 |---|---|---|
-| The scheme | A bookmap for it, whose `bookmeta` says `<data name="rdf:type" value="skos:ConceptScheme"/>` and gives the scheme's IRI as `<data name="dct:identifier" value="https://…/"/>`. Make that IRI resolve: it can be the site's home page. | **Planned** (#103) |
-| A concept | A `concept` topic, one per file, named after the concept (`concept/care_plan.dita`), with `<data name="rdf:type" value="skos:Concept"/>` in its prolog. A `glossentry` cannot hold the association table or the diagram. | Page **Now**; term **Planned** (#103) |
-| Its IRI | `<data name="dct:identifier" value="https://example.org/concept/care_plan"/>` when the concept already has an IRI. It is then the concept's identifier in SKOS and JSON-LD, and the page is its web page. | **Planned** (#103) |
+| The scheme | A bookmap for it, whose `bookmeta` says `<data name="rdf:type" value="skos:ConceptScheme"/>` and gives the scheme's IRI as `<data name="dct:identifier" value="https://…/"/>`. Make that IRI resolve: it can be the site's home page. | **Planned** ([#263](https://github.com/iStandUK/govuk-dita-plugin/issues/263)) |
+| A concept | A `concept` topic, one per file, named after the concept (`concept/care_plan.dita`), with `<data name="rdf:type" value="skos:Concept"/>` in its prolog. A `glossentry` cannot hold the association table or the diagram. | Page **Now**; term **Planned** (#263) |
+| Its IRI | `<data name="dct:identifier" value="https://example.org/concept/care_plan"/>` when the concept already has an IRI. It is then the concept's identifier in SKOS and JSON-LD, and the page is its web page. | **Now** for a `glossentry`; for a `concept` topic **Planned** (#263) |
 | Preferred label | The topic's `title`. | **Now** |
 | Definition | The `shortdesc`. Links to other concepts inside it are fine. | **Now** |
-| Alternative labels | `keyword` elements: synonyms, former names and plural forms, if readers search for them. Never a placeholder such as "N/A". | **Now** (search, tags); SKOS **Planned** |
-| Broader concept | `<data name="skos:broader" value="IRI"/>`. The navigation is for reading, and it rarely is the hierarchy: a concept may be placed under an overview page, or under a concept it is not a kind of. State the hierarchy; do not rely on nesting. | **Planned** (#103) |
+| Alternative labels | `keyword` elements: synonyms, former names and plural forms, if readers search for them. Never a placeholder such as "N/A". | **Now** (search, tags); SKOS for a `concept` topic **Planned** (#263) |
+| Broader concept | `<data name="skos:broader" value="IRI"/>`. The navigation is for reading, and it rarely is the hierarchy: a concept may be placed under an overview page, or under a concept it is not a kind of. State the hierarchy; do not rely on nesting. | **Planned** (#263) |
 | Associations | A table for readers, with the multiplicities. Named relations for machines wait for the publisher's own vocabulary (#191); until then, the related concepts are `related-links`. | Table **Now**; named relations **Planned** |
-| Alignment to an upper ontology | `<data name="skos:broadMatch" value="IRI"/>`, or `skos:exactMatch` where it is the same concept. | **Planned** (#103) |
+| Alignment to an upper ontology | `<data name="skos:broadMatch" value="IRI"/>`, or `skos:exactMatch` where it is the same concept. | **Planned** (#263) |
 | The ontology itself | Its own file (Turtle, RDF/XML, OWL), published beside the pages and referenced from the map as a resource-only `topicref` with its `format`. Multiplicities and OWL restrictions belong there, not in page metadata. | **Planned** (#102) |
 | Tool-internal properties | Leave them out of the DITA (an "is abstract" flag, export-plugin namespaces). | — |
 

@@ -10,7 +10,8 @@
       Core</indexterm>With the default <codeph>govuk.metadata=basic</codeph>, each page has
       Open Graph tags, which decide how a link to it looks when shared; Dublin Core tags,
       which government and library catalogues read; and links to its own address, its
-      neighbours in reading order and its licence. <codeph>govuk.metadata=no</codeph> writes
+      neighbours in reading order and its licence. <codeph>govuk.metadata=full</codeph> adds
+      one schema.org JSON-LD block to each page. <codeph>govuk.metadata=no</codeph> writes
       none of them. The print document never carries any.</p>
     <section>
       <title>What each page carries, and where it comes from</title>
@@ -112,6 +113,255 @@
           </tbody>
         </tgroup>
       </table>
+    </section>
+    <section id="json-ld">
+      <title>Structured data for search engines: govuk.metadata=full</title>
+      <p><indexterm>JSON-LD</indexterm><indexterm>schema.org</indexterm><indexterm>structured
+        data</indexterm>At <codeph>full</codeph>, each page also has one
+        <codeph>&lt;script type="application/ld+json"&gt;</codeph> block in its head, in the
+        <xref href="https://schema.org" format="html" scope="external">schema.org</xref>
+        vocabulary that search engines and language-model tools read. It is written from the
+        same facts as the tags above, so the two always agree, and it adds the tags'
+        structure: what the page is part of, and where it sits in the publication.</p>
+      <table frame="all" id="json-ld-table">
+        <title>What each page's block holds</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colwidth="2*"/>
+          <colspec colname="c2" colwidth="3*"/>
+          <thead>
+            <row><entry>On</entry><entry>The block holds</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>The home page</entry>
+              <entry>A <codeph>WebSite</codeph>: the publication's name, description and
+                language, its address, and its publisher.</entry>
+            </row>
+            <row>
+              <entry>A topic page</entry>
+              <entry>A <codeph>TechArticle</codeph>: the headline, description, language,
+                address, keywords, licence, dates when <codeph>govuk.dates</codeph> allows
+                them, the publication it is part of, and the publisher.</entry>
+            </row>
+            <row>
+              <entry>A task page</entry>
+              <entry>The <codeph>TechArticle</codeph> also names a <codeph>HowTo</codeph> as its
+                main entity: the task's title and description, and a
+                <codeph>HowToStep</codeph> for each step, named by its
+                <codeph>cmd</codeph> and told by its <codeph>info</codeph> (the command again
+                when there is no information).</entry>
+            </row>
+            <row>
+              <entry>The landing page of a data asset declared a dataset</entry>
+              <entry>The <codeph>TechArticle</codeph> also names a <codeph>Dataset</codeph> as
+                its main entity: the asset's name, description, address, licence, publisher,
+                dates and version when it states them, its temporal coverage, and a
+                <codeph>DataDownload</codeph> for each of its files. See
+                <xref href="#metadata/catalogue"/>. A standard or a service is not a dataset and
+                gets none.</entry>
+            </row>
+            <row>
+              <entry>A glossary entry's page</entry>
+              <entry>The <codeph>TechArticle</codeph> also names a <codeph>DefinedTerm</codeph>
+                as its main entity: the term, its definition, and its acronyms,
+                abbreviations, short forms and synonyms as alternative names.</entry>
+            </row>
+            <row>
+              <entry>A generated page (glossary, index, lists)</entry>
+              <entry>A <codeph>WebPage</codeph>, with the same facts. On the glossary page,
+                a <codeph>DefinedTermSet</codeph> of every term in the glossary is its main
+                entity.</entry>
+            </row>
+            <row>
+              <entry>Every page below the home page</entry>
+              <entry>A <codeph>BreadcrumbList</codeph>: the publication, each page above this
+                one in the map, then this page, numbered from 1. A heading in the map that
+                is not a page is left out, so the list is always contiguous.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <p>A <codeph>Dataset</codeph> is written only for a branch the map declares a dataset
+        (a <codeph>rdf:type</codeph> of <codeph>dcat:Dataset</codeph>), on that branch's first
+        page, with <codeph>govuk.metadata=full</codeph>. It does not need
+        <codeph>govuk.dcat</codeph>. It is built from the same record as the catalogue record,
+        so the two always say the same thing. For example, a branch that ships a table:</p>
+      <codeblock>&lt;topicref href="topics/annual-return.dita"&gt;
+  &lt;topicmeta&gt;
+    &lt;data name="rdf:type" value="dcat:Dataset"/&gt;
+    &lt;data name="dct:temporal" value="2025-04-01/2026-03-31"/&gt;
+  &lt;/topicmeta&gt;
+  &lt;topicref href="data/annual-return.csv" format="csv" processing-role="resource-only"/&gt;
+&lt;/topicref&gt;</codeblock>
+      <p>Two limits. A glossary of more than 500 terms has no <codeph>DefinedTermSet</codeph>:
+        the glossary page already lists every term, and a block as large again would double
+        it, so the set is left out whole (a partial set would be wrong) and the build says so
+        (<codeph>GOVK020W</codeph>). And no search engine currently rewards
+        <codeph>HowTo</codeph>: Google withdrew its how-to results in 2023. The block is
+        written because it describes the page accurately for tools that read it, not for
+        how a page appears in results.</p>
+      <p>The publisher is an <codeph>Organization</codeph>, or a
+        <codeph>GovernmentOrganization</codeph> for the official and NHS brandings, named as
+        <codeph>govuk.organisation</codeph> or the bookmap says. Every value comes from the
+        same place as its tag, and a value the DITA does not give is left out. Without
+        <codeph>govuk.site.url</codeph> there are no addresses, so there is no
+        <codeph>BreadcrumbList</codeph> and no address in any object, and the rest is still
+        written.</p>
+      <p>Values are escaped for JSON, and the characters <codeph>&lt;</codeph>,
+        <codeph>&gt;</codeph> and <codeph>&amp;</codeph> are written as escapes as well, so a
+        title can never close the block it is in. A data block is not script, so a
+        <codeph>Content-Security-Policy</codeph> (<codeph>govuk.csp</codeph>) does not
+        restrict it; CI checks that in a browser. The block holds the headline and description
+        a reader sees and nothing that is not on the page. To see how a search engine reads a
+        page, use its structured-data testing tool on the published address. Which of the
+        types a search engine rewards changes, so treat it as a description of the page, not
+        as a way to change how it appears.</p>
+    </section>
+    <section id="catalogue">
+      <title>A catalogue record for data publications: govuk.dcat</title>
+      <p><indexterm>DCAT</indexterm><indexterm>catalogue record</indexterm><indexterm>data.gov.uk</indexterm>A
+        publication that documents data, such as a data dictionary or a data standard, can
+        also describe that data to the catalogues that harvest it. With
+        <codeph>govuk.dcat=yes</codeph> (and <codeph>govuk.site.url</codeph>) the build writes
+        <filepath>dcat.jsonld</filepath> and <filepath>dcat.ttl</filepath> at the site root:
+        the same <xref href="https://www.w3.org/TR/vocab-dcat-3/" format="html"
+        scope="external">DCAT 3</xref> record in two serialisations, written from one graph so
+        they are the same record. The home page links both and holds the record in its head.
+        It is off by default, because a catalogue record is a publishing act, and the
+        publisher turns it on.</p>
+      <p><b>The map says what is an asset.</b> A branch of the map declares itself with a data
+        element named <codeph>rdf:type</codeph> in the <codeph>topicmeta</codeph> of the
+        topicref, <codeph>topichead</codeph> or <codeph>topicgroup</codeph> that heads it. The
+        type is the publisher's statement and is never inferred.</p>
+      <codeblock>&lt;topicref href="elements/index.dita"&gt;
+  &lt;topicmeta&gt;
+    &lt;data name="rdf:type" value="dct:Standard"/&gt;
+    &lt;data name="dct:identifier" value="https://example.org/dictionary/elements"/&gt;
+    &lt;data name="dct:conformsTo" value="https://example.org/model"/&gt;
+  &lt;/topicmeta&gt;
+  &lt;!-- a distribution: a data file the site ships, inside the branch --&gt;
+  &lt;topicref href="schemas/return.schema.json" format="json" processing-role="resource-only"/&gt;
+&lt;/topicref&gt;</codeblock>
+      <ul>
+        <li>The type is a class of a vocabulary the plugin knows (<codeph>dcat:Dataset</codeph>,
+          <codeph>dcat:DataService</codeph>, <codeph>dct:Standard</codeph>,
+          <codeph>adms:Asset</codeph>) or an absolute address. One that is neither is reported
+          (<codeph>GOVK017W</codeph>) and the entry is left out.</li>
+        <li><b>A submap is declared by wrapping its <codeph>mapref</codeph></b> in a
+          <codeph>topicgroup</codeph> that carries the <codeph>topicmeta</codeph>. DITA-OT
+          drops the <codeph>topicmeta</codeph> of the <codeph>mapref</codeph> itself, and of the
+          submap file's root, when it resolves the reference.</li>
+        <li>The asset's landing page is its entry's first page. Its title and description are
+          the entry's, else that page's. Its identifier is the address given as
+          <codeph>dct:identifier</codeph>, else its landing page's address. The publisher,
+          licence, language, rights and contact come from the publication unless the entry says
+          otherwise. Any other property is a <codeph>data</codeph> element
+          (<codeph>dct:spatial</codeph>, <codeph>dct:temporal</codeph>,
+          <codeph>dct:accrualPeriodicity</codeph>, <codeph>dcat:theme</codeph> and so on) with
+          the address or value the target catalogue expects.</li>
+        <li>A resource-only reference inside the branch to a file of a data type (JSON, CSV,
+          Turtle, YAML, XML, a spreadsheet, a zip) is the asset's distribution. The build
+          publishes the file at its path, and the record links it there with its media type
+          and format.</li>
+        <li>One declared asset gives that asset, with no catalogue around it. Several give a
+          catalogue of them. None gives no record, and the build says so
+          (<codeph>GOVK018W</codeph>).</li>
+        <li><codeph>govuk.contact.email</codeph> adds an organisational contact point. It is
+          never a person by default.</li>
+      </ul>
+      <p><b>A dictionary or a model: ADMS.</b> A publication whose parts are not datasets, such
+        as a data dictionary with a logical model and the specifications that conform to it,
+        declares each part <codeph>adms:Asset</codeph> and says what kind it is with a
+        <codeph>dct:type</codeph> address from the publisher's own list. The catalogue then
+        holds each part as a member, typed <codeph>adms:Asset</codeph> and never a dataset, with
+        what the map states: <codeph>dct:conformsTo</codeph> (a specification to its model, by
+        the model's identifier), <codeph>dct:references</codeph>, and
+        <codeph>dct:isPartOf</codeph> the catalogue. Give the model an identifier with
+        <codeph>dct:identifier</codeph> so that every specification can point at it. A part
+        that is retired, by <codeph>importance="obsolete"</codeph> on its first topic or a
+        <codeph>retired</codeph> token on its outputclass, carries
+        <codeph>adms:status</codeph> Withdrawn; state <codeph>adms:status</codeph> yourself to
+        say something else.</p>
+      <p><b>What data.gov.uk expects.</b> A title, a description, a stable identifier and a
+        licence. A record that lacks one is still written, and the build names the property
+        and the record (<codeph>GOVK019W</codeph>), so the harvester will not be the first to
+        say so.</p>
+      <p><b>Model honestly.</b> A documentation site describes data; it is not the data. A data
+        standard, a logical model or a data set specification is a <codeph>dct:Standard</codeph>.
+        An interface is a <codeph>dcat:DataService</codeph>. Declare
+        <codeph>dcat:Dataset</codeph> only for a branch that ships or links the data itself,
+        and give it the files as distributions. A dictionary that holds many specifications is
+        a catalogue of standards, not a dataset.</p>
+      <p>To check a built site, <filepath>tools/check_metadata.py</filepath> verifies the
+        mandatory properties and that every reference in the record names a record in it, and
+        <filepath>tools/check_rdf.py</filepath> parses both files with an independent RDF
+        library and confirms they are the same graph.</p>
+    </section>
+    <section id="vocabularies">
+      <title>Vocabularies for glossaries and code lists: govuk.skos</title>
+      <p><indexterm>SKOS</indexterm><indexterm>vocabulary</indexterm><indexterm>glossary<indexterm>as
+        a vocabulary</indexterm></indexterm>A glossary is a controlled list, and so is a code
+        list. With <codeph>govuk.skos=yes</codeph> (and <codeph>govuk.site.url</codeph>) the
+        build also writes each as a <xref href="https://www.w3.org/TR/skos-reference/"
+        format="html" scope="external">SKOS</xref> vocabulary that other systems can read:
+        <filepath>vocab/NAME.ttl</filepath> and <filepath>vocab/NAME.jsonld</filepath>, the same
+        vocabulary in two serialisations, written from one graph. It is off by default and
+        independent of <codeph>govuk.dcat</codeph>: a glossary site wants vocabularies without
+        declaring any asset.</p>
+      <table frame="all" id="vocab-table">
+        <title>What becomes a vocabulary</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colwidth="2*"/>
+          <colspec colname="c2" colwidth="3*"/>
+          <thead>
+            <row><entry>In the source</entry><entry>Published as</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>The glossary: every <codeph>glossentry</codeph> the map reaches</entry>
+              <entry><filepath>vocab/glossary</filepath>, a scheme of all of them. The glossary
+                page and the page of an entry that has one link it.</entry>
+            </row>
+            <row>
+              <entry>A <codeph>glossgroup</codeph></entry>
+              <entry><filepath>vocab/NAME</filepath>, named after the group's
+                <codeph>id</codeph>, a scheme of its entries.</entry>
+            </row>
+            <row>
+              <entry>A <codeph>subjectScheme</codeph> map, referenced from the root map as a
+                resource-only <codeph>mapref</codeph></entry>
+              <entry><filepath>vocab/NAME</filepath>, named after the map's <codeph>id</codeph>
+                or file: each <codeph>subjectdef</codeph> with <codeph>keys</codeph> is a
+                concept, nested ones <codeph>broader</codeph> and <codeph>narrower</codeph>,
+                and the top ones the scheme's top concepts.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <ul>
+        <li>A concept's <b>label</b> is the <codeph>glossterm</codeph> or
+          <codeph>navtitle</codeph>, its <b>definition</b> the <codeph>glossdef</codeph> or
+          <codeph>shortdesc</codeph>, its other names (acronyms, abbreviations, short forms,
+          synonyms) are <b>alternative labels</b>, and a subject scheme's key is its
+          <b>notation</b>. Text carries the language of what it labels.</li>
+        <li>A <codeph>related-links</codeph> link from one glossary entry to another is
+          <codeph>skos:related</codeph>. A term marked <codeph>retired</codeph>
+          (<codeph>outputclass</codeph>) carries its status.</li>
+        <li><b>A concept's address</b> is, in this order: one the source states
+          (<codeph>resourceid appid</codeph> in the entry's prolog, or a data element named
+          <codeph>dct:identifier</codeph>); the address of its page, if it has one; an anchor on
+          the glossary page, which is given to every term for this; in a subject scheme, its key
+          as a fragment of the vocabulary file. State the address a concept already has, so that
+          links already made to it still mean it. The page it is described on is then linked
+          from it. Two terms that state the same address are reported
+          (<codeph>GOVK021W</codeph>).</li>
+        <li>A publication with no glossary entry and no subject scheme gets no vocabulary and a
+          warning (<codeph>GOVK022W</codeph>).</li>
+      </ul>
+      <p>To check a built site, <filepath>tools/check_metadata.py</filepath> verifies that every
+        reference in a vocabulary names a concept in it and that a hierarchy says the same
+        thing from each end, and <filepath>tools/check_rdf.py</filepath> parses both files with
+        an independent RDF library and confirms they are the same graph.</p>
     </section>
     <section>
       <title>Any other property: data elements</title>

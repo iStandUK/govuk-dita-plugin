@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- Declares nothing: govuk.dcat=yes writes no record, and says why -->
+<map xml:lang="en-GB">
+  <title>No asset declared</title>
+  <topicref href="topics/about.dita"/>
+</map>

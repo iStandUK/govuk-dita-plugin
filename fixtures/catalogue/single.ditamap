@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- Exactly one declared asset: the record is that asset, with no catalogue around it -->
+<map xml:lang="en-GB">
+  <title>One standard</title>
+  <topicref href="topics/about.dita"/>
+  <topicref href="topics/standard.dita">
+    <topicmeta><data name="rdf:type" value="dct:Standard"/></topicmeta>
+    <topicref href="data/schema.json" format="json" processing-role="resource-only"/>
+  </topicref>
+</map>
