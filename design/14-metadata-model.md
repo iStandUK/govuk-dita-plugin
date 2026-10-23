@@ -271,3 +271,15 @@ What building the catalogue settled, where the sections above left it open or a 
 - **`dct:type` is an address,** from the publisher's own list of kinds (a logical model, a data set specification, a code list), because ADMS expects a concept; the table does not accept free text there.
 - **The shape of the NHS Data Model and Dictionary** is the fixture `dictionary.ditamap`: one catalogue, a logical model and specifications that conform to it, none a dataset, one retired.
 
+## 18. As built: SKOS vocabularies and the addresses of terms (#103)
+
+- **Its own switch, `govuk.skos`,** apart from `govuk.dcat`. A catalogue says what a publication holds; a vocabulary says what its words mean. A glossary site wants the second without declaring any asset, so the two are independent, and both need `govuk.site.url`.
+- **Three sources, one file pair each:** the generated glossary (every entry), each `glossgroup` (its entries; an entry is in the glossary's file as well), and each `subjectScheme` map. A resource-only `mapref` takes a scheme map out of the merged map but leaves its file in the build's working folder, so the harvester finds scheme maps there, by their root element, and not in the map.
+- **A term's address, in order:** an absolute address the source states (`resourceid appid`, or `dct:identifier`, the amendment found by checking the design against ContSys); its page's address; for a glossary entry with no page, an anchor on the glossary page; in a subject scheme, the key as a fragment of the vocabulary file. The page a stated address is described on is its `foaf:isPrimaryTopicOf`. Two terms stating one address are `GOVK021W`.
+- **Anchors on the glossary page.** The glossary had none, so a term had no address to point at. Every heading now has `gl-` and the entry's id, numbered if a second entry has the same id. The glossary page and the vocabulary read one list, so they cannot disagree, and a reader gains deep links.
+- **Language.** SKOS labels carry the language of what they label (`lang="yes"` on a row, written as `@en-GB` in Turtle and `@language` in JSON-LD).
+- **A term is a record in each file it is in,** with that file's scheme as its only `inScheme`, so no file holds a bare, unlabelled scheme.
+- **`hasTopConcept` and `topConceptOf`** are written for the top of a subject scheme's hierarchy; a glossary is flat and has none.
+- **Not built, and tracked:** concepts from `concept` topics typed `skos:Concept` in a scheme the map declares, with `skos:broader` and match links stated in `data` ([#263](https://github.com/iStandUK/govuk-dita-plugin/issues/263)); `org:Organization` records from registers, which the issue left out of scope.
+- **The vocabulary checks** are `tools/check_metadata.py` (both files, required labels, references that name a concept in the file, a hierarchy that agrees from both ends) and `tools/check_rdf.py` (the files parse and are the same graph).
+

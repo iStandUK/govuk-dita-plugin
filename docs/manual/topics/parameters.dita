@@ -347,6 +347,14 @@
                 <codeph>govuk.site.url</codeph>. See <xref keyref="metadata"/>.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.skos</codeph></entry>
+              <entry><codeph>no</codeph> (default), <codeph>yes</codeph></entry>
+              <entry>Write the glossary, each glossgroup and each subjectScheme map as a SKOS
+                vocabulary: <filepath>vocab/NAME.ttl</filepath> and
+                <filepath>vocab/NAME.jsonld</filepath>. Needs <codeph>govuk.site.url</codeph>.
+                See <xref keyref="metadata"/>.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.contact.email</codeph></entry>
               <entry>Text</entry>
               <entry>An organisational mailbox for the catalogue record's contact point. Not a

@@ -159,6 +159,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val default="true">no</val>
       <val>yes</val>
     </param>
+    <param name="govuk.skos"
+           desc="Write the glossary, each glossgroup and each subjectScheme map as a SKOS vocabulary: vocab/NAME.ttl and vocab/NAME.jsonld, with the glossary page and each glossary entry's page linking the glossary's. 'no' (default) writes none. 'yes' needs govuk.site.url."
+           type="enum">
+      <val default="true">no</val>
+      <val>yes</val>
+    </param>
     <param name="govuk.contact.email"
            desc="An organisational mailbox for the catalogue record's contact point (vcard:hasEmail). Never a person by default. Used only with govuk.dcat=yes."
            type="string"/>

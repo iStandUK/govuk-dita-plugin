@@ -36,6 +36,13 @@ the graph. The tables never name the syntax they are written in.
                                        [tokenize(@levels) = 'dcat']
                              return doc(resolve-uri($s/@href, $govuk-md-dir))/scheme[@syntax = 'rdf']"/>
 
+  <!-- The tables of the vocabulary files (#103), switched on by govuk.skos -->
+  <xsl:variable name="govuk-md-skos-schemes" as="element()*"
+                select="if ($GOVUK-SKOS ne 'yes') then ()
+                        else for $s in doc(resolve-uri('schemes.xml', $govuk-md-dir))/schemes/scheme
+                                       [tokenize(@levels) = 'skos']
+                             return doc(resolve-uri($s/@href, $govuk-md-dir))/scheme[@syntax = 'rdf']"/>
+
   <!-- ===== Walk ===== -->
 
   <!-- What one kind of a table says about a record: its values -->
@@ -63,6 +70,9 @@ the graph. The tables never name the syntax they are written in.
                 <xsl:attribute name="{if ($row/@node = 'yes') then 'iri' else 'lit'}" select="."/>
                 <xsl:if test="not($row/@node = 'yes') and ($row/@datatype or $row/@format = 'date')">
                   <xsl:attribute name="dt" select="($row/@datatype, 'xsd:date')[1]"/>
+                </xsl:if>
+                <xsl:if test="not($row/@node = 'yes') and $row/@lang = 'yes' and normalize-space($record/govuk:p[@term = 'dct:language'][1]/@value) ne ''">
+                  <xsl:attribute name="lang" select="normalize-space($record/govuk:p[@term = 'dct:language'][1]/@value)"/>
                 </xsl:if>
               </govuk:v>
             </xsl:for-each>
@@ -100,7 +110,7 @@ the graph. The tables never name the syntax they are written in.
     <xsl:for-each-group select="$all" group-by="@id">
       <govuk:s id="{current-grouping-key()}">
         <xsl:for-each-group select="current-group()/govuk:v"
-                            group-by="string-join((@p, @iri, @lit, @dt), '|')">
+                            group-by="string-join((@p, @iri, @lit, @dt, @lang), '|')">
           <xsl:sequence select="current-group()[1]"/>
         </xsl:for-each-group>
       </govuk:s>
@@ -142,6 +152,8 @@ the graph. The tables never name the syntax they are written in.
                           else if ($v/@iri) then concat('{ &quot;@id&quot;: ', govuk:md-json-string(string($v/@iri)), ' }')
                           else if ($v/@dt) then concat('{ &quot;@value&quot;: ', govuk:md-json-string(string($v/@lit)),
                                                        ', &quot;@type&quot;: ', govuk:md-json-string(string($v/@dt)), ' }')
+                          else if ($v/@lang) then concat('{ &quot;@value&quot;: ', govuk:md-json-string(string($v/@lit)),
+                                                         ', &quot;@language&quot;: ', govuk:md-json-string(string($v/@lang)), ' }')
                           else govuk:md-json-string(string($v/@lit))"/>
   </xsl:function>
 
@@ -213,6 +225,7 @@ the graph. The tables never name the syntax they are written in.
     <xsl:sequence select="if ($v/@iri) then (if (govuk:md-rdf-prefixed($prefixes, string($v/@iri))) then string($v/@iri)
                                              else govuk:md-ttl-iri(string($v/@iri)))
                           else if ($v/@dt) then concat(govuk:md-ttl-string(string($v/@lit)), '^^', $v/@dt)
+                          else if ($v/@lang) then concat(govuk:md-ttl-string(string($v/@lit)), '@', $v/@lang)
                           else govuk:md-ttl-string(string($v/@lit))"/>
   </xsl:function>
 
@@ -313,6 +326,15 @@ the graph. The tables never name the syntax they are written in.
         <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate(string(@title), ';', ',')"/>;%2=<xsl:value-of select="@row"/>;%3=<xsl:value-of select="@table"/>;%4=<xsl:value-of select="@id"/></xsl:with-param>
       </xsl:call-template>
     </xsl:for-each>
+  </xsl:template>
+
+  <!-- On the glossary page and a glossary entry's page: the glossary vocabulary, as its two files (#103) -->
+  <xsl:template name="govuk-md-skos-head">
+    <xsl:param name="prefix" as="xs:string" select="''"/>
+    <xsl:if test="$GOVUK-SKOS = 'yes' and $govuk-md-base ne ''">
+      <link rel="alternate" type="text/turtle" href="{$prefix}vocab/glossary.ttl"/>
+      <link rel="alternate" type="application/ld+json" href="{$prefix}vocab/glossary.jsonld"/>
+    </xsl:if>
   </xsl:template>
 
 </xsl:stylesheet>

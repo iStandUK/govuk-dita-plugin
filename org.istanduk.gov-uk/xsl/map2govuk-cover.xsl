@@ -26,6 +26,9 @@ map transformation with the plugin's values.
               omit-xml-declaration="yes"/>
 
   <!-- sitemap.xml is plain XML: no doctype, its own declaration -->
+  <!-- The vocabularies the publication holds, as SKOS files (#103) -->
+  <xsl:include href="metadata-vocab.xsl"/>
+
   <xsl:output name="govuk-sitemap" method="xml" encoding="UTF-8" indent="yes" omit-xml-declaration="no"/>
   <!-- llms.txt is Markdown: plain text -->
   <xsl:output name="govuk-llms" method="text" encoding="UTF-8"/>
@@ -196,6 +199,7 @@ map transformation with the plugin's values.
     <xsl:call-template name="govuk-sitemap"/>
     <xsl:call-template name="govuk-llms"/>
     <xsl:call-template name="govuk-dcat"/>
+    <xsl:call-template name="govuk-skos"/>
   </xsl:template>
 
   <!-- ===== sitemap.xml (#60) =====
@@ -394,6 +398,9 @@ map transformation with the plugin's values.
         </xsl:call-template>
       </xsl:with-param>
     </xsl:call-template>
+    <xsl:if test="$file = 'glossary.html'">
+      <xsl:call-template name="govuk-md-skos-head"/>
+    </xsl:if>
   </xsl:template>
 
   <!-- Kept in step with template.xsl's generateCssLinks; the cover is at the site

@@ -15,4 +15,6 @@ one, or a row to one, needs no stylesheet change.
   <!-- written as files, by govuk.dcat=yes, not into page heads -->
   <scheme href="dcat.xml" levels="dcat"/>
   <scheme href="adms.xml" levels="dcat"/>
+  <!-- written as files, by govuk.skos=yes -->
+  <scheme href="skos.xml" levels="skos"/>
 </schemes>
