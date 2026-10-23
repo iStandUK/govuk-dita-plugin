@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- Exactly one declared dataset: one Dataset on its landing page, and nothing on the others (#122) -->
+<map xml:lang="en-GB">
+  <title>One dataset</title>
+  <topicref href="topics/about.dita"/>
+  <topicref href="topics/dataset.dita">
+    <topicmeta>
+      <data name="rdf:type" value="dcat:Dataset"/>
+      <data name="dct:temporal" value="2025-04-01/2026-03-31"/>
+      <data name="dct:issued" value="2026-01-15"/>
+    </topicmeta>
+    <topicref href="data/table.csv" format="csv" processing-role="resource-only"/>
+  </topicref>
+</map>

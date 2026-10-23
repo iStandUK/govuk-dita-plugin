@@ -1323,6 +1323,7 @@ jobs:
           assert std["dcat:landingPage"] == ref(base + "topics/standard.html")
           assert std["dct:conformsTo"] == ref("https://example.org/model")
           assert std["dcat:distribution"] == ref(base + "data/schema.json", base + "data/openapi.yaml")
+          assert std["dct:isPartOf"] == ref(base) and nodes[dataset]["dct:isPartOf"] == ref(base)
           assert nodes[base + "data/schema.json"]["dcat:mediaType"] == ref("https://www.iana.org/assignments/media-types/application/json")
           assert nodes[base + "data/openapi.yaml"]["dcat:mediaType"] == ref("https://www.iana.org/assignments/media-types/application/yaml")
           assert nodes[base + "data/openapi.yaml"]["dcat:downloadURL"] == ref(base + "data/openapi.yaml")
@@ -1354,10 +1355,38 @@ jobs:
               out/catalogue/dcat.ttl out/catalogue/dcat.jsonld
           cp out/catalogue/dcat.ttl "$RUNNER_TEMP/broken.ttl"; printf 'dct:title "unterminated .\n' >> "$RUNNER_TEMP/broken.ttl"
           if rdf "$RUNNER_TEMP/broken.ttl"; then echo "check_rdf passed a Turtle file that is not Turtle"; exit 1; fi
+          # the shape of a data dictionary (#123): a catalogue of a logical model and the specifications
+          # that conform to it, none of them a dataset; a retired one carries its status
+          dcat --input fixtures/catalogue/dictionary.ditamap --output out/dictionary \
+            -Dgovuk.organisation="Example Body" -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ > /dev/null
+          python3 tools/check_metadata.py --site-url https://example.org/data/ out/dictionary
+          rdf --expect-type dcat:Catalog --expect-type adms:Asset out/dictionary/dcat.ttl out/dictionary/dcat.jsonld
+          absent -q 'dcat:Dataset' out/dictionary/dcat.ttl
+          python3 - <<'PY'
+          import json
+          base = "https://example.org/data/"
+          nodes = {n["@id"]: n for n in json.load(open("out/dictionary/dcat.jsonld"))["@graph"]}
+          ref = lambda i: {"@id": i}
+          model, a, b = "https://example.org/dictionary/model", base + "topics/spec-a.html", base + "topics/spec-b.html"
+          assert nodes[base]["@type"] == "dcat:Catalog" and nodes[base]["dcat:resource"] == [ref(model), ref(a), ref(b)]
+          for member in (model, a, b):
+              assert nodes[member]["@type"] == "adms:Asset", member
+              assert nodes[member]["dct:isPartOf"] == ref(base), member
+          # an identifier the map states is the model's own; a specification's is its page's address
+          assert nodes[model]["dct:identifier"] == model and nodes[model]["dct:type"] == ref("https://example.org/types/logical-model")
+          for spec in (a, b):
+              assert nodes[spec]["dct:identifier"] == nodes[spec]["dcat:landingPage"]["@id"] == spec
+              assert nodes[spec]["dct:conformsTo"] == ref(model) and nodes[spec]["dct:type"] == ref("https://example.org/types/data-set-specification")
+          assert nodes[a]["dct:references"] == ref("https://example.org/dictionary/rules")
+          # only the retired specification has a status, in ADMS's own vocabulary
+          assert nodes[b]["adms:status"] == ref("http://purl.org/adms/status/Withdrawn")
+          assert "adms:status" not in nodes[a] and "adms:status" not in nodes[model]
+          PY
           # exactly one declared asset is that asset, with no catalogue around it
           dcat --input fixtures/catalogue/single.ditamap --output out/catalogue-single -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ > /dev/null
           absent -q 'dcat:Catalog' out/catalogue-single/dcat.ttl
           has out/catalogue-single/dcat.ttl 'a dct:Standard'
+          absent -q 'isPartOf' out/catalogue-single/dcat.ttl
           rdf --expect-type dct:Standard out/catalogue-single/dcat.ttl out/catalogue-single/dcat.jsonld
           python3 tools/check_metadata.py --site-url https://example.org/data/ out/catalogue-single
           # none declared: nothing written, and the build says why
@@ -1369,6 +1398,45 @@ jobs:
           dcat --input fixtures/catalogue/single.ditamap --output out/catalogue-nolicence 2>&1 | tee catalogue-nolicence.log
           grep -q "GOVK019W.*'Example data standard' has no dct:license" catalogue-nolicence.log
           test -f out/catalogue-nolicence/dcat.ttl
+          # #122: a declared dataset is also a schema.org Dataset, on its landing page. Both read the
+          # one record, so they agree; a standard is not a dataset, and nothing declared is nothing
+          full() { tools/ci/dita --format govuk -Dgovuk.search=no -Dgovuk.metadata=full -Dgovuk.site.url=https://example.org/data \
+                     -Dgovuk.organisation="Example Body" -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ "$@"; }
+          full --input fixtures/catalogue/datasets.ditamap --output out/datasets -Dgovuk.dcat=yes > /dev/null
+          full --input fixtures/catalogue/dataset.ditamap --output out/dataset > /dev/null
+          full --input fixtures/catalogue/none.ditamap --output out/datasets-none > /dev/null
+          python3 tools/check_metadata.py --level full --site-url https://example.org/data/ out/datasets out/dataset out/datasets-none
+          python3 - <<'PY'
+          import glob, json, os, re
+          def datasets(site):
+              found = {}
+              for path in sorted(glob.glob(site + "/**/*.html", recursive=True)):
+                  for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', open(path, encoding="utf-8").read(), re.S):
+                      for obj in json.loads(block)["@graph"]:
+                          main = obj.get("mainEntity") or []
+                          for e in (main if isinstance(main, list) else [main]):
+                              if e.get("@type") == "Dataset":
+                                  found[os.path.relpath(path, site)] = e
+              return found
+          base = "https://example.org/data/"
+          assert list(datasets("out/dataset")) == ["topics/dataset.html"]
+          assert datasets("out/datasets-none") == {}
+          several = datasets("out/datasets")
+          assert sorted(several) == ["topics/dataset.html", "topics/dataset2.html"], sorted(several)
+          nodes = {n["@id"]: n for n in json.load(open("out/datasets/dcat.jsonld"))["@graph"]}
+          for page, d in several.items():
+              node = nodes[d["@id"]]
+              assert d["@id"] == d["url"] == base + page
+              assert d["name"] == node["dct:title"] and d["description"] == node["dct:description"]
+              assert d["license"] == node["dct:license"]["@id"]
+              assert d["isPartOf"] == {"@id": base}
+              refs = node["dcat:distribution"]
+              refs = refs if isinstance(refs, list) else [refs]
+              assert [x["contentUrl"] for x in d["distribution"]] == [r["@id"] for r in refs], page
+              assert [x["@type"] for x in d["distribution"]] == ["DataDownload"] * len(d["distribution"])
+          assert [x["encodingFormat"] for x in several["topics/dataset2.html"]["distribution"]] == ["application/json", "text/csv"]
+          assert several["topics/dataset.html"]["publisher"] == {"@type": "Organization", "name": "Example Body"}
+          PY
           # off by default, and the parameters are checked
           absent -rEq 'dcat' out/manual/index.html out/metadata/index.html
           test ! -e out/manual/dcat.jsonld
@@ -1383,6 +1451,96 @@ jobs:
           tools/ci/dita --input fixtures/catalogue/catalogue.ditamap --format govuk --output out/catalogue-csp \
             -Dgovuk.dcat=yes -Dgovuk.site.url=https://example.org/data -Dgovuk.csp=meta \
             -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ > /dev/null
+
+      # Vocabularies (#103, D-26): the glossary, each glossgroup and each subjectScheme map as SKOS,
+      # in two serialisations from one graph, read back by a parser that is not ours
+      - name: Vocabularies (#103)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          has() { grep -qF "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
+          vocab() { tools/ci/dita --format govuk -Dgovuk.search=no -Dgovuk.skos=yes -Dgovuk.site.url=https://example.org/v "$@"; }
+          if [ ! -x "$RUNNER_TEMP/rdf/bin/python" ]; then
+            python3 -m venv "$RUNNER_TEMP/rdf"
+            "$RUNNER_TEMP/rdf/bin/pip" install -q --require-hashes --only-binary :all: -r tools/ci/requirements-rdf.txt
+          fi
+          rdf() { "$RUNNER_TEMP/rdf/bin/python" tools/check_rdf.py "$@"; }
+          vocab --input fixtures/vocab/vocab.ditamap --output out/vocab 2>&1 | tee vocab.log
+          absent -Eq 'GOVK02[12]W' vocab.log
+          # a vocabulary for the glossary, for the glossgroup and for the subject scheme, each in both forms
+          for v in glossary clinical colours; do test -f out/vocab/vocab/$v.ttl && test -f out/vocab/vocab/$v.jsonld; done
+          test "$(ls out/vocab/vocab | wc -l | tr -d ' ')" = 6
+          python3 tools/check_metadata.py --site-url https://example.org/v/ out/vocab
+          rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/vocab/vocab/*.ttl out/vocab/vocab/*.jsonld
+          python3 - <<'PY'
+          import json, re
+          base = "https://example.org/v/"
+          def load(stem):
+              g = json.load(open(f"out/vocab/vocab/{stem}.jsonld"))["@graph"]
+              return {n["@id"]: n for n in g}
+          label = lambda n: n["skos:prefLabel"]["@value"]
+          ref = lambda i: {"@id": i}
+          # a subject scheme: its hierarchy from both ends, a notation from the key, an address the map states,
+          # an address in the file otherwise, and a retired term in ADMS's own vocabulary
+          c = load("colours"); f = base + "vocab/colours.ttl#"
+          assert c[f + "scheme"]["@type"] == "skos:ConceptScheme" and c[f + "scheme"]["skos:hasTopConcept"] == ref(f + "colour")
+          assert c[f + "colour"]["skos:topConceptOf"] == ref(f + "scheme") and "skos:broader" not in c[f + "colour"]
+          assert c[f + "warm"]["skos:broader"] == ref(f + "colour")
+          assert c[f + "warm"]["skos:narrower"] == [ref(f + "red"), ref("https://example.org/colours/orange")]
+          assert c[f + "red"]["skos:definition"] == {"@value": "The colour of blood.", "@language": "en-GB"}
+          assert c[f + "red"]["skos:notation"] == "red" and label(c[f + "red"]) == "Red"
+          assert c["https://example.org/colours/orange"]["skos:broader"] == ref(f + "warm")
+          assert c[f + "cool"]["adms:status"] == ref("http://purl.org/adms/status/Withdrawn")
+          assert all("adms:status" not in n for k, n in c.items() if not k.endswith("#cool"))
+          # the glossary: an address the source states (with the page it is described on), the page's own
+          # address, otherwise an anchor on the glossary page; names, relations and status
+          g = load("glossary")
+          assert g[base + "glossary.html"]["@type"] == "skos:ConceptScheme"
+          care = g["https://example.org/concept/care_plan"]
+          assert label(care) == "Care plan" and care["foaf:isPrimaryTopicOf"] == ref(base + "terms/standalone.html")
+          bp = g["https://example.org/vocab/blood-pressure"]
+          assert [a["@value"] for a in bp["skos:altLabel"]] == ["BP", "arterial pressure"]
+          assert bp["skos:related"] == ref(base + "glossary.html#gl-pulse") and bp["skos:inScheme"] == ref(base + "glossary.html")
+          assert label(g[base + "glossary.html#gl-referral"]) == "Referral"
+          assert g[base + "glossary.html#gl-old-term"]["adms:status"] == ref("http://purl.org/adms/status/Withdrawn")
+          # a group is a scheme of its own entries, which are in no other scheme there
+          k = load("clinical")
+          assert k[f.replace("colours", "clinical") + "scheme"]["dct:title"]["@value"] == "Clinical terms"
+          assert {label(n) for n in k.values() if n["@type"] == "skos:Concept"} == {"Blood pressure", "Pulse", "Heart rate (old)"}
+          assert all(n["skos:inScheme"] == ref(base + "vocab/clinical.ttl#scheme") for n in k.values() if n["@type"] == "skos:Concept")
+          # every anchor a vocabulary names is on the glossary page, and the print-ready ids stay unique
+          page = open("out/vocab/glossary.html", encoding="utf-8").read()
+          ids = re.findall(r' id="([^"]+)"', page)
+          assert len(ids) == len(set(ids)), "duplicate ids on the glossary page"
+          for node in list(g) + list(k):
+              if node.startswith(base + "glossary.html#"):
+                  assert node.split("#")[1] in ids, node
+          PY
+          # the glossary page and a glossary entry's page link the glossary's files
+          has out/vocab/glossary.html '<link rel="alternate" type="text/turtle" href="vocab/glossary.ttl">'
+          has out/vocab/glossary.html '<link rel="alternate" type="application/ld+json" href="vocab/glossary.jsonld">'
+          has out/vocab/terms/standalone.html '<link rel="alternate" type="text/turtle" href="../vocab/glossary.ttl">'
+          # two terms that state one address are named; nothing to publish is said; a bad switch is refused
+          vocab --input fixtures/vocab/duplicate.ditamap --output out/vocab-dup 2>&1 | tee vocab-dup.log
+          grep -q 'GOVK021W.*care_plan.*2 terms' vocab-dup.log
+          vocab --input fixtures/catalogue/none.ditamap --output out/vocab-none 2>&1 | tee vocab-none.log
+          grep -q 'GOVK022W' vocab-none.log
+          test ! -e out/vocab-none/vocab
+          if tools/ci/dita --input fixtures/vocab/vocab.ditamap --format govuk --output out/x-skos -Dgovuk.skos=yes; then echo "govuk.skos=yes without a URL should fail"; exit 1; fi
+          if tools/ci/dita --input fixtures/vocab/vocab.ditamap --format govuk --output out/x-skos -Dgovuk.skos=maybe; then echo "govuk.skos=maybe should fail"; exit 1; fi
+          # off by default: no files and no links; the manual's own glossary, groups and all, is a vocabulary too
+          tools/ci/dita --input fixtures/vocab/vocab.ditamap --format govuk --output out/vocab-off -Dgovuk.search=no -Dgovuk.site.url=https://example.org/v > /dev/null
+          test ! -e out/vocab-off/vocab
+          absent -q 'rel="alternate"' out/vocab-off/glossary.html
+          vocab --input docs/manual/manual.ditamap --output out/manual-vocab > /dev/null
+          vocab --input fixtures/source-system/dictionary.ditamap --output out/source-system-vocab > /dev/null
+          for site in out/manual-vocab out/source-system-vocab; do
+            python3 tools/check_metadata.py --site-url https://example.org/v/ "$site"
+            rdf --expect-type skos:Concept --expect-type skos:ConceptScheme "$site"/vocab/glossary.ttl "$site"/vocab/glossary.jsonld
+          done
+          # the same site twice, byte for byte
+          vocab --input fixtures/vocab/vocab.ditamap --output out/vocab-again > /dev/null
+          diff -r out/vocab out/vocab-again && echo "the vocabularies are byte-identical"
 
       - name: Branding CSS is current
         run: |
@@ -1422,7 +1580,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/metadata-full out/metadata-full-official out/catalogue out/catalogue-single out/keyref-unresolved out/subfolder-root-top
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/metadata-full out/metadata-full-official out/catalogue out/catalogue-single out/dictionary out/datasets out/dataset out/vocab out/keyref-unresolved out/subfolder-root-top
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }

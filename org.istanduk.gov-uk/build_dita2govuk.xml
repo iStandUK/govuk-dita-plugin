@@ -553,6 +553,15 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <equals arg1="${govuk.dcat}" arg2="no"/>
       </or></not></condition>
     </fail>
+    <!-- SKOS vocabularies (#103): their own switch, apart from the catalogue, because a glossary
+         site wants vocabularies without declaring any asset -->
+    <property name="govuk.skos" value="no"/>
+    <fail message="govuk.skos must be 'yes' or 'no', was: ${govuk.skos}">
+      <condition><not><or>
+        <equals arg1="${govuk.skos}" arg2="yes"/>
+        <equals arg1="${govuk.skos}" arg2="no"/>
+      </or></not></condition>
+    </fail>
     <fail message="govuk.contact.email must look like an email address, was: ${govuk.contact.email}">
       <condition>
         <and>
@@ -657,6 +666,14 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <condition property="govuk.llms.on">
       <equals arg1="${govuk.llms.enabled}" arg2="yes"/>
     </condition>
+    <fail message="govuk.skos=yes needs govuk.site.url (the published base URL): every identifier in a vocabulary is an address">
+      <condition>
+        <and>
+          <equals arg1="${govuk.skos}" arg2="yes"/>
+          <not><isset property="govuk.site.url.set"/></not>
+        </and>
+      </condition>
+    </fail>
     <fail message="govuk.dcat=yes needs govuk.site.url (the published base URL): every identifier and link in a catalogue record is an address">
       <condition>
         <and>
@@ -745,6 +762,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
       <param name="GOVUK-DATES" expression="${govuk.dates}"/>
       <param name="GOVUK-DCAT" expression="${govuk.dcat}"/>
+      <param name="GOVUK-SKOS" expression="${govuk.skos}"/>
       <param name="GOVUK-CONTACT-EMAIL" expression="${govuk.contact.email}" if:set="govuk.contact.email"/>
       <param name="GOVUK-METADATA" expression="${govuk.metadata}"/>
       <param name="GOVUK-METADATA-PERSONS" expression="${govuk.metadata.persons}"/>

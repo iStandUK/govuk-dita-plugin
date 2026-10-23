@@ -211,6 +211,23 @@
               would roughly double the page. See <xref keyref="metadata"/>.</entry>
           </row>
           <row>
+            <entry><codeph>GOVK021W</codeph></entry>
+            <entry>Two or more terms state the same address, in <codeph>resourceid appid</codeph>
+              or a data element named <codeph>dct:identifier</codeph>, so a vocabulary would say
+              they are one concept. Only with <codeph>govuk.skos=yes</codeph>.</entry>
+            <entry>Give each term its own address, or leave it out to take its page's address or
+              its place in the glossary.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK022W</codeph></entry>
+            <entry><codeph>govuk.skos=yes</codeph>, but the publication has no glossary entry
+              and no subject scheme, so no vocabulary is written.</entry>
+            <entry>A vocabulary is a glossary (<codeph>glossentry</codeph> topics, alone or in a
+              <codeph>glossgroup</codeph>, referenced from the map) or a
+              <codeph>subjectScheme</codeph> map with <codeph>subjectdef</codeph> elements that
+              have keys. See <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
             <entry><codeph>GOVK015W</codeph></entry>
             <entry>A key reference in topic content names no key that resolves. A
               <codeph>keyword</codeph>, <codeph>ph</codeph>, <codeph>uicontrol</codeph>,

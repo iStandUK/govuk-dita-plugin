@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- The vocabularies a publication holds (#103): a glossgroup, a glossary entry with a page and an
+     address of its own, one with neither, and a subject scheme with a hierarchy. -->
+<map xml:lang="en-GB">
+  <title>Example vocabularies</title>
+  <topicmeta><shortdesc>Controlled lists an example body publishes.</shortdesc></topicmeta>
+  <mapref href="schemes/colours.ditamap" processing-role="resource-only"/>
+  <topicref href="terms/standalone.dita"/>
+  <topicref href="terms/group.dita" processing-role="resource-only"/>
+  <topicref href="terms/plain.dita" processing-role="resource-only"/>
+</map>

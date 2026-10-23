@@ -43,6 +43,8 @@ the once-per-build checks).
   <!-- no | yes (#102): the DCAT catalogue record, its own switch -->
   <xsl:param name="GOVUK-DCAT" select="'no'"/>
   <xsl:param name="GOVUK-CONTACT-EMAIL" select="''"/>
+  <!-- no | yes (#103): the glossary and subject schemes as SKOS vocabularies, its own switch -->
+  <xsl:param name="GOVUK-SKOS" select="'no'"/>
   <xsl:param name="GOVUK-DATES" select="'no'"/>
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>
@@ -391,16 +393,19 @@ the once-per-build checks).
       <xsl:sequence select="govuk:md-data((reverse($chain)/*[contains(@class, ' map/topicmeta ')], $prolog))"/>
     </xsl:variable>
     <!-- what the page is about: a task's how-to, a glossary entry's term, or, for
-         the generated glossary, the scheme of its terms (#101) -->
-    <xsl:variable name="main" as="element(govuk:record)?"
-                  select="if (exists($topic) and govuk:md-topic-type($topic) = 'task')
-                          then govuk:md-howto-record($topic, ($topic-title, $title)[. ne ''][1],
-                                 string($own[@term = 'dct:description']/@value))
-                          else if (exists($topic) and govuk:md-topic-type($topic) = 'glossentry')
-                          then govuk:md-term-record($topic, '')
-                          else if ($role = 'utility' and $path = 'glossary.html')
-                          then govuk:md-glossary-record($title)
-                          else ()"/>
+         the generated glossary, the scheme of its terms (#101); and, on the first
+         page of a data asset's branch, the asset (#122) -->
+    <xsl:variable name="main" as="element(govuk:record)*"
+                  select="(if (exists($topic) and govuk:md-topic-type($topic) = 'task')
+                           then govuk:md-howto-record($topic, ($topic-title, $title)[. ne ''][1],
+                                  string($own[@term = 'dct:description']/@value))
+                           else if (exists($topic) and govuk:md-topic-type($topic) = 'glossentry')
+                           then govuk:md-term-record($topic, '')
+                           else if ($role = 'utility' and $path = 'glossary.html')
+                           then govuk:md-glossary-record($title)
+                           else (),
+                           (: a data asset's landing page is about the asset (#122) :)
+                           if ($role = 'topic') then $govuk-md-assets[@path = $path] else ())"/>
     <govuk:record kind="page" role="{$role}" path="{$path}">
       <xsl:if test="govuk:md-id($path) ne ''">
         <xsl:attribute name="id" select="govuk:md-id($path)"/>
@@ -488,7 +493,14 @@ the once-per-build checks).
         </xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
-    <xsl:variable name="values" select="distinct-values(for $v in $raw return govuk:md-format($v, $format)[. ne ''])"/>
+    <!-- map="neutral=scheme-value ...": a value the harvest states neutrally (retired)
+         becomes the one the scheme uses; any other value passes unchanged -->
+    <xsl:variable name="map" as="xs:string*" select="tokenize(normalize-space($row/@map))"/>
+    <xsl:variable name="values"
+                  select="distinct-values(for $v in $raw
+                                          return govuk:md-format(
+                                            (for $m in $map[starts-with(., concat($v, '='))] return substring-after($m, '='), $v)[1],
+                                            $format)[. ne ''])"/>
     <xsl:sequence select="if ($row/@repeat = 'yes') then $values else $values[1]"/>
   </xsl:function>
 

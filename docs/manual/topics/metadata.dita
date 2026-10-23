@@ -152,6 +152,15 @@
                 when there is no information).</entry>
             </row>
             <row>
+              <entry>The landing page of a data asset declared a dataset</entry>
+              <entry>The <codeph>TechArticle</codeph> also names a <codeph>Dataset</codeph> as
+                its main entity: the asset's name, description, address, licence, publisher,
+                dates and version when it states them, its temporal coverage, and a
+                <codeph>DataDownload</codeph> for each of its files. See
+                <xref href="#metadata/catalogue"/>. A standard or a service is not a dataset and
+                gets none.</entry>
+            </row>
+            <row>
               <entry>A glossary entry's page</entry>
               <entry>The <codeph>TechArticle</codeph> also names a <codeph>DefinedTerm</codeph>
                 as its main entity: the term, its definition, and its acronyms,
@@ -172,6 +181,18 @@
           </tbody>
         </tgroup>
       </table>
+      <p>A <codeph>Dataset</codeph> is written only for a branch the map declares a dataset
+        (a <codeph>rdf:type</codeph> of <codeph>dcat:Dataset</codeph>), on that branch's first
+        page, with <codeph>govuk.metadata=full</codeph>. It does not need
+        <codeph>govuk.dcat</codeph>. It is built from the same record as the catalogue record,
+        so the two always say the same thing. For example, a branch that ships a table:</p>
+      <codeblock>&lt;topicref href="topics/annual-return.dita"&gt;
+  &lt;topicmeta&gt;
+    &lt;data name="rdf:type" value="dcat:Dataset"/&gt;
+    &lt;data name="dct:temporal" value="2025-04-01/2026-03-31"/&gt;
+  &lt;/topicmeta&gt;
+  &lt;topicref href="data/annual-return.csv" format="csv" processing-role="resource-only"/&gt;
+&lt;/topicref&gt;</codeblock>
       <p>Two limits. A glossary of more than 500 terms has no <codeph>DefinedTermSet</codeph>:
         the glossary page already lists every term, and a block as large again would double
         it, so the set is left out whole (a partial set would be wrong) and the build says so
@@ -248,6 +269,19 @@
         <li><codeph>govuk.contact.email</codeph> adds an organisational contact point. It is
           never a person by default.</li>
       </ul>
+      <p><b>A dictionary or a model: ADMS.</b> A publication whose parts are not datasets, such
+        as a data dictionary with a logical model and the specifications that conform to it,
+        declares each part <codeph>adms:Asset</codeph> and says what kind it is with a
+        <codeph>dct:type</codeph> address from the publisher's own list. The catalogue then
+        holds each part as a member, typed <codeph>adms:Asset</codeph> and never a dataset, with
+        what the map states: <codeph>dct:conformsTo</codeph> (a specification to its model, by
+        the model's identifier), <codeph>dct:references</codeph>, and
+        <codeph>dct:isPartOf</codeph> the catalogue. Give the model an identifier with
+        <codeph>dct:identifier</codeph> so that every specification can point at it. A part
+        that is retired, by <codeph>importance="obsolete"</codeph> on its first topic or a
+        <codeph>retired</codeph> token on its outputclass, carries
+        <codeph>adms:status</codeph> Withdrawn; state <codeph>adms:status</codeph> yourself to
+        say something else.</p>
       <p><b>What data.gov.uk expects.</b> A title, a description, a stable identifier and a
         licence. A record that lacks one is still written, and the build names the property
         and the record (<codeph>GOVK019W</codeph>), so the harvester will not be the first to
@@ -262,6 +296,72 @@
         mandatory properties and that every reference in the record names a record in it, and
         <filepath>tools/check_rdf.py</filepath> parses both files with an independent RDF
         library and confirms they are the same graph.</p>
+    </section>
+    <section id="vocabularies">
+      <title>Vocabularies for glossaries and code lists: govuk.skos</title>
+      <p><indexterm>SKOS</indexterm><indexterm>vocabulary</indexterm><indexterm>glossary<indexterm>as
+        a vocabulary</indexterm></indexterm>A glossary is a controlled list, and so is a code
+        list. With <codeph>govuk.skos=yes</codeph> (and <codeph>govuk.site.url</codeph>) the
+        build also writes each as a <xref href="https://www.w3.org/TR/skos-reference/"
+        format="html" scope="external">SKOS</xref> vocabulary that other systems can read:
+        <filepath>vocab/NAME.ttl</filepath> and <filepath>vocab/NAME.jsonld</filepath>, the same
+        vocabulary in two serialisations, written from one graph. It is off by default and
+        independent of <codeph>govuk.dcat</codeph>: a glossary site wants vocabularies without
+        declaring any asset.</p>
+      <table frame="all" id="vocab-table">
+        <title>What becomes a vocabulary</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colwidth="2*"/>
+          <colspec colname="c2" colwidth="3*"/>
+          <thead>
+            <row><entry>In the source</entry><entry>Published as</entry></row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>The glossary: every <codeph>glossentry</codeph> the map reaches</entry>
+              <entry><filepath>vocab/glossary</filepath>, a scheme of all of them. The glossary
+                page and the page of an entry that has one link it.</entry>
+            </row>
+            <row>
+              <entry>A <codeph>glossgroup</codeph></entry>
+              <entry><filepath>vocab/NAME</filepath>, named after the group's
+                <codeph>id</codeph>, a scheme of its entries.</entry>
+            </row>
+            <row>
+              <entry>A <codeph>subjectScheme</codeph> map, referenced from the root map as a
+                resource-only <codeph>mapref</codeph></entry>
+              <entry><filepath>vocab/NAME</filepath>, named after the map's <codeph>id</codeph>
+                or file: each <codeph>subjectdef</codeph> with <codeph>keys</codeph> is a
+                concept, nested ones <codeph>broader</codeph> and <codeph>narrower</codeph>,
+                and the top ones the scheme's top concepts.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <ul>
+        <li>A concept's <b>label</b> is the <codeph>glossterm</codeph> or
+          <codeph>navtitle</codeph>, its <b>definition</b> the <codeph>glossdef</codeph> or
+          <codeph>shortdesc</codeph>, its other names (acronyms, abbreviations, short forms,
+          synonyms) are <b>alternative labels</b>, and a subject scheme's key is its
+          <b>notation</b>. Text carries the language of what it labels.</li>
+        <li>A <codeph>related-links</codeph> link from one glossary entry to another is
+          <codeph>skos:related</codeph>. A term marked <codeph>retired</codeph>
+          (<codeph>outputclass</codeph>) carries its status.</li>
+        <li><b>A concept's address</b> is, in this order: one the source states
+          (<codeph>resourceid appid</codeph> in the entry's prolog, or a data element named
+          <codeph>dct:identifier</codeph>); the address of its page, if it has one; an anchor on
+          the glossary page, which is given to every term for this; in a subject scheme, its key
+          as a fragment of the vocabulary file. State the address a concept already has, so that
+          links already made to it still mean it. The page it is described on is then linked
+          from it. Two terms that state the same address are reported
+          (<codeph>GOVK021W</codeph>).</li>
+        <li>A publication with no glossary entry and no subject scheme gets no vocabulary and a
+          warning (<codeph>GOVK022W</codeph>).</li>
+      </ul>
+      <p>To check a built site, <filepath>tools/check_metadata.py</filepath> verifies that every
+        reference in a vocabulary names a concept in it and that a hierarchy says the same
+        thing from each end, and <filepath>tools/check_rdf.py</filepath> parses both files with
+        an independent RDF library and confirms they are the same graph.</p>
     </section>
     <section>
       <title>Any other property: data elements</title>

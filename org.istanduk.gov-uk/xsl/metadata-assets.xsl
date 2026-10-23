@@ -119,6 +119,7 @@ The declaration is the publisher's statement and is never inferred.
                                 (govuk:md-ref-title($ref), replace($path, '^.*/', ''))[. ne ''][1]),
                               govuk:md-p('dcat:downloadURL', govuk:md-id($path)),
                               govuk:md-p('dcat:mediaType', concat('https://www.iana.org/assignments/media-types/', $type)),
+                              govuk:md-p('schema:encodingFormat', $type),
                               govuk:md-p('dct:format', upper-case((replace($path, '^.*\.', ''), $ref/@format)[1]))"/>
         <xsl:sequence select="govuk:md-data($ref/*[contains(@class, ' map/topicmeta ')])"/>
       </govuk:record>
@@ -160,6 +161,19 @@ The declaration is the publisher's statement and is never inferred.
     </xsl:for-each>
   </xsl:variable>
 
+  <!-- Whether a branch is retired: the entry says so (importance, or a retired token on its
+       outputclass), or its first topic does (the same two, on the topic or its title) -->
+  <xsl:function name="govuk:md-ref-retired" as="xs:boolean">
+    <xsl:param name="ref" as="element()"/>
+    <xsl:param name="landing" as="element()?"/>
+    <xsl:variable name="uri" select="if (exists($landing) and normalize-space($landing/@href))
+                                     then resolve-uri(replace($landing/@href, '#.*$', ''), string(base-uri($landing))) else ''"/>
+    <xsl:variable name="topic" select="if ($uri ne '' and doc-available($uri)) then (doc($uri)//*[contains(@class, ' topic/topic ')])[1] else ()"/>
+    <xsl:sequence select="$ref/@importance = 'obsolete' or $topic/@importance = 'obsolete'
+                          or tokenize(normalize-space(string-join(($ref/@outputclass, $topic/@outputclass,
+                               $topic/*[contains(@class, ' topic/title ')]/@outputclass), ' '))) = 'retired'"/>
+  </xsl:function>
+
   <xsl:function name="govuk:md-asset-record" as="element(govuk:record)">
     <xsl:param name="ref" as="element()"/>
     <xsl:variable name="topicmeta" select="$ref/*[contains(@class, ' map/topicmeta ')]"/>
@@ -177,11 +191,21 @@ The declaration is the publisher's statement and is never inferred.
                             govuk:md-p('dcat:landingPage', $landing-id)"/>
       <xsl:sequence select="$data"/>
     </xsl:variable>
-    <govuk:record kind="asset" id="{string(($stated, $landing-id)[. ne ''][1])}" path="{govuk:md-ref-path($landing)}">
+    <govuk:record kind="asset" id="{string(($stated, $landing-id)[. ne ''][1])}" path="{govuk:md-ref-path($landing)}"
+                  members="{if (count($govuk-md-asset-refs) gt 1) then 'many' else 'one'}">
       <xsl:sequence select="$own"/>
+      <!-- retired, unless the map states a status of its own -->
+      <xsl:if test="empty($data[@term = 'adms:status']) and govuk:md-ref-retired($ref, $landing)">
+        <xsl:sequence select="govuk:md-p('adms:status', 'retired')"/>
+      </xsl:if>
       <xsl:sequence select="$govuk-md-shared[not(@term = $own/@term)]"/>
       <govuk:rel name="hasPart">
         <xsl:sequence select="govuk:md-file-refs($ref) ! govuk:md-file-record(.)"/>
+      </govuk:rel>
+      <govuk:rel name="isPartOf">
+        <govuk:record kind="publication" id="{$govuk-md-base}">
+          <xsl:sequence select="$govuk-md-publication/govuk:p[@term = 'dct:title']"/>
+        </govuk:record>
       </govuk:rel>
     </govuk:record>
   </xsl:function>
