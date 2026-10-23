@@ -22,6 +22,7 @@ Exits non-zero and prints every finding.
 """
 import argparse
 import html.parser
+import json
 import os
 import re
 import shutil
@@ -41,9 +42,22 @@ class Head(html.parser.HTMLParser):
         super().__init__(convert_charrefs=True)
         self.metas = []   # (attribute, name, content)
         self.links = []   # (rel, href)
+        self.jsonld = []  # the text of each application/ld+json block
+        self._in_jsonld = False
+
+    def handle_endtag(self, tag):
+        if tag == "script":
+            self._in_jsonld = False
+
+    def handle_data(self, data):
+        if self._in_jsonld:
+            self.jsonld[-1] += data
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
+        if tag == "script" and (a.get("type") or "").strip().lower() == "application/ld+json":
+            self._in_jsonld = True
+            self.jsonld.append("")
         if tag == "meta":
             for attr in ("property", "name"):
                 if a.get(attr):
@@ -133,6 +147,81 @@ def values(head, table, row):
     return [c for a, n, c in head.metas if a == attr and n == row.get("as")]
 
 
+def jsonld_objects(head, rel, found):
+    """The objects of a page's JSON-LD block, in order. One block at most; it
+    must parse; an object is found in @graph or is the block itself."""
+    if len(head.jsonld) > 1:
+        found.append(f"{rel}: {len(head.jsonld)} JSON-LD blocks, not one")
+    objects = []
+    for text in head.jsonld:
+        try:
+            data = json.loads(text)
+        except ValueError as e:
+            found.append(f"{rel}: JSON-LD does not parse: {e}")
+            continue
+        graph = data.get("@graph", [data]) if isinstance(data, dict) else data
+        objects += [o for o in graph if isinstance(o, dict)]
+    return objects
+
+
+def jsonld_values(obj, key):
+    """A key's values as strings: a node reference is its @id."""
+    v = obj.get(key)
+    if v is None:
+        return []
+    return [(x.get("@id", "") if isinstance(x, dict) else str(x)) for x in (v if isinstance(v, list) else [v])]
+
+
+def check_jsonld(rel, head, table, role, site_url):
+    found = []
+    objects = jsonld_objects(head, rel, found)
+    label = table.get("id")
+    for kind in table.findall("kind"):
+        if kind.get("record") != "page" or not applies(kind, role):
+            continue
+        rows = [r for r in kind if r.tag != "kind"]
+        needs = [r for r in rows if r.tag == "list" and site_url
+                 or r.get("required") == "yes" and (site_url or not is_uri(r))]
+        mine = [o for o in objects if o.get("@type") == kind.get("type")]
+        if not mine:
+            if needs:
+                found.append(f"{rel}: no {label} {kind.get('type')}")
+            continue
+        for obj in mine:
+            for row in needs:
+                if not jsonld_values(obj, row.get("as")):
+                    found.append(f"{rel}: no {label} {kind.get('type')} {row.get('as')}")
+            for row in rows:
+                key = row.get("as")
+                for v in jsonld_values(obj, key):
+                    if row.tag == "list":
+                        continue
+                    if is_uri(row) and not re.match(r"^[A-Za-z][A-Za-z0-9+.\-]*:\S+$", v):
+                        found.append(f"{rel}: {label} {kind.get('type')} {key} is not an absolute URL: {v}")
+                    if own_address(row):
+                        if not site_url:
+                            found.append(f"{rel}: {label} {kind.get('type')} {key} written without a site URL")
+                        elif not v.startswith(site_url):
+                            found.append(f"{rel}: {label} {kind.get('type')} {key} is not under the site URL: {v}")
+                        elif row.get("term") == "@id" and v != site_url + rel:
+                            found.append(f"{rel}: {label} {kind.get('type')} {key} is {v}, not this page")
+                    if row.get("format") == "date" and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
+                        found.append(f"{rel}: {label} {kind.get('type')} {key} is not an ISO date: {v}")
+            for row in rows:
+                if row.tag != "list":
+                    continue
+                items = obj.get(row.get("as")) or []
+                positions = [i.get("position") for i in items if isinstance(i, dict)]
+                if positions != list(range(1, len(items) + 1)):
+                    found.append(f"{rel}: {label} {kind.get('type')} positions are {positions}, not 1 to {len(items)}")
+                for i in items:
+                    if not i.get("name") or (site_url and not str(i.get("item", "")).startswith(site_url)):
+                        found.append(f"{rel}: {label} {kind.get('type')} has an item with no name or an address outside the site")
+                if items and site_url and items[-1].get("item") != site_url + rel:
+                    found.append(f"{rel}: {label} {kind.get('type')} does not end at this page")
+    return found
+
+
 def check_page(path, rel, tables, site_url):
     head = Head()
     with open(path, encoding="utf-8") as f:
@@ -140,6 +229,9 @@ def check_page(path, rel, tables, site_url):
     role = "cover" if rel == "index.html" else "utility" if rel in UTILITY else "topic"
     found = []
     for table in tables:
+        if table.get("syntax") == "json-ld":
+            found += check_jsonld(rel, head, table, role, site_url)
+            continue
         for kind in table.findall("kind"):
             if kind.get("record") != "page" or not applies(kind, role):
                 continue
@@ -174,6 +266,9 @@ def check_print(path, rel, names, what="the print document"):
     with open(path, encoding="utf-8") as f:
         head.feed(f.read())
     written = {("meta", n) for _, n, _ in head.metas} | {("link", r) for r, _ in head.links}
+    if head.jsonld:
+        return [f"{rel}: {what} carries a JSON-LD block"] + [f"{rel}: {what} carries {name}" for syntax, name in sorted(names)
+                if (syntax, name) in written]
     return [f"{rel}: {what} carries {name}" for syntax, name in sorted(names)
             if (syntax, name) in written]
 

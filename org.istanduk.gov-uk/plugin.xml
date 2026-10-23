@@ -135,9 +135,10 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val>both</val>
     </param>
     <param name="govuk.metadata"
-           desc="Metadata in each page's head, read from the DITA (design 14). 'basic' (default) writes the canonical, previous, next and licence links, Open Graph tags and Dublin Core tags; 'no' writes none. URL-valued tags need govuk.site.url. The print document carries none."
+           desc="Metadata in each page's head, read from the DITA (design 14). 'basic' (default) writes the canonical, previous, next and licence links, Open Graph tags and Dublin Core tags; 'full' adds one schema.org JSON-LD block to each page (WebSite on the cover, TechArticle on topics, a BreadcrumbList below the cover); 'no' writes none. URL-valued tags need govuk.site.url. The print document carries none."
            type="enum">
       <val default="true">basic</val>
+      <val>full</val>
       <val>no</val>
     </param>
     <param name="govuk.organisation"

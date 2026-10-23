@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+schema.org as JSON-LD (https://schema.org), enabled by govuk.metadata=full: one
+block in each page's head holding an object for every kind below that
+describes the page. The cover is the website; a topic is a TechArticle; a
+generated page is a WebPage; every page below the cover has a BreadcrumbList.
+The publisher is an Organization, or a GovernmentOrganization for official
+and NHS branding.
+
+Row order is output order. A relation with node="yes" is written as a
+reference to another node by its address; a property with nested="agent" is
+written as the nested record's own object; a list row is a numbered list of
+the records a relation names, then the record itself. Address-valued rows
+need govuk.site.url and are left out without it. The table format is
+described in design 14, section 7.
+-->
+<scheme id="schemaorg" syntax="json-ld" context="https://schema.org">
+  <kind record="page" when="@role = 'cover'" type="WebSite">
+    <relation name="isPartOf" target="publication" as="@id"/>
+    <property term="dct:title" as="name" required="yes"/>
+    <relation name="isPartOf" target="publication" as="url" required="yes"/>
+    <property term="dct:description" as="description"/>
+    <property term="dct:language" as="inLanguage" required="yes"/>
+    <property term="dct:publisher" as="publisher" nested="agent"/>
+  </kind>
+  <kind record="page" when="@role = 'topic'" type="TechArticle">
+    <property term="@id" as="@id" format="uri"/>
+    <property term="dct:title" as="headline" required="yes"/>
+    <property term="dct:description" as="description"/>
+    <property term="@id" as="url" format="uri" required="yes"/>
+    <property term="dct:language" as="inLanguage" required="yes"/>
+    <property term="dct:issued" as="datePublished" format="date"/>
+    <property term="dct:modified" as="dateModified" format="date"/>
+    <property term="dct:subject" as="keywords" repeat="yes"/>
+    <property term="dct:license" as="license" format="uri"/>
+    <relation name="isPartOf" target="publication" as="isPartOf" node="yes"/>
+    <property term="dct:publisher" as="publisher" nested="agent"/>
+  </kind>
+  <kind record="page" when="@role = 'utility'" type="WebPage">
+    <property term="@id" as="@id" format="uri"/>
+    <property term="dct:title" as="name" required="yes"/>
+    <property term="dct:description" as="description"/>
+    <property term="@id" as="url" format="uri" required="yes"/>
+    <property term="dct:language" as="inLanguage" required="yes"/>
+    <relation name="isPartOf" target="publication" as="isPartOf" node="yes"/>
+    <property term="dct:publisher" as="publisher" nested="agent"/>
+  </kind>
+  <kind record="page" when="@role != 'cover'" type="BreadcrumbList">
+    <list as="itemListElement" type="ListItem" from="isPartOf" self="yes"/>
+  </kind>
+  <kind record="agent" when="dct:type != 'government'" type="Organization">
+    <property term="dct:title" as="name"/>
+    <property term="foaf:homepage" as="url" format="uri"/>
+  </kind>
+  <kind record="agent" when="dct:type = 'government'" type="GovernmentOrganization">
+    <property term="dct:title" as="name"/>
+    <property term="foaf:homepage" as="url" format="uri"/>
+  </kind>
+</scheme>

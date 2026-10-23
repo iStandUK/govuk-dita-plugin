@@ -1017,7 +1017,7 @@ jobs:
           # whose hash matches the one inline script, dates on (no manual topic has any)
           tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/manual-csp -Dgovuk.site.url=https://example.org/manual \
-            -Dgovuk.csp=meta -Dgovuk.dates=both -Dgovuk.print=yes
+            -Dgovuk.csp=meta -Dgovuk.dates=both -Dgovuk.print=yes -Dgovuk.metadata=full
           python3 -c "import xml.dom.minidom; xml.dom.minidom.parse('out/manual-csp/sitemap.xml')"
           absent -q '<!DOCTYPE' out/manual-csp/sitemap.xml
           grep -q '<loc>https://example.org/manual/index.html</loc>' out/manual-csp/sitemap.xml
@@ -1037,6 +1037,13 @@ jobs:
             -Dgovuk.site.url=https://example.org/llms/
           diff fixtures/llms/expected-llms.txt out/llms/llms.txt
           grep -q '<meta name="robots" content="noindex"' out/manual-csp/print.html
+          # #100: a JSON-LD block on the cover, a topic and a generated page, none in the print
+          # document, and (csp-check below, in a browser) no violation of the policy for any of them
+          grep -q '"@type": "WebSite"' out/manual-csp/index.html
+          grep -q '"@type": "TechArticle"' out/manual-csp/topics/install.html
+          grep -q '"@type": "WebPage"' out/manual-csp/glossary.html
+          grep -q '"@type": "BreadcrumbList"' out/manual-csp/glossary.html
+          absent -q 'ld+json' out/manual-csp/print.html
           for f in out/manual-csp/index.html out/manual-csp/search.html out/manual-csp/glossary.html out/manual-csp/topics/install.html out/manual-csp/print.html; do
             grep -q "Content-Security-Policy\" content=\"default-src 'self'; script-src 'self' 'sha256-" "$f" || { echo "no CSP meta in $f"; exit 1; }
           done
@@ -1153,7 +1160,7 @@ jobs:
           if dita --input fixtures/metadata/metadata.ditamap --output out/metadata-bad -Dgovuk.metadata=all > metadata-bad.log 2>&1; then
             echo "govuk.metadata=all should have failed the build"; exit 1
           fi
-          grep -qF "govuk.metadata must be 'basic' or 'no'" metadata-bad.log
+          grep -qF "govuk.metadata must be 'basic', 'full' or 'no'" metadata-bad.log
           # one checker for every table: each page against the enabled tables,
           # and no print document carrying any of it
           python3 tools/check_metadata.py --site-url https://example.org/metadata out/metadata
@@ -1174,6 +1181,60 @@ jobs:
           grep -q 'cannot find the plugin.s mapping tables' lone.log
           grep -q -- '--tables' lone.log
           absent -q 'Traceback' lone.log
+          # govuk.metadata=full (#100): one schema.org JSON-LD block a page, from the same
+          # records and the same checker; its values are read back by a JSON parser
+          dita --input fixtures/metadata/metadata.ditamap --output out/metadata-full -Dgovuk.print=yes \
+            -Dgovuk.site.url=https://example.org/metadata -Dgovuk.metadata=full \
+            -Dgovuk.organisation="Example Trust" -Dgovuk.organisation.url=https://example.org/ \
+            -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ > /dev/null
+          python3 tools/check_metadata.py --level full --site-url https://example.org/metadata out/metadata-full
+          python3 - <<'PY'
+          import json, re
+          base = "https://example.org/metadata/"
+          def graph(name):
+              html = open("out/metadata-full/" + name, encoding="utf-8").read()
+              blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)
+              assert len(blocks) == 1, (name, len(blocks))
+              assert "<" not in blocks[0], name + ": a literal < in the block"
+              data = json.loads(blocks[0])
+              assert data["@context"] == "https://schema.org", name
+              return {o["@type"]: o for o in data["@graph"]}
+          cover = graph("index.html")
+          assert list(cover) == ["WebSite"], list(cover)
+          assert cover["WebSite"]["@id"] == base and cover["WebSite"]["url"] == base
+          assert cover["WebSite"]["name"] == "Metadata fixture"
+          assert cover["WebSite"]["publisher"] == {"@type": "Organization", "name": "Example Trust", "url": "https://example.org/"}
+          page = graph("topics/check.html")
+          assert list(page) == ["TechArticle", "BreadcrumbList"], list(page)
+          article = page["TechArticle"]
+          assert article["@id"] == article["url"] == base + "topics/check.html"
+          assert article["headline"] == "6-8 week check" and article["inLanguage"] == "en-GB"
+          assert article["isPartOf"] == {"@id": base} and article["license"].endswith("/by/4.0/")
+          assert "Screening" in article["keywords"]
+          crumbs = [(i["position"], i["name"], i["item"]) for i in page["BreadcrumbList"]["itemListElement"]]
+          assert crumbs == [(1, "Metadata fixture", base), (2, "6-8 week check", base + "topics/check.html")], crumbs
+          nested = graph("topics/retired.html")["BreadcrumbList"]["itemListElement"]
+          assert [i["name"] for i in nested] == ["Metadata fixture", "6-8 week check", "Retired check"], nested
+          assert [i["position"] for i in nested] == [1, 2, 3]
+          # a title that would close the script element or break a string comes back as written
+          hostile = graph("topics/escape.html")["TechArticle"]
+          assert hostile["headline"] == 'Tom & Jerry\'s "guide" \\ </script><b> \U0001F600', repr(hostile["headline"])
+          assert "<script>alert(1)</script>" in hostile["description"] and hostile["description"].endswith("back\\slash.")
+          PY
+          absent -q 'ld+json' out/metadata-full/print.html
+          # the metadata tags are still there beside it, and the other levels have no block
+          has out/metadata-full/topics/check.html '<meta property="og:title" content="6-8 week check">'
+          absent -q 'ld+json' out/metadata/topics/check.html out/metadata-plain/topics/check.html out/metadata-no/topics/check.html
+          # without a site URL nothing has an address, and the rest is still written
+          dita --input fixtures/metadata/metadata.ditamap --output out/metadata-full-nourl -Dgovuk.metadata=full > /dev/null
+          python3 tools/check_metadata.py --level full out/metadata-full-nourl
+          has out/metadata-full-nourl/topics/check.html '"headline": "6-8 week check"'
+          absent -Eq '"(@id|url|item)"|BreadcrumbList' out/metadata-full-nourl/topics/check.html out/metadata-full-nourl/index.html
+          # official and NHS branding are government organisations
+          dita --input fixtures/metadata/metadata.ditamap --output out/metadata-full-official --govuk.branding=official \
+            -Dgovuk.site.url=https://example.org/metadata -Dgovuk.metadata=full -Dgovuk.organisation="Example Department" > /dev/null
+          has out/metadata-full-official/index.html '"@type": "GovernmentOrganization"'
+          absent -q '"@type": "Organization"' out/metadata-full-official/index.html
           # no stylesheet names a scheme: a row added to a table is a tag
           t="dita-ot-${DITA_OT_VERSION}/plugins/org.istanduk.gov-uk/resource/metadata/dublincore.xml"
           cp -p "$t" metadata-table.orig
@@ -1181,7 +1242,7 @@ jobs:
           dita --input fixtures/metadata/metadata.ditamap --output out/metadata-row > /dev/null
           cp -p metadata-table.orig "$t"
           has out/metadata-row/topics/check.html '<meta name="DC.coverage" content="http://statistics.data.gov.uk/id/statistical-geography/E92000001">'
-          absent -rEq 'opengraph|dublincore|og:|DC\.' org.istanduk.gov-uk/xsl --include='*.xsl'
+          absent -rEq 'opengraph|dublincore|schemaorg|og:|DC\.|TechArticle|BreadcrumbList|WebSite|HowTo|DefinedTerm' org.istanduk.gov-uk/xsl --include='*.xsl'
 
       - name: Branding CSS is current
         run: |
@@ -1221,7 +1282,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/keyref-unresolved out/subfolder-root-top
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/metadata-full out/metadata-full-official out/keyref-unresolved out/subfolder-root-top
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }
@@ -1522,10 +1583,10 @@ jobs:
         run: |
           tools/ci/dita --input docs/manual/manual.ditamap \
             --format govuk --output out/det-a -Dgovuk.search=no -Dgovuk.print=yes \
-            -Dgovuk.site.url=https://example.org/manual/ -Dgovuk.dates=both
+            -Dgovuk.site.url=https://example.org/manual/ -Dgovuk.dates=both -Dgovuk.metadata=full
           "dita-ot-${DITA_OT_VERSION}/bin/dita" --input docs/manual/manual.ditamap \
             --format govuk --output out/det-b -Dgovuk.search=no -Dgovuk.print=yes \
-            -Dgovuk.site.url=https://example.org/manual/ -Dgovuk.dates=both
+            -Dgovuk.site.url=https://example.org/manual/ -Dgovuk.dates=both -Dgovuk.metadata=full
           diff -r out/det-a out/det-b && echo "double build is byte-identical"
 
       - name: Install accessibility tooling

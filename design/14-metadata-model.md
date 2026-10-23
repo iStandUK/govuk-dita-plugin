@@ -215,3 +215,15 @@ What building `basic` settled, where the sections above left it open or a real b
 - **Two additions to the tables of #99:** `DC.creator`, which makes `govuk.metadata.persons` visible, and `rel="license"`.
 - **`govuk.metadata` takes `basic` or `no`** until `full` has a table (#100); a level that enables nothing is refused rather than accepted silently.
 - **The checks.** The cover's transform harvests every page once, and groups any warning by name or by table row, so a 10,000-page publication gets one warning per problem, not one per page. `tools/check_metadata.py` reads the same tables to check a built site, so it names no scheme either. CI proves the point by adding a row to an installed table and finding the tag.
+
+## 13. As built: the JSON-LD writer and `govuk.metadata=full` (#100)
+
+What building the second writer settled:
+
+- **One block a page, an `@graph` of objects.** Each kind of the `schemaorg` table that describes the page contributes one object, so a topic's block holds a `TechArticle` and a `BreadcrumbList`. A kind that states no property is not written, so a page with no address has no `BreadcrumbList`.
+- **Two new row types for a JSON-LD table.** `nested="agent"` on a property writes the nested record as its own object, by the table's kind for that record (`Organization`, or `GovernmentOrganization` when the agent says `dct:type` is `government`, which official and NHS branding do). `node="yes"` on a relation writes a reference to another node by address, `{"@id": …}`. A `list` row writes the records a relation names, then the record itself, as numbered `ListItem`s; a record with no address or no title is left out, so the positions are contiguous.
+- **The writer is generic.** It names no type. CI proves that by failing if a stylesheet names `TechArticle`, `BreadcrumbList`, `WebSite` or `schemaorg`.
+- **Written by hand, not through a map.** XPath maps do not promise an order, and row order is output order. Strings are escaped by one function that also escapes `<`, `>`, `&` and the line separators, so a value can never close the script element.
+- **The checker reads the same rows.** `tools/check_metadata.py` parses the block and checks, for each kind of the table, that its object exists, that its `required` rows are present, that addresses are absolute and under the site URL, and that a list's positions run from 1 and end at the page. A second check is that a page has at most one block and the print document none.
+- **The levels.** `basic` and `full` both enable the three `meta`/`link` tables; `full` adds `schemaorg`. A `data` property reaches the block only through a row that maps it.
+

@@ -534,12 +534,13 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <equals arg1="${govuk.dates}" arg2="both"/>
       </or></not></condition>
     </fail>
-    <!-- Page metadata (#99, design 14): basic | no, and the publisher's facts
-         it cannot read from the DITA -->
+    <!-- Page metadata (#99, #100, design 14): basic | full | no, and the
+         publisher's facts it cannot read from the DITA -->
     <property name="govuk.metadata" value="basic"/>
-    <fail message="govuk.metadata must be 'basic' or 'no', was: ${govuk.metadata}">
+    <fail message="govuk.metadata must be 'basic', 'full' or 'no', was: ${govuk.metadata}">
       <condition><not><or>
         <equals arg1="${govuk.metadata}" arg2="basic"/>
+        <equals arg1="${govuk.metadata}" arg2="full"/>
         <equals arg1="${govuk.metadata}" arg2="no"/>
       </or></not></condition>
     </fail>
