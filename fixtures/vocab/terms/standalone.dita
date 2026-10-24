@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossentry PUBLIC "-//OASIS//DTD DITA Glossary Entry//EN" "glossentry.dtd">
+<glossentry id="care-plan" xml:lang="en-GB">
+  <glossterm>Care plan</glossterm>
+  <glossdef>An agreed plan of care for one person.</glossdef>
+  <prolog>
+    <resourceid appid="https://example.org/concept/care_plan"/>
+  </prolog>
+</glossentry>

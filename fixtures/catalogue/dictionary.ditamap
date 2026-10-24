@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- The shape of a data dictionary (#123): one catalogue, a logical model and the data set
+     specifications that conform to it, none of them a dataset. The model states its own
+     identifier; the specifications take their pages'. One specification is retired. -->
+<map xml:lang="en-GB">
+  <title>Example data dictionary</title>
+  <topicmeta>
+    <shortdesc>The model and the specifications of an example data dictionary.</shortdesc>
+  </topicmeta>
+  <topicref href="topics/model.dita">
+    <topicmeta>
+      <data name="rdf:type" value="adms:Asset"/>
+      <data name="dct:type" value="https://example.org/types/logical-model"/>
+      <data name="dct:identifier" value="https://example.org/dictionary/model"/>
+    </topicmeta>
+  </topicref>
+  <topicref href="topics/spec-a.dita">
+    <topicmeta>
+      <data name="rdf:type" value="adms:Asset"/>
+      <data name="dct:type" value="https://example.org/types/data-set-specification"/>
+      <data name="dct:conformsTo" value="https://example.org/dictionary/model"/>
+      <data name="dct:references" value="https://example.org/dictionary/rules"/>
+    </topicmeta>
+  </topicref>
+  <topicref href="topics/spec-b.dita">
+    <topicmeta>
+      <data name="rdf:type" value="adms:Asset"/>
+      <data name="dct:type" value="https://example.org/types/data-set-specification"/>
+      <data name="dct:conformsTo" value="https://example.org/dictionary/model"/>
+    </topicmeta>
+  </topicref>
+</map>

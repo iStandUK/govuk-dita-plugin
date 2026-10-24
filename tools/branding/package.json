@@ -4,8 +4,8 @@
   "private": true,
   "description": "Vendor-time Sass recompile of govuk-frontend with brand palettes (#47)",
   "dependencies": {
-    "govuk-frontend": "6.5.1",
-    "sass": "^1.105.1"
+    "govuk-frontend": "6.6.0",
+    "sass": "^1.105.2"
   },
   "scripts": {
     "build": "node build.mjs"

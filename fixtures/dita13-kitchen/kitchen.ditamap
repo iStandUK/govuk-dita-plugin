@@ -39,7 +39,7 @@
     <relheader><relcolspec type="task"/><relcolspec type="troubleshooting"/></relheader>
     <relrow>
       <relcell><topicref href="topics/task-full.dita"/></relcell>
-      <relcell><topicref href="topics/troubleshooting.dita"/></relcell>
+      <relcell><topicref href="topics/troubleshooting.dita"/><topicref href="topics/reference-full.dita"/></relcell>
     </relrow>
   </reltable>
 </map>

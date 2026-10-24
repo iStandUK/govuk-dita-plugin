@@ -12,9 +12,16 @@ then:
 |---|---|---|
 | `check_links.py` | Every internal `href`/`src` resolves, and `#fragment` anchors exist (NFR) | `python3 tools/check_links.py out/manual [...]` |
 | `check_metadata.py` | Each page's head metadata against the tables in `resource/metadata` that the level enables: required tags, single tags written once, absolute URLs under the site URL, ISO dates; none in a print document (#99, design 14) | `python3 tools/check_metadata.py --site-url https://example.org/manual/ out/manual` |
+| `check_rdf.py` | The catalogue's `dcat.ttl` and `dcat.jsonld` (and any other Turtle or JSON-LD file) parse with an independent RDF library, are the same graph, and hold the types asked for (#102). Needs `rdflib`, pinned with hashes in `tools/ci/requirements-rdf.txt` | `python3 tools/check_rdf.py out/site/dcat.ttl out/site/dcat.jsonld` |
 | `page_weight.py` | Each page shell (HTML+CSS+JS) is under the budget, uncompressed (NFR-P2) | `python3 tools/page_weight.py --report --budget-kb 300 out/manual` |
 | `a11y/run.mjs` | axe-core at WCAG 2.2 AA over every page (NFR-A1) | `node tools/a11y/run.mjs out/manual [...]` |
 | `a11y/snapshot.mjs` | Full-page PNGs for eyeballing a govuk-frontend upgrade (NFR-M2) | `node tools/a11y/snapshot.mjs out/manual out/snapshots` |
+
+`check_metadata.py` needs the plugin's mapping tables and finds them wherever it is kept, so a
+checker fetched from a release tag works beside a build that has nothing else of this repository.
+In order it uses `--tables DIR` (the plugin's `resource/metadata` folder), the plugin installed in
+`--dita-dir DIR`, the repository layout, `$DITA_HOME`, and the toolkit of the `dita` command on the
+`PATH`. If none has `schemes.xml` it prints where it looked and exits with status 2.
 
 Build determinism (FR-B6) is checked in CI by building twice and comparing byte-for-byte.
 

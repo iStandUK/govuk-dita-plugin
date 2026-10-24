@@ -8,6 +8,18 @@
     <prereq>
       <p>The plugin is installed (see <xref keyref="install"/>) and you have a DITA map to
         publish.</p>
+      <p><indexterm>root map</indexterm><indexterm>input directory</indexterm>The map you give
+        to <codeph>--input</codeph>, the root map, sits at the top of the publication's folder
+        tree. Keep topics, images, diagrams and key maps in folders beneath it, and include
+        a map that you keep in a subfolder with <codeph>&lt;mapref href="…"&gt;</codeph>.
+        DITA-OT takes the root map's folder as the input directory and reports a file above it
+        as <codeph>DOTJ036W</codeph>. A root map in a subfolder also leaves the pages and
+        assets the plugin writes at the output root linking to each other relative to the
+        map's folder, so stylesheets and links do not resolve, and the plugin says so once
+        (<codeph>GOVK016W</codeph>). Setting <codeph>args.input.dir</codeph> does not change
+        that. It widens the plugin's own scope for inlining diagrams
+        (<codeph>govuk.inline.scope</codeph>), which the toolkit's test ignores, so a
+        publisher who accepts the layout keeps inlined diagrams.</p>
     </prereq>
     <steps>
       <step>

@@ -677,3 +677,35 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 - The entries are the sitemap's pages, with the titles and short descriptions the home page shows, grouped by top-level map entry; the glossary, index and list pages go in the convention's `Optional` section.
 - **`llms.txt` is not a consent mechanism.** The manual tells a publisher who does not want their content used for training to look at `robots.txt` and licensing, and does not present publishing an index as advice.
 - [#119](https://github.com/iStandUK/govuk-dita-plugin/issues/119) (`llms-full.txt`) is closed as not planned. **Revisit** if publishers ask for it, or if a major consumer documents reading either file.
+
+## D-31 · The root map sits at the top of the folder tree; a root map in a subfolder is not supported
+
+**Date:** 2026-10-21. Sponsor's decision, closing [#255](https://github.com/iStandUK/govuk-dita-plugin/issues/255). It followed the uFTi-Docs findings ([#239](https://github.com/iStandUK/govuk-dita-plugin/issues/239)), which built a root map in `maps/` with its topics and images in folders beside it.
+
+**Question:** should the plugin make a site work when the root map is below the top of the folder tree its topics are in, so that its topic references begin `../`?
+
+**What the layout does (DITA-OT 4.4.1, plugin 1.3.0):**
+
+- DITA-OT takes the root map's folder as the input directory and reports each file above it as `DOTJ036W`; `args.input.dir` does not change that test.
+- It writes topics and images relative to the **top of the tree**, while the plugin works out the path to the output root from the **map's folder**, and writes its own map-level files (`index.html`, `print.html`, the `govuk/` assets) at the output root.
+- So topic pages link `../maps/govuk/plugin.css` where the file is `govuk/plugin.css`, the cover links `../topics/first.html`, and `print.html` links `../images/pixel.png`. The site is unstyled and its links break.
+
+**Options:**
+
+- (a) Support the layout: pass the map's folder relative to the output root as an offset, and use it in the page's path to the output root and in every map-level page's reference to a topic or asset, in about a dozen places.
+- (b) Follow DITA-OT: the root map at the top of the tree, topics, images, diagrams and key maps beneath it, and maps kept in subfolders included with `<mapref href>`. Warn when a publication does not, and say so in the manual.
+
+**Decision:** (b).
+
+**Rationale:**
+
+- **The workaround is one file.** Moving the root map to the top of the tree fixes the layout, and the reporter's own conclusion was the same: every bookmap moved to the publication root, shared chapter maps left in `maps/structure/` and included by `mapref href`.
+- **(a) would build a second layout on a first that the toolkit itself reports as out of scope.** `DOTJ036W` is DITA-OT's signal that the input directory is the root map's folder. The plugin would be making work what the toolkit warns about, and keeping it working as the toolkit changes.
+- **The cost falls on every build, for a rare case.** An offset threaded through the cover, the utility pages, the print document, the sitemap, canonical URLs, search and the books pages is a change to code every publication runs.
+
+**Consequences:**
+
+- `GOVK016W` stays: one warning when a root map's topic references reach above its folder, naming the first and the remedy. It is a warning, never a failed build.
+- The manual's build topic says where the root map goes. The fixture `fixtures/subfolder-root` keeps both layouts under test: the root map in a subfolder, which must warn, and `top.ditamap`, which must be silent with every link and print path resolving.
+- `args.input.dir` still widens the plugin's own inline scope (`govuk.inline.scope`), so a publisher who accepts the layout keeps inlined diagrams. It is a convenience and not support.
+- **Revisit** if a publication cannot move its root map, for a reason other than preference.

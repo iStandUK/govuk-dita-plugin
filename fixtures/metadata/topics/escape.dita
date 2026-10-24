@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<!-- Values that would break a script element or a JSON string if the writer did
+     not escape them: quotes, a backslash, ampersands, angle brackets and a
+     closing script tag, and a character outside the Basic Multilingual Plane. -->
+<concept id="escape" xml:lang="en-GB">
+  <title>Tom &amp; Jerry's "guide" \ &lt;/script&gt;&lt;b&gt; 😀</title>
+  <shortdesc>Say "hello" &amp; wave: 5 &lt; 6 &gt; 4, &lt;/script&gt;&lt;script&gt;alert(1)&lt;/script&gt; and a back\slash.</shortdesc>
+  <conbody>
+    <p>The head of this page carries those words in its title and description.</p>
+  </conbody>
+</concept>

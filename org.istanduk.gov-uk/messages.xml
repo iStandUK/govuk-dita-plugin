@@ -47,4 +47,36 @@ DITA-OT convention: four letters, three digits, severity (I/W/E/F).
     <reason>Navigation entry '%1' has keyref='%2' that was not resolved, so it is rendered without a link and without children.</reason>
     <response>DITA-OT does not resolve keys inside a map that is itself included with &lt;mapref keyref="..."&gt;. Include that submap with &lt;mapref href="..."&gt; instead, or check that the key is defined.</response>
   </message>
+  <message id="GOVK015W" type="WARN">
+    <reason>The key reference '%1' on the %2 element does not resolve: no key of that name is defined, so the element is %3.</reason>
+    <response>Check the spelling of the key, and that the map, or a key map it includes, defines it. Text written inside the element is kept as the fallback, so giving the element content leaves the page readable while the key is missing. DITA-OT itself reports this only at its verbose log level, as DOTJ047I.</response>
+  </message>
+  <message id="GOVK016W" type="WARN">
+    <reason>The root map is below the top of its folder tree: %1 of its topic references reach above its folder, the first being '%2'.</reason>
+    <response>DITA-OT reports DOTJ036W for each, and the stylesheets, scripts and links between pages that this plugin writes are relative to the map's folder, where nothing is. Move the root map to the top of the publication's folder tree, with topics, images, diagrams and key maps beneath it, and include maps kept in subfolders with &lt;mapref href&gt;. Setting args.input.dir widens the plugin's own inline scope (GOVK005W) but not these.</response>
+  </message>
+  <message id="GOVK017W" type="WARN">
+    <reason>The type '%1' declared on '%2' is not one the catalogue record can write, so the entry is left out of it.</reason>
+    <response>A declared type is a term of a vocabulary the plugin knows (the prefixes are %3), such as dcat:Dataset, dcat:DataService or dct:Standard, or an absolute http(s) or urn address.</response>
+  </message>
+  <message id="GOVK018W" type="WARN">
+    <reason>govuk.dcat=yes, but no entry of the map declares a data asset, so no catalogue record was written.</reason>
+    <response>Declare an asset with a data element named rdf:type in the topicmeta of the topicref, or submap, that heads it, for example value="dct:Standard". The type is the publisher's statement and is never inferred.</response>
+  </message>
+  <message id="GOVK019W" type="WARN">
+    <reason>The catalogue record for '%1' has no %2, which the %3 table marks as required (data.gov.uk expects it of a record); the record is written without it (%4).</reason>
+    <response>Give the asset the value it comes from: the entry's title and short description, a licence (govuk.licence.url, or official branding), and an address (govuk.site.url).</response>
+  </message>
+  <message id="GOVK020W" type="WARN">
+    <reason>The glossary has %1 terms, more than the %2 a page's structured data holds, so its DefinedTermSet is left out of the glossary page.</reason>
+    <response>The glossary itself is unaffected. The page already lists every term; structured data for all of them would roughly double its size. A partial set would be wrong, so none is written.</response>
+  </message>
+  <message id="GOVK021W" type="WARN">
+    <reason>The address %1 is stated for %2 terms (%3), so a vocabulary would say they are one concept.</reason>
+    <response>Give each term its own address in resourceid appid or a data element named dct:identifier, or leave it out to take the term's page or its place in the glossary.</response>
+  </message>
+  <message id="GOVK022W" type="WARN">
+    <reason>govuk.skos=yes, but the publication has no glossary entry and no subject scheme, so no vocabulary was written.</reason>
+    <response>A vocabulary is a glossary (glossentry topics, alone or in glossgroup topics, referenced from the map) or a subjectScheme map with subjectdef elements that have keys. See the manual's metadata topic.</response>
+  </message>
 </messages>
