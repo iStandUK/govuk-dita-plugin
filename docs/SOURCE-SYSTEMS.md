@@ -8,7 +8,7 @@ Everything here is standard DITA 1.3. There is no specialisation and no DTD to i
 
 Each rule is marked:
 
-- **Now**: the plugin acts on it today (v1.3.0).
+- **Now**: the plugin acts on it today (v1.4.0).
 - **Planned**: designed and decided ([design 14](../design/14-metadata-model.md), D-26), not yet built. Write it now: it is valid DITA, it is ignored until then, and nothing will need regenerating.
 
 ## 1. The ten things that matter most
@@ -103,7 +103,7 @@ Links between books work, because it is one site. (**Now**)
 | `title` | Plain words; no status or type suffix that is not part of the name | Page heading, navigation, search result, metadata title |
 | `shortdesc` | **One sentence saying what this is.** Always write it. | Page summary, home page, search (weighted four times body text), link previews, metadata description |
 | `titlealts/searchtitle` | Optional: a fuller title for search results | Search result title (**Now**) |
-| Topic type | `task` with `steps` for a procedure; `glossentry` for a term and its definition; `reference` for an entry with properties; `concept` for explanation | Rendering today; typed metadata (`HowTo`, defined terms) (**Planned**) |
+| Topic type | `task` with `steps` for a procedure; `glossentry` for a term and its definition; `reference` for an entry with properties; `concept` for explanation | Rendering; with `govuk.metadata=full`, a task's `HowTo` and a glossary entry's `DefinedTerm` in the page's structured data (**Now**) |
 | `image` | Always with `<alt>`. An SVG also carries a `<title>`. | Accessibility. A PDF with an undescribed image fails PDF/UA (`DSPDF009W`). (**Now**) |
 | `table` | A `thead` row for column headings; a `title` | Accessible tables; repeated headings across pages in the PDF |
 | `xref`, `link` | By `keyref`, or a relative `href` to the `.dita` file | Links that resolve on the site and become page references in the PDF |
@@ -154,9 +154,9 @@ Metadata goes in the topic's `prolog`. The order of the elements is fixed by the
 | `keywords/keyword` | Real alternative names, abbreviations and former names. **Never the title split into words**: that adds nothing to search and pollutes the tags. | Searchable aliases; tags in the page's metadata, where a keyword that only repeats a word of the title is dropped | Subjects in the catalogue schemes |
 | `audience` | Who it is for, if the publication distinguishes | A search filter | Audience |
 | `critdates` | `created` and `revised`, **only if true**. A batch-stamped date on every topic is worse than none. See the caution below on dates in `bookmeta`. | The dates line, when the publisher sets `govuk.dates`; published and modified dates in the page's metadata, on the same switch | — |
-| `resourceid` | The identifier the source system uses, stable across releases | — | The page's identifier in catalogue records |
-| `importance="obsolete"` (on the topic) | Retired or superseded items | Demoted in search | Status |
-| `<data name="adms:status" value="retired"/>` | The same fact for catalogues | — | `adms:status` |
+| `resourceid` | The identifier the source system uses, stable across releases | A glossary entry's address in a vocabulary, when `appid` is an address (`govuk.skos`) | The page's identifier in catalogue records |
+| `importance="obsolete"` (on the topic) | Retired or superseded items | Demoted in search; `adms:status` of a declared asset whose first topic it is on (`govuk.dcat`) | A retired page's status in its own metadata |
+| `<data name="adms:status" value="retired"/>` | The same fact for catalogues | `adms:status` of a declared asset (`retired`, or a status address) | — |
 | `author` | An organisation. A person's name is published only if the publisher opts in. | Footer credits (from the map); the creator in the page's metadata, when the publisher sets `govuk.metadata.persons=yes` | — |
 | `<data name="prefix:term" value="…"/>` | Any other property (Section 7) | Read; written where a table maps the term | More schemes that know the term |
 
@@ -187,16 +187,16 @@ Publication-wide facts go in `bookmeta` (or the `topicmeta` of a plain map). Top
 | Element | Now | Planned |
 |---|---|---|
 | `organization` (publisher, owner), `author` | Footer credits; the home page; the print cover; the publisher in every page's metadata | — |
-| `critdates` | "Published" and "Last updated" on the print cover | Issued and modified |
-| `bookid/edition`, `isbn`, `booknumber` | Edition and reference on the print cover | Version, identifier |
+| `critdates` | "Published" and "Last updated" on the print cover; the catalogue's issued and modified dates (`govuk.dcat`) | — |
+| `bookid/edition`, `isbn`, `booknumber` | Edition and reference on the print cover; the catalogue's version (`govuk.dcat`) | Identifier |
 | `bookrights` (`copyrfirst`, `bookowner`, `summary`) | Copyright line; the rights statement in the imprint; rights in every page's metadata | — |
-| `data` | Read, and taken by every page that does not state the property itself | Catalogue properties (Section 7) |
+| `data` | Read, and taken by every page that does not state the property itself; the catalogue, vocabulary and structured-data tables read the terms they map (Section 7) | — |
 
 The licence, the site's address and the organisation's URL are the **publisher's** build parameters, not the source system's. Do not hard-code them in the DITA.
 
 **Dates in `bookmeta` and in topics can both be given.** DITA-OT copies `bookmeta`'s `critdates` into every topic, over the topic's own. The plugin reads each topic's own `critdates` from its source file instead, so the dates line, `sitemap.xml` and the page metadata give a page its own dates, and a page with none has none, never the book's (#189, from 1.3.0). The print cover keeps the book's. A topic written in Markdown has no `critdates` of its own. Releases up to 1.2.0 show the book's dates on every page: with those, give dates either per topic or in `bookmeta`, not both.
 
-## 7. Any other property: `data` (**Now**; the catalogue schemes that read most terms are **Planned**)
+## 7. Any other property: `data` (**Now**: the tables for page tags, JSON-LD, the catalogue and vocabularies read the terms they map)
 
 `<data name="…" value="…"/>` is DITA's own extension point. It is allowed in `bookmeta`, in the `topicmeta` of a map or topicref, and in a topic's `prolog`. Write the name as a **prefixed term** from a standard vocabulary:
 
@@ -265,7 +265,7 @@ A concept system (a model of concepts with definitions, a hierarchy and named as
 | Broader concept | `<data name="skos:broader" value="IRI"/>`. The navigation is for reading, and it rarely is the hierarchy: a concept may be placed under an overview page, or under a concept it is not a kind of. State the hierarchy; do not rely on nesting. | **Planned** (#263) |
 | Associations | A table for readers, with the multiplicities. Named relations for machines wait for the publisher's own vocabulary (#191); until then, the related concepts are `related-links`. | Table **Now**; named relations **Planned** |
 | Alignment to an upper ontology | `<data name="skos:broadMatch" value="IRI"/>`, or `skos:exactMatch` where it is the same concept. | **Planned** (#263) |
-| The ontology itself | Its own file (Turtle, RDF/XML, OWL), published beside the pages and referenced from the map as a resource-only `topicref` with its `format`. Multiplicities and OWL restrictions belong there, not in page metadata. | **Planned** (#102) |
+| The ontology itself | Its own file (Turtle, RDF/XML, OWL), published beside the pages and referenced from the map as a resource-only `topicref` with its `format`. Multiplicities and OWL restrictions belong there, not in page metadata. | **Now** as a distribution of a declared asset, for Turtle, RDF/XML and JSON-LD files (`govuk.dcat`, #102); the plugin does not know `.owl` as a type, so name the file `.rdf` or `.ttl` |
 | Tool-internal properties | Leave them out of the DITA (an "is abstract" flag, export-plugin namespaces). | — |
 
 ## 10. Size
