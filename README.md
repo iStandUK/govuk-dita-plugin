@@ -70,7 +70,8 @@ not bundle the indexer, but published sites carry the search index and interface
 never install anything. Without Pagefind, builds simply omit search. That second
 command builds the **[user manual](docs/manual/)** — itself a DITA bookmap, so the result at
 `out/manual/index.html` is both the documentation and a live demonstration of every
-capability the plugin supports.
+capability the plugin supports. The released manual is also online, at
+<https://istanduk.github.io/govuk-dita-plugin/>.
 
 ## What it does
 
