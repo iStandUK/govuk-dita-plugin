@@ -65,6 +65,11 @@ release pull request.
       unzip the site and open `index.html`
 - [ ] If the release changes the print document or `print.css`, make the accessibility
       checks that need a person (at the end of this file) on the manual's PDF
+- [ ] The manual is on the web too (#275): publishing the release runs the `pages`
+      workflow (Actions → pages), which checks the manual zip against its `.sha256` and
+      attestation and deploys it. Open <https://istanduk.github.io/govuk-dita-plugin/> and
+      confirm the cover says `Version x.y.z`. It leaves the site alone for a release that is
+      not the latest, and a prerelease; to publish a chosen tag, Run workflow with its name
 
 ## Registry
 
