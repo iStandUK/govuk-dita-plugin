@@ -68,9 +68,9 @@ jobs:
           gh attestation verify ./*-manual-*.zip --repo "$GITHUB_REPOSITORY"
           unzip -q ./*-manual-*.zip -d site
           # the zip holds the site as one folder
-          dir=$(ls -d site/*/ | head -n 1)
-          test -f "${dir}index.html" || { echo "no index.html in the manual zip"; exit 1; }
-          echo "SITE=manual/${dir%/}" >> "$GITHUB_ENV"
+          dir=$(find site -mindepth 1 -maxdepth 1 -type d | LC_ALL=C sort | head -n 1)
+          test -f "$dir/index.html" || { echo "no index.html in the manual zip"; exit 1; }
+          echo "SITE=manual/$dir" >> "$GITHUB_ENV"
 
       - name: Upload the site
         if: steps.release.outputs.publish == 'yes'
