@@ -3,8 +3,12 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: v1.4.0 — released** —
-[v1.4.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.4.0) writes **structured data**
+**Status: v1.4.1 — released** —
+[v1.4.1](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.4.1) is a maintenance release: no
+change to what the plugin writes. It refreshes the vendored NHS stylesheet (Sass 1.106.1) and the
+DesignSystemPDF libraries behind the manual's PDF, and puts the released manual online at
+<https://istanduk.github.io/govuk-dita-plugin/>.
+[v1.4.0]((https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.4.0) writes **structured data**
 from the same DITA, each opt-in: `govuk.metadata=full` adds schema.org JSON-LD to every page
 (`WebSite`, `TechArticle`, `BreadcrumbList`, a task's `HowTo`, a glossary's `DefinedTermSet`, a
 declared dataset's `Dataset`); `govuk.dcat` writes a DCAT 3 catalogue record with ADMS typing of the
@@ -63,7 +67,7 @@ dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 
 (The first command resolves the name through the DITA-OT plugin registry; a release zip URL —
-`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.4.0/org.istanduk.gov-uk-1.4.0.zip`
+`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.4.1/org.istanduk.gov-uk-1.4.1.zip`
 — works in the same place for an offline or pinned install.)
 
 Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. Optionally,
