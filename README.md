@@ -70,6 +70,9 @@ dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 `https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.4.1/org.istanduk.gov-uk-1.4.1.zip`
 — works in the same place for an offline or pinned install.)
 
+To upgrade, uninstall the installed version first (`dita uninstall org.istanduk.gov-uk`): the
+toolkit will not install over it.
+
 Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. Optionally,
 [Pagefind](https://pagefind.app/) on the build machine enables site search — the plugin does
 not bundle the indexer, but published sites carry the search index and interface, so readers
