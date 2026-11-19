@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="introduccion" xml:lang="es">
+  <title>Introducción</title>
+  <shortdesc>Qué contiene esta guía.</shortdesc>
+  <prolog>
+    <critdates>
+      <created date="2026-09-07"/>
+      <revised modified="2026-10-01"/>
+    </critdates>
+  </prolog>
+  <conbody>
+    <p>Esta página comprueba las notas, las figuras y las tablas.</p>
+    <note>Lea toda la guía antes de empezar.</note>
+    <note type="warning">No comparta su contraseña.</note>
+    <fig>
+      <title>Imagen de ejemplo</title>
+      <p>Un texto en lugar de una imagen.</p>
+    </fig>
+    <table>
+      <title>Tabla de ejemplo</title>
+      <tgroup cols="2">
+        <thead>
+          <row><entry>Nombre</entry><entry>Valor</entry></row>
+        </thead>
+        <tbody>
+          <row><entry>Ancho</entry><entry>10</entry></row>
+        </tbody>
+      </tgroup>
+    </table>
+  </conbody>
+</concept>
