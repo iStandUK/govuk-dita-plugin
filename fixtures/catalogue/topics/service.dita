@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="service" xml:lang="en-GB">
+  <title>Example lookup service</title>
+  <shortdesc>An interface for looking a return up.</shortdesc>
+  <conbody><p>An interface for looking a return up.</p></conbody>
+</concept>

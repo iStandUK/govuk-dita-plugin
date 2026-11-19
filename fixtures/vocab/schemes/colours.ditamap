@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE subjectScheme PUBLIC "-//OASIS//DTD DITA Subject Scheme Map//EN" "subjectScheme.dtd">
+<subjectScheme id="colours" xml:lang="en-GB">
+  <title>Colours</title>
+  <subjectdef keys="colour">
+    <topicmeta><navtitle>Colour</navtitle></topicmeta>
+    <subjectdef keys="warm">
+      <topicmeta><navtitle>Warm colour</navtitle></topicmeta>
+      <subjectdef keys="red">
+        <topicmeta><navtitle>Red</navtitle><shortdesc>The colour of blood.</shortdesc></topicmeta>
+      </subjectdef>
+      <subjectdef keys="orange">
+        <topicmeta>
+          <navtitle>Orange</navtitle>
+          <data name="dct:identifier" value="https://example.org/colours/orange"/>
+        </topicmeta>
+      </subjectdef>
+    </subjectdef>
+    <subjectdef keys="cool" outputclass="retired">
+      <topicmeta><navtitle>Cool colour</navtitle></topicmeta>
+    </subjectdef>
+  </subjectdef>
+</subjectScheme>

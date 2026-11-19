@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="odd" xml:lang="en-GB">
+  <title>A page with a type nobody can write</title>
+  <shortdesc>A page whose declared type is not a class.</shortdesc>
+  <conbody><p>A page whose declared type is not a class.</p></conbody>
+</concept>

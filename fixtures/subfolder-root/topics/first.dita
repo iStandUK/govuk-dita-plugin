@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="first" xml:lang="en-GB">
+  <title>First topic</title>
+  <body>
+    <p>A raster picture <image href="../images/pixel.png" placement="inline"><alt>a pixel</alt></image> and a diagram:</p>
+    <fig>
+      <title>A diagram from beside the maps folder</title>
+      <svg-container><svgref href="../images/diagram.svg"/></svg-container>
+    </fig>
+  </body>
+</topic>

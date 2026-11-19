@@ -43,6 +43,8 @@ Every behaviour that touches content risk is a **parameter with a safe default**
 | `govuk.content.policy` | `warn` | render as authored, or `strip` to a placeholder | — |
 | `govuk.csp` | `no` | `meta` emits a policy the pages satisfy; a literal policy passes through | `GOVK007W` |
 | `govuk.site.url`, `govuk.sitemap` | `auto` | `sitemap.xml` + `robots.txt`; print document excluded and `noindex` | — |
+| `govuk.metadata` | `basic` | `full` adds one JSON-LD block a page: the headline, description, addresses and publisher the page already shows. Values are escaped so none can close the script element; a data block is outside a `script-src` policy; the print document carries none (#100) | — |
+| `govuk.dcat`, `govuk.contact.email` | `no` | `yes` writes `dcat.jsonld` and `dcat.ttl` and a block in the home page's head: titles, descriptions, addresses and the licence of assets the map declares, and an organisational mailbox if one is given. Needs `govuk.site.url`. Escaped for each syntax; nothing is fetched; the mailbox is the publisher's to publish (#102) | `GOVK017W`–`GOVK019W` |
 | `govuk.llms` | `auto` | `llms.txt`: titles, short descriptions and absolute links of pages the site already publishes; nothing new is exposed. Not a consent mechanism (D-30) | — |
 | `govuk.dates` | `no` | critdates as a metadata line (date quality is the source's) | — |
 

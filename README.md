@@ -3,7 +3,19 @@
 An open **DITA Open Toolkit (DITA-OT) plugin** that publishes DITA content directly as a
 static website styled with the **GOV.UK Design System**.
 
-**Status: v1.3.0 — released** —
+**Status: v1.4.1 — released** —
+[v1.4.1](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.4.1) is a maintenance release: no
+change to what the plugin writes. It refreshes the vendored NHS stylesheet (Sass 1.106.1) and the
+DesignSystemPDF libraries behind the manual's PDF, and puts the released manual online at
+<https://istanduk.github.io/govuk-dita-plugin/>.
+[v1.4.0]((https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.4.0) writes **structured data**
+from the same DITA, each opt-in: `govuk.metadata=full` adds schema.org JSON-LD to every page
+(`WebSite`, `TechArticle`, `BreadcrumbList`, a task's `HowTo`, a glossary's `DefinedTermSet`, a
+declared dataset's `Dataset`); `govuk.dcat` writes a DCAT 3 catalogue record with ADMS typing of the
+data assets a map declares (`dcat.jsonld`, `dcat.ttl`); `govuk.skos` writes the glossary, its groups
+and subject schemes as SKOS vocabularies (D-26, #100 to #104). Content that DITA-OT leaves empty or
+mislinks is now reported (`GOVK015W`, `GOVK016W`), inlined diagrams with links are accessible groups,
+and govuk-frontend is 6.6.0.
 [v1.3.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.3.0) writes **metadata in every
 page's head**, read from the DITA: the canonical, previous, next and licence links, Open Graph and
 Dublin Core tags (`govuk.metadata=basic`, the default; D-26, #190), with
@@ -55,8 +67,11 @@ dita --input=docs/manual/manual.ditamap --format=govuk --output=out/manual
 ```
 
 (The first command resolves the name through the DITA-OT plugin registry; a release zip URL —
-`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.3.0/org.istanduk.gov-uk-1.3.0.zip`
+`https://github.com/iStandUK/govuk-dita-plugin/releases/download/v1.4.1/org.istanduk.gov-uk-1.4.1.zip`
 — works in the same place for an offline or pinned install.)
+
+To upgrade, uninstall the installed version first (`dita uninstall org.istanduk.gov-uk`): the
+toolkit will not install over it.
 
 Requires [DITA-OT 4.4.1+](https://www.dita-ot.org/) and Java 17+; nothing else. Optionally,
 [Pagefind](https://pagefind.app/) on the build machine enables site search — the plugin does
@@ -64,7 +79,8 @@ not bundle the indexer, but published sites carry the search index and interface
 never install anything. Without Pagefind, builds simply omit search. That second
 command builds the **[user manual](docs/manual/)** — itself a DITA bookmap, so the result at
 `out/manual/index.html` is both the documentation and a live demonstration of every
-capability the plugin supports.
+capability the plugin supports. The released manual is also online, at
+<https://istanduk.github.io/govuk-dita-plugin/>.
 
 ## What it does
 

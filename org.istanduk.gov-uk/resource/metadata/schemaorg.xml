@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+schema.org as JSON-LD (https://schema.org), enabled by govuk.metadata=full: one
+block in each page's head holding an object for every kind below that
+describes the page. The cover is the website; a topic is a TechArticle; a
+generated page is a WebPage; every page below the cover has a BreadcrumbList. A task
+adds a HowTo and a glossary entry a DefinedTerm as the topic's mainEntity, and the
+generated glossary a DefinedTermSet as its page's. A data asset declared a dataset
+adds a Dataset, with its files as DataDownloads, to its landing page's main entities.
+The publisher is an Organization, or a GovernmentOrganization for official
+and NHS branding.
+
+Row order is output order. A relation with node="yes" is written as a
+reference to another node by its address; a property with nested="agent" is
+written as the nested record's own object; a list row is a numbered list of
+the records a relation names, then the record itself. Address-valued rows
+need govuk.site.url and are left out without it. The table format is
+described in design 14, section 7.
+-->
+<scheme id="schemaorg" syntax="json-ld" context="https://schema.org">
+  <kind record="page" when="@role = 'cover'" type="WebSite">
+    <relation name="isPartOf" target="publication" as="@id"/>
+    <property term="dct:title" as="name" required="yes"/>
+    <relation name="isPartOf" target="publication" as="url" required="yes"/>
+    <property term="dct:description" as="description"/>
+    <property term="dct:language" as="inLanguage" required="yes"/>
+    <property term="dct:publisher" as="publisher" nested="agent"/>
+  </kind>
+  <kind record="page" when="@role = 'topic'" type="TechArticle">
+    <property term="@id" as="@id" format="uri"/>
+    <property term="dct:title" as="headline" required="yes"/>
+    <property term="dct:description" as="description"/>
+    <property term="@id" as="url" format="uri" required="yes"/>
+    <property term="dct:language" as="inLanguage" required="yes"/>
+    <property term="dct:issued" as="datePublished" format="date"/>
+    <property term="dct:modified" as="dateModified" format="date"/>
+    <property term="dct:subject" as="keywords" repeat="yes"/>
+    <property term="dct:license" as="license" format="uri"/>
+    <relation name="isPartOf" target="publication" as="isPartOf" node="yes"/>
+    <property term="dct:publisher" as="publisher" nested="agent"/>
+    <relation name="mainEntity" target="howto" as="mainEntity" nested="yes"/>
+    <relation name="mainEntity" target="term" as="mainEntity" nested="yes"/>
+    <relation name="mainEntity" target="asset" as="mainEntity" nested="yes"/>
+  </kind>
+  <kind record="page" when="@role = 'utility'" type="WebPage">
+    <property term="@id" as="@id" format="uri"/>
+    <property term="dct:title" as="name" required="yes"/>
+    <property term="dct:description" as="description"/>
+    <property term="@id" as="url" format="uri" required="yes"/>
+    <property term="dct:language" as="inLanguage" required="yes"/>
+    <relation name="isPartOf" target="publication" as="isPartOf" node="yes"/>
+    <property term="dct:publisher" as="publisher" nested="agent"/>
+    <relation name="mainEntity" target="scheme" as="mainEntity" nested="yes"/>
+  </kind>
+  <kind record="page" when="@role != 'cover'" type="BreadcrumbList">
+    <list as="itemListElement" type="ListItem" from="isPartOf" self="yes"/>
+  </kind>
+  <!-- a task is a how-to; its steps are named by their command and told by their information -->
+  <kind record="howto" type="HowTo">
+    <property term="dct:title" as="name"/>
+    <property term="dct:description" as="description"/>
+    <relation name="hasPart" target="step" as="step" nested="yes" repeat="yes"/>
+  </kind>
+  <kind record="step" type="HowToStep">
+    <property term="dct:title" as="name"/>
+    <property term="dct:description" as="text"/>
+  </kind>
+  <!-- the generated glossary is a set of defined terms, and a glossary entry's own page is one term -->
+  <kind record="scheme" type="DefinedTermSet">
+    <property term="dct:title" as="name"/>
+    <relation name="hasPart" target="term" as="hasDefinedTerm" nested="yes" repeat="yes"/>
+  </kind>
+  <kind record="term" type="DefinedTerm">
+    <property term="dct:title" as="name"/>
+    <property term="dct:description" as="description"/>
+    <property term="dct:alternative" as="alternateName" repeat="yes"/>
+  </kind>
+  <!-- an asset the map declares a dataset is a Dataset, written on its landing page; the
+       DCAT record (govuk.dcat) reads the same record, so the two agree by construction -->
+  <kind record="asset" when="rdf:type = 'dcat:Dataset'" type="Dataset">
+    <property term="@id" as="@id" format="uri"/>
+    <property term="dct:title" as="name"/>
+    <property term="dct:description" as="description"/>
+    <property term="dcat:landingPage" as="url" format="uri"/>
+    <property term="dct:license" as="license" format="uri"/>
+    <property term="dct:publisher" as="publisher" nested="agent"/>
+    <property term="dct:issued" as="datePublished" format="date"/>
+    <property term="dct:modified" as="dateModified" format="date"/>
+    <property term="dcat:version" as="version"/>
+    <property term="dct:temporal" as="temporalCoverage"/>
+    <property term="dct:subject" as="keywords" repeat="yes"/>
+    <relation name="isPartOf" target="publication" as="isPartOf" node="yes"/>
+    <relation name="hasPart" target="file" as="distribution" nested="yes" repeat="yes"/>
+  </kind>
+  <kind record="file" type="DataDownload">
+    <property term="dct:title" as="name"/>
+    <property term="dcat:downloadURL" as="contentUrl" format="uri"/>
+    <property term="schema:encodingFormat" as="encodingFormat"/>
+  </kind>
+  <kind record="agent" when="dct:type != 'government'" type="Organization">
+    <property term="dct:title" as="name"/>
+    <property term="foaf:homepage" as="url" format="uri"/>
+  </kind>
+  <kind record="agent" when="dct:type = 'government'" type="GovernmentOrganization">
+    <property term="dct:title" as="name"/>
+    <property term="foaf:homepage" as="url" format="uri"/>
+  </kind>
+</scheme>

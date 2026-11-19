@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- A publication that declares several data assets (#102): a standard with a
+     stated identifier and two distributions, a dataset with its table and the
+     catalogue properties a harvester expects, a data service declared on a
+     submap, and an entry whose type nobody can write. -->
+<map xml:lang="en-GB">
+  <title>Example data catalogue</title>
+  <topicmeta>
+    <shortdesc>The standards, datasets and services an example body publishes.</shortdesc>
+  </topicmeta>
+  <topicref href="topics/about.dita"/>
+  <topicref href="topics/standard.dita">
+    <topicmeta>
+      <data name="rdf:type" value="dct:Standard"/>
+      <data name="dct:identifier" value="https://example.org/id/standard"/>
+      <data name="dct:conformsTo" value="https://example.org/model"/>
+    </topicmeta>
+    <topicref href="data/schema.json" format="json" processing-role="resource-only"/>
+    <topicref href="data/openapi.yaml" format="openapi" processing-role="resource-only"/>
+  </topicref>
+  <topicref href="topics/dataset.dita">
+    <topicmeta>
+      <data name="rdf:type" value="dcat:Dataset"/>
+      <data name="dct:spatial" value="http://statistics.data.gov.uk/id/statistical-geography/E92000001"/>
+      <data name="dct:accrualPeriodicity" value="http://publications.europa.eu/resource/authority/frequency/ANNUAL"/>
+      <data name="dct:temporal" value="2025-04-01/2026-03-31"/>
+      <data name="dct:issued" value="2026-01-15"/>
+    </topicmeta>
+    <topicref href="data/table.csv" format="csv" processing-role="resource-only"/>
+  </topicref>
+  <!-- a submap is declared by wrapping its mapref: DITA-OT drops the topicmeta of the
+       mapref itself, and of the submap's root, when it resolves the reference -->
+  <topicgroup>
+    <topicmeta>
+      <data name="rdf:type" value="dcat:DataService"/>
+    </topicmeta>
+    <mapref href="service.ditamap"/>
+  </topicgroup>
+  <topicref href="topics/odd.dita">
+    <topicmeta>
+      <data name="rdf:type" value="Dataset"/>
+    </topicmeta>
+  </topicref>
+</map>

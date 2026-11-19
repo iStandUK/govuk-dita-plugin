@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="spec-a" xml:lang="en-GB">
+  <title>Return specification</title>
+  <shortdesc>The data set specification for the annual return.</shortdesc>
+  <conbody><p>The data set specification for the annual return.</p></conbody>
+</concept>

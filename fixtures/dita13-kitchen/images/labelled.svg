@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60"
+     role="img" aria-labelledby="diagram-title" aria-describedby="diagram-desc">
+  <title id="diagram-title">Two boxes</title>
+  <desc id="diagram-desc">A blue box beside a green box, drawn without links.</desc>
+  <rect x="5" y="5" width="90" height="50" fill="#1d70b8"/>
+  <rect x="105" y="5" width="90" height="50" fill="#5bac26"/>
+</svg>

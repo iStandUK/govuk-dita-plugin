@@ -1,0 +1,9 @@
+# The RDF parser tools/check_rdf.py needs (#102), pinned by version and hash. All
+# three are pure-Python wheels, so one hash each is the whole of it. Install with
+#   python3 -m venv "$RUNNER_TEMP/rdf" && "$RUNNER_TEMP/rdf/bin/pip" install --require-hashes --only-binary :all: -r tools/ci/requirements-rdf.txt
+isodate==0.7.2 \
+    --hash=sha256:28009937d8031054830160fce6d409ed342816b543597cece116d966c6d99e15
+pyparsing==3.3.3 \
+    --hash=sha256:ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4
+rdflib==7.6.0 \
+    --hash=sha256:30c0a3ebf4c0e09215f066be7246794b6492e054e782d7ac2a34c9f70a15e0dd

@@ -248,7 +248,9 @@
               <entry><codeph>input</codeph> (default), <codeph>any</codeph></entry>
               <entry>Where inlined SVG and MathML may come from: only under the input
                 directory, or anywhere the reference points. A reference outside the
-                input directory is reported (<codeph>GOVK005W</codeph>).</entry>
+                input directory is reported (<codeph>GOVK005W</codeph>). The input directory
+                is the root map's folder, or the folder given with
+                <codeph>args.input.dir</codeph>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.content.warnings</codeph></entry>
@@ -329,11 +331,34 @@
             </row>
             <row>
               <entry><codeph>govuk.metadata</codeph></entry>
-              <entry><codeph>basic</codeph> (default), <codeph>no</codeph></entry>
+              <entry><codeph>basic</codeph> (default), <codeph>full</codeph>, <codeph>no</codeph></entry>
               <entry>Metadata in each page's head, read from the DITA: the canonical,
-                previous, next and licence links, Open Graph and Dublin Core tags. Tags whose
-                value is a URL need <codeph>govuk.site.url</codeph>. See
+                previous, next and licence links, Open Graph and Dublin Core tags.
+                <codeph>full</codeph> adds one schema.org JSON-LD block to each page. Tags
+                whose value is a URL need <codeph>govuk.site.url</codeph>. See
                 <xref keyref="metadata"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.dcat</codeph></entry>
+              <entry><codeph>no</codeph> (default), <codeph>yes</codeph></entry>
+              <entry>Write a DCAT 3 catalogue record of the data assets the map declares:
+                <filepath>dcat.jsonld</filepath> and <filepath>dcat.ttl</filepath> at the site
+                root, with the record in the home page's head. Needs
+                <codeph>govuk.site.url</codeph>. See <xref keyref="metadata"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.skos</codeph></entry>
+              <entry><codeph>no</codeph> (default), <codeph>yes</codeph></entry>
+              <entry>Write the glossary, each glossgroup and each subjectScheme map as a SKOS
+                vocabulary: <filepath>vocab/NAME.ttl</filepath> and
+                <filepath>vocab/NAME.jsonld</filepath>. Needs <codeph>govuk.site.url</codeph>.
+                See <xref keyref="metadata"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.contact.email</codeph></entry>
+              <entry>Text</entry>
+              <entry>An organisational mailbox for the catalogue record's contact point. Not a
+                person's address by default. Used only with <codeph>govuk.dcat=yes</codeph>.</entry>
             </row>
             <row>
               <entry><codeph>govuk.organisation</codeph></entry>

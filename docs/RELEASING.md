@@ -27,6 +27,8 @@ release pull request.
   - `design/05-decision-log.md` if the release changes scope or process
 - [ ] Draft the release notes (what changed since the last release, install/upgrade
       commands, what comes next) — they become the GitHub release body
+      Under "Install or upgrade", give `dita uninstall org.istanduk.gov-uk` before
+      `dita install`: the toolkit will not install over an installed plugin (#279)
 - [ ] Open a pull request `release/x.y.z` → `main`, titled `Release vx.y.z`, with this
       checklist; wait for `ci`
 
@@ -65,6 +67,11 @@ release pull request.
       unzip the site and open `index.html`
 - [ ] If the release changes the print document or `print.css`, make the accessibility
       checks that need a person (at the end of this file) on the manual's PDF
+- [ ] The manual is on the web too (#275): publishing the release runs the `pages`
+      workflow (Actions → pages), which checks the manual zip against its `.sha256` and
+      attestation and deploys it. Open <https://istanduk.github.io/govuk-dita-plugin/> and
+      confirm the cover says `Version x.y.z`. It leaves the site alone for a release that is
+      not the latest, and a prerelease; to publish a chosen tag, Run workflow with its name
 
 ## Registry
 

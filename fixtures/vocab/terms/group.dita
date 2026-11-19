@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glossgroup PUBLIC "-//OASIS//DTD DITA Glossary Group//EN" "glossgroup.dtd">
+<glossgroup id="clinical" xml:lang="en-GB">
+  <title>Clinical terms</title>
+  <glossentry id="blood-pressure">
+    <glossterm>Blood pressure</glossterm>
+    <glossdef>The pressure of the blood in the arteries.</glossdef>
+    <prolog>
+      <resourceid appid="https://example.org/vocab/blood-pressure"/>
+    </prolog>
+    <glossBody>
+      <glossAlt><glossAcronym>BP</glossAcronym></glossAlt>
+      <glossAlt><glossSynonym>arterial pressure</glossSynonym></glossAlt>
+    </glossBody>
+    <related-links>
+      <link href="group.dita#pulse"/>
+    </related-links>
+  </glossentry>
+  <glossentry id="pulse">
+    <glossterm>Pulse</glossterm>
+    <glossdef>The beat of the heart felt at an artery.</glossdef>
+  </glossentry>
+  <glossentry id="old-term">
+    <glossterm outputclass="retired">Heart rate (old)</glossterm>
+    <glossdef>A term the service no longer uses.</glossdef>
+  </glossentry>
+</glossgroup>

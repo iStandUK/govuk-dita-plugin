@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map xml:lang="en-GB">
+  <title>Unresolved key references</title>
+  <keydef keys="k-word"><topicmeta><keywords><keyword>Resolved word</keyword></keywords></topicmeta></keydef>
+  <keydef keys="k-ui"><topicmeta><keywords><keyword>Save</keyword></keywords></topicmeta></keydef>
+  <keydef keys="k-img" href="images/dot.svg" format="svg"><topicmeta><linktext>A dot</linktext></topicmeta></keydef>
+  <keydef keys="k-topic" href="topics/refs.dita"/>
+  <topicref href="topics/refs.dita"/>
+</map>

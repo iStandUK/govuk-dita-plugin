@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- Several declared datasets and a standard: one Dataset for each dataset, each on its own
+     landing page, none for the standard (#122) -->
+<map xml:lang="en-GB">
+  <title>Two datasets</title>
+  <topicmeta>
+    <shortdesc>Two datasets and the standard they follow.</shortdesc>
+  </topicmeta>
+  <topicref href="topics/standard.dita">
+    <topicmeta><data name="rdf:type" value="dct:Standard"/></topicmeta>
+  </topicref>
+  <topicref href="topics/dataset.dita">
+    <topicmeta><data name="rdf:type" value="dcat:Dataset"/></topicmeta>
+    <topicref href="data/table.csv" format="csv" processing-role="resource-only"/>
+  </topicref>
+  <topicref href="topics/dataset2.dita">
+    <topicmeta><data name="rdf:type" value="dcat:Dataset"/></topicmeta>
+    <topicref href="data/monthly.json" format="json" processing-role="resource-only"/>
+    <topicref href="data/table.csv" format="csv" processing-role="resource-only"/>
+  </topicref>
+</map>

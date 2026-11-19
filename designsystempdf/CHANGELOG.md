@@ -2,6 +2,10 @@
 
 DesignSystemPDF is versioned on its own line, independently of the GOV.UK DITA plugin. Releases are tagged `pdf-v<version>`.
 
+## 0.1.2 — 2026-10-15
+
+- Engine: Open HTML to PDF 1.1.94 (from 1.1.87), still with Apache PDFBox 3.0.7 and Batik 1.17; the four jars are shipped unmodified with their source attached to the release, as before. No change to the print contracts understood or to the command line.
+
 ## 0.1.1 — 2026-10-04
 
 - A document of a thousand pages or more no longer fails with `DSPDF007E` (`NegativeArraySizeException: -1`) when a contents entry nearly fills its line ([#182](https://github.com/iStandUK/govuk-dita-plugin/issues/182)). The engine lays each contents line out for a three-digit page number and paints the real one, so a wider number left the dots less than no room. From a thousand pages, each contents entry's page number is now read from the layout and written in, and the document is laid out again, so every line is laid out at its true width. Shorter documents are laid out once, as before, and are unchanged to the byte.

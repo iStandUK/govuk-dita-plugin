@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- Two terms state the same address (#103): the build says so -->
+<map xml:lang="en-GB">
+  <title>Duplicate addresses</title>
+  <topicref href="terms/standalone.dita"/>
+  <topicref href="terms/standalone-again.dita" processing-role="resource-only"/>
+</map>

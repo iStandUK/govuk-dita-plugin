@@ -20,13 +20,28 @@
           paths served by the host; the crown crest is suppressed rather than fetched.
           Continuous integration asserts that no page or stylesheet in any mode references
           another origin.</li>
-        <li><b>One inline script.</b> The only script written into a page is the Design
-          System's own body-class snippet, byte for byte, so its published hash applies;
+        <li><b>One inline script.</b> The only script written into a page that runs is the
+          Design System's own body-class snippet, byte for byte, so its published hash applies;
           everything else — navigation, search, govuk-frontend initialisation — is a file
-          under <filepath>govuk/</filepath>.</li>
+          under <filepath>govuk/</filepath>. The structured data that
+          <codeph>govuk.metadata=full</codeph> and <codeph>govuk.dcat</codeph> write into a page
+          is a block of data (<codeph>type="application/ld+json"</codeph>), which a browser does
+          not run and a <codeph>script-src</codeph> policy does not restrict. CI checks in a
+          browser that it adds no violation.</li>
         <li><b>No cookies, no third-party requests, no restricted assets bundled.</b></li>
         <li><b>Valid, accessible output</b>, checked on every build with the Nu HTML checker
           and axe-core at WCAG 2.2 AA.</li>
+        <li><b>Structured data says what the page says.</b> The JSON-LD blocks
+          (<codeph>govuk.metadata=full</codeph>), the catalogue record
+          (<codeph>govuk.dcat</codeph>) and the vocabularies (<codeph>govuk.skos</codeph>)
+          hold the titles, descriptions, addresses, dates and licence of what the site already
+          publishes, and an organisational mailbox only if the publisher gives
+          <codeph>govuk.contact.email</codeph>. No person is named unless
+          <codeph>govuk.metadata.persons=yes</codeph>. Every value is escaped for its syntax,
+          the characters that could close a script element are written as escapes, nothing is
+          fetched from another origin, and the print document carries none. Each is written
+          only where the publisher turned it on, and the catalogue and vocabularies need
+          <codeph>govuk.site.url</codeph>.</li>
         <li><b>Nothing extra in the index files.</b> <filepath>sitemap.xml</filepath> and
           <filepath>llms.txt</filepath> list only pages the site already publishes, with
           their titles and short descriptions; they leave out resource-only and

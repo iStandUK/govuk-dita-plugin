@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file is part of the govuk-dita-plugin project.
+Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
+
+ADMS (https://www.w3.org/TR/vocab-adms/), the vocabulary for describing
+interoperability assets, written into the same files as the DCAT record
+(govuk.dcat=yes). It is for publications whose parts are not datasets: a logical
+model, the data set specifications that conform to it, a code list. The publisher
+declares each part an adms:Asset in the map (a data element named rdf:type), says
+what kind it is with dct:type and what it conforms to or refers to, and a retired
+part carries its status. A part is never made a dcat:Dataset by this table.
+
+The DCAT table has already typed and described an asset; this table adds what is
+ADMS's, as a second kind for the same record. dct:isPartOf is written only where
+there is a catalogue to be part of. map= turns a value the harvest states
+neutrally into the one the scheme uses. The table format is described in design 14,
+section 7.
+-->
+<scheme id="adms" syntax="rdf">
+  <prefix name="adms" uri="http://www.w3.org/ns/adms#"/>
+  <prefix name="dct" uri="http://purl.org/dc/terms/"/>
+
+  <kind record="asset" when="rdf:type = 'adms:Asset'">
+    <property term="dct:type" as="dct:type" format="uri" node="yes" repeat="yes"/>
+    <property term="adms:status" as="adms:status" format="uri" node="yes"
+              map="retired=http://purl.org/adms/status/Withdrawn"/>
+    <property term="dct:references" as="dct:references" format="uri" node="yes" repeat="yes"/>
+  </kind>
+
+  <!-- a member of a catalogue is part of it -->
+  <kind record="asset" when="@members = 'many'">
+    <relation name="isPartOf" target="publication" as="dct:isPartOf"/>
+  </kind>
+</scheme>

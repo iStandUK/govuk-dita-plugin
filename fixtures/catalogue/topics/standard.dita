@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="standard" xml:lang="en-GB">
+  <title>Example data standard</title>
+  <shortdesc>The model every return follows, with its JSON schema and API description.</shortdesc>
+  <conbody><p>The model every return follows, with its JSON schema and API description.</p></conbody>
+</concept>

@@ -469,7 +469,37 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <equals arg1="${govuk.inline.scope}" arg2="any"/>
       </or></not></condition>
     </fail>
-    <!-- the input directory as a URL, for the scope check -->
+    <!-- The folder inlining is limited to, as a URL, for the scope check (#239): the
+         input directory the publisher named with args.input.dir (a path, or a file:
+         URI from a project file), else the root map's folder. DITA-OT's own
+         DOTJ036W test ignores args.input.dir and keeps to the root map's folder;
+         this one is the plugin's, so it can follow the publisher. The scans above
+         stay in the root map's folder. -->
+    <condition property="govuk.scope.named">
+      <and>
+        <isset property="args.input.dir"/>
+        <not><equals arg1="${args.input.dir}" arg2="" trim="true"/></not>
+      </and>
+    </condition>
+    <condition property="govuk.scope.is-uri">
+      <and>
+        <isset property="govuk.scope.named"/>
+        <matches pattern="^file:" string="${args.input.dir}"/>
+      </and>
+    </condition>
+    <condition property="govuk.scope.is-abs">
+      <and>
+        <isset property="govuk.scope.named"/>
+        <matches pattern="^(/|[A-Za-z]:[\\/]|\\\\)" string="${args.input.dir}"/>
+      </and>
+    </condition>
+    <property name="govuk.input.dir.url" value="${args.input.dir}" if:set="govuk.scope.is-uri"/>
+    <!-- a relative path is the working directory's, which Ant's own base is not -->
+    <property name="govuk.scope.path" value="${args.input.dir}" if:set="govuk.scope.is-abs"/>
+    <property name="govuk.scope.path" value="${user.dir}/${args.input.dir}" if:set="govuk.scope.named"/>
+    <available file="${govuk.scope.path}" type="dir" property="govuk.scope.exists"/>
+    <makeurl property="govuk.input.dir.url" file="${govuk.scope.path}" if:set="govuk.scope.exists"/>
+    <!-- else the root map's folder: a folder that is not there never fails the build -->
     <makeurl property="govuk.input.dir.url" file="${govuk.input.dir}"/>
     <property name="govuk.content.warnings" value="yes"/>
     <fail message="govuk.content.warnings must be 'yes' or 'no', was: ${govuk.content.warnings}">
@@ -504,14 +534,41 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <equals arg1="${govuk.dates}" arg2="both"/>
       </or></not></condition>
     </fail>
-    <!-- Page metadata (#99, design 14): basic | no, and the publisher's facts
-         it cannot read from the DITA -->
+    <!-- Page metadata (#99, #100, design 14): basic | full | no, and the
+         publisher's facts it cannot read from the DITA -->
     <property name="govuk.metadata" value="basic"/>
-    <fail message="govuk.metadata must be 'basic' or 'no', was: ${govuk.metadata}">
+    <fail message="govuk.metadata must be 'basic', 'full' or 'no', was: ${govuk.metadata}">
       <condition><not><or>
         <equals arg1="${govuk.metadata}" arg2="basic"/>
+        <equals arg1="${govuk.metadata}" arg2="full"/>
         <equals arg1="${govuk.metadata}" arg2="no"/>
       </or></not></condition>
+    </fail>
+    <!-- DCAT catalogue record (#102, D-24 decision 6): its own switch, because a
+         catalogue record is a publishing act with legal and stewardship weight -->
+    <property name="govuk.dcat" value="no"/>
+    <fail message="govuk.dcat must be 'yes' or 'no', was: ${govuk.dcat}">
+      <condition><not><or>
+        <equals arg1="${govuk.dcat}" arg2="yes"/>
+        <equals arg1="${govuk.dcat}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <!-- SKOS vocabularies (#103): their own switch, apart from the catalogue, because a glossary
+         site wants vocabularies without declaring any asset -->
+    <property name="govuk.skos" value="no"/>
+    <fail message="govuk.skos must be 'yes' or 'no', was: ${govuk.skos}">
+      <condition><not><or>
+        <equals arg1="${govuk.skos}" arg2="yes"/>
+        <equals arg1="${govuk.skos}" arg2="no"/>
+      </or></not></condition>
+    </fail>
+    <fail message="govuk.contact.email must look like an email address, was: ${govuk.contact.email}">
+      <condition>
+        <and>
+          <isset property="govuk.contact.email"/>
+          <not><matches pattern="^[^@\s]+@[^@\s]+$" string="${govuk.contact.email}"/></not>
+        </and>
+      </condition>
     </fail>
     <property name="govuk.metadata.persons" value="no"/>
     <fail message="govuk.metadata.persons must be 'yes' or 'no', was: ${govuk.metadata.persons}">
@@ -609,6 +666,22 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
     <condition property="govuk.llms.on">
       <equals arg1="${govuk.llms.enabled}" arg2="yes"/>
     </condition>
+    <fail message="govuk.skos=yes needs govuk.site.url (the published base URL): every identifier in a vocabulary is an address">
+      <condition>
+        <and>
+          <equals arg1="${govuk.skos}" arg2="yes"/>
+          <not><isset property="govuk.site.url.set"/></not>
+        </and>
+      </condition>
+    </fail>
+    <fail message="govuk.dcat=yes needs govuk.site.url (the published base URL): every identifier and link in a catalogue record is an address">
+      <condition>
+        <and>
+          <equals arg1="${govuk.dcat}" arg2="yes"/>
+          <not><isset property="govuk.site.url.set"/></not>
+        </and>
+      </condition>
+    </fail>
     <echo level="info" unless:set="govuk.llms.on"
           message="govuk: llms.txt not written (govuk.llms=${govuk.llms}; set govuk.site.url to the published base URL to generate one)"/>
     <!-- the vendored govuk-frontend version, for init.js -->
@@ -688,6 +761,9 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-LLMS" expression="${govuk.llms.enabled}"/>
       <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
       <param name="GOVUK-DATES" expression="${govuk.dates}"/>
+      <param name="GOVUK-DCAT" expression="${govuk.dcat}"/>
+      <param name="GOVUK-SKOS" expression="${govuk.skos}"/>
+      <param name="GOVUK-CONTACT-EMAIL" expression="${govuk.contact.email}" if:set="govuk.contact.email"/>
       <param name="GOVUK-METADATA" expression="${govuk.metadata}"/>
       <param name="GOVUK-METADATA-PERSONS" expression="${govuk.metadata.persons}"/>
       <param name="GOVUK-ORGANISATION" expression="${govuk.organisation}" if:set="govuk.organisation"/>
