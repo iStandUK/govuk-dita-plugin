@@ -54,4 +54,29 @@ collisions with toolkit variables.
   <variable id="govuk-dita.phase-feedback">feedback</variable>
   <variable id="govuk-dita.phase-suffix"> will help us to improve it.</variable>
   <variable id="govuk-dita.phase-plain">This is a new service.</variable>
+  <!-- labels that name a navigation region to assistive technology -->
+  <variable id="govuk-dita.pagination">Pagination</variable>
+  <variable id="govuk-dita.a-to-z">A to Z</variable>
+  <!-- the text govuk-frontend's accordion script writes; the plugin gives it
+       through the component's data-i18n attributes, the script itself unchanged -->
+  <variable id="govuk-dita.accordion.hide-all-sections">Hide all sections</variable>
+  <variable id="govuk-dita.accordion.hide-section">Hide</variable>
+  <variable id="govuk-dita.accordion.hide-section-aria-label">Hide this section</variable>
+  <variable id="govuk-dita.accordion.show-all-sections">Show all sections</variable>
+  <variable id="govuk-dita.accordion.show-section">Show</variable>
+  <variable id="govuk-dita.accordion.show-section-aria-label">Show this section</variable>
+  <!-- dates: %d the day, %m the month's name below, %y the year -->
+  <variable id="govuk-dita.date-format">%d %m %y</variable>
+  <variable id="govuk-dita.month-1">January</variable>
+  <variable id="govuk-dita.month-2">February</variable>
+  <variable id="govuk-dita.month-3">March</variable>
+  <variable id="govuk-dita.month-4">April</variable>
+  <variable id="govuk-dita.month-5">May</variable>
+  <variable id="govuk-dita.month-6">June</variable>
+  <variable id="govuk-dita.month-7">July</variable>
+  <variable id="govuk-dita.month-8">August</variable>
+  <variable id="govuk-dita.month-9">September</variable>
+  <variable id="govuk-dita.month-10">October</variable>
+  <variable id="govuk-dita.month-11">November</variable>
+  <variable id="govuk-dita.month-12">December</variable>
 </variables>

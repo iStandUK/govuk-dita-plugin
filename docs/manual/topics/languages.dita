@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="languages" xml:lang="en-GB">
+  <title>Languages</title>
+  <shortdesc>Publishing in Welsh or Spanish: the text the plugin adds to your pages follows
+    the language of your content, and how to add another language.</shortdesc>
+  <conbody>
+    <p><indexterm>languages</indexterm><indexterm>Welsh</indexterm><indexterm>Spanish</indexterm>Your
+      content is in whatever language you write it in. Around it the plugin adds text of its
+      own: the skip link, <q>Contents</q>, <q>Search</q>, the phase banner, the labels on
+      warnings, figures and tables, the names of months in dates, and the buttons on the
+      accordion home page. That text is in English, Welsh or Spanish, chosen by the
+      <codeph>xml:lang</codeph> of your map and topics. There is no build parameter.</p>
+    <p>Where GOV.UK has published its own Welsh or Spanish wording for a piece of this text,
+      such as the skip link, the accordion's buttons and the Open Government Licence line, the
+      plugin uses it unchanged. The rest is the project's own translation.</p>
+    <section>
+      <title>Choosing the language</title>
+      <p>Set <codeph>xml:lang</codeph> on the map and on every topic:</p>
+      <codeblock outputclass="language-xml">&lt;map xml:lang="cy-GB"&gt;</codeblock>
+      <table>
+        <title>Languages the plugin's own text is in</title>
+        <tgroup cols="2">
+          <thead>
+            <row>
+              <entry>Language</entry>
+              <entry>Values of <codeph>xml:lang</codeph></entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>English</entry>
+              <entry><codeph>en</codeph>, <codeph>en-GB</codeph>, <codeph>en-US</codeph>, and
+                any language not listed here</entry>
+            </row>
+            <row>
+              <entry>Welsh</entry>
+              <entry><codeph>cy</codeph>, <codeph>cy-GB</codeph></entry>
+            </row>
+            <row>
+              <entry>Spanish</entry>
+              <entry><codeph>es</codeph>, <codeph>es-ES</codeph>, <codeph>es-419</codeph>,
+                <codeph>es-MX</codeph>, <codeph>es-US</codeph></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <p>The map's language decides the home page, the search, glossary and index pages, and
+        the order the glossary and index are sorted in. A topic's own language decides the
+        text on its page, so a publication can hold topics in more than one language.</p>
+    </section>
+    <section>
+      <title>What stays as it is</title>
+      <ul>
+        <li>The GOV.UK Design System is used as released. Its accordion script writes
+          <q>Show all sections</q> and similar text; the plugin gives it the translated text
+          through the attributes the Design System provides for that, and changes nothing in
+          the script.</li>
+        <li>The search box and its results are written by Pagefind, which has translations
+          of its own and chooses one from the page's language.</li>
+        <li>The <q>GOV.UK</q> and <q>NHS</q> names on the logos are not translated.</li>
+        <li>Glossary and index entries are grouped under the letters A to Z; a term that
+          begins with an accented letter is grouped with the entries that begin with no
+          letter.</li>
+        <li>Text is laid out left to right. A right-to-left language is marked as such on the
+          page, but the layout is not mirrored.</li>
+      </ul>
+    </section>
+    <section>
+      <title>Adding a language</title>
+      <p>The text lives in the plugin's <filepath>strings</filepath> folder, one file for each
+        language. To add one, copy <filepath>strings-en-gb.xml</filepath> to a file named for
+        the language, translate each value (taking GOV.UK's wording where it has one for the language), and add a line for each <codeph>xml:lang</codeph>
+        value to <filepath>strings.xml</filepath>. Where the DITA Open Toolkit has no strings
+        for the language, as with Welsh, add its labels too
+        (<filepath>strings-cy.xml</filepath> shows which). Then install the plugin again.</p>
+      <p>Translations are welcome as contributions to the project.</p>
+    </section>
+  </conbody>
+</concept>

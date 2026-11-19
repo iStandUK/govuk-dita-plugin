@@ -64,6 +64,7 @@
     <topicref keyref="pdf"/>
     <topicref keyref="security"/>
     <topicref keyref="accessibility"/>
+    <topicref keyref="languages"/>
     <topicref keyref="troubleshooting"/>
     <topicref keyref="messages"/>
   </chapter>

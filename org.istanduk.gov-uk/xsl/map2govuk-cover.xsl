@@ -696,6 +696,50 @@ map transformation with the plugin's values.
                 <xsl:when test="$layout = 'accordion'">
                   <xsl:call-template name="govuk-contents-heading"/>
                   <div class="govuk-accordion" data-module="govuk-accordion" id="app-contents-accordion">
+                    <!-- the text govuk-frontend's script writes (show, hide), in the
+                         publication's language, by the attributes it reads them from -->
+                    <xsl:attribute name="data-i18n.hide-all-sections">
+                      <xsl:for-each select="$govuk-norm-map[1]">
+                        <xsl:call-template name="getVariable">
+                          <xsl:with-param name="id" select="'govuk-dita.accordion.hide-all-sections'"/>
+                        </xsl:call-template>
+                      </xsl:for-each>
+                    </xsl:attribute>
+                    <xsl:attribute name="data-i18n.hide-section">
+                      <xsl:for-each select="$govuk-norm-map[1]">
+                        <xsl:call-template name="getVariable">
+                          <xsl:with-param name="id" select="'govuk-dita.accordion.hide-section'"/>
+                        </xsl:call-template>
+                      </xsl:for-each>
+                    </xsl:attribute>
+                    <xsl:attribute name="data-i18n.hide-section-aria-label">
+                      <xsl:for-each select="$govuk-norm-map[1]">
+                        <xsl:call-template name="getVariable">
+                          <xsl:with-param name="id" select="'govuk-dita.accordion.hide-section-aria-label'"/>
+                        </xsl:call-template>
+                      </xsl:for-each>
+                    </xsl:attribute>
+                    <xsl:attribute name="data-i18n.show-all-sections">
+                      <xsl:for-each select="$govuk-norm-map[1]">
+                        <xsl:call-template name="getVariable">
+                          <xsl:with-param name="id" select="'govuk-dita.accordion.show-all-sections'"/>
+                        </xsl:call-template>
+                      </xsl:for-each>
+                    </xsl:attribute>
+                    <xsl:attribute name="data-i18n.show-section">
+                      <xsl:for-each select="$govuk-norm-map[1]">
+                        <xsl:call-template name="getVariable">
+                          <xsl:with-param name="id" select="'govuk-dita.accordion.show-section'"/>
+                        </xsl:call-template>
+                      </xsl:for-each>
+                    </xsl:attribute>
+                    <xsl:attribute name="data-i18n.show-section-aria-label">
+                      <xsl:for-each select="$govuk-norm-map[1]">
+                        <xsl:call-template name="getVariable">
+                          <xsl:with-param name="id" select="'govuk-dita.accordion.show-section-aria-label'"/>
+                        </xsl:call-template>
+                      </xsl:for-each>
+                    </xsl:attribute>
                     <xsl:for-each select="$entries">
                       <xsl:variable name="pos" select="position()"/>
                       <div class="govuk-accordion__section">
@@ -809,7 +853,8 @@ map transformation with the plugin's values.
       </xsl:call-template>
     </xsl:variable>
     <xsl:result-document href="search.html">
-      <html class="govuk-template" lang="en">
+      <html class="govuk-template" lang="{$DEFAULTLANG}">
+        <xsl:copy-of select="$govuk-map-dir"/>
         <head>
           <meta charset="UTF-8"/>
           <xsl:call-template name="govuk-csp-meta"/>

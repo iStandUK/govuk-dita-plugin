@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="cyflwyniad" xml:lang="cy-GB">
+  <title>Cyflwyniad</title>
+  <shortdesc>Beth mae’r canllaw hwn yn ei gynnwys.</shortdesc>
+  <prolog>
+    <critdates>
+      <created date="2026-09-07"/>
+      <revised modified="2026-10-01"/>
+    </critdates>
+  </prolog>
+  <conbody>
+    <p>Mae’r dudalen hon yn profi’r nodiadau, y ffigurau a’r tablau.</p>
+    <note>Darllenwch y canllaw cyfan cyn dechrau.</note>
+    <note type="warning">Peidiwch â rhannu eich cyfrinair.</note>
+    <fig>
+      <title>Llun enghreifftiol</title>
+      <p>Darn o destun yn lle llun.</p>
+    </fig>
+    <table>
+      <title>Tabl enghreifftiol</title>
+      <tgroup cols="2">
+        <thead>
+          <row><entry>Enw</entry><entry>Gwerth</entry></row>
+        </thead>
+        <tbody>
+          <row><entry>Lled</entry><entry>10</entry></row>
+        </tbody>
+      </tgroup>
+    </table>
+  </conbody>
+</concept>

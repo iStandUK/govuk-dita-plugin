@@ -12,4 +12,13 @@ further lang entries pointing at new files.
   <lang xml:lang="en" filename="strings-en-gb.xml"/>
   <lang xml:lang="en-gb" filename="strings-en-gb.xml"/>
   <lang xml:lang="en-us" filename="strings-en-gb.xml"/>
+  <!-- Welsh -->
+  <lang xml:lang="cy" filename="strings-cy.xml"/>
+  <lang xml:lang="cy-gb" filename="strings-cy.xml"/>
+  <!-- Spanish -->
+  <lang xml:lang="es" filename="strings-es.xml"/>
+  <lang xml:lang="es-es" filename="strings-es.xml"/>
+  <lang xml:lang="es-419" filename="strings-es.xml"/>
+  <lang xml:lang="es-mx" filename="strings-es.xml"/>
+  <lang xml:lang="es-us" filename="strings-es.xml"/>
 </langlist>

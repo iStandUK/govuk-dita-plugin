@@ -25,13 +25,35 @@ good as its source. govuk.dates = no | updated | both.
     <xsl:sequence select="if ($day castable as xs:date) then $day else ''"/>
   </xsl:function>
 
-  <!-- 7 September 2026 for machine dates; anything else is shown as written -->
-  <xsl:function name="govuk:date-text" as="xs:string">
+  <!-- 7 September 2026 for machine dates, the month's name and the order of
+       the parts from the string registry (%d day, %m month, %y year), so the
+       date reads in the page's language; anything else is shown as written -->
+  <xsl:template name="govuk-date-text">
     <xsl:param name="value" as="xs:string?"/>
     <xsl:variable name="iso" select="govuk:iso-date($value)"/>
-    <xsl:sequence select="if ($iso ne '') then format-date(xs:date($iso), '[D] [MNn] [Y]', 'en', (), ())
-                          else normalize-space(string($value))"/>
-  </xsl:function>
+    <xsl:choose>
+      <xsl:when test="$iso ne ''">
+        <xsl:variable name="date" select="xs:date($iso)"/>
+        <xsl:variable name="month">
+          <xsl:call-template name="getVariable">
+            <xsl:with-param name="id" select="concat('govuk-dita.month-', month-from-date($date))"/>
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="format">
+          <xsl:call-template name="getVariable">
+            <xsl:with-param name="id" select="'govuk-dita.date-format'"/>
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:value-of select="replace(replace(replace(normalize-space($format),
+                                '%d', string(day-from-date($date))),
+                                '%y', string(year-from-date($date))),
+                                '%m', normalize-space($month))"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="normalize-space(string($value))"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
 
   <xsl:template name="govuk-date-item">
     <xsl:param name="label-id" as="xs:string"/>
@@ -45,7 +67,9 @@ good as its source. govuk.dates = no | updated | both.
         <xsl:if test="govuk:iso-date($value) ne ''">
           <xsl:attribute name="datetime" select="govuk:iso-date($value)"/>
         </xsl:if>
-        <xsl:value-of select="govuk:date-text($value)"/>
+        <xsl:call-template name="govuk-date-text">
+          <xsl:with-param name="value" select="$value"/>
+        </xsl:call-template>
       </time>
     </span>
   </xsl:template>

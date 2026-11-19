@@ -93,7 +93,20 @@ Where there is no `zip` command, `jar cMf ../org.istanduk.gov-uk.zip .` makes th
 archive.
 
 The fixtures under `fixtures/` exercise bookmaps, keys, chunking, the SVG domain, search
-semantics and unresolved keys; `.github/workflows/build.yml` lists every assertion.
+semantics, unresolved keys and languages; `.github/workflows/build.yml` lists every assertion.
+
+## Adding a language
+
+The text the plugin generates is in `org.istanduk.gov-uk/strings`, one file for each language.
+Copy `strings-en-gb.xml`, translate every value, and register each `xml:lang` value the file
+serves in `strings.xml`. CI fails if a language file lacks an id the English file has. Where GOV.UK has its own
+wording, use it unchanged: `strings/NOTICE.md` names the source (the locale files of
+`govuk_publishing_components`, which cover some 65 languages) and the strings it has, and each
+language file keeps those in its first group. Where
+DITA-OT has no strings for the language, add the toolkit's labels under the toolkit's own ids,
+as `strings-cy.xml` does. Text that govuk-frontend's scripts write goes to them through the
+component's `data-i18n` attributes, never by changing the vendored files. Add a map to
+`fixtures/languages` and its checks to the "Welsh and Spanish" step.
 
 ## Keeping in step with govuk-frontend
 

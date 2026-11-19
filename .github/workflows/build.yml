@@ -1097,6 +1097,80 @@ jobs:
           has out/metadata-row/topics/check.html '<meta name="DC.coverage" content="http://statistics.data.gov.uk/id/statistical-geography/E92000001">'
           absent -rEq 'opengraph|dublincore|og:|DC\.' org.istanduk.gov-uk/xsl --include='*.xsl'
 
+      # Languages (NFR-I1, R7): a publication in Welsh and one in Spanish. The
+      # text the plugin writes, the toolkit's labels and the text govuk-frontend's
+      # accordion script writes (given by its data-i18n attributes, the script
+      # itself as released) are all in the publication's language, and the
+      # English is gone from every page. Where GOV.UK has its own wording the
+      # strings are GOV.UK's (strings/NOTICE.md), so several of these are its.
+      - name: Welsh and Spanish (R7)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          has() { grep -qF "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
+          strings=org.istanduk.gov-uk/strings
+          # every language has every string English has, and is registered
+          ids() { grep -o 'id="govuk-dita\.[^"]*"' "$1" | sort; }
+          for f in "$strings"/strings-*.xml; do
+            diff <(ids "$strings/strings-en-gb.xml") <(ids "$f") \
+              || { echo "::error::$f and strings-en-gb.xml do not hold the same ids"; exit 1; }
+            has "$strings/strings.xml" "filename=\"$(basename "$f")\""
+          done
+          for l in cy es; do
+            tools/ci/dita --input "fixtures/languages/$l.ditamap" --format govuk --output "out/languages-$l" \
+              -Dgovuk.homepage.layout=accordion -Dgovuk.dates=both -Dgovuk.phase=beta \
+              -Dgovuk.print=yes -Dgovuk.pdf=no
+          done
+          # Welsh (the map says cy-GB)
+          o=out/languages-cy
+          for page in index.html search.html glossary.html print.html cy/cyflwyniad.html; do
+            grep -qi '<html[^>]* lang="cy-gb"' "$o/$page" || { echo "::error::$o/$page is not marked as Welsh"; exit 1; }
+          done
+          has $o/index.html "Neidio i'r prif gynnwys"
+          has $o/index.html 'Mae hwn yn wasanaeth newydd.'
+          has $o/index.html 'data-i18n.show-all-sections="Dangos pob adran"'
+          has $o/index.html 'data-i18n.hide-all-sections="Cuddio pob adran"'
+          has $o/index.html 'data-i18n.show-section="Dangos"'
+          has $o/index.html 'data-i18n.hide-section="Cuddio"'
+          has $o/index.html 'data-i18n.show-section-aria-label="Dangos yr adran hon"'
+          has $o/index.html 'data-i18n.hide-section-aria-label="Cuddio yr adran hon"'
+          has $o/cy/cyflwyniad.html 'aria-label="Tudalennu"'
+          has $o/cy/cyflwyniad.html 'Rhybudd'
+          has $o/cy/cyflwyniad.html 'Ffigur 1'
+          has $o/cy/cyflwyniad.html 'Tabl 1'
+          has $o/cy/cyflwyniad.html 'Cyhoeddwyd'
+          has $o/cy/cyflwyniad.html '7 Medi 2026'
+          has $o/cy/cyflwyniad.html 'Diweddarwyd ddiwethaf'
+          has $o/cy/cyflwyniad.html '1 Hydref 2026'
+          has $o/glossary.html 'Geirfa'
+          has $o/glossary.html 'aria-label="Yn nhrefn yr wyddor"'
+          # Spanish
+          o=out/languages-es
+          for page in index.html search.html glossary.html print.html es/introduccion.html; do
+            grep -qi '<html[^>]* lang="es"' "$o/$page" || { echo "::error::$o/$page is not marked as Spanish"; exit 1; }
+          done
+          has $o/index.html 'Ir al contenido principal'
+          has $o/index.html 'Este es un servicio nuevo.'
+          has $o/index.html 'data-i18n.show-all-sections="Mostrar todas las secciones"'
+          has $o/index.html 'data-i18n.hide-all-sections="Ocultar todas las secciones"'
+          has $o/index.html 'data-i18n.show-section-aria-label="Mostrar esta sección"'
+          has $o/index.html 'data-i18n.hide-section-aria-label="Ocultar esta sección"'
+          has $o/es/introduccion.html 'aria-label="Paginación"'
+          has $o/es/introduccion.html 'Aviso'
+          has $o/es/introduccion.html 'Figura 1'
+          has $o/es/introduccion.html 'Tabla 1'
+          has $o/es/introduccion.html '7 de septiembre de 2026'
+          has $o/es/introduccion.html 'Última actualización'
+          has $o/es/introduccion.html '1 de octubre de 2026'
+          has $o/glossary.html 'Glosario'
+          has $o/glossary.html 'aria-label="De la A a la Z"'
+          # and no English left on any page of either
+          absent -rlE 'Skip to main content|Show all sections|Hide all sections|This is a new service|aria-label="Pagination"|A to Z|>Warning<|Figure 1|Table 1|Last updated|September 2026|>Contents<|>Glossary<' \
+            out/languages-cy out/languages-es --include='*.html'
+          # English is as it was: the accordion is given its text the same way
+          has out/manual-accordion/index.html 'data-i18n.show-all-sections="Show all sections"'
+          has out/manual/topics/install.html 'aria-label="Pagination"'
+
       - name: Branding CSS is current
         run: |
           (cd tools/branding && npm ci && npm run build)
@@ -1135,7 +1209,7 @@ jobs:
       - name: Validate HTML
         run: |
           set -e
-          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain
+          java -jar vnu/vnu.jar --errors-only --skip-non-html out/manual out/oruk-mini out/kitchen out/kitchen-flag out/manual-nhs out/manual-official out/manual-frt3 out/manual-custom out/keyref-nest out/keyref-nest-href out/manual-print out/oruk-print out/kitchen-print out/kitchen-raw out/kitchen-strip out/kitchen-embed out/kitchen-quiet out/inline-scope out/inline-scope-any out/manual-csp out/markdown-mini out/markdown-pdf out/search-semantics out/search-semantics-json out/metadata out/metadata-plain out/languages-cy out/languages-es
           # NFR-A2: exactly one h1 and one main landmark per topic page
           for f in out/manual/topics/*.html; do
             test "$(grep -c '<h1' "$f")" = "1" || { echo "expected one h1 in $f"; exit 1; }

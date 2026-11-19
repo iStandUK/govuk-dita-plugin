@@ -19,6 +19,10 @@ indexterm markup. Imported by map2govuk-cover.xsl.
 
   <xsl:variable name="govuk-map-base" select="base-uri(/*)"/>
 
+  <!-- the map's text direction, for the pages written whole (search, glossary,
+       index, lists); their language is the toolkit's $DEFAULTLANG -->
+  <xsl:variable name="govuk-map-dir" select="/*/@dir" as="attribute()?"/>
+
   <xsl:variable name="govuk-norm-map" as="element()*">
     <xsl:apply-templates select="/*[contains(@class, ' map/map ')]" mode="normalize-map"/>
   </xsl:variable>
@@ -173,7 +177,8 @@ indexterm markup. Imported by map2govuk-cover.xsl.
     <xsl:param name="page-title" as="xs:string"/>
     <xsl:param name="content" as="item()*"/>
     <xsl:result-document href="{$file}">
-      <html class="govuk-template" lang="en">
+      <html class="govuk-template" lang="{$DEFAULTLANG}">
+        <xsl:copy-of select="$govuk-map-dir"/>
         <head>
           <meta charset="UTF-8"/>
           <xsl:call-template name="govuk-csp-meta"/>
@@ -231,7 +236,14 @@ indexterm markup. Imported by map2govuk-cover.xsl.
   <xsl:template name="govuk-letter-nav">
     <xsl:param name="letters" as="xs:string*"/>
     <xsl:param name="prefix" as="xs:string"/>
-    <nav class="app-letter-nav" aria-label="A to Z">
+    <nav class="app-letter-nav">
+      <xsl:attribute name="aria-label">
+        <xsl:for-each select="$govuk-norm-map[1]">
+          <xsl:call-template name="getVariable">
+            <xsl:with-param name="id" select="'govuk-dita.a-to-z'"/>
+          </xsl:call-template>
+        </xsl:for-each>
+      </xsl:attribute>
       <xsl:for-each select="$letters">
         <a class="govuk-link" href="#{$prefix}-{if (. = '#') then 'other' else .}">
           <xsl:value-of select="."/>
@@ -247,7 +259,7 @@ indexterm markup. Imported by map2govuk-cover.xsl.
   <xsl:template name="govuk-glossary-content">
     <xsl:variable name="sorted" as="element()*">
       <xsl:perform-sort select="$govuk-gloss">
-        <xsl:sort select="lower-case(@term)" lang="en-GB"/>
+        <xsl:sort select="lower-case(@term)" lang="{$DEFAULTLANG}"/>
       </xsl:perform-sort>
     </xsl:variable>
     <xsl:call-template name="govuk-letter-nav">
@@ -366,8 +378,8 @@ indexterm markup. Imported by map2govuk-cover.xsl.
   <xsl:template name="govuk-index-content">
     <xsl:variable name="sorted" as="element()*">
       <xsl:perform-sort select="$govuk-ix">
-        <xsl:sort select="lower-case(@primary)" lang="en-GB"/>
-        <xsl:sort select="lower-case(@secondary)" lang="en-GB"/>
+        <xsl:sort select="lower-case(@primary)" lang="{$DEFAULTLANG}"/>
+        <xsl:sort select="lower-case(@secondary)" lang="{$DEFAULTLANG}"/>
       </xsl:perform-sort>
     </xsl:variable>
     <xsl:call-template name="govuk-letter-nav">
