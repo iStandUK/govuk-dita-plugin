@@ -1595,6 +1595,67 @@ jobs:
           vocab --input fixtures/vocab/vocab.ditamap --output out/vocab-again > /dev/null
           diff -r out/vocab out/vocab-again && echo "the vocabularies are byte-identical"
 
+      # Concepts that have pages (#294, D-32): a subjectdef that points at a page is the concept the
+      # page describes, with one address, and what the page says of it is not written a second time
+      - name: Concepts that have pages (#294)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          if [ ! -x "$RUNNER_TEMP/rdf/bin/python" ]; then
+            python3 -m venv "$RUNNER_TEMP/rdf"
+            "$RUNNER_TEMP/rdf/bin/pip" install -q --require-hashes --only-binary :all: -r tools/ci/requirements-rdf.txt
+          fi
+          rdf() { "$RUNNER_TEMP/rdf/bin/python" tools/check_rdf.py "$@"; }
+          pages() { tools/ci/dita --format govuk -Dgovuk.search=no -Dgovuk.skos=yes -Dgovuk.site.url=https://example.org/v --input fixtures/vocab/pages.ditamap "$@"; }
+          pages --output out/vocab-pages 2>&1 | tee vocab-pages.log
+          absent -Eq 'GOVK0(11|21|22)W' vocab-pages.log
+          python3 tools/check_metadata.py --site-url https://example.org/v/ out/vocab-pages
+          rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/vocab-pages/vocab/needs.ttl out/vocab-pages/vocab/needs.jsonld
+          pages --output out/vocab-pages-hidden -Dgovuk.skos.keywords=hidden > /dev/null
+          pages --output out/vocab-pages-none -Dgovuk.skos.keywords=no > /dev/null
+          python3 - <<'PY'
+          import json, os
+          base = "https://example.org/v/"; f = base + "vocab/needs.ttl#"
+          def load(site):
+              return {n["@id"]: n for n in json.load(open(f"out/{site}/vocab/needs.jsonld"))["@graph"]}
+          ref = lambda i: {"@id": i}; text = lambda v: {"@value": v, "@language": "en-GB"}
+          as_list = lambda v: v if isinstance(v, list) else [v]
+          g = load("vocab-pages")
+          advice, housing, debt = base + "pages/advice.html", base + "pages/housing.html", "https://example.org/id/need/debt-advice"
+          # the address: the one the page states, else the page, else the key; never two for one concept
+          assert set(g) == {f + "scheme", advice, housing, debt, f + "need-benefits", f + "need-other"}
+          for page in ("advice", "housing", "debt"):
+              assert os.path.isfile(f"out/vocab-pages/pages/{page}.html")
+          # a page that is the concept's address is not linked from it as well; a stated address links its page
+          assert "foaf:isPrimaryTopicOf" not in g[advice] and "foaf:isPrimaryTopicOf" not in g[housing]
+          assert g[debt]["foaf:isPrimaryTopicOf"] == ref(base + "pages/debt.html")
+          # every reference uses the one address, from both ends
+          assert g[f + "scheme"]["skos:hasTopConcept"] == ref(advice) and g[advice]["skos:topConceptOf"] == ref(f + "scheme")
+          assert g[advice]["skos:narrower"] == [ref(debt), ref(housing), ref(f + "need-benefits"), ref(f + "need-other")]
+          assert all(g[c]["skos:broader"] == ref(advice) for c in (debt, housing, f + "need-benefits", f + "need-other"))
+          # the label and the definition are the page's, unless the entry gives its own; the key is the notation
+          assert g[advice]["skos:prefLabel"] == text("Advice services") and g[advice]["skos:notation"] == "need-advice"
+          assert g[advice]["skos:definition"] == text("Services that help a person understand a problem and decide what to do.")
+          assert g[housing]["skos:prefLabel"] == text("Housing") and g[housing]["skos:definition"] == text("A home, and help to keep it.")
+          # a topic the navigation does not reach has no page to be an address, and still gives its words
+          assert g[f + "need-benefits"]["skos:prefLabel"] == text("Benefits advice")
+          # keywords are alternative labels by default: the entry's own, else the page's; never the label
+          # again, and never one twice
+          assert g[advice]["skos:altLabel"] == [text("Guidance"), text("where can I get advice")]
+          assert g[housing]["skos:altLabel"] == text("Homelessness") and g[debt]["skos:altLabel"] == text("Money advice")
+          assert not any("skos:hiddenLabel" in n for n in g.values())
+          # hidden: the same words as hidden labels, and nothing else moves; no: neither
+          h = load("vocab-pages-hidden")
+          assert h[advice]["skos:hiddenLabel"] == [text("Guidance"), text("where can I get advice")]
+          assert not any("skos:altLabel" in n for n in h.values())
+          strip = lambda n: {k: v for k, v in n.items() if k not in ("skos:altLabel", "skos:hiddenLabel")}
+          n = load("vocab-pages-none")
+          assert not any("skos:altLabel" in x or "skos:hiddenLabel" in x for x in n.values())
+          assert {k: strip(v) for k, v in g.items()} == {k: strip(v) for k, v in h.items()} == n
+          PY
+          # the parameter is checked
+          if pages --output out/x-keywords -Dgovuk.skos.keywords=maybe; then echo "govuk.skos.keywords=maybe should fail"; exit 1; fi
+
       # The publisher's own vocabulary and tables (#191, design 14 section 7): a file of terms the
       # plugin does not ship and a file of rows that map them, so that named relationships between
       # concepts are written with no stylesheet change

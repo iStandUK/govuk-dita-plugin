@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE subjectScheme PUBLIC "-//OASIS//DTD DITA Subject Scheme Map//EN" "subjectScheme.dtd">
+<!-- Concepts that have pages (#294, D-32). A subjectdef that points at a page with href takes the
+     page's address, label, definition and keywords, so nothing is written twice; one whose topic
+     states an address takes that and links the page; one with no href, or whose topic the
+     navigation does not reach, keeps its key in the vocabulary file. -->
+<subjectScheme id="needs" xml:lang="en-GB">
+  <title>Needs</title>
+  <subjectdef keys="need-advice" href="../pages/advice.dita">
+    <subjectdef keys="need-debt" href="../pages/debt.dita"/>
+    <subjectdef keys="need-housing" href="../pages/housing.dita">
+      <topicmeta>
+        <navtitle>Housing</navtitle>
+        <shortdesc>A home, and help to keep it.</shortdesc>
+        <keywords><keyword>Homelessness</keyword></keywords>
+      </topicmeta>
+    </subjectdef>
+    <subjectdef keys="need-benefits" href="../pages/unlisted.dita"/>
+    <subjectdef keys="need-other">
+      <topicmeta><navtitle>Other advice</navtitle></topicmeta>
+    </subjectdef>
+  </subjectdef>
+</subjectScheme>

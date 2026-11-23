@@ -43,6 +43,7 @@ declared only in a file that uses it. The table format is described in design
     <property term="dct:title" as="skos:prefLabel" lang="yes" required="yes"/>
     <property term="dct:description" as="skos:definition" lang="yes"/>
     <property term="dct:alternative" as="skos:altLabel" lang="yes" repeat="yes"/>
+    <property term="skos:hiddenLabel" as="skos:hiddenLabel" lang="yes" repeat="yes"/>
     <property term="skos:notation" as="skos:notation"/>
     <property term="skos:scopeNote" as="skos:scopeNote" lang="yes" repeat="yes"/>
     <property term="skos:example" as="skos:example" lang="yes" repeat="yes"/>

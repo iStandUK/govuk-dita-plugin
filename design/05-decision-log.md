@@ -737,7 +737,7 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 **Consequences:**
 
 - **The address of a `subjectdef` with an `@href` changes** from 1.4.1, from `vocab/NAME.ttl#KEY` to its page, unless it states one. The release notes say so, and the manual tells a publisher whose vocabulary is cited to state its addresses ([#294](https://github.com/iStandUK/govuk-dita-plugin/issues/294), [#300](https://github.com/iStandUK/govuk-dita-plugin/issues/300)).
-- A keywords parameter (`alt`, `hidden` or `no`), one rule for subject-scheme terms and for `concept` topics; its default is settled in #294.
+- `govuk.skos.keywords` = `alt` (default) | `hidden` | `no`, one rule for subject-scheme terms and for `concept` topics. The default was settled on the same day: `alt`, which is what the guide for source systems already tells a generator a keyword is.
 - [#298](https://github.com/iStandUK/govuk-dita-plugin/issues/298) links the vocabulary files from the cover, the term pages and `llms.txt`, and not from the sitemap.
 - #299 becomes a paragraph of the manual. **Revisit** if a publisher needs the PDF to carry its vocabulary.
 - Status is four words in the `skos` and `adms` tables. They are stated in `data`; only `retired` is also read from `outputclass` and `importance`, and only that demotes a page in search (D-18).

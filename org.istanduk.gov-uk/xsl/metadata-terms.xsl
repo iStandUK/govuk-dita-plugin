@@ -69,6 +69,23 @@ its own, if it has one. #103 reuses the term records for SKOS.
                             return govuk:md-text($n)[. ne ''])"/>
   </xsl:function>
 
+  <!-- The keywords of a concept as labels, as govuk.skos.keywords says they are written
+       (D-32): alt, alternative labels, for keywords that are other names; hidden, hidden
+       labels, for keywords that are search phrases and not names; no, not written. A
+       keyword that repeats the label, or another keyword, is left out: SKOS has a
+       concept's labels disjoint. -->
+  <xsl:function name="govuk:md-keyword-labels" as="element(govuk:p)*">
+    <xsl:param name="keywords" as="xs:string*"/>
+    <xsl:param name="label" as="xs:string"/>
+    <xsl:if test="$GOVUK-SKOS-KEYWORDS = ('alt', 'hidden')">
+      <xsl:for-each-group select="$keywords[matches(., '[\p{L}\p{N}]')][lower-case(.) ne lower-case($label)]"
+                          group-by="lower-case(.)">
+        <xsl:sequence select="govuk:md-p(if ($GOVUK-SKOS-KEYWORDS = 'hidden') then 'skos:hiddenLabel' else 'dct:alternative',
+                                         current-group()[1])"/>
+      </xsl:for-each-group>
+    </xsl:if>
+  </xsl:function>
+
   <!-- A glossary entry as a term; id is the address it is known by, or '' -->
   <xsl:function name="govuk:md-term-record" as="element(govuk:record)?">
     <xsl:param name="entry" as="element()"/>

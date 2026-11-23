@@ -355,6 +355,15 @@
                 See <xref keyref="metadata"/>.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.skos.keywords</codeph></entry>
+              <entry><codeph>alt</codeph> (default), <codeph>hidden</codeph>,
+                <codeph>no</codeph></entry>
+              <entry>What a concept's keywords are in a vocabulary: alternative labels, for
+                keywords that are its other names; hidden labels, for keywords that are search
+                phrases; or nothing. Used only with <codeph>govuk.skos=yes</codeph>. See
+                <xref keyref="metadata"/>.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.metadata.vocabularies</codeph></entry>
               <entry>File</entry>
               <entry>Your own vocabularies: a file that names each prefix, its namespace and,

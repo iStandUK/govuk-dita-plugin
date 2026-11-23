@@ -345,17 +345,39 @@
           <codeph>shortdesc</codeph>, its other names (acronyms, abbreviations, short forms,
           synonyms) are <b>alternative labels</b>, and a subject scheme's key is its
           <b>notation</b>. Text carries the language of what it labels.</li>
+        <li><b>A <codeph>subjectdef</codeph> that points at a topic</b> with
+          <codeph>href</codeph> is the concept that topic describes. What the entry does not
+          say for itself it takes from the topic: the label from the title, the definition
+          from the short description, and the keywords. So a concept that has a page is
+          written once, in its topic, and the scheme map holds only its key, its
+          <codeph>href</codeph> and its place in the hierarchy.</li>
+        <li><b>Keywords</b> of a concept, in the <codeph>subjectdef</codeph>'s
+          <codeph>topicmeta</codeph> or else in its topic's <codeph>prolog</codeph>, are
+          written as <codeph>govuk.skos.keywords</codeph> says: <codeph>alt</codeph> (the
+          default) as alternative labels, for keywords that are the concept's other names;
+          <codeph>hidden</codeph> as hidden labels, for keywords that are phrases people
+          search with and not names; <codeph>no</codeph> not at all. A keyword that repeats
+          the label, or another keyword, is left out.</li>
         <li>A <codeph>related-links</codeph> link from one glossary entry to another is
           <codeph>skos:related</codeph>. A term marked <codeph>retired</codeph>
           (<codeph>outputclass</codeph>) carries its status.</li>
         <li><b>A concept's address</b> is, in this order: one the source states
           (<codeph>resourceid appid</codeph> in the entry's prolog, or a data element named
-          <codeph>dct:identifier</codeph>); the address of its page, if it has one; an anchor on
-          the glossary page, which is given to every term for this; in a subject scheme, its key
-          as a fragment of the vocabulary file. State the address a concept already has, so that
-          links already made to it still mean it. The page it is described on is then linked
-          from it. Two terms that state the same address are reported
-          (<codeph>GOVK021W</codeph>).</li>
+          <codeph>dct:identifier</codeph>, on the <codeph>subjectdef</codeph> or in the topic it
+          points at); the address of its page, if it has one; an anchor on the glossary page,
+          which is given to every term for this; in a subject scheme, its key as a fragment of
+          the vocabulary file. State the address a concept already has, so that links already
+          made to it still mean it. The page it is described on is then linked from it. Two
+          terms that state the same address are reported (<codeph>GOVK021W</codeph>); a
+          <codeph>subjectdef</codeph> and the topic it points at are one concept, not
+          two.</li>
+        <li><b>Changed in 1.5.0.</b> A <codeph>subjectdef</codeph> whose
+          <codeph>href</codeph> points at a page of the site now has the page's address, where
+          1.4 gave it its key in the vocabulary file; it takes its label from the topic's
+          title where 1.4 used the key, when it has no <codeph>navtitle</codeph>; and its
+          keywords are alternative labels. If others already cite the addresses a 1.4 build
+          wrote, state them with <codeph>dct:identifier</codeph> before you upgrade, and they
+          do not move.</li>
         <li><b>Any other property</b> is a <xref href="#metadata/data-elements">data
           element</xref>: in a <codeph>subjectdef</codeph>'s <codeph>topicmeta</codeph> or a
           glossary entry's <codeph>prolog</codeph> for a concept, and in the scheme map's own

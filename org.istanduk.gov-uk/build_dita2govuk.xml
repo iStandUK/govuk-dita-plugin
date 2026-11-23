@@ -562,6 +562,16 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <equals arg1="${govuk.skos}" arg2="no"/>
       </or></not></condition>
     </fail>
+    <!-- What a concept's keywords are in a vocabulary (#294, D-32): other names, search phrases
+         that are not names, or nothing to do with it -->
+    <property name="govuk.skos.keywords" value="alt"/>
+    <fail message="govuk.skos.keywords must be 'alt', 'hidden' or 'no', was: ${govuk.skos.keywords}">
+      <condition><not><or>
+        <equals arg1="${govuk.skos.keywords}" arg2="alt"/>
+        <equals arg1="${govuk.skos.keywords}" arg2="hidden"/>
+        <equals arg1="${govuk.skos.keywords}" arg2="no"/>
+      </or></not></condition>
+    </fail>
     <!-- The publisher's own vocabularies and tables (#191): each a file in the shipped format,
          given to the stylesheets as an address. A name that is no such file is reported by the
          map transform (GOVK023W, GOVK024W), and the build goes on without it. -->
@@ -799,6 +809,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-DATES" expression="${govuk.dates}"/>
       <param name="GOVUK-DCAT" expression="${govuk.dcat}"/>
       <param name="GOVUK-SKOS" expression="${govuk.skos}"/>
+      <param name="GOVUK-SKOS-KEYWORDS" expression="${govuk.skos.keywords}"/>
       <param name="GOVUK-CONTACT-EMAIL" expression="${govuk.contact.email}" if:set="govuk.contact.email"/>
       <param name="GOVUK-METADATA" expression="${govuk.metadata}"/>
       <param name="GOVUK-METADATA-PERSONS" expression="${govuk.metadata.persons}"/>

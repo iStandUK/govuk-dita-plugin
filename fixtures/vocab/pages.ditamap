@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- A subject scheme whose concepts have pages (#294): see schemes/needs.ditamap. -->
+<map xml:lang="en-GB">
+  <title>Needs a directory lists</title>
+  <mapref href="schemes/needs.ditamap" processing-role="resource-only"/>
+  <topicref href="pages/advice.dita">
+    <topicref href="pages/debt.dita"/>
+    <topicref href="pages/housing.dita"/>
+  </topicref>
+</map>

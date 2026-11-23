@@ -45,6 +45,8 @@ the once-per-build checks).
   <xsl:param name="GOVUK-CONTACT-EMAIL" select="''"/>
   <!-- no | yes (#103): the glossary and subject schemes as SKOS vocabularies, its own switch -->
   <xsl:param name="GOVUK-SKOS" select="'no'"/>
+  <!-- alt | hidden | no (#294, D-32): what a concept's keywords are in a vocabulary -->
+  <xsl:param name="GOVUK-SKOS-KEYWORDS" select="'alt'"/>
   <xsl:param name="GOVUK-DATES" select="'no'"/>
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>

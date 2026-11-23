@@ -75,14 +75,21 @@ it. Nothing is invented, and the type of a scheme is its source's.
     <xsl:sequence select="normalize-space(string($label))"/>
   </xsl:variable>
 
+
+  <!-- The entries of the map that are pages, by the topic each points at. A key, because
+       every subjectdef of a scheme asks for its page, and its parent's and its children's:
+       a scan of the map for each would grow as the square of a large vocabulary. -->
+  <xsl:key name="govuk-md-page-by-topic"
+           match="*[contains(@class, ' map/topicref ')][normalize-space(@href)]
+                   [not(@processing-role = 'resource-only')][not(@scope = 'external')]
+                   [not(@format) or @format = 'dita']"
+           use="string(resolve-uri(replace(@href, '#.*$', ''), string(base-uri(.))))"/>
+
   <!-- The page an entry has of its own, if it does: the entry is the root of a topic the navigation reaches -->
   <xsl:function name="govuk:md-entry-page" as="xs:string">
     <xsl:param name="entry" as="element()"/>
     <xsl:variable name="ref" as="element()?"
-                  select="($govuk-md-map//*[contains(@class, ' map/topicref ')][normalize-space(@href)]
-                           [not(@processing-role = 'resource-only')][not(@scope = 'external')]
-                           [not(@format) or @format = 'dita']
-                           [string(resolve-uri(replace(@href, '#.*$', ''), string(base-uri($govuk-md-map)))) = string(base-uri($entry))]
+                  select="(key('govuk-md-page-by-topic', string(base-uri($entry)), root($govuk-md-map))
                            [$entry is root($entry)/*])[1]"/>
     <xsl:sequence select="if (exists($ref)) then govuk:md-id(govuk:md-ref-path($ref)) else ''"/>
   </xsl:function>
@@ -107,7 +114,8 @@ it. Nothing is invented, and the type of a scheme is its source's.
     <xsl:variable name="page" select="govuk:md-entry-page($entry)"/>
     <xsl:variable name="term" select="govuk:md-term-record($entry, $id)"/>
     <xsl:if test="exists($term)">
-      <govuk:record kind="term" id="{$id}" stated="{if (govuk:md-stated-iri($entry/*[contains(@class, ' topic/prolog ')]) ne '') then 'yes' else 'no'}">
+      <govuk:record kind="term" id="{$id}" src="{concat(base-uri($entry), '#', $entry/@id)}"
+                    stated="{if (govuk:md-stated-iri($entry/*[contains(@class, ' topic/prolog ')]) ne '') then 'yes' else 'no'}">
         <xsl:sequence select="$term/govuk:p"/>
         <xsl:sequence select="govuk:md-p('dct:language', govuk:md-lang($entry))"/>
         <xsl:if test="$page ne '' and $page ne $id">
@@ -163,13 +171,40 @@ it. Nothing is invented, and the type of a scheme is its source's.
                           else concat($govuk-md-base, 'vocab/', govuk:md-scheme-stem($map), '.ttl#scheme')"/>
   </xsl:function>
 
+  <!-- The topic a subjectdef points at with its href, when it is a DITA topic of this build -->
+  <xsl:function name="govuk:md-subjectdef-topic" as="element()?">
+    <xsl:param name="def" as="element()"/>
+    <xsl:variable name="href" select="replace(normalize-space($def/@href), '#.*$', '')"/>
+    <xsl:variable name="uri" as="xs:string?"
+                  select="if ($href ne '' and not($def/@scope = ('external', 'peer')) and (not($def/@format) or $def/@format = 'dita'))
+                          then string(resolve-uri($href, string(base-uri($def)))) else ()"/>
+    <xsl:sequence select="if (exists($uri) and doc-available($uri)) then doc($uri)/*[contains(@class, ' topic/topic ')] else ()"/>
+  </xsl:function>
+
+  <!-- The address a subjectdef's source states: its own (a data element named dct:identifier
+       in its topicmeta), else the one the topic it points at states -->
+  <xsl:function name="govuk:md-subjectdef-stated" as="xs:string">
+    <xsl:param name="def" as="element()"/>
+    <xsl:sequence select="(govuk:md-stated-iri($def/*[contains(@class, ' map/topicmeta ')])[. ne ''],
+                           govuk:md-stated-iri(govuk:md-subjectdef-topic($def)/*[contains(@class, ' topic/prolog ')]))[1]"/>
+  </xsl:function>
+
+  <!-- The page of the topic a subjectdef points at, when the navigation reaches it, or '' -->
+  <xsl:function name="govuk:md-subjectdef-page" as="xs:string">
+    <xsl:param name="def" as="element()"/>
+    <xsl:variable name="topic" select="govuk:md-subjectdef-topic($def)"/>
+    <xsl:sequence select="if (exists($topic)) then govuk:md-entry-page($topic) else ''"/>
+  </xsl:function>
+
+  <!-- A subjectdef's address (D-32): the one its source states, else its page, else its key
+       as a fragment of the vocabulary file. One concept has one address, whether it is
+       reached as a subjectdef or as the topic the subjectdef points at. -->
   <xsl:function name="govuk:md-subjectdef-id" as="xs:string">
     <xsl:param name="def" as="element()"/>
     <xsl:variable name="map" select="$def/ancestor::*[contains(@class, ' subjectScheme/subjectScheme ')][1]"/>
-    <xsl:variable name="stated" select="govuk:md-stated-iri($def/*[contains(@class, ' map/topicmeta ')])"/>
-    <xsl:sequence select="if ($stated ne '') then $stated
-                          else concat($govuk-md-base, 'vocab/', govuk:md-scheme-stem($map), '.ttl#',
-                                      replace(tokenize(normalize-space($def/@keys))[1], '[^A-Za-z0-9_.\-]', '-'))"/>
+    <xsl:sequence select="(govuk:md-subjectdef-stated($def)[. ne ''], govuk:md-subjectdef-page($def)[. ne ''],
+                           concat($govuk-md-base, 'vocab/', govuk:md-scheme-stem($map), '.ttl#',
+                                  replace(tokenize(normalize-space($def/@keys))[1], '[^A-Za-z0-9_.\-]', '-')))[1]"/>
   </xsl:function>
 
   <xsl:function name="govuk:md-subject-term" as="element(govuk:record)?">
@@ -178,15 +213,37 @@ it. Nothing is invented, and the type of a scheme is its source's.
     <xsl:variable name="key" select="tokenize(normalize-space($def/@keys))[1]"/>
     <xsl:variable name="map" select="$def/ancestor::*[contains(@class, ' subjectScheme/subjectScheme ')][1]"/>
     <xsl:variable name="parent" select="$def/parent::*[contains(@class, ' subjectScheme/subjectdef ')][normalize-space(@keys)]"/>
+    <xsl:variable name="topic" select="govuk:md-subjectdef-topic($def)"/>
+    <xsl:variable name="id" select="govuk:md-subjectdef-id($def)"/>
+    <xsl:variable name="page" select="govuk:md-subjectdef-page($def)"/>
+    <!-- what the entry says of itself, else what the topic it points at says, so that a label
+         and a definition need not be written twice (#294) -->
     <xsl:variable name="label" select="(govuk:md-text($meta/*[contains(@class, ' topic/navtitle ')][1]),
-                                        govuk:md-text($meta/*[contains(@class, ' map/linktext ')][1]), $key)[. ne ''][1]"/>
+                                        govuk:md-text($meta/*[contains(@class, ' map/linktext ')][1]),
+                                        govuk:md-text($topic/*[contains(@class, ' topic/title ')][1]), $key)[. ne ''][1]"/>
+    <xsl:variable name="keywords" as="element()*"
+                  select="($meta/*[contains(@class, ' topic/keywords ')]/*[contains(@class, ' topic/keyword ')],
+                           $topic/*[contains(@class, ' topic/prolog ')]/*[contains(@class, ' topic/metadata ')]
+                             /*[contains(@class, ' topic/keywords ')]/*[contains(@class, ' topic/keyword ')])"/>
+    <xsl:variable name="own-keywords" as="element()*" select="$keywords[ancestor::* intersect $meta]"/>
     <xsl:if test="normalize-space($key) ne ''">
-      <govuk:record kind="term" id="{govuk:md-subjectdef-id($def)}"
-                    stated="{if (govuk:md-stated-iri($meta) ne '') then 'yes' else 'no'}">
+      <govuk:record kind="term" id="{$id}"
+                    src="{if (exists($topic)) then concat(base-uri($topic), '#', $topic/@id) else generate-id($def)}"
+                    stated="{if (govuk:md-subjectdef-stated($def) ne '') then 'yes' else 'no'}">
         <xsl:sequence select="govuk:md-p('dct:title', $label),
-                              govuk:md-p('dct:description', govuk:md-text($meta/*[contains(@class, ' map/shortdesc ')][1])),
+                              govuk:md-p('dct:description',
+                                (govuk:md-text($meta/*[contains(@class, ' map/shortdesc ')][1]),
+                                 govuk:md-text(($topic/*[contains(@class, ' topic/shortdesc ')],
+                                                $topic/*[contains(@class, ' topic/abstract ')]/*[contains(@class, ' topic/shortdesc ')])[1]))[. ne ''][1]),
                               govuk:md-p('skos:notation', $key),
                               govuk:md-p('dct:language', govuk:md-lang($def))"/>
+        <!-- its keywords, as the publisher says keywords are written; the entry's own, else its topic's -->
+        <xsl:sequence select="govuk:md-keyword-labels(
+                                (if (exists($own-keywords)) then $own-keywords else $keywords) ! govuk:md-text(.), $label)"/>
+        <!-- the page it is described on, when that is not already its address -->
+        <xsl:if test="$page ne '' and $page ne $id">
+          <xsl:sequence select="govuk:md-p('foaf:isPrimaryTopicOf', $page)"/>
+        </xsl:if>
         <xsl:if test="tokenize(normalize-space($def/@outputclass)) = 'retired' or govuk:md-data($meta)[@term = 'adms:status'] = 'retired'">
           <xsl:sequence select="govuk:md-p('adms:status', 'retired')"/>
         </xsl:if>
@@ -334,9 +391,10 @@ it. Nothing is invented, and the type of a scheme is its source's.
       <xsl:for-each-group select="$govuk-md-vocab[not(@stem = $govuk-md-group-schemes/@stem)]
                                   /govuk:rel[@name = 'hasPart']/govuk:record[@kind = 'term'][@stated = 'yes']"
                           group-by="@id">
-        <xsl:if test="count(current-group()) gt 1">
-          <govuk:dup id="{current-grouping-key()}" n="{count(current-group())}"
-                     titles="{string-join(current-group()/govuk:p[@term = 'dct:title']/@value, ', ')}"/>
+        <!-- two sources, not one source met twice: a subjectdef and the topic it points at are one concept -->
+        <xsl:if test="count(distinct-values(current-group()/@src)) gt 1">
+          <govuk:dup id="{current-grouping-key()}" n="{count(distinct-values(current-group()/@src))}"
+                     titles="{string-join(for $s in distinct-values(current-group()/@src) return (current-group()[@src = $s])[1]/govuk:p[@term = 'dct:title']/@value, ', ')}"/>
         </xsl:if>
       </xsl:for-each-group>
     </xsl:variable>
