@@ -6,5 +6,10 @@
   <prolog>
     <data name="rdf:type" value="skos:Concept"/>
   </prolog>
+
   <conbody><p>States no address: its page is its address. It has nothing broader, so it is a top concept.</p></conbody>
+  <related-links>
+    <link href="care_plan.dita"/>
+    <link href="guidance.dita"/>
+  </related-links>
 </concept>

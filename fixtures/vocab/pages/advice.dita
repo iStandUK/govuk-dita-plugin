@@ -13,5 +13,10 @@
       </keywords>
     </metadata>
   </prolog>
+
   <conbody><p>What belongs here, and what does not.</p></conbody>
+  <related-links>
+    <link href="housing.dita"/>
+    <link href="https://example.org/elsewhere" scope="external" format="html"><linktext>Elsewhere</linktext></link>
+  </related-links>
 </concept>

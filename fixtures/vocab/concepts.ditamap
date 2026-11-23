@@ -18,6 +18,15 @@
     <topicref href="concepts/assessment.dita"/>
     <topicref href="concepts/care_plan.dita"/>
     <topicref href="concepts/review.dita"/>
+
     <topicref href="concepts/guidance.dita"/>
   </topicref>
+  <!-- Related concepts from a relationship table (#295), beside those the topics state -->
+  <reltable>
+    <relheader><relcolspec/><relcolspec/></relheader>
+    <relrow>
+      <relcell><topicref href="concepts/healthcare_activity.dita"/></relcell>
+      <relcell><topicref href="concepts/review.dita"/></relcell>
+    </relrow>
+  </reltable>
 </map>

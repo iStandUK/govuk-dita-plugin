@@ -369,9 +369,20 @@
           <codeph>hidden</codeph> as hidden labels, for keywords that are phrases people
           search with and not names; <codeph>no</codeph> not at all. A keyword that repeats
           the label, or another keyword, is left out.</li>
+
         <li>A <codeph>related-links</codeph> link from one glossary entry to another is
           <codeph>skos:related</codeph>. A term marked <codeph>retired</codeph>
           (<codeph>outputclass</codeph>) carries its status.</li>
+        <li><indexterm>relationship table<indexterm>related concepts</indexterm></indexterm><b>Related
+          concepts</b> of a subject scheme, or of a scheme the map declares, come from the
+          map's relationship tables and from the topics' own links. A row of a
+          <codeph>reltable</codeph> relates each concept in one cell to each in the others,
+          whether the entry names the concept by <codeph>keyref</codeph> or by
+          <codeph>href</codeph>; a <codeph>related-links</codeph> link an author writes from
+          one concept's topic to another's relates the two. Both concepts then say
+          <codeph>skos:related</codeph>. An entry or a link to something that is not a
+          concept of the same scheme relates nothing, so the same table can still link
+          concepts to ordinary pages for readers.</li>
         <li><b>A concept's address</b> is, in this order: one the source states
           (<codeph>resourceid appid</codeph> in the entry's prolog, or a data element named
           <codeph>dct:identifier</codeph>, on the <codeph>subjectdef</codeph> or in the topic it

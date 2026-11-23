@@ -3,31 +3,38 @@
 This file is part of the govuk-dita-plugin project.
 Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
 
-The vocabulary harvesters and files (design 14 section 8, #103), included by
-map2govuk-cover.xsl: the schemes and terms a publication holds, written by
-govuk.skos=yes as SKOS, one vocab/<name>.ttl and vocab/<name>.jsonld for each.
+
+The vocabulary harvesters and files (design 14 sections 8, 18 and 19; #103,
+#263), included by map2govuk-cover.xsl: the schemes and terms a publication
+holds, written by govuk.skos=yes as SKOS, one vocab/<name>.ttl and
+vocab/<name>.jsonld for each.
 
   scheme   The generated glossary (every glossary entry), each glossgroup (its
-           entries), and each subjectScheme map the build holds (its subjectdefs).
-  term     A glossary entry or a subjectdef: its label, definition, other
-           names, and, in a subject scheme, its place in the hierarchy.
+           entries), each subjectScheme map the build holds (its subjectdefs),
+           and each scheme the map declares (the topics beneath the declaration
+           that say they are concepts).
+  term     A glossary entry, a subjectdef, or a topic that says it is a
+           concept: its label, definition and other names, what its data
+           elements state, and its place in a hierarchy: a subjectdef's
+           nesting, or the broader and narrower concepts a topic states.
 
 A term's address is, in this order: an absolute address the source states
 (resourceid appid, or a data element named dct:identifier); the address of its
 own page; the glossary page with the entry's anchor; the vocabulary file with
 the term's key as the fragment. The page a term is described on is linked from
-it. Nothing is invented, and the type of a scheme is its source's.
+it. One concept has one address, however it is reached (D-32). Nothing is
+invented, and the type of a scheme is its source's.
+
+The names, addresses and rules that a page's own transform needs as well are
+in metadata-terms.xsl.
 -->
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns:govuk="https://github.com/iStandUK/govuk-dita-plugin"
+
+                xmlns:map="http://www.w3.org/2005/xpath-functions/map"
                 version="3.0"
-                exclude-result-prefixes="xs govuk">
-
-
-  <!-- The names and addresses of terms and schemes (govuk:md-stem, govuk:md-stated-iri,
-       govuk:md-lang, govuk:md-term-retired, govuk:md-stub, and a subject scheme's file name
-       and address) are in metadata-terms.xsl, where a page's own transform reads them too. -->
+                exclude-result-prefixes="xs govuk map">
 
   <!-- ===== The generated glossary and its groups ===== -->
 
@@ -159,8 +166,97 @@ it. Nothing is invented, and the type of a scheme is its source's.
                                   replace(tokenize(normalize-space($def/@keys))[1], '[^A-Za-z0-9_.\-]', '-')))[1]"/>
   </xsl:function>
 
+  <!-- ===== Related concepts, from relationship tables and related links (#295) =====
+
+       Design 14 section 4 has relations come from related links and relationship tables. A
+       row of a reltable relates what is in one of its cells to what is in the others, and
+       an author's own link from one topic to another relates the two. Each is a pair here,
+       whose ends are named as the source names them: by the topic a reference points at,
+       and by the key it uses. A scheme then finds, for each of its terms, the other end of
+       every pair the term is an end of, and writes skos:related when that end is a term of
+       the same scheme too; SKOS has the property symmetric, so both terms say it. A pair
+       with an end that is no term of the scheme writes nothing. -->
+
+  <!-- One end of a pair, from a topicref or a link: the topic it points at (as an address
+       in the working folder, or '') and the key it uses (or '') -->
+  <xsl:function name="govuk:md-pair-end" as="element(govuk:end)?">
+    <xsl:param name="from" as="element()"/>
+    <xsl:param name="base" as="xs:string"/>
+    <xsl:variable name="href" select="replace(normalize-space($from/@href), '#.*$', '')"/>
+    <xsl:variable name="local" select="$href ne '' and not($from/@scope = ('external', 'peer'))
+                                       and (not($from/@format) or $from/@format = 'dita')"/>
+    <xsl:variable name="key" select="replace(tokenize(normalize-space($from/@keyref))[1], '/.*$', '')"/>
+    <xsl:if test="$local or $key ne ''">
+      <govuk:end uri="{if ($local) then string(resolve-uri($href, $base)) else ''}" key="{$key}"/>
+    </xsl:if>
+  </xsl:function>
+
+  <!-- A topic's own links to other topics: those its author wrote, not those the build adds
+       from the map (which it marks with the class of the map entry they came from) -->
+  <xsl:function name="govuk:md-topic-pairs" as="element(govuk:pair)*">
+    <xsl:param name="topic" as="element()?"/>
+    <xsl:variable name="uri" select="string(base-uri($topic))"/>
+    <xsl:for-each select="$topic/*[contains(@class, ' topic/related-links ')]//*[contains(@class, ' topic/link ')]
+                          [not(@mapclass)][normalize-space(@href)]">
+      <xsl:variable name="other" select="govuk:md-pair-end(., $uri)"/>
+      <xsl:if test="exists($other) and $other/@uri ne $uri">
+        <govuk:pair>
+          <govuk:end uri="{$uri}" key=""/>
+          <xsl:sequence select="$other"/>
+        </govuk:pair>
+      </xsl:if>
+    </xsl:for-each>
+  </xsl:function>
+
+  <xsl:variable name="govuk-md-pairs">
+    <xsl:variable name="base" select="string(base-uri($govuk-md-map))"/>
+    <!-- a row of a relationship table: each entry of a cell with each entry of every later cell -->
+    <xsl:for-each select="$govuk-md-map//*[contains(@class, ' map/reltable ')]/*[contains(@class, ' map/relrow ')]">
+      <xsl:variable name="cells" select="*[contains(@class, ' map/relcell ')]"/>
+      <xsl:for-each select="1 to count($cells)">
+        <xsl:variable name="i" select="."/>
+        <xsl:for-each select="$cells[$i]//*[contains(@class, ' map/topicref ')] ! govuk:md-pair-end(., $base)">
+          <xsl:variable name="a" select="."/>
+          <xsl:for-each select="$cells[position() gt $i]//*[contains(@class, ' map/topicref ')] ! govuk:md-pair-end(., $base)">
+            <govuk:pair>
+              <xsl:sequence select="$a, ."/>
+            </govuk:pair>
+          </xsl:for-each>
+        </xsl:for-each>
+      </xsl:for-each>
+    </xsl:for-each>
+    <!-- the links of each topic a subjectdef points at, once; those of the topics that say
+         they are concepts are read with them, below -->
+    <xsl:for-each-group select="$govuk-md-scheme-maps//*[contains(@class, ' subjectScheme/subjectdef ')] ! govuk:md-subjectdef-topic(.)"
+                        group-by="string(base-uri(.))">
+      <xsl:sequence select="govuk:md-topic-pairs(current-group()[1])"/>
+    </xsl:for-each-group>
+    <xsl:sequence select="$govuk-md-concepts/govuk:concept/govuk:pair"/>
+  </xsl:variable>
+
+  <xsl:key name="govuk-md-end-by-uri" match="govuk:pair/govuk:end[@uri ne '']" use="string(@uri)"/>
+  <xsl:key name="govuk-md-end-by-key" match="govuk:pair/govuk:end[@key ne '']" use="string(@key)"/>
+
+  <!-- The terms of a scheme that a term is related to by a pair: the term is named by its
+       topic or its keys, and the scheme by its terms' addresses, each under its topic and
+       under its keys -->
+  <xsl:function name="govuk:md-paired" as="xs:string*">
+    <xsl:param name="self" as="xs:string"/>
+    <xsl:param name="uri" as="xs:string?"/>
+    <xsl:param name="keys" as="xs:string*"/>
+    <xsl:param name="by-uri" as="map(xs:string, xs:string)"/>
+    <xsl:param name="by-key" as="map(xs:string, xs:string)"/>
+    <xsl:variable name="ends" select="(if (normalize-space($uri) ne '') then key('govuk-md-end-by-uri', string($uri), $govuk-md-pairs) else ()),
+                                      (for $k in $keys return key('govuk-md-end-by-key', $k, $govuk-md-pairs))"/>
+    <xsl:sequence select="distinct-values(for $other in ($ends/../govuk:end except $ends)
+                                          return (map:get($by-uri, string($other/@uri)), map:get($by-key, string($other/@key)))[1])
+                          [. ne $self]"/>
+  </xsl:function>
+
   <xsl:function name="govuk:md-subject-term" as="element(govuk:record)?">
     <xsl:param name="def" as="element()"/>
+    <xsl:param name="by-uri" as="map(xs:string, xs:string)"/>
+    <xsl:param name="by-key" as="map(xs:string, xs:string)"/>
     <xsl:variable name="meta" select="$def/*[contains(@class, ' map/topicmeta ')]"/>
     <xsl:variable name="key" select="tokenize(normalize-space($def/@keys))[1]"/>
     <xsl:variable name="map" select="$def/ancestor::*[contains(@class, ' subjectScheme/subjectScheme ')][1]"/>
@@ -216,6 +312,11 @@ it. Nothing is invented, and the type of a scheme is its source's.
           <xsl:sequence select="$def/*[contains(@class, ' subjectScheme/subjectdef ')][normalize-space(@keys)]
                                 ! govuk:md-stub('term', govuk:md-subjectdef-id(.))"/>
         </govuk:rel>
+        <!-- the terms of the scheme it is paired with, by a relationship table or a link (#295) -->
+        <govuk:rel name="related">
+          <xsl:sequence select="govuk:md-paired($id, $topic ! string(base-uri(.)), tokenize(normalize-space($def/@keys)), $by-uri, $by-key)
+                                ! govuk:md-stub('term', .)"/>
+        </govuk:rel>
       </govuk:record>
     </xsl:if>
   </xsl:function>
@@ -244,7 +345,7 @@ it. Nothing is invented, and the type of a scheme is its source's.
         <xsl:variable name="page" select="govuk:md-id(govuk:md-ref-path($ref))"/>
         <xsl:variable name="properties" select="govuk:md-concept-properties($topic, $ref)"/>
         <govuk:concept id="{$id}" decl="{if (exists($decl)) then generate-id($decl) else ''}"
-                       src="{concat(base-uri($topic), '#', $topic/@id)}"
+                       src="{concat(base-uri($topic), '#', $topic/@id)}" uri="{base-uri($topic)}"
                        stated="{if ($id ne $page) then 'yes' else 'no'}"
                        title="{$properties[@term = 'dct:title'][1]/@value}" path="{govuk:md-ref-path($ref)}">
           <xsl:sequence select="$properties"/>
@@ -255,6 +356,7 @@ it. Nothing is invented, and the type of a scheme is its source's.
                                            [govuk:md-uri(@value) ne ''][@value ne $id]">
             <govuk:edge rel="{substring-after(@term, ':')}" to="{@value}"/>
           </xsl:for-each>
+          <xsl:sequence select="govuk:md-topic-pairs($topic)"/>
         </govuk:concept>
       </xsl:if>
     </xsl:for-each-group>
@@ -281,6 +383,7 @@ it. Nothing is invented, and the type of a scheme is its source's.
     <xsl:param name="concept" as="element(govuk:concept)"/>
     <xsl:param name="scheme" as="xs:string"/>
     <xsl:param name="hierarchy" as="xs:boolean"/>
+    <xsl:param name="by-uri" as="map(xs:string, xs:string)"/>
     <xsl:variable name="broader" select="govuk:md-concept-related($concept, 'broader', 'narrower')"/>
     <govuk:record kind="term" id="{$concept/@id}" src="{$concept/@src}" stated="{$concept/@stated}">
       <xsl:sequence select="$concept/govuk:p"/>
@@ -298,7 +401,9 @@ it. Nothing is invented, and the type of a scheme is its source's.
         <xsl:sequence select="govuk:md-concept-related($concept, 'narrower', 'broader') ! govuk:md-stub('term', .)"/>
       </govuk:rel>
       <govuk:rel name="related">
-        <xsl:sequence select="govuk:md-concept-related($concept, 'related', 'related') ! govuk:md-stub('term', .)"/>
+        <xsl:sequence select="distinct-values((govuk:md-concept-related($concept, 'related', 'related'),
+                                               govuk:md-paired(string($concept/@id), string($concept/@uri), (), $by-uri, map{})))
+                              ! govuk:md-stub('term', .)"/>
       </govuk:rel>
     </govuk:record>
   </xsl:function>
@@ -335,7 +440,8 @@ it. Nothing is invented, and the type of a scheme is its source's.
               <xsl:sequence select="govuk:md-p('foaf:isPrimaryTopicOf', $page)"/>
             </xsl:if>
             <govuk:rel name="hasPart">
-              <xsl:sequence select="$concepts ! govuk:md-concept-term(., $id, $hierarchy)"/>
+              <xsl:sequence select="let $by-uri := map:merge($concepts ! map:entry(string(@uri), string(@id)), map{'duplicates': 'use-first'})
+                                    return $concepts ! govuk:md-concept-term(., $id, $hierarchy, $by-uri)"/>
             </govuk:rel>
             <govuk:rel name="topConcept">
               <xsl:sequence select="if ($hierarchy)
@@ -418,7 +524,14 @@ it. Nothing is invented, and the type of a scheme is its source's.
                                   govuk:md-p('dct:language', govuk:md-lang(.)),
                                   govuk:md-data(*[contains(@class, ' map/topicmeta ')])"/>
             <govuk:rel name="hasPart">
-              <xsl:sequence select="$defs ! govuk:md-subject-term(.)"/>
+              <!-- the scheme's terms by the topic each points at and by each of its keys, to find related terms -->
+              <xsl:sequence select="let $by-uri := map:merge(for $d in $defs, $t in govuk:md-subjectdef-topic($d)
+                                                             return map:entry(string(base-uri($t)), govuk:md-subjectdef-id($d)),
+                                                             map{'duplicates': 'use-first'}),
+                                        $by-key := map:merge(for $d in $defs, $k in tokenize(normalize-space($d/@keys))
+                                                             return map:entry($k, govuk:md-subjectdef-id($d)),
+                                                             map{'duplicates': 'use-first'})
+                                    return $defs ! govuk:md-subject-term(., $by-uri, $by-key)"/>
             </govuk:rel>
             <govuk:rel name="topConcept">
               <xsl:sequence select="$defs[not(parent::*[contains(@class, ' subjectScheme/subjectdef ')][normalize-space(@keys)])]

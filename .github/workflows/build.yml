@@ -1633,6 +1633,13 @@ jobs:
           assert g[f + "scheme"]["skos:hasTopConcept"] == ref(advice) and g[advice]["skos:topConceptOf"] == ref(f + "scheme")
           assert g[advice]["skos:narrower"] == [ref(debt), ref(housing), ref(f + "need-benefits"), ref(f + "need-other")]
           assert all(g[c]["skos:broader"] == ref(advice) for c in (debt, housing, f + "need-benefits", f + "need-other"))
+          # related concepts (#295): a row of a relationship table that names two of them by key, and a
+          # link one topic's author made to another, each said by both; a row with a page that is no
+          # concept of the scheme relates nothing
+          assert g[debt]["skos:related"] == ref(housing) and g[advice]["skos:related"] == ref(housing)
+          assert g[housing]["skos:related"] == [ref(debt), ref(advice)]
+          assert not any("skos:related" in g[c] for c in (f + "need-benefits", f + "need-other", f + "scheme"))
+          assert not any("about" in json.dumps(n) for n in g.values())
           # the label and the definition are the page's, unless the entry gives its own; the key is the notation
           assert g[advice]["skos:prefLabel"] == text("Advice services") and g[advice]["skos:notation"] == "need-advice"
           assert g[advice]["skos:definition"] == text("Services that help a person understand a problem and decide what to do.")
@@ -1717,8 +1724,14 @@ jobs:
           assert "skos:topConceptOf" not in g[plan]
           # related is said by both concepts; a related concept outside the scheme is a reference only
           assert g[assessment]["skos:related"] == [ref(plan), ref("https://example.org/other/triage")]
-          assert g[plan]["skos:related"] == ref(assessment)
+
           assert "https://example.org/other/triage" not in g
+          # related concepts from a row of a relationship table and from a topic's own link (#295), each
+          # said by both; a link to a page that is not a concept relates nothing
+          assert g[activity]["skos:related"] == ref(review)
+          assert g[review]["skos:related"] == [ref(activity), ref(plan)]
+          assert g[plan]["skos:related"] == [ref(assessment), ref(review)]
+          assert not any(base + "concepts/guidance.html" in json.dumps(n) for n in g.values())
           # alignment to other vocabularies, as stated
           assert g[plan]["skos:exactMatch"] == ref("https://contsys.example/concept/care_plan")
           assert g[plan]["skos:broadMatch"] == ref("https://upper.example/Plan")
