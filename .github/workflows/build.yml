@@ -1467,9 +1467,9 @@ jobs:
           rdf() { "$RUNNER_TEMP/rdf/bin/python" tools/check_rdf.py "$@"; }
           vocab --input fixtures/vocab/vocab.ditamap --output out/vocab 2>&1 | tee vocab.log
           absent -Eq 'GOVK02[12]W' vocab.log
-          # a vocabulary for the glossary, for the glossgroup and for the subject scheme, each in both forms
-          for v in glossary clinical colours; do test -f out/vocab/vocab/$v.ttl && test -f out/vocab/vocab/$v.jsonld; done
-          test "$(find out/vocab/vocab -type f | wc -l | tr -d ' ')" = 6
+          # a vocabulary for the glossary, for the glossgroup and for each subject scheme, each in both forms
+          for v in glossary clinical colours services; do test -f out/vocab/vocab/$v.ttl && test -f out/vocab/vocab/$v.jsonld; done
+          test "$(find out/vocab/vocab -type f | wc -l | tr -d ' ')" = 8
           python3 tools/check_metadata.py --site-url https://example.org/v/ out/vocab
           rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/vocab/vocab/*.ttl out/vocab/vocab/*.jsonld
           python3 - <<'PY'
@@ -1479,6 +1479,7 @@ jobs:
               g = json.load(open(f"out/vocab/vocab/{stem}.jsonld"))["@graph"]
               return {n["@id"]: n for n in g}
           label = lambda n: n["skos:prefLabel"]["@value"]
+          label_of = lambda n: n["dct:title"]["@value"]
           ref = lambda i: {"@id": i}
           # a subject scheme: its hierarchy from both ends, a notation from the key, an address the map states,
           # an address in the file otherwise, and a retired term in ADMS's own vocabulary
@@ -1492,6 +1493,17 @@ jobs:
           assert c["https://example.org/colours/orange"]["skos:broader"] == ref(f + "warm")
           assert c[f + "cool"]["adms:status"] == ref("http://purl.org/adms/status/Withdrawn")
           assert all("adms:status" not in n for k, n in c.items() if not k.endswith("#cool"))
+          # a vocabulary others cite (#300): the scheme and every concept are at the addresses the map
+          # states, from every end, and a key is a notation and never part of an address
+          s = load("services"); d = "https://example.org/def/service-type"
+          assert not any(i.startswith(base) for i in s), "an address built from the file or a key"
+          assert s[d]["@type"] == "skos:ConceptScheme" and label_of(s[d]) == "Service types"
+          assert s[d]["skos:hasTopConcept"] == [ref(d + "/advice"), ref(d + "/support")]
+          assert all(n["skos:inScheme"] == ref(d) for n in s.values() if n["@type"] == "skos:Concept")
+          assert s[d + "/advice"]["skos:topConceptOf"] == ref(d)
+          assert s[d + "/advice"]["skos:narrower"] == [ref(d + "/debt-advice"), ref(d + "/housing-advice")]
+          assert s[d + "/debt-advice"]["skos:broader"] == ref(d + "/advice")
+          assert s[d + "/debt-advice"]["skos:notation"] == "svc-debt" and "svc-" not in "".join(s)
           # the glossary: an address the source states (with the page it is described on), the page's own
           # address, otherwise an anchor on the glossary page; names, relations and status
           g = load("glossary")

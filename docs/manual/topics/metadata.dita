@@ -358,6 +358,33 @@
         <li>A publication with no glossary entry and no subject scheme gets no vocabulary and a
           warning (<codeph>GOVK022W</codeph>).</li>
       </ul>
+      <p><indexterm>vocabulary<indexterm>stable addresses</indexterm></indexterm><b>Keep keys and
+        addresses apart in a vocabulary that others will cite.</b> A <codeph>subjectdef</codeph>'s
+        key is what authors write in <codeph>keyref</codeph>, and by default it is also the end of
+        the concept's address (<filepath>vocab/NAME.ttl#KEY</filepath>). Renaming the key, the map
+        or the site then moves the concept, and every link another system has made to it breaks.
+        State the addresses instead: a data element named <codeph>dct:identifier</codeph> in the
+        scheme map's own <codeph>topicmeta</codeph> for the scheme, and one in each
+        <codeph>subjectdef</codeph>'s <codeph>topicmeta</codeph> for its concept. Every reference
+        to the scheme and its concepts then uses those addresses, and the key is written only as
+        the concept's notation.</p>
+      <codeblock outputclass="language-xml">&lt;subjectScheme id="services">
+  &lt;title>Service types&lt;/title>
+  &lt;topicmeta>
+    &lt;data name="dct:identifier" value="https://example.org/def/service-type"/>
+  &lt;/topicmeta>
+  &lt;subjectdef keys="svc-advice">
+    &lt;topicmeta>
+      &lt;navtitle>Advice&lt;/navtitle>
+      &lt;data name="dct:identifier" value="https://example.org/def/service-type/advice"/>
+    &lt;/topicmeta>
+  &lt;/subjectdef>
+&lt;/subjectScheme></codeblock>
+      <p>An address must be an absolute <codeph>http</codeph>, <codeph>https</codeph> or
+        <codeph>urn</codeph> address, or it is ignored. Choose one you can keep: it need not be
+        on this site, but a reader who follows it should reach something, so make it resolve when
+        you can. A draft whose identifiers are provisional can leave them out and state them
+        before the vocabulary is first cited.</p>
       <p>To check a built site, <filepath>tools/check_metadata.py</filepath> verifies that every
         reference in a vocabulary names a concept in it and that a hierarchy says the same
         thing from each end, and <filepath>tools/check_rdf.py</filepath> parses both files with

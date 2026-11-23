@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE subjectScheme PUBLIC "-//OASIS//DTD DITA Subject Scheme Map//EN" "subjectScheme.dtd">
+<!-- A vocabulary others cite (#300): the scheme and every concept state their address, so the keys
+     authors use in keyref can be renamed without moving a concept. No address here is built from a key. -->
+<subjectScheme id="services" xml:lang="en-GB">
+  <title>Service types</title>
+  <topicmeta>
+    <data name="dct:identifier" value="https://example.org/def/service-type"/>
+  </topicmeta>
+  <subjectdef keys="svc-advice">
+    <topicmeta>
+      <navtitle>Advice</navtitle>
+      <shortdesc>Help to understand a problem and decide what to do.</shortdesc>
+      <data name="dct:identifier" value="https://example.org/def/service-type/advice"/>
+    </topicmeta>
+    <subjectdef keys="svc-debt">
+      <topicmeta>
+        <navtitle>Debt advice</navtitle>
+        <data name="dct:identifier" value="https://example.org/def/service-type/debt-advice"/>
+      </topicmeta>
+    </subjectdef>
+    <subjectdef keys="svc-housing">
+      <topicmeta>
+        <navtitle>Housing advice</navtitle>
+        <data name="dct:identifier" value="https://example.org/def/service-type/housing-advice"/>
+      </topicmeta>
+    </subjectdef>
+  </subjectdef>
+  <subjectdef keys="svc-support">
+    <topicmeta>
+      <navtitle>Support</navtitle>
+      <data name="dct:identifier" value="https://example.org/def/service-type/support"/>
+    </topicmeta>
+  </subjectdef>
+</subjectScheme>
