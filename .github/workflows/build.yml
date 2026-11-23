@@ -1509,6 +1509,30 @@ jobs:
           assert s[d]["dct:description"] == {"@value": "The kinds of service a directory lists.", "@language": "en-GB"}
           assert s[d]["dct:license"] == ref("https://creativecommons.org/licenses/by/4.0/")
           assert s[d + "/debt-advice"]["skos:altLabel"] == [{"@value": v, "@language": "en-GB"} for v in ("Money advice", "Help with debt")]
+          # a concept's notes, each as often as it is given, in the concept's language (#296)
+          debt = s[d + "/debt-advice"]; text = lambda v: {"@value": v, "@language": "en-GB"}
+          assert debt["skos:scopeNote"] == [text("Advice on debts a person owes, from an adviser who is regulated to give it."),
+                                            text("Not help to claim a benefit: see Advice.")]
+          assert debt["skos:example"] == text("A session with a debt adviser at an advice centre.")
+          assert debt["skos:note"] == text("Often given with benefits advice.")
+          assert debt["skos:editorialNote"] == text("Check the boundary with housing advice.")
+          assert debt["skos:historyNote"] == text("Called money advice until 2024.")
+          assert debt["skos:changeNote"] == text("Definition narrowed in draft 0.3.")
+          # the status of a draft, a finished and a deprecated concept and of a draft scheme, in ADMS's
+          # own vocabulary; a scheme's version and dates, the dates typed (#297)
+          adms = "http://purl.org/adms/status/"
+          assert debt["adms:status"] == ref(adms + "UnderDevelopment") == s[d]["adms:status"]
+          assert s[d + "/housing-advice"]["adms:status"] == ref(adms + "Completed")
+          assert s[d + "/support"]["adms:status"] == ref(adms + "Deprecated")
+          assert "adms:status" not in s[d + "/advice"]
+          assert s[d]["dcat:version"] == "0.3"
+          assert s[d]["dct:issued"] == {"@value": "2026-11-02", "@type": "xsd:date"}
+          assert s[d]["dct:modified"] == {"@value": "2026-11-20", "@type": "xsd:date"}
+          # a vocabulary that names a version or a date declares their prefixes; one that does not is
+          # written with the four it always had
+          context = lambda stem: list(json.load(open(f"out/vocab/vocab/{stem}.jsonld"))["@context"])
+          assert context("services") == ["skos", "dct", "foaf", "adms", "dcat", "xsd"]
+          assert context("colours") == context("glossary") == ["skos", "dct", "foaf", "adms"]
           assert set(c[f + "scheme"]) == {"@id", "@type", "dct:title", "skos:hasTopConcept"}
           assert set(c[f + "red"]) == {"@id", "@type", "skos:prefLabel", "skos:definition", "skos:notation", "skos:inScheme", "skos:broader"}
           # the glossary: an address the source states (with the page it is described on), the page's own

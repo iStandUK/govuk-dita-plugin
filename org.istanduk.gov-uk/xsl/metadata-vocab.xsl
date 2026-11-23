@@ -289,9 +289,10 @@ it. Nothing is invented, and the type of a scheme is its source's.
   <xsl:template name="govuk-skos">
     <xsl:if test="$GOVUK-SKOS = 'yes' and $govuk-md-base ne ''">
       <xsl:call-template name="govuk-skos-check"/>
-      <xsl:variable name="prefixes" select="govuk:md-rdf-prefixes($govuk-md-skos-schemes)"/>
+      <xsl:variable name="declared" select="govuk:md-rdf-prefixes($govuk-md-skos-schemes)"/>
       <xsl:for-each select="$govuk-md-vocab">
         <xsl:variable name="graph" select="govuk:md-rdf-graph($govuk-md-skos-schemes, .)"/>
+        <xsl:variable name="prefixes" select="govuk:md-rdf-prefixes-used($declared, $graph)"/>
         <xsl:result-document href="vocab/{@stem}.ttl" format="govuk-rdf">
           <xsl:value-of select="govuk:md-rdf-turtle($prefixes, $graph)"/>
         </xsl:result-document>

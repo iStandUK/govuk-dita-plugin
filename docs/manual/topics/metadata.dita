@@ -281,7 +281,8 @@
         that is retired, by <codeph>importance="obsolete"</codeph> on its first topic or a
         <codeph>retired</codeph> token on its outputclass, carries
         <codeph>adms:status</codeph> Withdrawn; state <codeph>adms:status</codeph> yourself to
-        say something else.</p>
+        say something else: <codeph>draft</codeph>, <codeph>completed</codeph> or
+        <codeph>deprecated</codeph>, or a status's address.</p>
       <p><b>What data.gov.uk expects.</b> A title, a description, a stable identifier and a
         licence. A record that lacks one is still written, and the build names the property
         and the record (<codeph>GOVK019W</codeph>), so the harvester will not be the first to
@@ -364,6 +365,23 @@
           for a scheme, <codeph>dct:description</codeph> and <codeph>dct:license</codeph>, whose
           value is the licence's address. A misspelt name is reported
           (<codeph>GOVK011W</codeph>) and left out.</li>
+        <li><b>A concept's notes</b> are data elements named for the SKOS note properties, each
+          as often as it is needed: <codeph>skos:scopeNote</codeph> (what the concept covers and
+          what it does not), <codeph>skos:example</codeph>, <codeph>skos:note</codeph>,
+          <codeph>skos:editorialNote</codeph> (for those who maintain the vocabulary),
+          <codeph>skos:historyNote</codeph> and <codeph>skos:changeNote</codeph>. A long note
+          can be the element's content instead of its <codeph>value</codeph>.</li>
+        <li><b>The status</b> of a concept or of a scheme is a data element named
+          <codeph>adms:status</codeph>, whose value is <codeph>draft</codeph>,
+          <codeph>completed</codeph>, <codeph>deprecated</codeph> or <codeph>retired</codeph>,
+          written as the status of the ADMS vocabulary it stands for (under development,
+          completed, deprecated, withdrawn), or the address of a status in another vocabulary.
+          Only <codeph>retired</codeph> has another spelling (the <codeph>outputclass</codeph>),
+          and only a retired topic is demoted in search.</li>
+        <li><b>A scheme's version and dates</b> are data elements in the scheme map's
+          <codeph>topicmeta</codeph>: <codeph>dcat:version</codeph>,
+          <codeph>dct:issued</codeph> and <codeph>dct:modified</codeph>, the dates in ISO form
+          (<codeph>2026-11-02</codeph>). A date that is not one is left out.</li>
         <li>A publication with no glossary entry and no subject scheme gets no vocabulary and a
           warning (<codeph>GOVK022W</codeph>).</li>
       </ul>

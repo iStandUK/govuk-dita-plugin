@@ -156,7 +156,7 @@ Metadata goes in the topic's `prolog`. The order of the elements is fixed by the
 | `critdates` | `created` and `revised`, **only if true**. A batch-stamped date on every topic is worse than none. See the caution below on dates in `bookmeta`. | The dates line, when the publisher sets `govuk.dates`; published and modified dates in the page's metadata, on the same switch | — |
 | `resourceid` | The identifier the source system uses, stable across releases | A glossary entry's address in a vocabulary, when `appid` is an address (`govuk.skos`) | The page's identifier in catalogue records |
 | `importance="obsolete"` (on the topic) | Retired or superseded items | Demoted in search; `adms:status` of a declared asset whose first topic it is on (`govuk.dcat`) | A retired page's status in its own metadata |
-| `<data name="adms:status" value="retired"/>` | The same fact for catalogues | `adms:status` of a declared asset (`retired`, or a status address) | — |
+| `<data name="adms:status" value="retired"/>` | The same fact for catalogues, and the other states of a thing's life: `draft`, `completed`, `deprecated` | `adms:status` of a declared asset, and of a concept or a scheme in a vocabulary (`govuk.skos`): one of those four words, or a status address | — |
 | `author` | An organisation. A person's name is published only if the publisher opts in. | Footer credits (from the map); the creator in the page's metadata, when the publisher sets `govuk.metadata.persons=yes` | — |
 | `<data name="prefix:term" value="…"/>` | Any other property (Section 7) | Read; written where a table maps the term | More schemes that know the term |
 
@@ -205,7 +205,7 @@ The licence, the site's address and the organisation's URL are the **publisher's
 | `dct:` | Dublin Core terms | `dct:identifier`, `dct:conformsTo`, `dct:spatial`, `dct:temporal`, `dct:accrualPeriodicity`, `dct:references`, `dct:type` |
 | `dcat:` | Data Catalog Vocabulary | `dcat:theme`, `dcat:keyword`, `dcat:endpointURL` |
 | `adms:` | Asset Description Metadata Schema | `adms:status`, `adms:versionNotes` |
-| `skos:` | Simple Knowledge Organization System | `skos:notation`, `skos:exactMatch` |
+| `skos:` | Simple Knowledge Organization System | `skos:notation`, `skos:exactMatch`, `skos:scopeNote`, `skos:example` |
 | `rdf:` | | `rdf:type` (Section 8) |
 
 - Where the value is a thing with a URI (a place, a frequency, a standard, a licence), write the **URI**, not a label.
@@ -249,6 +249,7 @@ A publication often holds several catalogue-worthy things: a logical model, each
 - Group the entries of one scheme together (one `glossgroup`, one `subjectScheme` map), so each scheme can be published as one vocabulary.
 - **`govuk.skos=yes` publishes them** (needs `govuk.site.url`) as `vocab/<name>.ttl` and `vocab/<name>.jsonld`: one for the whole glossary, one for each `glossgroup`, one for each `subjectScheme` map. The labels are the `glossterm` or `navtitle`, the definitions the `glossdef` or `shortdesc`, the other names `skos:altLabel`, the hierarchy `skos:broader` and `skos:narrower`, and the key `skos:notation`. A `related-links` link from one entry to another is `skos:related`. **A term retired** (`outputclass="retired"` on it, or on its `glossterm`) carries its status.
 - **A term's IRI** is, in this order: an absolute address you state, as `<resourceid appid="https://example.org/concept/care_plan"/>` in its `prolog` (or `<data name="dct:identifier" value="…"/>`); the address of its page, if it has one; an anchor on the glossary page; in a subject scheme, the key as a fragment of the vocabulary file. State the IRI a concept already has, so that links already made to it still mean it. The page it is described on is then its `foaf:isPrimaryTopicOf`. Two terms that state the same IRI are reported (`GOVK021W`).
+- **What else a concept or a scheme says** is `data` in the `subjectdef`'s `topicmeta` or the glossary entry's `prolog`, and for a scheme in the scheme map's own `topicmeta` or the `glossgroup`'s `prolog`: another name (`dct:alternative`); where a concept's edges are (`skos:scopeNote`), an example (`skos:example`) and the other SKOS notes; a status (`adms:status`: `draft`, `completed`, `deprecated` or `retired`); and for a scheme its description (`dct:description`), licence (`dct:license`, an address), version (`dcat:version`) and dates (`dct:issued`, `dct:modified`). Say where a category ends in a scope note and not only in the page's text: a reader of the vocabulary file sees nothing else. (**Now**)
 
 ### A concept system
 

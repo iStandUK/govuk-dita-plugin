@@ -3,13 +3,17 @@
 <!-- A vocabulary others cite (#300): the scheme and every concept state their address, so the keys
      authors use in keyref can be renamed without moving a concept. No address here is built from a key.
      Its data elements are properties of the scheme and of a concept, written where the SKOS table
-     maps them (#293). -->
+     maps them (#293): its notes (#296), and the status of a draft and its version, dates and licence (#297). -->
 <subjectScheme id="services" xml:lang="en-GB">
   <title>Service types</title>
   <topicmeta>
     <data name="dct:identifier" value="https://example.org/def/service-type"/>
     <data name="dct:description" value="The kinds of service a directory lists."/>
     <data name="dct:license" value="https://creativecommons.org/licenses/by/4.0/"/>
+    <data name="dcat:version" value="0.3"/>
+    <data name="dct:issued" value="2026-11-02"/>
+    <data name="dct:modified" value="2026-11-20T09:30:00Z"/>
+    <data name="adms:status" value="draft"/>
   </topicmeta>
   <subjectdef keys="svc-advice">
     <topicmeta>
@@ -22,12 +26,21 @@
         <navtitle>Debt advice</navtitle>
         <data name="dct:alternative" value="Money advice"/>
         <data name="dct:alternative">Help with debt</data>
+        <data name="skos:scopeNote" value="Advice on debts a person owes, from an adviser who is regulated to give it."/>
+        <data name="skos:scopeNote">Not help to claim a benefit: see Advice.</data>
+        <data name="skos:example" value="A session with a debt adviser at an advice centre."/>
+        <data name="skos:note" value="Often given with benefits advice."/>
+        <data name="skos:editorialNote" value="Check the boundary with housing advice."/>
+        <data name="skos:historyNote" value="Called money advice until 2024."/>
+        <data name="skos:changeNote" value="Definition narrowed in draft 0.3."/>
+        <data name="adms:status" value="draft"/>
         <data name="dct:identifier" value="https://example.org/def/service-type/debt-advice"/>
       </topicmeta>
     </subjectdef>
     <subjectdef keys="svc-housing">
       <topicmeta>
         <navtitle>Housing advice</navtitle>
+        <data name="adms:status" value="completed"/>
         <data name="dct:identifier" value="https://example.org/def/service-type/housing-advice"/>
       </topicmeta>
     </subjectdef>
@@ -35,6 +48,7 @@
   <subjectdef keys="svc-support">
     <topicmeta>
       <navtitle>Support</navtitle>
+      <data name="adms:status" value="deprecated"/>
       <data name="dct:identifier" value="https://example.org/def/service-type/support"/>
     </topicmeta>
   </subjectdef>

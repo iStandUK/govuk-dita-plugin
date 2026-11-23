@@ -69,7 +69,7 @@ A record has a **kind**, an **identifier** (the thing's URL, when `govuk.site.ur
 | `dct:audience` | `audience` |
 | `dct:type` | topic type (task, concept, reference, glossentry); a declared type (Section 6) |
 | `dcat:version` | bookmeta `vrm`; `edition` |
-| `adms:status` | `importance="obsolete"`; outputclass token `retired` |
+| `adms:status` | `importance="obsolete"`; outputclass token `retired`; `data` for the other states, `draft`, `completed` and `deprecated` (D-32) |
 | *any prefixed name* | `<data name="prefix:term" value="…"/>` in bookmeta, topicmeta or prolog (Section 6) |
 
 **Relations** come from structure, not from properties: `isPartOf` (the page's ancestors in the map, and the publication), `previous`/`next` (reading order), `hasPart` (a scheme's terms, a task's steps, an asset's files), `broader`/`narrower` (nesting), `related` (related links, relationship tables).
@@ -143,6 +143,7 @@ One file per scheme. The shipped ones: `opengraph`, `dublincore`, `links` (canon
 
 - **Row order is output order**, which gives JSON-LD a fixed property order without relying on map ordering.
 - **`format`** names one of a few converters: `date`, `uri`, `locale` (`en-GB` to `en_GB`), `text`. A new converter is the only reason a table change needs code.
+- **A `prefix` marked `optional="yes"`** is declared only in a graph that uses it, so a table can take on a vocabulary without adding a line to every file written before it did.
 - **`required`** drives one checker for every scheme, in the build (a warning naming the record and the term) and in CI. It replaces the separate structured-data and DCAT checkers in #100 and #102.
 - **`Dataset` and DCAT agree by construction**: both tables read the same `asset` record.
 
@@ -290,3 +291,7 @@ Found by publishing a draft Open Referral UK classification of 258 concepts in t
 
 - **`data` reaches the vocabulary records** ([#293](https://github.com/iStandUK/govuk-dita-plugin/issues/293)). Section 4 says any prefixed `data` name is a property of the record it describes, but the vocabulary harvesters read `data` only for a stated address and a retired status. A term now carries the `data` of its `subjectdef`'s `topicmeta` or its glossary entry's `prolog`, and a scheme that of the scheme map's own `topicmeta` or the `glossgroup`'s `prolog`, after what the harvest reads from the structure, so a title or description the source states in the ordinary way still comes first. The table decides what is written, as for a page.
 - **A misspelt name in a scheme map is reported.** The merged map holds a scheme map's `subjectdef` entries but not its own `topicmeta`, and the pages' check does not run under `govuk.metadata=no`, so the vocabulary check reports (`GOVK011W`) the names the pages' check has not.
+- **The SKOS notes are rows** ([#296](https://github.com/iStandUK/govuk-dita-plugin/issues/296)). `vocabularies.xml` declared `skos:scopeNote`, `example`, `note`, `editorialNote`, `historyNote` and `changeNote`, so an author could write them without a warning, and no row wrote them. All six are now repeatable text in the concept's language. The issue asked for four; the other two were the same quiet loss.
+- **Status is four words, not one** ([#297](https://github.com/iStandUK/govuk-dita-plugin/issues/297), D-32). `draft`, `completed` and `deprecated` join `retired`, mapped to the ADMS status vocabulary (`UnderDevelopment`, `Completed`, `Deprecated`, `Withdrawn`) in the `skos` and `adms` tables alike, for a concept, a scheme and a declared asset. They are stated in `data`; only `retired` is also read from `outputclass` and `importance`, and only that demotes a page in search (D-18).
+- **A scheme's version and dates** are `dcat:version`, `dct:issued` and `dct:modified` rows of the scheme kind, read from `data` in the scheme map's `topicmeta`. A stated date is written whatever `govuk.dates` says: the gate is for dates the build would otherwise take from `critdates`, which batch tools stamp, and a `data` element is the publisher's own statement.
+- **Optional prefixes.** Those rows need `dcat` and `xsd`. Declared outright they would add two lines to every vocabulary file a 1.4 build writes, so the table marks them `optional="yes"` and the vocabulary writer declares them only in a file that uses them (`govuk:md-rdf-prefixes-used`). CI asserts that a vocabulary with no version or date has the four prefixes it always had.

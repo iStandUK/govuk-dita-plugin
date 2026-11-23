@@ -125,6 +125,19 @@ the graph. The tables never name the syntax they are written in.
     </xsl:for-each-group>
   </xsl:function>
 
+  <!-- The prefixes a graph is written with: every prefix of the tables, less those a table
+       marks optional="yes" that nothing in the graph uses. So a table can gain a vocabulary
+       without adding a line to every file written before it did. -->
+  <xsl:function name="govuk:md-rdf-prefixes-used" as="element(prefix)*">
+    <xsl:param name="prefixes" as="element(prefix)*"/>
+    <xsl:param name="subjects" as="element(govuk:s)*"/>
+    <xsl:variable name="used" as="xs:string*"
+                  select="distinct-values(($subjects/govuk:v/@p, $subjects/govuk:v/@dt,
+                                           $subjects/govuk:v/@iri[govuk:md-rdf-prefixed($prefixes, string(.))])
+                                          ! substring-before(., ':'))"/>
+    <xsl:sequence select="$prefixes[not(@optional = 'yes') or @name = $used]"/>
+  </xsl:function>
+
   <!-- The required rows a record leaves empty, by their output name -->
   <xsl:function name="govuk:md-rdf-missing" as="xs:string*">
     <xsl:param name="scheme" as="element()"/>
