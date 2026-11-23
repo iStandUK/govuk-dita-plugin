@@ -228,6 +228,25 @@
               have keys. See <xref keyref="metadata"/>.</entry>
           </row>
           <row>
+            <entry><codeph>GOVK023W</codeph></entry>
+            <entry><codeph>govuk.metadata.vocabularies</codeph> names a file that holds no
+              vocabulary: it is missing, is not well-formed XML, or its root is not a
+              <codeph>vocabularies</codeph> or <codeph>vocabulary</codeph> element. The build
+              goes on without it.</entry>
+            <entry>Check the path, which is relative to the folder the build is run from, and
+              the file against the example in <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK024W</codeph></entry>
+            <entry><codeph>govuk.metadata.tables</codeph> names a file that holds no mapping
+              table: it is missing, is not well-formed XML, or holds no <codeph>scheme</codeph>
+              whose <codeph>syntax</codeph> is <codeph>meta</codeph>, <codeph>link</codeph>,
+              <codeph>json-ld</codeph> or <codeph>rdf</codeph>. The build goes on without
+              it.</entry>
+            <entry>Check the path, which is relative to the folder the build is run from, and
+              the file against the example in <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
             <entry><codeph>GOVK015W</codeph></entry>
             <entry>A key reference in topic content names no key that resolves. A
               <codeph>keyword</codeph>, <codeph>ph</codeph>, <codeph>uicontrol</codeph>,

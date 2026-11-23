@@ -165,6 +165,12 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val default="true">no</val>
       <val>yes</val>
     </param>
+    <param name="govuk.metadata.vocabularies"
+           desc="A file of the publisher's own vocabularies, in the format of the plugin's resource/metadata/vocabularies.xml: a prefix, a namespace and, unless the vocabulary is open, its terms. A data element named with one of its terms is then metadata, and a misspelt one is still reported (GOVK011W). Empty (default) adds none. A file that holds no vocabulary gives a warning (GOVK023W)."
+           type="file"/>
+    <param name="govuk.metadata.tables"
+           desc="A file of the publisher's own mapping tables, in the format of the plugin's resource/metadata tables: one scheme, or a schemes element holding several. Each is added to the tables its levels attribute names (basic, full, dcat, skos), and its rows map terms, the publisher's own or the plugin's, to what is written. Empty (default) adds none. A file that holds no table gives a warning (GOVK024W)."
+           type="file"/>
     <param name="govuk.contact.email"
            desc="An organisational mailbox for the catalogue record's contact point (vcard:hasEmail). Never a person by default. Used only with govuk.dcat=yes."
            type="string"/>

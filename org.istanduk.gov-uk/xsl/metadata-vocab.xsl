@@ -326,7 +326,7 @@ it. Nothing is invented, and the type of a scheme is its source's.
                         group-by="normalize-space(@name)">
       <xsl:call-template name="output-message">
         <xsl:with-param name="id" select="'GOVK011W'"/>
-        <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate(current-grouping-key(), ';', ',')"/>;%2=<xsl:value-of select="count(current-group())"/>;%3=<xsl:value-of select="govuk:md-where(current-group()[1], $base)"/>;%4=<xsl:value-of select="string-join($govuk-md-vocabularies/@prefix, ', ')"/></xsl:with-param>
+        <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate(current-grouping-key(), ';', ',')"/>;%2=<xsl:value-of select="count(current-group())"/>;%3=<xsl:value-of select="govuk:md-where(current-group()[1], $base)"/>;%4=<xsl:value-of select="$govuk-md-prefix-list"/></xsl:with-param>
       </xsl:call-template>
     </xsl:for-each-group>
     <xsl:variable name="dups" as="element(govuk:dup)*">

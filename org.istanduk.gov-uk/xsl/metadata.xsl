@@ -49,6 +49,9 @@ the once-per-build checks).
   <xsl:param name="GOVUK-BRANDING" select="'neutral'"/>
   <xsl:param name="GOVUK-SERVICE-NAME" select="''"/>
   <xsl:param name="GOVUK-FOOTER-LICENCE" select="''"/>
+  <!-- The publisher's own vocabularies and tables (#191): each a file's address, or '' -->
+  <xsl:param name="GOVUK-METADATA-VOCABULARIES" select="''"/>
+  <xsl:param name="GOVUK-METADATA-TABLES" select="''"/>
 
   <!-- The published base URL with its closing slash, or '' when unknown:
        without it no identifier and no URL-valued property is written -->
@@ -59,15 +62,65 @@ the once-per-build checks).
   <xsl:variable name="govuk-md-dir" as="xs:anyURI"
                 select="resolve-uri('../resource/metadata/', static-base-uri())"/>
 
-  <!-- The tables govuk.metadata enables, in schemes.xml's order -->
+  <!-- ===== The publisher's own vocabulary and tables (#191, design 14 section 7) ===== -->
+
+  <!-- The document element of a file a parameter names, or nothing when the
+       parameter is empty or the file cannot be read (govuk-md-publisher-check says so) -->
+  <xsl:function name="govuk:md-publisher-doc" as="element()?">
+    <xsl:param name="url" as="xs:string?"/>
+    <xsl:variable name="u" select="normalize-space(string($url))"/>
+    <xsl:sequence select="if ($u ne '' and doc-available($u)) then doc($u)/* else ()"/>
+  </xsl:function>
+
+  <!-- The publisher's vocabularies: a vocabularies file like the shipped one, or
+       a single vocabulary. A prefix the plugin already knows gains the terms listed. -->
+  <xsl:variable name="govuk-md-publisher-vocabularies" as="element()*"
+                select="govuk:md-publisher-doc($GOVUK-METADATA-VOCABULARIES)
+                        /(self::vocabularies/vocabulary | self::vocabulary)
+                         [matches(normalize-space(@prefix), '^[A-Za-z][A-Za-z0-9\-]*$')]"/>
+
+  <!-- The publisher's tables: a schemes file holding scheme elements, or a single
+       scheme, in the shipped format. Each says when it is on with levels (basic,
+       full, dcat, skos); one that does not is on wherever its syntax is written.
+       Its prefixes are declared only in a graph that uses them. -->
+  <xsl:variable name="govuk-md-publisher-tables" as="element(scheme)*">
+    <xsl:for-each select="govuk:md-publisher-doc($GOVUK-METADATA-TABLES)
+                          /(self::schemes/scheme | self::scheme)[@syntax = ('meta', 'link', 'json-ld', 'rdf')]">
+      <scheme>
+        <xsl:copy-of select="@*"/>
+        <xsl:if test="normalize-space(@levels) = ''">
+          <xsl:attribute name="levels"
+                         select="if (@syntax = 'rdf') then 'dcat skos' else if (@syntax = 'json-ld') then 'full' else 'basic full'"/>
+        </xsl:if>
+        <xsl:for-each select="prefix">
+          <prefix optional="yes">
+            <xsl:copy-of select="@*"/>
+          </prefix>
+        </xsl:for-each>
+        <xsl:copy-of select="* except prefix"/>
+      </scheme>
+    </xsl:for-each>
+  </xsl:variable>
+
+  <!-- The tables a level enables: the shipped ones in schemes.xml's order, then the publisher's -->
+  <xsl:function name="govuk:md-tables" as="element()*">
+    <xsl:param name="level" as="xs:string"/>
+    <xsl:sequence select="(for $s in doc(resolve-uri('schemes.xml', $govuk-md-dir))/schemes/scheme[tokenize(@levels) = $level]
+                           return doc(resolve-uri($s/@href, $govuk-md-dir))/scheme,
+                           $govuk-md-publisher-tables[tokenize(@levels) = $level])"/>
+  </xsl:function>
+
+  <!-- The tables govuk.metadata enables -->
   <xsl:variable name="govuk-md-schemes" as="element()*"
-                select="if ($GOVUK-METADATA = 'no') then ()
-                        else for $s in doc(resolve-uri('schemes.xml', $govuk-md-dir))/schemes/scheme
-                                       [tokenize(@levels) = $GOVUK-METADATA]
-                             return doc(resolve-uri($s/@href, $govuk-md-dir))/scheme"/>
+                select="if ($GOVUK-METADATA = 'no') then () else govuk:md-tables($GOVUK-METADATA)"/>
 
   <xsl:variable name="govuk-md-vocabularies" as="element()*"
-                select="doc(resolve-uri('vocabularies.xml', $govuk-md-dir))/vocabularies/vocabulary"/>
+                select="(doc(resolve-uri('vocabularies.xml', $govuk-md-dir))/vocabularies/vocabulary,
+                         $govuk-md-publisher-vocabularies)"/>
+
+  <!-- The prefixes of the vocabularies, each once, for the messages that list them -->
+  <xsl:variable name="govuk-md-prefix-list" as="xs:string"
+                select="string-join(distinct-values(for $v in $govuk-md-vocabularies return string($v/@prefix)), ', ')"/>
 
   <!-- Terms that describe one thing only, so a page never takes them from
        the publication it is part of -->
@@ -148,8 +201,9 @@ the once-per-build checks).
     <xsl:param name="name" as="xs:string"/>
     <xsl:variable name="vocabulary" select="$govuk-md-vocabularies[@prefix = substring-before($name, ':')]"/>
     <xsl:variable name="local" select="substring-after($name, ':')"/>
+    <!-- several, when the publisher's file adds terms to a prefix the plugin knows -->
     <xsl:sequence select="exists($vocabulary) and matches($local, '^[A-Za-z_][A-Za-z0-9_.\-]*$')
-                          and ($vocabulary/@open = 'yes' or tokenize(normalize-space($vocabulary)) = $local)"/>
+                          and ($vocabulary/@open = 'yes' or ($vocabulary ! tokenize(normalize-space(.))) = $local)"/>
   </xsl:function>
 
   <!-- data elements that are metadata: a prefixed name, at the top level of
@@ -757,7 +811,7 @@ the once-per-build checks).
       <xsl:for-each-group select="$findings[self::govuk:unknown]" group-by="@name">
         <xsl:call-template name="output-message">
           <xsl:with-param name="id" select="'GOVK011W'"/>
-          <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate(current-grouping-key(), ';', ',')"/>;%2=<xsl:value-of select="count(current-group())"/>;%3=<xsl:value-of select="current-group()[1]/@where"/>;%4=<xsl:value-of select="string-join($govuk-md-vocabularies/@prefix, ', ')"/></xsl:with-param>
+          <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate(current-grouping-key(), ';', ',')"/>;%2=<xsl:value-of select="count(current-group())"/>;%3=<xsl:value-of select="current-group()[1]/@where"/>;%4=<xsl:value-of select="$govuk-md-prefix-list"/></xsl:with-param>
         </xsl:call-template>
       </xsl:for-each-group>
       <xsl:for-each-group select="$findings[self::govuk:missing]" group-by="@row">
@@ -766,6 +820,24 @@ the once-per-build checks).
           <xsl:with-param name="msgparams">%1=<xsl:value-of select="count(current-group())"/>;%2=<xsl:value-of select="substring-after(current-grouping-key(), ' ')"/>;%3=<xsl:value-of select="substring-before(current-grouping-key(), ' ')"/>;%4=<xsl:value-of select="current-group()[1]/@path"/></xsl:with-param>
         </xsl:call-template>
       </xsl:for-each-group>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- GOVK023W when govuk.metadata.vocabularies names a file that holds no
+       vocabulary, GOVK024W when govuk.metadata.tables names one that holds no
+       table. The build goes on without the file. Once per build. -->
+  <xsl:template name="govuk-md-publisher-check">
+    <xsl:if test="normalize-space($GOVUK-METADATA-VOCABULARIES) ne '' and empty($govuk-md-publisher-vocabularies)">
+      <xsl:call-template name="output-message">
+        <xsl:with-param name="id" select="'GOVK023W'"/>
+        <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate($GOVUK-METADATA-VOCABULARIES, ';', ',')"/></xsl:with-param>
+      </xsl:call-template>
+    </xsl:if>
+    <xsl:if test="normalize-space($GOVUK-METADATA-TABLES) ne '' and empty($govuk-md-publisher-tables)">
+      <xsl:call-template name="output-message">
+        <xsl:with-param name="id" select="'GOVK024W'"/>
+        <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate($GOVUK-METADATA-TABLES, ';', ',')"/></xsl:with-param>
+      </xsl:call-template>
     </xsl:if>
   </xsl:template>
 

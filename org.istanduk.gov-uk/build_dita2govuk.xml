@@ -562,6 +562,42 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
         <equals arg1="${govuk.skos}" arg2="no"/>
       </or></not></condition>
     </fail>
+    <!-- The publisher's own vocabularies and tables (#191): each a file in the shipped format,
+         given to the stylesheets as an address. A name that is no such file is reported by the
+         map transform (GOVK023W, GOVK024W), and the build goes on without it. -->
+    <condition property="govuk.metadata.vocabularies.named">
+      <and>
+        <isset property="govuk.metadata.vocabularies"/>
+        <not><equals arg1="${govuk.metadata.vocabularies}" arg2="" trim="true"/></not>
+      </and>
+    </condition>
+    <condition property="govuk.metadata.vocabularies.is-abs">
+      <and>
+        <isset property="govuk.metadata.vocabularies.named"/>
+        <matches pattern="^(/|[A-Za-z]:[\\/]|\\\\)" string="${govuk.metadata.vocabularies}"/>
+      </and>
+    </condition>
+    <!-- a relative path is the working directory's, which Ant's own base is not -->
+    <property name="govuk.metadata.vocabularies.path" value="${govuk.metadata.vocabularies}" if:set="govuk.metadata.vocabularies.is-abs"/>
+    <property name="govuk.metadata.vocabularies.path" value="${user.dir}/${govuk.metadata.vocabularies}" if:set="govuk.metadata.vocabularies.named"/>
+    <makeurl property="govuk.metadata.vocabularies.url" file="${govuk.metadata.vocabularies.path}"
+             validate="false" if:set="govuk.metadata.vocabularies.named"/>
+    <condition property="govuk.metadata.tables.named">
+      <and>
+        <isset property="govuk.metadata.tables"/>
+        <not><equals arg1="${govuk.metadata.tables}" arg2="" trim="true"/></not>
+      </and>
+    </condition>
+    <condition property="govuk.metadata.tables.is-abs">
+      <and>
+        <isset property="govuk.metadata.tables.named"/>
+        <matches pattern="^(/|[A-Za-z]:[\\/]|\\\\)" string="${govuk.metadata.tables}"/>
+      </and>
+    </condition>
+    <property name="govuk.metadata.tables.path" value="${govuk.metadata.tables}" if:set="govuk.metadata.tables.is-abs"/>
+    <property name="govuk.metadata.tables.path" value="${user.dir}/${govuk.metadata.tables}" if:set="govuk.metadata.tables.named"/>
+    <makeurl property="govuk.metadata.tables.url" file="${govuk.metadata.tables.path}"
+             validate="false" if:set="govuk.metadata.tables.named"/>
     <fail message="govuk.contact.email must look like an email address, was: ${govuk.contact.email}">
       <condition>
         <and>
@@ -766,6 +802,8 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <param name="GOVUK-CONTACT-EMAIL" expression="${govuk.contact.email}" if:set="govuk.contact.email"/>
       <param name="GOVUK-METADATA" expression="${govuk.metadata}"/>
       <param name="GOVUK-METADATA-PERSONS" expression="${govuk.metadata.persons}"/>
+      <param name="GOVUK-METADATA-VOCABULARIES" expression="${govuk.metadata.vocabularies.url}" if:set="govuk.metadata.vocabularies.url"/>
+      <param name="GOVUK-METADATA-TABLES" expression="${govuk.metadata.tables.url}" if:set="govuk.metadata.tables.url"/>
       <param name="GOVUK-ORGANISATION" expression="${govuk.organisation}" if:set="govuk.organisation"/>
       <param name="GOVUK-ORGANISATION-URL" expression="${govuk.organisation.url}" if:set="govuk.organisation.url"/>
       <param name="GOVUK-OG-IMAGE" expression="${govuk.og.image}" if:set="govuk.og.image"/>

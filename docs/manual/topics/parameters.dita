@@ -355,6 +355,21 @@
                 See <xref keyref="metadata"/>.</entry>
             </row>
             <row>
+              <entry><codeph>govuk.metadata.vocabularies</codeph></entry>
+              <entry>File</entry>
+              <entry>Your own vocabularies: a file that names each prefix, its namespace and,
+                unless the vocabulary is open, its terms. A data element named with one of them
+                is then metadata. Empty (default) adds none. See
+                <xref keyref="metadata"/>.</entry>
+            </row>
+            <row>
+              <entry><codeph>govuk.metadata.tables</codeph></entry>
+              <entry>File</entry>
+              <entry>Your own mapping tables: a file of rows that say where a term is written,
+                in the page's head, the catalogue record or the vocabulary files. Empty
+                (default) adds none. See <xref keyref="metadata"/>.</entry>
+            </row>
+            <row>
               <entry><codeph>govuk.contact.email</codeph></entry>
               <entry>Text</entry>
               <entry>An organisational mailbox for the catalogue record's contact point. Not a

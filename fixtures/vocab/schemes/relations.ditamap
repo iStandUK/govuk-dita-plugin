@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE subjectScheme PUBLIC "-//OASIS//DTD DITA Subject Scheme Map//EN" "subjectScheme.dtd">
+<!-- Named relationships between concepts (#191): terms of the publisher's own vocabulary, written
+     by the publisher's own table. One is misspelt. -->
+<subjectScheme id="relations" xml:lang="en-GB">
+  <title>Stages of a referral</title>
+  <subjectdef keys="assessment">
+    <topicmeta>
+      <navtitle>Assessment</navtitle>
+      <data name="ex:precedes" value="https://example.org/v/vocab/relations.ttl#plan"/>
+      <data name="ex:isProvidedWith" value="https://example.org/def/service-type/advice"/>
+      <data name="ex:isProvidedWith" value="https://example.org/def/service-type/support"/>
+      <data name="ex:preceeds" value="https://example.org/v/vocab/relations.ttl#review"/>
+    </topicmeta>
+  </subjectdef>
+  <subjectdef keys="plan">
+    <topicmeta><navtitle>Plan</navtitle></topicmeta>
+  </subjectdef>
+  <subjectdef keys="review">
+    <topicmeta><navtitle>Review</navtitle></topicmeta>
+  </subjectdef>
+</subjectScheme>

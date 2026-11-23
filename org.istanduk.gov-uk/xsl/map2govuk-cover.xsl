@@ -183,6 +183,7 @@ map transformation with the plugin's values.
   <xsl:template name="chapter-setup">
     <xsl:call-template name="govuk-check-map"/>
     <xsl:call-template name="govuk-check-root-map"/>
+    <xsl:call-template name="govuk-md-publisher-check"/>
     <xsl:call-template name="govuk-md-check">
       <xsl:with-param name="cover" select="$govuk-md-cover"/>
     </xsl:call-template>

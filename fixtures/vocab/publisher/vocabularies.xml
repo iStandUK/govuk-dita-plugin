@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A publisher's own vocabulary (#191), named with govuk.metadata.vocabularies: the named
+     relationships of a concept system. Closed, so a misspelt term is reported. The second entry
+     adds a term to a vocabulary the plugin already knows: one DCAT 3 defines and the plugin's list does
+     not hold. -->
+<vocabularies>
+  <vocabulary prefix="ex" namespace="https://example.org/def/relations#">
+    isProvidedWith precedes
+  </vocabulary>
+  <vocabulary prefix="dcat" namespace="http://www.w3.org/ns/dcat#">
+    seriesMember
+  </vocabulary>
+</vocabularies>

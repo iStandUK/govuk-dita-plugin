@@ -1595,6 +1595,64 @@ jobs:
           vocab --input fixtures/vocab/vocab.ditamap --output out/vocab-again > /dev/null
           diff -r out/vocab out/vocab-again && echo "the vocabularies are byte-identical"
 
+      # The publisher's own vocabulary and tables (#191, design 14 section 7): a file of terms the
+      # plugin does not ship and a file of rows that map them, so that named relationships between
+      # concepts are written with no stylesheet change
+      - name: The publisher's vocabulary and tables (#191)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          has() { grep -qF "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
+          if [ ! -x "$RUNNER_TEMP/rdf/bin/python" ]; then
+            python3 -m venv "$RUNNER_TEMP/rdf"
+            "$RUNNER_TEMP/rdf/bin/pip" install -q --require-hashes --only-binary :all: -r tools/ci/requirements-rdf.txt
+          fi
+          rdf() { "$RUNNER_TEMP/rdf/bin/python" tools/check_rdf.py "$@"; }
+          own() { tools/ci/dita --format govuk -Dgovuk.search=no -Dgovuk.skos=yes -Dgovuk.site.url=https://example.org/v --input fixtures/vocab/publisher.ditamap "$@"; }
+          files=fixtures/vocab/publisher
+          own --output out/own -Dgovuk.metadata.vocabularies=$files/vocabularies.xml -Dgovuk.metadata.tables=$files/tables.xml 2>&1 | tee own.log
+          # the publisher's vocabulary is closed, so its one misspelt term is named, with the publisher's
+          # prefix among those the message lists; nothing else is reported
+          test "$(grep -c 'GOVK011W' own.log)" = 1
+          grep -q "GOVK011W.*'ex:preceeds'.*The prefixes are .*, ex;" own.log
+          absent -Eq 'GOVK02[34]W' own.log
+          python3 tools/check_metadata.py --site-url https://example.org/v/ out/own
+          rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/own/vocab/*.ttl out/own/vocab/*.jsonld
+          python3 - <<'PY'
+          import json
+          base = "https://example.org/v/vocab/relations.ttl#"
+          doc = json.load(open("out/own/vocab/relations.jsonld"))
+          g = {n["@id"]: n for n in doc["@graph"]}
+          ref = lambda i: {"@id": i}
+          # named relationships, as references, once or as often as they are stated
+          a = g[base + "assessment"]
+          assert a["ex:precedes"] == ref(base + "plan")
+          assert a["ex:isProvidedWith"] == [ref("https://example.org/def/service-type/advice"),
+                                            ref("https://example.org/def/service-type/support")]
+          assert "ex:preceeds" not in a and not any(k.startswith("ex:") for k in g[base + "plan"])
+          # the publisher's prefix is declared after the plugin's own, and only where it is used
+          assert list(doc["@context"]) == ["skos", "dct", "foaf", "adms", "ex"]
+          assert doc["@context"]["ex"] == "https://example.org/def/relations#"
+          assert list(json.load(open("out/own/vocab/glossary.jsonld"))["@context"]) == ["skos", "dct", "foaf", "adms"]
+          PY
+          has out/own/vocab/relations.ttl '@prefix ex: <https://example.org/def/relations#> .'
+          has out/own/vocab/relations.ttl 'ex:precedes <https://example.org/v/vocab/relations.ttl#plan>'
+          # a term added to a vocabulary the plugin knows, written to a page's head by the publisher's own table
+          has out/own/terms/standalone.html '<meta name="example:series-member" content="https://example.org/data/2026">'
+          # without the files the same source builds as it did: the four names are unknown and none is written
+          own --output out/own-none 2>&1 | tee own-none.log
+          test "$(grep -c 'GOVK011W' own-none.log)" = 4
+          absent -q 'ex:' out/own-none/vocab/relations.ttl
+          absent -q 'example:series-member' out/own-none/terms/standalone.html
+          # a name that is no such file is said, each parameter by its own message, and the build goes on
+          own --output out/own-bad -Dgovuk.metadata.vocabularies=$files/missing.xml -Dgovuk.metadata.tables=$files/vocabularies.xml 2>&1 | tee own-bad.log
+          grep -q 'GOVK023W.*missing.xml' own-bad.log
+          grep -q 'GOVK024W.*vocabularies.xml' own-bad.log
+          test -f out/own-bad/vocab/relations.ttl
+          # an absolute path names the same files
+          own --output out/own-abs "-Dgovuk.metadata.vocabularies=$PWD/$files/vocabularies.xml" "-Dgovuk.metadata.tables=$PWD/$files/tables.xml" > /dev/null
+          diff -r out/own out/own-abs && echo "relative and absolute paths give the same site"
+
       # Languages (NFR-I1, R7): a publication in Welsh and one in Spanish. The
       # text the plugin writes, the toolkit's labels and the text govuk-frontend's
       # accordion script writes (given by its data-i18n attributes, the script

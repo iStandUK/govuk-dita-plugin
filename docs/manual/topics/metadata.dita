@@ -449,6 +449,73 @@
         <xref href="https://github.com/iStandUK/govuk-dita-plugin/blob/dev/docs/SOURCE-SYSTEMS.md"
               format="html" scope="external">the guide for source systems</xref>.</p>
     </section>
+    <section id="own-vocabulary">
+      <title>Your own vocabulary and mapping tables</title>
+      <p><indexterm>metadata<indexterm>your own vocabulary</indexterm></indexterm><indexterm>vocabulary<indexterm>named
+        relationships</indexterm></indexterm>The plugin knows a fixed set of vocabularies, and
+        its tables write a fixed set of properties. A publication with a vocabulary of its own,
+        such as a concept system whose concepts are joined by named relationships ("an
+        assessment <i>precedes</i> a plan"), names two files, and nothing in the plugin
+        changes.</p>
+      <p><codeph>govuk.metadata.vocabularies</codeph> names a file of vocabularies. Each has a
+        prefix, a namespace and its terms; <codeph>open="yes"</codeph> in place of the terms
+        accepts any term under the prefix. List the terms when you can: a misspelt one is then
+        reported (<codeph>GOVK011W</codeph>) and not quietly written. A prefix the plugin
+        already knows keeps its namespace and gains the terms you list.</p>
+      <codeblock outputclass="language-xml">&lt;vocabularies>
+  &lt;vocabulary prefix="ex" namespace="https://example.org/def/relations#">
+    isProvidedWith precedes
+  &lt;/vocabulary>
+&lt;/vocabularies></codeblock>
+      <p>A term of that vocabulary is then metadata wherever a data element is:</p>
+      <codeblock outputclass="language-xml">&lt;subjectdef keys="assessment">
+  &lt;topicmeta>
+    &lt;navtitle>Assessment&lt;/navtitle>
+    &lt;data name="ex:precedes" value="https://example.org/def/stage/plan"/>
+  &lt;/topicmeta>
+&lt;/subjectdef></codeblock>
+      <p><codeph>govuk.metadata.tables</codeph> names a file of mapping tables, which say where
+        a term is written. A table is a <codeph>scheme</codeph>; a file holds one, or a
+        <codeph>schemes</codeph> element holding several. This one writes the two relationships
+        as properties of a concept in the vocabulary files:</p>
+      <codeblock outputclass="language-xml">&lt;scheme id="relations" syntax="rdf" levels="skos">
+  &lt;prefix name="ex" uri="https://example.org/def/relations#"/>
+  &lt;kind record="term">
+    &lt;property term="ex:isProvidedWith" as="ex:isProvidedWith" format="uri" node="yes" repeat="yes"/>
+    &lt;property term="ex:precedes" as="ex:precedes" format="uri" node="yes" repeat="yes"/>
+  &lt;/kind>
+&lt;/scheme></codeblock>
+      <ul>
+        <li><codeph>syntax</codeph> is what the table writes: <codeph>meta</codeph> or
+          <codeph>link</codeph> elements in a page's head, a <codeph>json-ld</codeph> block
+          there, or <codeph>rdf</codeph> in the catalogue record and the vocabulary files.</li>
+        <li><codeph>levels</codeph> is when it is on: <codeph>basic</codeph> and
+          <codeph>full</codeph> are the levels of <codeph>govuk.metadata</codeph>,
+          <codeph>dcat</codeph> is <codeph>govuk.dcat=yes</codeph> and <codeph>skos</codeph> is
+          <codeph>govuk.skos=yes</codeph>. Left out, the table is on wherever its syntax is
+          written.</li>
+        <li>A <codeph>kind</codeph> names the record its rows describe: a
+          <codeph>publication</codeph>, a <codeph>page</codeph>, an <codeph>asset</codeph>, a
+          <codeph>scheme</codeph> or a <codeph>term</codeph>.</li>
+        <li>A row reads the property named by <codeph>term</codeph> and writes it as
+          <codeph>as</codeph>. <codeph>format="uri"</codeph> keeps only an absolute address,
+          <codeph>node="yes"</codeph> writes it as a reference to a thing and not as text,
+          <codeph>repeat="yes"</codeph> writes every value and not only the first, and
+          <codeph>lang="yes"</codeph> gives text the language of what it describes.</li>
+        <li>Your tables are added after the plugin's own, so they add properties and cannot
+          take any away. A prefix a table declares is written only in a file that uses it.</li>
+        <li>The plugin's own tables, in its <filepath>resource/metadata</filepath> folder, are
+          the reference for the format: your tables are read exactly as they are.</li>
+      </ul>
+      <p>A path is relative to the folder the build is run from. A file that holds no
+        vocabulary, or no table, is reported (<codeph>GOVK023W</codeph>,
+        <codeph>GOVK024W</codeph>) and the build goes on without it. The files are inputs to
+        your build like your stylesheet: a table can write any tag into every page's head, so
+        take one only from a source you trust.</p>
+      <p>What stays out is the ontology itself: the domain, range and multiplicity of a
+        relationship. Publish that as a file of its own, declare it as a distribution of the
+        catalogue record: the relationships the vocabulary files name are defined there.</p>
+    </section>
     <section>
       <title>Checking</title>
       <p>A page the metadata tables require a value for, and that has none, is reported once

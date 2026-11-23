@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- The publisher's own vocabulary and tables (#191): built with govuk.metadata.vocabularies and
+     govuk.metadata.tables naming the files in publisher/. -->
+<map xml:lang="en-GB">
+  <title>Named relationships</title>
+  <mapref href="schemes/relations.ditamap" processing-role="resource-only"/>
+  <topicref href="terms/standalone.dita">
+    <topicmeta><data name="dcat:seriesMember" value="https://example.org/data/2026"/></topicmeta>
+  </topicref>
+</map>
