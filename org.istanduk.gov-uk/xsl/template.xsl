@@ -91,7 +91,12 @@ element-level typography.
       <xsl:variable name="prev" select="$govuk-reading[$i - 1]" as="element()?"/>
       <xsl:variable name="next" select="$govuk-reading[$i + 1]" as="element()?"/>
       <xsl:if test="exists($prev) or exists($next)">
-        <nav class="govuk-pagination govuk-pagination--block" aria-label="Pagination">
+        <nav class="govuk-pagination govuk-pagination--block">
+          <xsl:attribute name="aria-label">
+            <xsl:call-template name="getVariable">
+              <xsl:with-param name="id" select="'govuk-dita.pagination'"/>
+            </xsl:call-template>
+          </xsl:attribute>
           <xsl:if test="exists($prev)">
             <div class="govuk-pagination__prev">
               <a class="govuk-link govuk-pagination__link" rel="prev">

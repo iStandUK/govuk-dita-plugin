@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- Languages (NFR-I1, R7): a publication written in Spanish. CI builds it and
+     checks that the text the plugin, the toolkit and govuk-frontend's script
+     generate is in that language, and that none of the English is left. -->
+<map xml:lang="es">
+  <title>Guía de ejemplo</title>
+  <topicmeta>
+    <shortdesc>Una publicación breve en español para comprobar el texto de la interfaz.</shortdesc>
+  </topicmeta>
+  <topicref href="es/introduccion.dita"/>
+  <topicref href="es/pasos.dita"/>
+  <topicref href="es/term.dita" processing-role="resource-only"/>
+</map>

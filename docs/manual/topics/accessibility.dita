@@ -22,7 +22,8 @@
         <li>the plugin's own additions — the navigation tree, glossary, index, figure and
           table lists, search page and footer — built and tested to the same standard;</li>
         <li>the page's language from <codeph>@xml:lang</codeph>, and right-to-left direction
-          from <codeph>@dir</codeph>, carried through to the output.</li>
+          from <codeph>@dir</codeph>, carried through to the output, with the plugin's own text
+          in English, Welsh or Spanish to match (<xref keyref="languages"/>).</li>
       </ul>
       <p>Branding changes none of this. Every mode — neutral, iStandUK, NHS and official — is
         checked to the same WCAG 2.2 AA bar in CI, so the NHS and GOV.UK palettes, headers and
