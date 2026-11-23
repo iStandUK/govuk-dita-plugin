@@ -531,8 +531,17 @@
         of each concept link the vocabulary that concept is in; and
         <filepath>llms.txt</filepath> lists them under <codeph>Vocabularies</codeph>, with a
         scheme's description. So a reader, a harvester or an agent that reaches any of those
+
         finds the files. <filepath>sitemap.xml</filepath> does not list them: it is a list of
         pages.</p>
+      <p id="vocabularies-pdf"><indexterm>PDF<indexterm>vocabularies</indexterm></indexterm><b>The
+        PDF does not include the vocabularies.</b> The print document, and the PDF made from
+        it, hold the publication's pages, with its title and author in the PDF's own
+        properties. They hold no SKOS: the vocabulary files are not attached to the PDF and
+        their addresses are not written into it, and the same is true of the catalogue
+        record. A reader of the PDF who needs a vocabulary takes it from the site, at the
+        addresses above, so give the site's address in the publication itself if the PDF
+        will travel without it.</p>
       <p>To check a built site, <filepath>tools/check_metadata.py</filepath> verifies that every
         reference in a vocabulary names a concept in it, that a hierarchy says the same
         thing from each end and that the home page links every vocabulary file, and
