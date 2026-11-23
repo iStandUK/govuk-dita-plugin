@@ -524,9 +524,19 @@
         on this site, but a reader who follows it should reach something, so make it resolve when
         you can. A draft whose identifiers are provisional can leave them out and state them
         before the vocabulary is first cited.</p>
+
+      <p><indexterm>vocabulary<indexterm>finding the files</indexterm></indexterm><b>Finding the
+        files.</b> The home page links every vocabulary, in both forms, with
+        <codeph>rel="alternate"</codeph> and the scheme's title; the glossary page and the page
+        of each concept link the vocabulary that concept is in; and
+        <filepath>llms.txt</filepath> lists them under <codeph>Vocabularies</codeph>, with a
+        scheme's description. So a reader, a harvester or an agent that reaches any of those
+        finds the files. <filepath>sitemap.xml</filepath> does not list them: it is a list of
+        pages.</p>
       <p>To check a built site, <filepath>tools/check_metadata.py</filepath> verifies that every
-        reference in a vocabulary names a concept in it and that a hierarchy says the same
-        thing from each end, and <filepath>tools/check_rdf.py</filepath> parses both files with
+        reference in a vocabulary names a concept in it, that a hierarchy says the same
+        thing from each end and that the home page links every vocabulary file, and
+        <filepath>tools/check_rdf.py</filepath> parses both files with
         an independent RDF library and confirms they are the same graph.</p>
     </section>
     <section id="data-elements">
@@ -653,7 +663,9 @@
         entry in the map, listing its pages with the titles and short descriptions the home
         page shows, each linked by its full address. The pages are the sitemap's: topics that
         are resource-only or <codeph>toc="no"</codeph>, the search page and the print document
-        are left out. The glossary, index and list pages come last, under
+        are left out. With <codeph>govuk.skos=yes</codeph> the vocabulary files come next,
+        under <codeph>Vocabularies</codeph>: the Turtle and the JSON-LD of each, by the
+        scheme's title. The glossary, index and list pages come last, under
         <codeph>Optional</codeph>, which a reader short of room may skip.</p>
       <codeblock outputclass="language-markdown"># GOV.UK DITA plugin manual
 

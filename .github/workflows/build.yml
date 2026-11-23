@@ -1562,7 +1562,23 @@ jobs:
           # the glossary page and a glossary entry's page link the glossary's files
           has out/vocab/glossary.html '<link rel="alternate" type="text/turtle" href="vocab/glossary.ttl">'
           has out/vocab/glossary.html '<link rel="alternate" type="application/ld+json" href="vocab/glossary.jsonld">'
+
           has out/vocab/terms/standalone.html '<link rel="alternate" type="text/turtle" href="../vocab/glossary.ttl">'
+          # the home page links every vocabulary, in both forms and by its scheme's title, and llms.txt
+          # lists them the same, with a scheme's description; the sitemap lists pages, so not these (#298, D-32)
+          for v in glossary clinical colours services; do
+            grep -qE "<link rel=\"alternate\" type=\"text/turtle\" href=\"vocab/$v.ttl\" title=\"[^\"]+\">" out/vocab/index.html
+            grep -qE "<link rel=\"alternate\" type=\"application/ld\+json\" href=\"vocab/$v.jsonld\" title=\"[^\"]+\">" out/vocab/index.html
+          done
+          has out/vocab/index.html '<link rel="alternate" type="text/turtle" href="vocab/services.ttl" title="Service types">'
+          test "$(grep -c 'rel="alternate"' out/vocab/index.html)" = 8
+          grep -qx '## Vocabularies' out/vocab/llms.txt
+          grep -qxF -e '- [Service types (SKOS, Turtle)](https://example.org/v/vocab/services.ttl): The kinds of service a directory lists.' out/vocab/llms.txt
+          grep -qxF -e '- [Service types (SKOS, JSON-LD)](https://example.org/v/vocab/services.jsonld)' out/vocab/llms.txt
+          grep -qxF -e '- [Glossary (SKOS, Turtle)](https://example.org/v/vocab/glossary.ttl)' out/vocab/llms.txt
+          test "$(grep -c '/vocab/' out/vocab/llms.txt)" = 8
+          test "$(grep -n '^## ' out/vocab/llms.txt | tail -2 | cut -d: -f2- | tr '\n' '|')" = '## Vocabularies|## Optional|'
+          absent -q 'vocab/' out/vocab/sitemap.xml
           # a misspelt data name in a subject scheme, on a subjectdef or on the scheme, is named once and
           # left out, with or without the pages' metadata; a name with no prefix is not metadata (#293)
           for level in basic no; do
@@ -1585,6 +1601,8 @@ jobs:
           tools/ci/dita --input fixtures/vocab/vocab.ditamap --format govuk --output out/vocab-off -Dgovuk.search=no -Dgovuk.site.url=https://example.org/v > /dev/null
           test ! -e out/vocab-off/vocab
           absent -q 'rel="alternate"' out/vocab-off/glossary.html
+          absent -q 'rel="alternate"' out/vocab-off/index.html
+          absent -q 'Vocabularies' out/vocab-off/llms.txt
           vocab --input docs/manual/manual.ditamap --output out/manual-vocab > /dev/null
           vocab --input fixtures/source-system/dictionary.ditamap --output out/source-system-vocab > /dev/null
           for site in out/manual-vocab out/source-system-vocab; do

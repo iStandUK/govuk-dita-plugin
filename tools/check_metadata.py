@@ -340,7 +340,8 @@ def check_catalogue(site, tables):
 
 def check_vocab(site, tables):
     """The vocabularies govuk.skos=yes writes (#103): vocab/NAME.ttl and
-    vocab/NAME.jsonld for each, the glossary page linking the glossary's; in each
+    vocab/NAME.jsonld for each, the glossary page linking the glossary's and the
+    home page linking every one (#298); in each
     file every record has the properties the table marks required, every
     reference names a record in the file, and broader and narrower agree.
     Nothing is checked when the site has no vocab folder and links none."""
@@ -360,10 +361,24 @@ def check_vocab(site, tables):
         for ext in (".ttl", ".jsonld"):
             if stem + ext not in names:
                 found.append(f"vocab/{stem + ext}: a vocabulary is written in both serialisations, and this one is missing")
+
     if os.path.exists(glossary):
         for want in ("vocab/glossary.ttl", "vocab/glossary.jsonld"):
             if want not in linked:
                 found.append(f"glossary.html: no rel=alternate link to {want}")
+    # the home page links every vocabulary, in both serialisations (#298)
+    cover = os.path.join(site, "index.html")
+    if os.path.exists(cover):
+        home = Head()
+        with open(cover, encoding="utf-8") as f:
+            home.feed(f.read())
+        on_cover = {h for r, h in home.links if r == "alternate" and h.startswith("vocab/")}
+        for stem in stems:
+            for ext in (".ttl", ".jsonld"):
+                if stem + ext in names and f"vocab/{stem}{ext}" not in on_cover:
+                    found.append(f"index.html: no rel=alternate link to vocab/{stem}{ext}")
+        for extra in sorted(on_cover - {f"vocab/{n}" for n in names}):
+            found.append(f"index.html: links {extra}, which the site does not have")
     table = next((t for t in tables if t.get("id") == "skos"), None)
     required = {k.get("type"): [r.get("as") for r in k if r.get("required") == "yes"]
                 for k in (table.findall("kind") if table is not None else [])}

@@ -543,7 +543,31 @@ in metadata-terms.xsl.
     </xsl:if>
   </xsl:variable>
 
+
   <!-- ===== The files and the findings ===== -->
+
+  <!-- The files govuk.skos=yes writes, in the order they are written: for each vocabulary
+       its Turtle and its JSON-LD, with the scheme's title, and its description on the first.
+       Read by the cover's head and by llms.txt, so that a reader who reaches the home page,
+       or an agent that reads the index, finds every vocabulary (#298). Not by the sitemap,
+       which lists pages (D-32). -->
+  <xsl:variable name="govuk-md-skos-files" as="element(govuk:file)*">
+    <xsl:if test="$GOVUK-SKOS = 'yes' and $govuk-md-base ne ''">
+      <xsl:for-each select="$govuk-md-vocab">
+        <xsl:variable name="title" select="string(govuk:p[@term = 'dct:title'][1]/@value)"/>
+        <govuk:file href="vocab/{@stem}.ttl" type="text/turtle" form="Turtle" title="{$title}"
+                    description="{govuk:p[@term = 'dct:description'][1]/@value}"/>
+        <govuk:file href="vocab/{@stem}.jsonld" type="application/ld+json" form="JSON-LD" title="{$title}" description=""/>
+      </xsl:for-each>
+    </xsl:if>
+  </xsl:variable>
+
+  <!-- In the cover's head: every vocabulary, as its two files -->
+  <xsl:template name="govuk-md-skos-cover-head">
+    <xsl:for-each select="$govuk-md-skos-files">
+      <link rel="alternate" type="{@type}" href="{@href}" title="{@title}"/>
+    </xsl:for-each>
+  </xsl:template>
 
   <!-- vocab/<name>.ttl and .jsonld for each scheme; run once, by the map transform -->
   <xsl:template name="govuk-skos">
