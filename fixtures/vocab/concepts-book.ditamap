@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "bookmap.dtd">
+<!-- A book that is one scheme (#263): its bookmeta declares it, so the scheme has the book's title,
+     description and edition, and the site's home page as the page it is described on. It holds two
+     of the model's concepts and not the rest: one states a broader concept that is not here
+     (GOVK026W), and no hierarchy is left, so the scheme is flat and has no top concepts. -->
+<bookmap id="care-part" xml:lang="en-GB">
+  <booktitle>
+    <mainbooktitle>Two concepts of care</mainbooktitle>
+    <booktitlealt>A part of the model, published on its own.</booktitlealt>
+  </booktitle>
+  <bookmeta>
+    <bookid><edition>3</edition></bookid>
+    <data name="rdf:type" value="skos:ConceptScheme"/>
+    <data name="dct:identifier" value="https://example.org/care-part/"/>
+  </bookmeta>
+  <chapter href="concepts/care_plan.dita"/>
+  <chapter href="concepts/review.dita"/>
+</bookmap>

@@ -12,8 +12,8 @@ DesignSystemPDF libraries behind the manual's PDF, and puts the released manual 
 from the same DITA, each opt-in: `govuk.metadata=full` adds schema.org JSON-LD to every page
 (`WebSite`, `TechArticle`, `BreadcrumbList`, a task's `HowTo`, a glossary's `DefinedTermSet`, a
 declared dataset's `Dataset`); `govuk.dcat` writes a DCAT 3 catalogue record with ADMS typing of the
-data assets a map declares (`dcat.jsonld`, `dcat.ttl`); `govuk.skos` writes the glossary, its groups
-and subject schemes as SKOS vocabularies (D-26, #100 to #104). Content that DITA-OT leaves empty or
+data assets a map declares (`dcat.jsonld`, `dcat.ttl`); `govuk.skos` writes the glossary, its groups,
+subject schemes and concept topics as SKOS vocabularies (D-26, #100 to #104). Content that DITA-OT leaves empty or
 mislinks is now reported (`GOVK015W`, `GOVK016W`), inlined diagrams with links are accessible groups,
 and govuk-frontend is 6.6.0.
 [v1.3.0](https://github.com/iStandUK/govuk-dita-plugin/releases/tag/v1.3.0) writes **metadata in every

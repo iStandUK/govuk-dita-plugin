@@ -55,7 +55,16 @@ declared only in a file that uses it. The table format is described in design
     <relation name="topConceptOf" as="skos:topConceptOf"/>
     <relation name="broader" as="skos:broader"/>
     <relation name="narrower" as="skos:narrower"/>
+
     <relation name="related" as="skos:related"/>
+    <!-- a related concept the source names by its address, which need not be in this file -->
+    <property term="skos:related" as="skos:related" format="uri" node="yes" repeat="yes"/>
+    <!-- alignment with a concept of another vocabulary: written as stated -->
+    <property term="skos:exactMatch" as="skos:exactMatch" format="uri" node="yes" repeat="yes"/>
+    <property term="skos:closeMatch" as="skos:closeMatch" format="uri" node="yes" repeat="yes"/>
+    <property term="skos:broadMatch" as="skos:broadMatch" format="uri" node="yes" repeat="yes"/>
+    <property term="skos:narrowMatch" as="skos:narrowMatch" format="uri" node="yes" repeat="yes"/>
+    <property term="skos:relatedMatch" as="skos:relatedMatch" format="uri" node="yes" repeat="yes"/>
     <property term="foaf:isPrimaryTopicOf" as="foaf:isPrimaryTopicOf" format="uri" node="yes"/>
     <property term="adms:status" as="adms:status" format="uri" node="yes"
               map="retired=http://purl.org/adms/status/Withdrawn draft=http://purl.org/adms/status/UnderDevelopment completed=http://purl.org/adms/status/Completed deprecated=http://purl.org/adms/status/Deprecated"/>

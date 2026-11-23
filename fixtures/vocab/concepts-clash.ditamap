@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- Two vocabularies with one file name (#263): the map declares a scheme and its id is the name
+     of a subject scheme it includes. The subject scheme is written, the map's is left out, and the
+     build says so (GOVK027W). -->
+<map id="needs" xml:lang="en-GB">
+  <title>A scheme named as another is</title>
+  <topicmeta>
+    <data name="rdf:type" value="skos:ConceptScheme"/>
+  </topicmeta>
+  <mapref href="schemes/needs.ditamap" processing-role="resource-only"/>
+  <topicref href="concepts/review.dita"/>
+  <topicref href="pages/advice.dita"/>
+</map>

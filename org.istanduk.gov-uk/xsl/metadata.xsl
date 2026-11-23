@@ -457,8 +457,11 @@ the once-per-build checks).
                                   string($own[@term = 'dct:description']/@value))
                            else if (exists($topic) and govuk:md-topic-type($topic) = 'glossentry')
                            then govuk:md-term-record($topic, '')
+
                            else if ($role = 'utility' and $path = 'glossary.html')
                            then govuk:md-glossary-record($title)
+                           (: a page that describes a concept of a vocabulary is about the concept (#263) :)
+                           else if ($role = 'topic') then govuk:md-concept-entity($topic, $ref)
                            else (),
                            (: a data asset's landing page is about the asset (#122) :)
                            if ($role = 'topic') then $govuk-md-assets[@path = $path] else ())"/>

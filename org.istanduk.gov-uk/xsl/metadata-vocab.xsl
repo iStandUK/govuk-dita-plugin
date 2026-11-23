@@ -24,45 +24,10 @@ it. Nothing is invented, and the type of a scheme is its source's.
                 version="3.0"
                 exclude-result-prefixes="xs govuk">
 
-  <!-- ===== Names and addresses ===== -->
 
-  <!-- A file name for a scheme: letters, digits, dot, underscore and hyphen -->
-  <xsl:function name="govuk:md-stem" as="xs:string">
-    <xsl:param name="name" as="xs:string"/>
-    <xsl:sequence select="replace(replace(lower-case(normalize-space($name)), '[^a-z0-9_.\-]+', '-'), '^-+|-+$', '')"/>
-  </xsl:function>
-
-  <!-- An address the source states for a topic or a map entry: resourceid appid, or
-       a data element named dct:identifier. '' when it states none, or one that is
-       not an absolute http(s) or urn address. -->
-  <xsl:function name="govuk:md-stated-iri" as="xs:string">
-    <xsl:param name="holders" as="element()*"/>
-    <xsl:variable name="candidates" as="xs:string*"
-                  select="($holders//*[contains(@class, ' topic/resourceid ')]/@appid/string(.),
-                           govuk:md-data($holders)[@term = 'dct:identifier']/@value/string(.))"/>
-    <xsl:sequence select="string(($candidates ! normalize-space(.)[matches(., '^(https?://|urn:)[^\s]+$')])[1])"/>
-  </xsl:function>
-
-  <xsl:function name="govuk:md-lang" as="xs:string">
-    <xsl:param name="e" as="element()"/>
-    <xsl:sequence select="string(($e/ancestor-or-self::*[@xml:lang][1]/@xml:lang,
-                                  $govuk-md-publication/govuk:p[@term = 'dct:language']/@value)[normalize-space()][1])"/>
-  </xsl:function>
-
-  <!-- Whether a source says a term is retired: a retired token on its outputclass or its title's, or a status of its own -->
-  <xsl:function name="govuk:md-term-retired" as="xs:boolean">
-    <xsl:param name="e" as="element()"/>
-    <xsl:sequence select="$e/@importance = 'obsolete'
-                          or tokenize(normalize-space(string-join(($e/@outputclass,
-                               $e/*[contains(@class, ' topic/title ') or contains(@class, ' glossentry/glossterm ')]/@outputclass), ' '))) = 'retired'"/>
-  </xsl:function>
-
-  <!-- A reference to a term or scheme by its address alone -->
-  <xsl:function name="govuk:md-stub" as="element(govuk:record)">
-    <xsl:param name="kind" as="xs:string"/>
-    <xsl:param name="id" as="xs:string"/>
-    <govuk:record kind="{$kind}" id="{$id}"/>
-  </xsl:function>
+  <!-- The names and addresses of terms and schemes (govuk:md-stem, govuk:md-stated-iri,
+       govuk:md-lang, govuk:md-term-retired, govuk:md-stub, and a subject scheme's file name
+       and address) are in metadata-terms.xsl, where a page's own transform reads them too. -->
 
   <!-- ===== The generated glossary and its groups ===== -->
 
@@ -157,19 +122,6 @@ it. Nothing is invented, and the type of a scheme is its source's.
       <xsl:sequence select="."/>
     </xsl:for-each>
   </xsl:variable>
-
-  <xsl:function name="govuk:md-scheme-stem" as="xs:string">
-    <xsl:param name="map" as="element()"/>
-    <xsl:sequence select="govuk:md-stem(string(($map/@id[normalize-space()],
-                                                replace(replace(string(base-uri($map)), '^.*/', ''), '\.[^.]*$', ''))[1]))"/>
-  </xsl:function>
-
-  <xsl:function name="govuk:md-scheme-id" as="xs:string">
-    <xsl:param name="map" as="element()"/>
-    <xsl:variable name="stated" select="govuk:md-stated-iri($map/*[contains(@class, ' map/topicmeta ')])"/>
-    <xsl:sequence select="if ($stated ne '') then $stated
-                          else concat($govuk-md-base, 'vocab/', govuk:md-scheme-stem($map), '.ttl#scheme')"/>
-  </xsl:function>
 
   <!-- The topic a subjectdef points at with its href, when it is a DITA topic of this build -->
   <xsl:function name="govuk:md-subjectdef-topic" as="element()?">
@@ -268,6 +220,134 @@ it. Nothing is invented, and the type of a scheme is its source's.
     </xsl:if>
   </xsl:function>
 
+
+  <!-- ===== Schemes the map declares, and the topics that are their concepts (#263) =====
+
+       The rules are in metadata-terms.xsl. Here each concept is read once, with the
+       relations its source states (skos:broader, skos:narrower and skos:related, as data
+       elements whose value is the other concept's address), and each scheme is then written
+       with its relations said from both ends: SKOS has broader and narrower as inverses and
+       related as symmetric, and a reader of the file should not have to work that out. -->
+
+  <!-- Every page whose topic says it is a concept, once: its address, the scheme declared
+       above it (or ''), what it says of itself, and the relations it states -->
+  <xsl:variable name="govuk-md-concepts">
+    <xsl:variable name="base" select="string(base-uri($govuk-md-map))"/>
+    <xsl:for-each-group select="govuk:md-reading($govuk-md-map)" group-by="replace(normalize-space(@href), '#.*$', '')">
+      <xsl:variable name="ref" select="current-group()[1]"/>
+      <xsl:variable name="uri" select="string(resolve-uri(current-grouping-key(), $base))"/>
+      <xsl:variable name="topic" as="element()?"
+                    select="if (doc-available($uri)) then doc($uri)/*[contains(@class, ' topic/topic ')] else ()"/>
+      <xsl:if test="govuk:md-is-concept($topic, $ref)">
+        <xsl:variable name="decl" select="govuk:md-scheme-decl($ref)"/>
+        <xsl:variable name="id" select="govuk:md-concept-id($topic, $ref)"/>
+        <xsl:variable name="page" select="govuk:md-id(govuk:md-ref-path($ref))"/>
+        <xsl:variable name="properties" select="govuk:md-concept-properties($topic, $ref)"/>
+        <govuk:concept id="{$id}" decl="{if (exists($decl)) then generate-id($decl) else ''}"
+                       src="{concat(base-uri($topic), '#', $topic/@id)}"
+                       stated="{if ($id ne $page) then 'yes' else 'no'}"
+                       title="{$properties[@term = 'dct:title'][1]/@value}" path="{govuk:md-ref-path($ref)}">
+          <xsl:sequence select="$properties"/>
+          <xsl:if test="$page ne '' and $page ne $id">
+            <xsl:sequence select="govuk:md-p('foaf:isPrimaryTopicOf', $page)"/>
+          </xsl:if>
+          <xsl:for-each select="$properties[@term = ('skos:broader', 'skos:narrower', 'skos:related')]
+                                           [govuk:md-uri(@value) ne ''][@value ne $id]">
+            <govuk:edge rel="{substring-after(@term, ':')}" to="{@value}"/>
+          </xsl:for-each>
+        </govuk:concept>
+      </xsl:if>
+    </xsl:for-each-group>
+  </xsl:variable>
+
+  <!-- a concept of a scheme by its address, and the relations that point at an address -->
+  <xsl:key name="govuk-md-concept-by-id" match="govuk:concept" use="concat(@decl, ' ', @id)"/>
+  <xsl:key name="govuk-md-edge-to" match="govuk:edge" use="concat(../@decl, ' ', @rel, ' ', @to)"/>
+
+  <!-- The concepts of a scheme that a concept is related to in one way: those it names that
+       are in the scheme, and those that name it in the inverse way -->
+  <xsl:function name="govuk:md-concept-related" as="xs:string*">
+    <xsl:param name="concept" as="element(govuk:concept)"/>
+    <xsl:param name="rel" as="xs:string"/>
+    <xsl:param name="inverse" as="xs:string"/>
+    <xsl:sequence select="distinct-values((
+        $concept/govuk:edge[@rel = $rel]/@to[exists(key('govuk-md-concept-by-id', concat($concept/@decl, ' ', .), $govuk-md-concepts))],
+        key('govuk-md-edge-to', concat($concept/@decl, ' ', $inverse, ' ', $concept/@id), $govuk-md-concepts)/../@id)
+        ! string(.))[. ne $concept/@id]"/>
+  </xsl:function>
+
+  <!-- A concept as a term of its scheme -->
+  <xsl:function name="govuk:md-concept-term" as="element(govuk:record)">
+    <xsl:param name="concept" as="element(govuk:concept)"/>
+    <xsl:param name="scheme" as="xs:string"/>
+    <xsl:param name="hierarchy" as="xs:boolean"/>
+    <xsl:variable name="broader" select="govuk:md-concept-related($concept, 'broader', 'narrower')"/>
+    <govuk:record kind="term" id="{$concept/@id}" src="{$concept/@src}" stated="{$concept/@stated}">
+      <xsl:sequence select="$concept/govuk:p"/>
+      <govuk:rel name="inScheme">
+        <xsl:sequence select="govuk:md-stub('scheme', $scheme)"/>
+      </govuk:rel>
+      <!-- a top concept is one with nothing broader, in a scheme that has a hierarchy at all -->
+      <xsl:if test="$hierarchy and empty($broader)">
+        <govuk:rel name="topConceptOf"><xsl:sequence select="govuk:md-stub('scheme', $scheme)"/></govuk:rel>
+      </xsl:if>
+      <govuk:rel name="broader">
+        <xsl:sequence select="$broader ! govuk:md-stub('term', .)"/>
+      </govuk:rel>
+      <govuk:rel name="narrower">
+        <xsl:sequence select="govuk:md-concept-related($concept, 'narrower', 'broader') ! govuk:md-stub('term', .)"/>
+      </govuk:rel>
+      <govuk:rel name="related">
+        <xsl:sequence select="govuk:md-concept-related($concept, 'related', 'related') ! govuk:md-stub('term', .)"/>
+      </govuk:rel>
+    </govuk:record>
+  </xsl:function>
+
+  <!-- A scheme for each declaration that has concepts: its file name, address and what it
+       says of itself. A scheme the map itself declares is the publication's, so it has the
+       publication's title, description, licence, version and dates; one an entry declares has
+       the entry's. The page it is described on is linked from it. -->
+  <xsl:variable name="govuk-md-declared-vocab" as="element(govuk:record)*">
+    <xsl:if test="$govuk-md-base ne ''">
+      <xsl:for-each select="$govuk-md-scheme-decls">
+        <xsl:variable name="decl" select="."/>
+        <xsl:variable name="concepts" select="$govuk-md-concepts/govuk:concept[@decl = generate-id($decl)]"/>
+        <xsl:if test="exists($concepts)">
+          <xsl:variable name="id" select="govuk:md-decl-id($decl)"/>
+          <xsl:variable name="is-map" select="contains($decl/@class, ' map/map ')"/>
+          <xsl:variable name="meta" select="$decl/*[contains(@class, ' map/topicmeta ')]"/>
+          <xsl:variable name="page" select="if ($is-map) then $govuk-md-base else govuk:md-id(govuk:md-ref-path($decl))"/>
+          <xsl:variable name="hierarchy" as="xs:boolean"
+                        select="some $c in $concepts satisfies exists(govuk:md-concept-related($c, 'broader', 'narrower'))"/>
+          <govuk:record kind="scheme" id="{$id}" stem="{govuk:md-decl-stem($decl)}">
+            <xsl:choose>
+              <xsl:when test="$is-map">
+                <xsl:sequence select="$govuk-md-publication/govuk:p[not(*)][not(@term = ('rdf:type', 'dct:identifier'))]"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:sequence select="govuk:md-p('dct:title', govuk:md-ref-title($decl)),
+                                      govuk:md-p('dct:description', govuk:md-text($meta/*[contains(@class, ' map/shortdesc ')][1])),
+                                      govuk:md-p('dct:language', govuk:md-lang($decl)),
+                                      govuk:md-data($meta)[not(@term = ('rdf:type', 'dct:identifier'))]"/>
+              </xsl:otherwise>
+            </xsl:choose>
+            <xsl:if test="$page ne '' and $page ne $id">
+              <xsl:sequence select="govuk:md-p('foaf:isPrimaryTopicOf', $page)"/>
+            </xsl:if>
+            <govuk:rel name="hasPart">
+              <xsl:sequence select="$concepts ! govuk:md-concept-term(., $id, $hierarchy)"/>
+            </govuk:rel>
+            <govuk:rel name="topConcept">
+              <xsl:sequence select="if ($hierarchy)
+                                    then $concepts[empty(govuk:md-concept-related(., 'broader', 'narrower'))] ! govuk:md-stub('term', string(@id))
+                                    else ()"/>
+            </govuk:rel>
+          </govuk:record>
+        </xsl:if>
+      </xsl:for-each>
+    </xsl:if>
+  </xsl:variable>
+
   <!-- ===== All the schemes ===== -->
 
   <!-- The glossgroups that hold entries, in document order -->
@@ -286,7 +366,16 @@ it. Nothing is invented, and the type of a scheme is its source's.
     </xsl:for-each>
   </xsl:variable>
 
+  <!-- Every vocabulary, each under a file name no other has: the glossary, the glossgroups
+       and the subject schemes, then the schemes the map declares. Of two with one name the
+       first is written and the second reported (GOVK027W). -->
   <xsl:variable name="govuk-md-vocab" as="element(govuk:record)*">
+    <xsl:for-each-group select="($govuk-md-source-vocab, $govuk-md-declared-vocab)" group-by="string(@stem)">
+      <xsl:sequence select="current-group()[1]"/>
+    </xsl:for-each-group>
+  </xsl:variable>
+
+  <xsl:variable name="govuk-md-source-vocab" as="element(govuk:record)*">
     <xsl:if test="$govuk-md-base ne ''">
       <xsl:variable name="glossary-id" select="concat($govuk-md-base, 'glossary.html')"/>
       <!-- the generated glossary: every entry, each in the scheme of its own file -->
@@ -316,6 +405,7 @@ it. Nothing is invented, and the type of a scheme is its source's.
           </govuk:rel>
         </govuk:record>
       </xsl:for-each>
+
       <!-- a scheme for each subject scheme map -->
       <xsl:for-each select="$govuk-md-scheme-maps">
         <xsl:variable name="defs" select=".//*[contains(@class, ' subjectScheme/subjectdef ')][normalize-space(@keys)]"/>
@@ -385,6 +475,32 @@ it. Nothing is invented, and the type of a scheme is its source's.
         <xsl:with-param name="id" select="'GOVK011W'"/>
         <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate(current-grouping-key(), ';', ',')"/>;%2=<xsl:value-of select="count(current-group())"/>;%3=<xsl:value-of select="govuk:md-where(current-group()[1], $base)"/>;%4=<xsl:value-of select="$govuk-md-prefix-list"/></xsl:with-param>
       </xsl:call-template>
+    </xsl:for-each-group>
+    <!-- GOVK025W: topics that say they are concepts, under no declared scheme -->
+    <xsl:variable name="orphans" select="$govuk-md-concepts/govuk:concept[@decl = '']"/>
+    <xsl:if test="exists($orphans)">
+      <xsl:call-template name="output-message">
+        <xsl:with-param name="id" select="'GOVK025W'"/>
+        <xsl:with-param name="msgparams">%1=<xsl:value-of select="count($orphans)"/>;%2=<xsl:value-of select="translate(string($orphans[1]/@title), ';', ',')"/>;%3=<xsl:value-of select="$orphans[1]/@path"/></xsl:with-param>
+      </xsl:call-template>
+    </xsl:if>
+    <!-- GOVK026W: a broader or narrower concept that is no concept of the scheme -->
+    <xsl:variable name="outside" select="$govuk-md-concepts/govuk:concept[@decl ne '']/govuk:edge[@rel = ('broader', 'narrower')]
+                                           [empty(key('govuk-md-concept-by-id', concat(../@decl, ' ', @to), $govuk-md-concepts))]"/>
+    <xsl:if test="exists($outside)">
+      <xsl:call-template name="output-message">
+        <xsl:with-param name="id" select="'GOVK026W'"/>
+        <xsl:with-param name="msgparams">%1=<xsl:value-of select="count($outside)"/>;%2=<xsl:value-of select="translate(string($outside[1]/@to), ';', ',')"/>;%3=<xsl:value-of select="translate(string($outside[1]/../@title), ';', ',')"/></xsl:with-param>
+      </xsl:call-template>
+    </xsl:if>
+    <!-- GOVK027W: two vocabularies with one file name -->
+    <xsl:for-each-group select="($govuk-md-source-vocab, $govuk-md-declared-vocab)" group-by="string(@stem)">
+      <xsl:if test="count(current-group()) gt 1">
+        <xsl:call-template name="output-message">
+          <xsl:with-param name="id" select="'GOVK027W'"/>
+          <xsl:with-param name="msgparams">%1=<xsl:value-of select="current-grouping-key()"/>;%2=<xsl:value-of select="translate(string(current-group()[1]/govuk:p[@term = 'dct:title'][1]/@value), ';', ',')"/>;%3=<xsl:value-of select="translate(string(current-group()[2]/govuk:p[@term = 'dct:title'][1]/@value), ';', ',')"/></xsl:with-param>
+        </xsl:call-template>
+      </xsl:if>
     </xsl:for-each-group>
     <xsl:variable name="dups" as="element(govuk:dup)*">
       <!-- each term once: a glossgroup's entries are in the glossary's file as well -->

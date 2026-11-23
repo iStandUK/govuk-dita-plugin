@@ -336,6 +336,7 @@ the graph. The tables never name the syntax they are written in.
     </xsl:for-each>
   </xsl:template>
 
+
   <!-- On the glossary page and a glossary entry's page: the glossary vocabulary, as its two files (#103) -->
   <xsl:template name="govuk-md-skos-head">
     <xsl:param name="prefix" as="xs:string" select="''"/>
@@ -343,6 +344,17 @@ the graph. The tables never name the syntax they are written in.
       <link rel="alternate" type="text/turtle" href="{$prefix}vocab/glossary.ttl"/>
       <link rel="alternate" type="application/ld+json" href="{$prefix}vocab/glossary.jsonld"/>
     </xsl:if>
+  </xsl:template>
+
+  <!-- On the page of a concept: each vocabulary the concept is in, as its two files (#263) -->
+  <xsl:template name="govuk-md-skos-page-head">
+    <xsl:param name="prefix" as="xs:string" select="''"/>
+    <xsl:param name="topic" as="element()?"/>
+    <xsl:param name="ref" as="element()?"/>
+    <xsl:for-each select="govuk:md-page-schemes($topic, $ref)">
+      <link rel="alternate" type="text/turtle" href="{$prefix}vocab/{@stem}.ttl"/>
+      <link rel="alternate" type="application/ld+json" href="{$prefix}vocab/{@stem}.jsonld"/>
+    </xsl:for-each>
   </xsl:template>
 
 </xsl:stylesheet>

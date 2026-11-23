@@ -73,10 +73,16 @@ described in design 14, section 7.
     <property term="dct:title" as="name"/>
     <relation name="hasPart" target="term" as="hasDefinedTerm" nested="yes" repeat="yes"/>
   </kind>
+
+  <!-- a concept that has a page of its own (govuk.skos=yes) also has the address its source
+       states, the page, and the scheme it is in; a glossary entry has none of the three -->
   <kind record="term" type="DefinedTerm">
+    <property term="@id" as="@id" format="uri"/>
     <property term="dct:title" as="name"/>
     <property term="dct:description" as="description"/>
     <property term="dct:alternative" as="alternateName" repeat="yes"/>
+    <property term="foaf:isPrimaryTopicOf" as="url" format="uri"/>
+    <relation name="inScheme" target="scheme" as="inDefinedTermSet"/>
   </kind>
   <!-- an asset the map declares a dataset is a Dataset, written on its landing page; the
        DCAT record (govuk.dcat) reads the same record, so the two agree by construction -->

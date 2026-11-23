@@ -160,7 +160,7 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val>yes</val>
     </param>
     <param name="govuk.skos"
-           desc="Write the glossary, each glossgroup and each subjectScheme map as a SKOS vocabulary: vocab/NAME.ttl and vocab/NAME.jsonld, with the glossary page and each glossary entry's page linking the glossary's. 'no' (default) writes none. 'yes' needs govuk.site.url."
+           desc="Write the glossary, each glossgroup, each subjectScheme map and each scheme the map declares over topics that say they are concepts as a SKOS vocabulary: vocab/NAME.ttl and vocab/NAME.jsonld, with the glossary page and the page of each concept linking its vocabulary's. 'no' (default) writes none. 'yes' needs govuk.site.url."
            type="enum">
       <val default="true">no</val>
       <val>yes</val>

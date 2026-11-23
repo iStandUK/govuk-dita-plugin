@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- Two concept topics state one address (#263): the build says so (GOVK021W). -->
+<map id="care-dup" xml:lang="en-GB">
+  <title>One address, two topics</title>
+  <topicmeta>
+    <data name="rdf:type" value="skos:ConceptScheme"/>
+  </topicmeta>
+  <topicref href="concepts/care_plan.dita"/>
+  <topicref href="concepts/care_plan_again.dita"/>
+</map>

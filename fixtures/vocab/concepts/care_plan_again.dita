@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="care_plan_again" xml:lang="en-GB">
+  <title>Plan of care</title>
+  <shortdesc>A second topic that states the address the care plan has.</shortdesc>
+  <prolog>
+    <data name="rdf:type" value="skos:Concept"/>
+    <data name="dct:identifier" value="https://example.org/care/care_plan"/>
+  </prolog>
+  <conbody><p>Two topics cannot be one concept: the build names them (GOVK021W).</p></conbody>
+</concept>

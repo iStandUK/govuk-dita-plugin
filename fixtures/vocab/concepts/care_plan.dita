@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="care_plan" xml:lang="en-GB">
+  <title>Care plan</title>
+  <shortdesc>An agreed plan of care for one person.</shortdesc>
+  <prolog>
+    <metadata><keywords><keyword>Plan of care</keyword></keywords></metadata>
+    <resourceid appid="https://example.org/care/care_plan"/>
+    <data name="rdf:type" value="http://www.w3.org/2004/02/skos/core#Concept"/>
+    <data name="skos:broader" value="https://example.org/care/healthcare_activity"/>
+    <data name="skos:exactMatch" value="https://contsys.example/concept/care_plan"/>
+    <data name="skos:broadMatch" value="https://upper.example/Plan"/>
+    <data name="adms:status" value="draft"/>
+  </prolog>
+  <conbody><p>States its address with resourceid, its type by its address, and its alignment to other vocabularies.</p></conbody>
+</concept>

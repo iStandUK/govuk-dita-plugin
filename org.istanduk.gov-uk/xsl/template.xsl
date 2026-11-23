@@ -162,9 +162,15 @@ element-level typography.
     </xsl:call-template>
     <xsl:if test="contains(((/dita/*[contains(@class, ' topic/topic ')], /*[contains(@class, ' topic/topic ')])[1])/@class, ' glossentry/glossentry ')">
       <xsl:call-template name="govuk-md-skos-head">
+
         <xsl:with-param name="prefix" select="string($govuk-root)"/>
       </xsl:call-template>
     </xsl:if>
+    <xsl:call-template name="govuk-md-skos-page-head">
+      <xsl:with-param name="prefix" select="string($govuk-root)"/>
+      <xsl:with-param name="topic" select="(/dita/*[contains(@class, ' topic/topic ')], /*[contains(@class, ' topic/topic ')])[1]"/>
+      <xsl:with-param name="ref" select="($current-topicrefs[not(@processing-role = 'resource-only')], $current-topicrefs)[1]"/>
+    </xsl:call-template>
     <xsl:apply-templates select="." mode="gen-user-head"/>
   </xsl:template>
 
