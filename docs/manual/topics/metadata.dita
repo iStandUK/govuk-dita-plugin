@@ -355,6 +355,15 @@
           links already made to it still mean it. The page it is described on is then linked
           from it. Two terms that state the same address are reported
           (<codeph>GOVK021W</codeph>).</li>
+        <li><b>Any other property</b> is a <xref href="#metadata/data-elements">data
+          element</xref>: in a <codeph>subjectdef</codeph>'s <codeph>topicmeta</codeph> or a
+          glossary entry's <codeph>prolog</codeph> for a concept, and in the scheme map's own
+          <codeph>topicmeta</codeph> or a <codeph>glossgroup</codeph>'s <codeph>prolog</codeph>
+          for a scheme. It is written when the SKOS table maps it: for a concept,
+          <codeph>dct:alternative</codeph> (one more alternative label each time it is given);
+          for a scheme, <codeph>dct:description</codeph> and <codeph>dct:license</codeph>, whose
+          value is the licence's address. A misspelt name is reported
+          (<codeph>GOVK011W</codeph>) and left out.</li>
         <li>A publication with no glossary entry and no subject scheme gets no vocabulary and a
           warning (<codeph>GOVK022W</codeph>).</li>
       </ul>
@@ -390,7 +399,7 @@
         thing from each end, and <filepath>tools/check_rdf.py</filepath> parses both files with
         an independent RDF library and confirms they are the same graph.</p>
     </section>
-    <section>
+    <section id="data-elements">
       <title>Any other property: data elements</title>
       <p><indexterm>metadata<indexterm>data element</indexterm></indexterm>A
         <codeph>&lt;data name="prefix:term" value="…"/&gt;</codeph> in a bookmap's

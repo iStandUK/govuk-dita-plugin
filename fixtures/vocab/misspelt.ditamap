@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- A subject scheme with a misspelt data name (#293): GOVK011W names it. -->
+<map xml:lang="en-GB">
+  <title>A vocabulary with a misspelt property</title>
+  <mapref href="schemes/misspelt.ditamap" processing-role="resource-only"/>
+  <topicref href="terms/standalone.dita"/>
+</map>

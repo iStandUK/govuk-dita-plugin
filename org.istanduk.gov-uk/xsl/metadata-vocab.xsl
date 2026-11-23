@@ -116,6 +116,8 @@ it. Nothing is invented, and the type of a scheme is its source's.
         <xsl:if test="govuk:md-term-retired($entry)">
           <xsl:sequence select="govuk:md-p('adms:status', 'retired')"/>
         </xsl:if>
+        <!-- any other property the entry's prolog states (design 14 section 6): the tables decide what is written -->
+        <xsl:sequence select="govuk:md-data($entry/*[contains(@class, ' topic/prolog ')])"/>
         <govuk:rel name="inScheme">
           <xsl:sequence select="govuk:md-stub('scheme', $scheme)"/>
         </govuk:rel>
@@ -188,6 +190,8 @@ it. Nothing is invented, and the type of a scheme is its source's.
         <xsl:if test="tokenize(normalize-space($def/@outputclass)) = 'retired' or govuk:md-data($meta)[@term = 'adms:status'] = 'retired'">
           <xsl:sequence select="govuk:md-p('adms:status', 'retired')"/>
         </xsl:if>
+        <!-- any other property the entry states in data elements (#293): the tables decide what is written -->
+        <xsl:sequence select="govuk:md-data($meta)"/>
         <govuk:rel name="inScheme">
           <xsl:sequence select="govuk:md-stub('scheme', govuk:md-scheme-id($map))"/>
         </govuk:rel>
@@ -244,7 +248,8 @@ it. Nothing is invented, and the type of a scheme is its source's.
         <xsl:variable name="group" select="$govuk-md-glossary-groups[position() = xs:integer($g/@n)]"/>
         <govuk:record kind="scheme" id="{$g/@id}" stem="{$g/@stem}">
           <xsl:sequence select="govuk:md-p('dct:title', string($g/@title)),
-                                govuk:md-p('dct:language', govuk:md-lang($group))"/>
+                                govuk:md-p('dct:language', govuk:md-lang($group)),
+                                govuk:md-data($group/*[contains(@class, ' topic/prolog ')])"/>
           <govuk:rel name="hasPart">
             <xsl:for-each select="1 to count($govuk-gloss-sources)">
               <xsl:if test="$govuk-gloss-sources[current()]/ancestor::*[contains(@class, ' glossgroup/glossgroup ')][1] is $group">
@@ -263,7 +268,8 @@ it. Nothing is invented, and the type of a scheme is its source's.
                                     (govuk:md-text(*[contains(@class, ' topic/title ')][1]),
                                      govuk:md-text(*[contains(@class, ' map/topicmeta ')]/*[contains(@class, ' topic/navtitle ')][1]),
                                      govuk:md-scheme-stem(.))[. ne ''][1]),
-                                  govuk:md-p('dct:language', govuk:md-lang(.))"/>
+                                  govuk:md-p('dct:language', govuk:md-lang(.)),
+                                  govuk:md-data(*[contains(@class, ' map/topicmeta ')])"/>
             <govuk:rel name="hasPart">
               <xsl:sequence select="$defs ! govuk:md-subject-term(.)"/>
             </govuk:rel>
@@ -303,6 +309,25 @@ it. Nothing is invented, and the type of a scheme is its source's.
         <xsl:with-param name="id" select="'GOVK022W'"/>
       </xsl:call-template>
     </xsl:if>
+    <!-- a data name no vocabulary knows, in a subject scheme map (#293). The check of the pages'
+         metadata (govuk-md-check) reads the merged map: that holds a scheme map's subjectdefs but
+         not the scheme map's own topicmeta, and it does not run under govuk.metadata=no. So the
+         names it has not reported are reported here, each once. -->
+    <xsl:variable name="base" select="string(base-uri($govuk-md-map))"/>
+    <xsl:variable name="reported" as="xs:string*"
+                  select="if ($GOVUK-METADATA = 'no') then ()
+                          else govuk:md-data-elements(($govuk-md-map/*[contains(@class, ' map/topicmeta ')],
+                                 $govuk-md-map//*[contains(@class, ' map/topicref ')]/*[contains(@class, ' map/topicmeta ')]))
+                               /normalize-space(@name)"/>
+    <xsl:for-each-group select="govuk:md-data-elements($govuk-md-scheme-maps//*[contains(@class, ' map/topicmeta ')])
+                                [not(govuk:md-known-term(normalize-space(@name)))]
+                                [not(normalize-space(@name) = $reported)]"
+                        group-by="normalize-space(@name)">
+      <xsl:call-template name="output-message">
+        <xsl:with-param name="id" select="'GOVK011W'"/>
+        <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate(current-grouping-key(), ';', ',')"/>;%2=<xsl:value-of select="count(current-group())"/>;%3=<xsl:value-of select="govuk:md-where(current-group()[1], $base)"/>;%4=<xsl:value-of select="string-join($govuk-md-vocabularies/@prefix, ', ')"/></xsl:with-param>
+      </xsl:call-template>
+    </xsl:for-each-group>
     <xsl:variable name="dups" as="element(govuk:dup)*">
       <!-- each term once: a glossgroup's entries are in the glossary's file as well -->
       <xsl:for-each-group select="$govuk-md-vocab[not(@stem = $govuk-md-group-schemes/@stem)]

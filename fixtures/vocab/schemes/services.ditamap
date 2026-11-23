@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE subjectScheme PUBLIC "-//OASIS//DTD DITA Subject Scheme Map//EN" "subjectScheme.dtd">
 <!-- A vocabulary others cite (#300): the scheme and every concept state their address, so the keys
-     authors use in keyref can be renamed without moving a concept. No address here is built from a key. -->
+     authors use in keyref can be renamed without moving a concept. No address here is built from a key.
+     Its data elements are properties of the scheme and of a concept, written where the SKOS table
+     maps them (#293). -->
 <subjectScheme id="services" xml:lang="en-GB">
   <title>Service types</title>
   <topicmeta>
     <data name="dct:identifier" value="https://example.org/def/service-type"/>
+    <data name="dct:description" value="The kinds of service a directory lists."/>
+    <data name="dct:license" value="https://creativecommons.org/licenses/by/4.0/"/>
   </topicmeta>
   <subjectdef keys="svc-advice">
     <topicmeta>
@@ -16,6 +20,8 @@
     <subjectdef keys="svc-debt">
       <topicmeta>
         <navtitle>Debt advice</navtitle>
+        <data name="dct:alternative" value="Money advice"/>
+        <data name="dct:alternative">Help with debt</data>
         <data name="dct:identifier" value="https://example.org/def/service-type/debt-advice"/>
       </topicmeta>
     </subjectdef>

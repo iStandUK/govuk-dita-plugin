@@ -283,3 +283,10 @@ What building the catalogue settled, where the sections above left it open or a 
 - **Not built, and tracked:** concepts from `concept` topics typed `skos:Concept` in a scheme the map declares, with `skos:broader` and match links stated in `data` ([#263](https://github.com/iStandUK/govuk-dita-plugin/issues/263)); `org:Organization` records from registers, which the issue left out of scope.
 - **The vocabulary checks** are `tools/check_metadata.py` (both files, required labels, references that name a concept in the file, a hierarchy that agrees from both ends) and `tools/check_rdf.py` (the files parse and are the same graph).
 
+
+## 19. As built: what a vocabulary carries beyond its labels (1.5.0)
+
+Found by publishing a draft Open Referral UK classification of 258 concepts in three subject schemes, and built as the issues it raised.
+
+- **`data` reaches the vocabulary records** ([#293](https://github.com/iStandUK/govuk-dita-plugin/issues/293)). Section 4 says any prefixed `data` name is a property of the record it describes, but the vocabulary harvesters read `data` only for a stated address and a retired status. A term now carries the `data` of its `subjectdef`'s `topicmeta` or its glossary entry's `prolog`, and a scheme that of the scheme map's own `topicmeta` or the `glossgroup`'s `prolog`, after what the harvest reads from the structure, so a title or description the source states in the ordinary way still comes first. The table decides what is written, as for a page.
+- **A misspelt name in a scheme map is reported.** The merged map holds a scheme map's `subjectdef` entries but not its own `topicmeta`, and the pages' check does not run under `govuk.metadata=no`, so the vocabulary check reports (`GOVK011W`) the names the pages' check has not.

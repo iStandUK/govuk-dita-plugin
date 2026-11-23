@@ -1504,6 +1504,13 @@ jobs:
           assert s[d + "/advice"]["skos:narrower"] == [ref(d + "/debt-advice"), ref(d + "/housing-advice")]
           assert s[d + "/debt-advice"]["skos:broader"] == ref(d + "/advice")
           assert s[d + "/debt-advice"]["skos:notation"] == "svc-debt" and "svc-" not in "".join(s)
+          # data elements are properties of the scheme and of a concept, written where the table maps
+          # them (#293); a scheme and a concept that state none are written as they were
+          assert s[d]["dct:description"] == {"@value": "The kinds of service a directory lists.", "@language": "en-GB"}
+          assert s[d]["dct:license"] == ref("https://creativecommons.org/licenses/by/4.0/")
+          assert s[d + "/debt-advice"]["skos:altLabel"] == [{"@value": v, "@language": "en-GB"} for v in ("Money advice", "Help with debt")]
+          assert set(c[f + "scheme"]) == {"@id", "@type", "dct:title", "skos:hasTopConcept"}
+          assert set(c[f + "red"]) == {"@id", "@type", "skos:prefLabel", "skos:definition", "skos:notation", "skos:inScheme", "skos:broader"}
           # the glossary: an address the source states (with the page it is described on), the page's own
           # address, otherwise an anchor on the glossary page; names, relations and status
           g = load("glossary")
@@ -1532,6 +1539,16 @@ jobs:
           has out/vocab/glossary.html '<link rel="alternate" type="text/turtle" href="vocab/glossary.ttl">'
           has out/vocab/glossary.html '<link rel="alternate" type="application/ld+json" href="vocab/glossary.jsonld">'
           has out/vocab/terms/standalone.html '<link rel="alternate" type="text/turtle" href="../vocab/glossary.ttl">'
+          # a misspelt data name in a subject scheme, on a subjectdef or on the scheme, is named once and
+          # left out, with or without the pages' metadata; a name with no prefix is not metadata (#293)
+          for level in basic no; do
+            vocab --input fixtures/vocab/misspelt.ditamap --output out/vocab-misspelt -Dgovuk.metadata=$level 2>&1 | tee vocab-misspelt.log
+            test "$(grep -c "GOVK011W.*'dct:alternativ'" vocab-misspelt.log)" = 1
+            test "$(grep -c "GOVK011W.*'dct:licence'" vocab-misspelt.log)" = 1
+            absent -q "GOVK011W.*'reviewer'" vocab-misspelt.log
+            has out/vocab-misspelt/vocab/misspelt.ttl 'skos:altLabel "Compact"@en-GB'
+            absent -Eq 'Little|creativecommons' out/vocab-misspelt/vocab/misspelt.ttl
+          done
           # two terms that state one address are named; nothing to publish is said; a bad switch is refused
           vocab --input fixtures/vocab/duplicate.ditamap --output out/vocab-dup 2>&1 | tee vocab-dup.log
           grep -q 'GOVK021W.*care_plan.*2 terms' vocab-dup.log
