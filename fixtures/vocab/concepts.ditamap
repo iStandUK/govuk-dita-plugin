@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- A concept system (#263): each concept a topic with a page of its own, in a scheme an entry of
+     the map declares. The hierarchy is what the topics state, not the nesting here: every concept
+     is a sibling, and the page that is not a concept sits among them. -->
+<map xml:lang="en-GB">
+  <title>A model of care</title>
+  <topicref href="concepts/index.dita" keys="care">
+    <topicmeta>
+      <shortdesc>The concepts of an example model of care.</shortdesc>
+      <data name="rdf:type" value="skos:ConceptScheme"/>
+      <data name="dct:identifier" value="https://example.org/care/"/>
+      <data name="dct:license" value="https://creativecommons.org/licenses/by/4.0/"/>
+      <data name="dcat:version" value="2.1"/>
+      <data name="adms:status" value="completed"/>
+    </topicmeta>
+    <topicref href="concepts/healthcare_activity.dita"/>
+    <topicref href="concepts/assessment.dita"/>
+    <topicref href="concepts/care_plan.dita"/>
+    <topicref href="concepts/review.dita"/>
+
+    <topicref href="concepts/guidance.dita"/>
+  </topicref>
+  <!-- Related concepts from a relationship table (#295), beside those the topics state -->
+  <reltable>
+    <relheader><relcolspec/><relcolspec/></relheader>
+    <relrow>
+      <relcell><topicref href="concepts/healthcare_activity.dita"/></relcell>
+      <relcell><topicref href="concepts/review.dita"/></relcell>
+    </relrow>
+  </reltable>
+</map>

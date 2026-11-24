@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE subjectScheme PUBLIC "-//OASIS//DTD DITA Subject Scheme Map//EN" "subjectScheme.dtd">
+<!-- A data name no vocabulary knows, on a subjectdef and on the scheme (#293): each is reported
+     (GOVK011W) and left out; the rest of the vocabulary is written. -->
+<subjectScheme id="misspelt" xml:lang="en-GB">
+  <title>Sizes</title>
+  <topicmeta>
+    <data name="dct:licence" value="https://creativecommons.org/licenses/by/4.0/"/>
+  </topicmeta>
+  <subjectdef keys="small">
+    <topicmeta>
+      <navtitle>Small</navtitle>
+      <data name="dct:alternativ" value="Little"/>
+      <data name="dct:alternative" value="Compact"/>
+      <data name="reviewer" value="not metadata: a name with no prefix is the publisher's own"/>
+    </topicmeta>
+  </subjectdef>
+</subjectScheme>

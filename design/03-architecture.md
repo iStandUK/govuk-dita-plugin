@@ -210,7 +210,9 @@ Status as of v0.1.0: ✅ implemented · ⬜ planned (each arrives with its featu
 | `govuk.metadata.persons`, `govuk.organisation`, `govuk.organisation.url`, `govuk.og.image`, `govuk.licence.url` | no \| yes; text | #99, D-24 — the facts the DITA cannot give: whether authors are named, the publisher, a share image, the licence | ✅ |
 | `govuk.dcat` | `no` (default) \| `yes` | #102, #123, D-24 decision 6 — a DCAT 3 catalogue record with ADMS typing, `dcat.jsonld` and `dcat.ttl`, of the data assets the map declares; needs `govuk.site.url` | ✅ |
 | `govuk.contact.email` | text | #102 — the catalogue's contact point, an organisational mailbox | ✅ |
-| `govuk.skos` | `no` (default) \| `yes` | #103 — the glossary, each glossgroup and each subjectScheme map as SKOS, `vocab/NAME.ttl` and `.jsonld`; needs `govuk.site.url` | ✅ |
+| `govuk.skos` | `no` (default) | `yes` | #103, #263 — the glossary, each glossgroup, each subjectScheme map and each scheme the map declares over concept topics as SKOS, `vocab/NAME.ttl` and `.jsonld`; needs `govuk.site.url`| `govuk.skos.keywords` | `alt` (default) | `hidden` | `no` | #294, D-32 — what a concept's keywords are in a vocabulary: alternative labels, hidden labels, or not written | ✅ |
+| `govuk.metadata.vocabularies`, `govuk.metadata.tables` | file | #191 — the publisher's own vocabularies and mapping tables, in the shipped formats, added to the plugin's; a file that holds none is `GOVK023W` or `GOVK024W` | ✅ |
+| `yes` | #103 — the glossary, each glossgroup and each subjectScheme map as SKOS, `vocab/NAME.ttl` and `.jsonld`; needs `govuk.site.url` | ✅ |
 | `govuk.dates` | `no` (default) \| `updated` \| `both` | #61 — critdates as a metadata line; sitemap `lastmod` | ✅ (#77) |
 | `govuk.footer.links` | `label\|url;label\|url` | Extra footer links | ✅ (#49) |
 | `govuk.footer.licence` | text | Footer licence/credit line (neutral, iStandUK, NHS; official keeps the OGL) | ✅ (#49) |

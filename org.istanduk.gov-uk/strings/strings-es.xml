@@ -46,6 +46,7 @@ whether or not DITA-OT has strings for it.
   <variable id="govuk-dita.search-this-site">Buscar en este sitio</variable>
   <variable id="govuk-dita.search-unavailable">La búsqueda no está disponible en esta versión.</variable>
   <variable id="govuk-dita.glossary">Glosario</variable>
+  <variable id="govuk-dita.vocabularies">Vocabularios</variable>
   <variable id="govuk-dita.index">Índice</variable>
   <variable id="govuk-dita.see">véase</variable>
   <variable id="govuk-dita.see-also">véase también</variable>

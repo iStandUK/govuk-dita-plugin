@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- A subject scheme whose concepts have pages (#294): see schemes/needs.ditamap. -->
+<map xml:lang="en-GB">
+  <title>Needs a directory lists</title>
+  <mapref href="schemes/needs.ditamap" processing-role="resource-only"/>
+
+  <topicref href="pages/advice.dita">
+    <topicref href="pages/debt.dita"/>
+    <topicref href="pages/housing.dita"/>
+  </topicref>
+  <topicref href="pages/about.dita"/>
+  <!-- Related concepts (#295): a row relates what is in one cell to what is in the others, whether
+       an entry names its concept by key or by topic. An entry that is no concept of the scheme
+       relates nothing. -->
+  <reltable>
+    <relheader><relcolspec/><relcolspec/></relheader>
+    <relrow>
+      <relcell><topicref keyref="need-debt"/></relcell>
+
+      <relcell><topicref keyref="need-housing"/></relcell>
+    </relrow>
+    <relrow>
+      <relcell><topicref href="pages/housing.dita"/></relcell>
+      <relcell><topicref href="pages/about.dita"/></relcell>
+    </relrow>
+  </reltable>
+</map>

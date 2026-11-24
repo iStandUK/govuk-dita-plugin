@@ -183,6 +183,7 @@ map transformation with the plugin's values.
   <xsl:template name="chapter-setup">
     <xsl:call-template name="govuk-check-map"/>
     <xsl:call-template name="govuk-check-root-map"/>
+    <xsl:call-template name="govuk-md-publisher-check"/>
     <xsl:call-template name="govuk-md-check">
       <xsl:with-param name="cover" select="$govuk-md-cover"/>
     </xsl:call-template>
@@ -295,6 +296,24 @@ map transformation with the plugin's values.
             </xsl:call-template>
           </xsl:for-each>
         </xsl:for-each-group>
+
+        <!-- the vocabularies the site publishes (govuk.skos, #298): each file, by its scheme's
+             title and its form, with the scheme's description on the first -->
+        <xsl:if test="exists($govuk-md-skos-files)">
+          <xsl:variable name="vocabularies" as="xs:string">
+            <xsl:call-template name="govuk-llms-string">
+              <xsl:with-param name="id" select="'govuk-dita.vocabularies'"/>
+            </xsl:call-template>
+          </xsl:variable>
+          <xsl:value-of select="concat('&#10;## ', $vocabularies, '&#10;&#10;')"/>
+          <xsl:for-each select="$govuk-md-skos-files">
+            <xsl:call-template name="govuk-llms-item">
+              <xsl:with-param name="title" select="concat(@title, ' (SKOS, ', @form, ')')"/>
+              <xsl:with-param name="page" select="string(@href)"/>
+              <xsl:with-param name="description" select="string(@description)"/>
+            </xsl:call-template>
+          </xsl:for-each>
+        </xsl:if>
         <xsl:if test="exists(($govuk-gloss, $govuk-ix, $govuk-figs, $govuk-tables))">
           <xsl:value-of select="'&#10;## Optional&#10;&#10;'"/>
           <xsl:for-each select="('glossary', 'index-page', 'figurelist', 'tablelist')
@@ -369,6 +388,7 @@ map transformation with the plugin's values.
       <xsl:with-param name="record" select="$govuk-md-cover"/>
     </xsl:call-template>
     <xsl:call-template name="govuk-md-dcat-head"/>
+    <xsl:call-template name="govuk-md-skos-cover-head"/>
     <xsl:apply-templates select="." mode="gen-user-head"/>
   </xsl:template>
 

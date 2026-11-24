@@ -28,9 +28,14 @@
           font embedded;</li>
         <li>repeated table headers, and landscape pages for a table or figure marked
           <codeph>outputclass="landscape"</codeph>;</li>
+
         <li>the same bytes from the same input, and no network request: it suits a build
           server as well as a desk.</li>
       </ul>
+      <p>What it does not add is the site's machine-readable metadata. The PDF has the
+        publication's title and author in its properties and nothing else of that kind: the
+        SKOS vocabularies and the catalogue record that the site publishes
+        (<xref keyref="metadata"/>) are not attached to the PDF or named in it.</p>
     </section>
     <section id="install">
       <title>Installing it</title>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="debt" xml:lang="en-GB">
+  <title>Debt advice</title>
+  <shortdesc>Advice on debts a person owes.</shortdesc>
+  <prolog>
+    <metadata>
+      <keywords><keyword>Money advice</keyword></keywords>
+    </metadata>
+    <data name="dct:identifier" value="https://example.org/id/need/debt-advice"/>
+  </prolog>
+  <conbody><p>The page states the address the concept already has.</p></conbody>
+</concept>

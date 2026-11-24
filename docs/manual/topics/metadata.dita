@@ -281,7 +281,8 @@
         that is retired, by <codeph>importance="obsolete"</codeph> on its first topic or a
         <codeph>retired</codeph> token on its outputclass, carries
         <codeph>adms:status</codeph> Withdrawn; state <codeph>adms:status</codeph> yourself to
-        say something else.</p>
+        say something else: <codeph>draft</codeph>, <codeph>completed</codeph> or
+        <codeph>deprecated</codeph>, or a status's address.</p>
       <p><b>What data.gov.uk expects.</b> A title, a description, a stable identifier and a
         licence. A record that lacks one is still written, and the build names the property
         and the record (<codeph>GOVK019W</codeph>), so the harvester will not be the first to
@@ -332,8 +333,19 @@
                 resource-only <codeph>mapref</codeph></entry>
               <entry><filepath>vocab/NAME</filepath>, named after the map's <codeph>id</codeph>
                 or file: each <codeph>subjectdef</codeph> with <codeph>keys</codeph> is a
+
                 concept, nested ones <codeph>broader</codeph> and <codeph>narrower</codeph>,
                 and the top ones the scheme's top concepts.</entry>
+            </row>
+            <row>
+              <entry>A scheme the map declares: an entry, or the map itself, whose
+                <codeph>topicmeta</codeph> (or <codeph>bookmeta</codeph>) has a data element
+                named <codeph>rdf:type</codeph> with the value
+                <codeph>skos:ConceptScheme</codeph></entry>
+              <entry><filepath>vocab/NAME</filepath>, named after the entry's first key, its
+                <codeph>id</codeph> or its topic's file, or after the map's
+                <codeph>id</codeph> or file: each topic beneath it that says it is a concept,
+                with the hierarchy the topics state.</entry>
             </row>
           </tbody>
         </tgroup>
@@ -344,26 +356,199 @@
           <codeph>shortdesc</codeph>, its other names (acronyms, abbreviations, short forms,
           synonyms) are <b>alternative labels</b>, and a subject scheme's key is its
           <b>notation</b>. Text carries the language of what it labels.</li>
+        <li><b>A <codeph>subjectdef</codeph> that points at a topic</b> with
+          <codeph>href</codeph> is the concept that topic describes. What the entry does not
+          say for itself it takes from the topic: the label from the title, the definition
+          from the short description, and the keywords. So a concept that has a page is
+          written once, in its topic, and the scheme map holds only its key, its
+          <codeph>href</codeph> and its place in the hierarchy.</li>
+        <li><b>Keywords</b> of a concept, in the <codeph>subjectdef</codeph>'s
+          <codeph>topicmeta</codeph> or else in its topic's <codeph>prolog</codeph>, are
+          written as <codeph>govuk.skos.keywords</codeph> says: <codeph>alt</codeph> (the
+          default) as alternative labels, for keywords that are the concept's other names;
+          <codeph>hidden</codeph> as hidden labels, for keywords that are phrases people
+          search with and not names; <codeph>no</codeph> not at all. A keyword that repeats
+          the label, or another keyword, is left out.</li>
+
         <li>A <codeph>related-links</codeph> link from one glossary entry to another is
           <codeph>skos:related</codeph>. A term marked <codeph>retired</codeph>
           (<codeph>outputclass</codeph>) carries its status.</li>
+        <li><indexterm>relationship table<indexterm>related concepts</indexterm></indexterm><b>Related
+          concepts</b> of a subject scheme, or of a scheme the map declares, come from the
+          map's relationship tables and from the topics' own links. A row of a
+          <codeph>reltable</codeph> relates each concept in one cell to each in the others,
+          whether the entry names the concept by <codeph>keyref</codeph> or by
+          <codeph>href</codeph>; a <codeph>related-links</codeph> link an author writes from
+          one concept's topic to another's relates the two. Both concepts then say
+          <codeph>skos:related</codeph>. An entry or a link to something that is not a
+          concept of the same scheme relates nothing, so the same table can still link
+          concepts to ordinary pages for readers.</li>
         <li><b>A concept's address</b> is, in this order: one the source states
           (<codeph>resourceid appid</codeph> in the entry's prolog, or a data element named
-          <codeph>dct:identifier</codeph>); the address of its page, if it has one; an anchor on
-          the glossary page, which is given to every term for this; in a subject scheme, its key
-          as a fragment of the vocabulary file. State the address a concept already has, so that
-          links already made to it still mean it. The page it is described on is then linked
-          from it. Two terms that state the same address are reported
-          (<codeph>GOVK021W</codeph>).</li>
-        <li>A publication with no glossary entry and no subject scheme gets no vocabulary and a
-          warning (<codeph>GOVK022W</codeph>).</li>
+          <codeph>dct:identifier</codeph>, on the <codeph>subjectdef</codeph> or in the topic it
+          points at); the address of its page, if it has one; an anchor on the glossary page,
+          which is given to every term for this; in a subject scheme, its key as a fragment of
+          the vocabulary file. State the address a concept already has, so that links already
+          made to it still mean it. The page it is described on is then linked from it. Two
+          terms that state the same address are reported (<codeph>GOVK021W</codeph>); a
+          <codeph>subjectdef</codeph> and the topic it points at are one concept, not
+          two.</li>
+        <li><b>Changed in 1.5.0.</b> A <codeph>subjectdef</codeph> whose
+          <codeph>href</codeph> points at a page of the site now has the page's address, where
+          1.4 gave it its key in the vocabulary file; it takes its label from the topic's
+          title where 1.4 used the key, when it has no <codeph>navtitle</codeph>; and its
+          keywords are alternative labels. If others already cite the addresses a 1.4 build
+          wrote, state them with <codeph>dct:identifier</codeph> before you upgrade, and they
+          do not move.</li>
+        <li><b>Any other property</b> is a <xref href="#metadata/data-elements">data
+          element</xref>: in a <codeph>subjectdef</codeph>'s <codeph>topicmeta</codeph> or a
+          glossary entry's <codeph>prolog</codeph> for a concept, and in the scheme map's own
+          <codeph>topicmeta</codeph> or a <codeph>glossgroup</codeph>'s <codeph>prolog</codeph>
+          for a scheme. It is written when the SKOS table maps it: for a concept,
+          <codeph>dct:alternative</codeph> (one more alternative label each time it is given);
+          for a scheme, <codeph>dct:description</codeph> and <codeph>dct:license</codeph>, whose
+          value is the licence's address. A misspelt name is reported
+          (<codeph>GOVK011W</codeph>) and left out.</li>
+        <li><b>A concept's notes</b> are data elements named for the SKOS note properties, each
+          as often as it is needed: <codeph>skos:scopeNote</codeph> (what the concept covers and
+          what it does not), <codeph>skos:example</codeph>, <codeph>skos:note</codeph>,
+          <codeph>skos:editorialNote</codeph> (for those who maintain the vocabulary),
+          <codeph>skos:historyNote</codeph> and <codeph>skos:changeNote</codeph>. A long note
+          can be the element's content instead of its <codeph>value</codeph>.</li>
+        <li><b>The status</b> of a concept or of a scheme is a data element named
+          <codeph>adms:status</codeph>, whose value is <codeph>draft</codeph>,
+          <codeph>completed</codeph>, <codeph>deprecated</codeph> or <codeph>retired</codeph>,
+          written as the status of the ADMS vocabulary it stands for (under development,
+          completed, deprecated, withdrawn), or the address of a status in another vocabulary.
+          Only <codeph>retired</codeph> has another spelling (the <codeph>outputclass</codeph>),
+          and only a retired topic is demoted in search.</li>
+        <li><b>A scheme's version and dates</b> are data elements in the scheme map's
+          <codeph>topicmeta</codeph>: <codeph>dcat:version</codeph>,
+          <codeph>dct:issued</codeph> and <codeph>dct:modified</codeph>, the dates in ISO form
+          (<codeph>2026-11-02</codeph>). A date that is not one is left out.</li>
+        <li>A publication with no glossary entry, no subject scheme and no declared scheme gets
+          no vocabulary and a warning (<codeph>GOVK022W</codeph>).</li>
       </ul>
+      <p><indexterm>vocabulary<indexterm>concept topics</indexterm></indexterm><b>A concept
+        system: each concept a topic with a page of its own.</b> A glossary entry cannot hold
+        a diagram, a table of associations or a discussion; a <codeph>concept</codeph> topic
+        can. Say that a topic is a concept, and which scheme it is in, and the build publishes
+        the scheme as a vocabulary like the others.</p>
+      <codeblock outputclass="language-xml">&lt;!-- in the map: the entry that heads the concepts declares their scheme -->
+&lt;topicref href="concepts/index.dita" keys="care">
+  &lt;topicmeta>
+    &lt;data name="rdf:type" value="skos:ConceptScheme"/>
+    &lt;data name="dct:identifier" value="https://example.org/care/"/>
+  &lt;/topicmeta>
+  &lt;topicref href="concepts/care_plan.dita"/>
+  …
+&lt;/topicref>
+
+&lt;!-- in concepts/care_plan.dita: the topic says it is a concept, and what is broader -->
+&lt;prolog>
+  &lt;metadata>&lt;keywords>&lt;keyword>Plan of care&lt;/keyword>&lt;/keywords>&lt;/metadata>
+  &lt;data name="rdf:type" value="skos:Concept"/>
+  &lt;data name="dct:identifier" value="https://example.org/care/care_plan"/>
+  &lt;data name="skos:broader" value="https://example.org/care/healthcare_activity"/>
+  &lt;data name="skos:exactMatch" value="https://other.example/concept/care_plan"/>
+&lt;/prolog></codeblock>
+      <ul>
+        <li><b>The scheme</b> is the nearest entry above the topic, the topic's own entry
+          included, that declares one; else the map, when its own <codeph>topicmeta</codeph>
+          or a bookmap's <codeph>bookmeta</codeph> declares one. Its title and description
+          are the entry's (for the map, the publication's, with its licence, edition and
+          dates), its other properties are its data elements, its address is the
+          <codeph>dct:identifier</codeph> it states or else
+          <filepath>vocab/NAME.ttl#scheme</filepath>, and the page it is described on is
+          linked from it. A topic that says it is a concept under no declared scheme is in no
+          vocabulary, and the build says so (<codeph>GOVK025W</codeph>).</li>
+        <li><b>The concept</b> has the topic's title as its label, its short description as
+          its definition, its keywords as <codeph>govuk.skos.keywords</codeph> says, and its
+          other properties (notes, status) from the data elements of its
+          <codeph>prolog</codeph>. Its address is the one the topic states, else the address
+          of its page. Only a topic that says so is a concept: the page that heads the
+          scheme, and any other page beneath it, is not.</li>
+        <li><b>The hierarchy is what the topics state</b>, not the nesting of the map, which
+          is for reading: a concept is often placed under an overview page, or under a
+          concept it is not a kind of. State <codeph>skos:broader</codeph> or
+          <codeph>skos:narrower</codeph> with the other concept's address. Say it from either
+          end: the vocabulary says it from both, and a concept with nothing broader is a top
+          concept of the scheme. A scheme whose topics state no hierarchy is a flat list. A
+          value that names no concept of the same scheme is left out and reported
+          (<codeph>GOVK026W</codeph>).</li>
+        <li><b><codeph>skos:related</codeph></b> is likewise said by both concepts when both
+          are in the scheme, and written as stated when the other is not.</li>
+        <li><b>Alignment with another vocabulary</b> is <codeph>skos:exactMatch</codeph>,
+          <codeph>skos:closeMatch</codeph>, <codeph>skos:broadMatch</codeph>,
+          <codeph>skos:narrowMatch</codeph> or <codeph>skos:relatedMatch</codeph>, whose
+          value is the other vocabulary's address for its concept. They are written as
+          stated, for a <codeph>subjectdef</codeph> and a glossary entry too.</li>
+        <li><b>The concept's page</b> links the vocabulary's two files
+          (<codeph>rel="alternate"</codeph>), as does the page of a concept a
+          <codeph>subjectdef</codeph> points at. With <codeph>govuk.metadata=full</codeph>
+          the page's structured data also says the page is about the concept (a
+          <codeph>DefinedTerm</codeph> as its <codeph>mainEntity</codeph>, naming its
+          scheme), with the concept's own address when the source states one. Neither is
+          written without <codeph>govuk.skos=yes</codeph>.</li>
+        <li>Two vocabularies cannot have one file name. The first is written and the second
+          reported (<codeph>GOVK027W</codeph>): give the scheme an <codeph>id</codeph> or
+          <codeph>keys</codeph> of its own.</li>
+        <li>The same declaration makes the branch an asset of the catalogue record, when
+          <codeph>govuk.dcat=yes</codeph> is set as well: a code list or a taxonomy is
+          catalogued, and its concepts are published.</li>
+      </ul>
+      <p><indexterm>vocabulary<indexterm>stable addresses</indexterm></indexterm><b>Keep keys and
+        addresses apart in a vocabulary that others will cite.</b> A <codeph>subjectdef</codeph>'s
+        key is what authors write in <codeph>keyref</codeph>, and by default it is also the end of
+        the concept's address (<filepath>vocab/NAME.ttl#KEY</filepath>). Renaming the key, the map
+        or the site then moves the concept, and every link another system has made to it breaks.
+        State the addresses instead: a data element named <codeph>dct:identifier</codeph> in the
+        scheme map's own <codeph>topicmeta</codeph> for the scheme, and one in each
+        <codeph>subjectdef</codeph>'s <codeph>topicmeta</codeph> for its concept. Every reference
+        to the scheme and its concepts then uses those addresses, and the key is written only as
+        the concept's notation.</p>
+      <codeblock outputclass="language-xml">&lt;subjectScheme id="services">
+  &lt;title>Service types&lt;/title>
+  &lt;topicmeta>
+    &lt;data name="dct:identifier" value="https://example.org/def/service-type"/>
+  &lt;/topicmeta>
+  &lt;subjectdef keys="svc-advice">
+    &lt;topicmeta>
+      &lt;navtitle>Advice&lt;/navtitle>
+      &lt;data name="dct:identifier" value="https://example.org/def/service-type/advice"/>
+    &lt;/topicmeta>
+  &lt;/subjectdef>
+&lt;/subjectScheme></codeblock>
+      <p>An address must be an absolute <codeph>http</codeph>, <codeph>https</codeph> or
+        <codeph>urn</codeph> address, or it is ignored. Choose one you can keep: it need not be
+        on this site, but a reader who follows it should reach something, so make it resolve when
+        you can. A draft whose identifiers are provisional can leave them out and state them
+        before the vocabulary is first cited.</p>
+
+      <p><indexterm>vocabulary<indexterm>finding the files</indexterm></indexterm><b>Finding the
+        files.</b> The home page links every vocabulary, in both forms, with
+        <codeph>rel="alternate"</codeph> and the scheme's title; the glossary page and the page
+        of each concept link the vocabulary that concept is in; and
+        <filepath>llms.txt</filepath> lists them under <codeph>Vocabularies</codeph>, with a
+        scheme's description. So a reader, a harvester or an agent that reaches any of those
+
+        finds the files. <filepath>sitemap.xml</filepath> does not list them: it is a list of
+        pages.</p>
+      <p id="vocabularies-pdf"><indexterm>PDF<indexterm>vocabularies</indexterm></indexterm><b>The
+        PDF does not include the vocabularies.</b> The print document, and the PDF made from
+        it, hold the publication's pages, with its title and author in the PDF's own
+        properties. They hold no SKOS: the vocabulary files are not attached to the PDF and
+        their addresses are not written into it, and the same is true of the catalogue
+        record. A reader of the PDF who needs a vocabulary takes it from the site, at the
+        addresses above, so give the site's address in the publication itself if the PDF
+        will travel without it.</p>
       <p>To check a built site, <filepath>tools/check_metadata.py</filepath> verifies that every
-        reference in a vocabulary names a concept in it and that a hierarchy says the same
-        thing from each end, and <filepath>tools/check_rdf.py</filepath> parses both files with
+        reference in a vocabulary names a concept in it, that a hierarchy says the same
+        thing from each end and that the home page links every vocabulary file, and
+        <filepath>tools/check_rdf.py</filepath> parses both files with
         an independent RDF library and confirms they are the same graph.</p>
     </section>
-    <section>
+    <section id="data-elements">
       <title>Any other property: data elements</title>
       <p><indexterm>metadata<indexterm>data element</indexterm></indexterm>A
         <codeph>&lt;data name="prefix:term" value="…"/&gt;</codeph> in a bookmap's
@@ -395,6 +580,73 @@
         <xref href="https://github.com/iStandUK/govuk-dita-plugin/blob/dev/docs/SOURCE-SYSTEMS.md"
               format="html" scope="external">the guide for source systems</xref>.</p>
     </section>
+    <section id="own-vocabulary">
+      <title>Your own vocabulary and mapping tables</title>
+      <p><indexterm>metadata<indexterm>your own vocabulary</indexterm></indexterm><indexterm>vocabulary<indexterm>named
+        relationships</indexterm></indexterm>The plugin knows a fixed set of vocabularies, and
+        its tables write a fixed set of properties. A publication with a vocabulary of its own,
+        such as a concept system whose concepts are joined by named relationships ("an
+        assessment <i>precedes</i> a plan"), names two files, and nothing in the plugin
+        changes.</p>
+      <p><codeph>govuk.metadata.vocabularies</codeph> names a file of vocabularies. Each has a
+        prefix, a namespace and its terms; <codeph>open="yes"</codeph> in place of the terms
+        accepts any term under the prefix. List the terms when you can: a misspelt one is then
+        reported (<codeph>GOVK011W</codeph>) and not quietly written. A prefix the plugin
+        already knows keeps its namespace and gains the terms you list.</p>
+      <codeblock outputclass="language-xml">&lt;vocabularies>
+  &lt;vocabulary prefix="ex" namespace="https://example.org/def/relations#">
+    isProvidedWith precedes
+  &lt;/vocabulary>
+&lt;/vocabularies></codeblock>
+      <p>A term of that vocabulary is then metadata wherever a data element is:</p>
+      <codeblock outputclass="language-xml">&lt;subjectdef keys="assessment">
+  &lt;topicmeta>
+    &lt;navtitle>Assessment&lt;/navtitle>
+    &lt;data name="ex:precedes" value="https://example.org/def/stage/plan"/>
+  &lt;/topicmeta>
+&lt;/subjectdef></codeblock>
+      <p><codeph>govuk.metadata.tables</codeph> names a file of mapping tables, which say where
+        a term is written. A table is a <codeph>scheme</codeph>; a file holds one, or a
+        <codeph>schemes</codeph> element holding several. This one writes the two relationships
+        as properties of a concept in the vocabulary files:</p>
+      <codeblock outputclass="language-xml">&lt;scheme id="relations" syntax="rdf" levels="skos">
+  &lt;prefix name="ex" uri="https://example.org/def/relations#"/>
+  &lt;kind record="term">
+    &lt;property term="ex:isProvidedWith" as="ex:isProvidedWith" format="uri" node="yes" repeat="yes"/>
+    &lt;property term="ex:precedes" as="ex:precedes" format="uri" node="yes" repeat="yes"/>
+  &lt;/kind>
+&lt;/scheme></codeblock>
+      <ul>
+        <li><codeph>syntax</codeph> is what the table writes: <codeph>meta</codeph> or
+          <codeph>link</codeph> elements in a page's head, a <codeph>json-ld</codeph> block
+          there, or <codeph>rdf</codeph> in the catalogue record and the vocabulary files.</li>
+        <li><codeph>levels</codeph> is when it is on: <codeph>basic</codeph> and
+          <codeph>full</codeph> are the levels of <codeph>govuk.metadata</codeph>,
+          <codeph>dcat</codeph> is <codeph>govuk.dcat=yes</codeph> and <codeph>skos</codeph> is
+          <codeph>govuk.skos=yes</codeph>. Left out, the table is on wherever its syntax is
+          written.</li>
+        <li>A <codeph>kind</codeph> names the record its rows describe: a
+          <codeph>publication</codeph>, a <codeph>page</codeph>, an <codeph>asset</codeph>, a
+          <codeph>scheme</codeph> or a <codeph>term</codeph>.</li>
+        <li>A row reads the property named by <codeph>term</codeph> and writes it as
+          <codeph>as</codeph>. <codeph>format="uri"</codeph> keeps only an absolute address,
+          <codeph>node="yes"</codeph> writes it as a reference to a thing and not as text,
+          <codeph>repeat="yes"</codeph> writes every value and not only the first, and
+          <codeph>lang="yes"</codeph> gives text the language of what it describes.</li>
+        <li>Your tables are added after the plugin's own, so they add properties and cannot
+          take any away. A prefix a table declares is written only in a file that uses it.</li>
+        <li>The plugin's own tables, in its <filepath>resource/metadata</filepath> folder, are
+          the reference for the format: your tables are read exactly as they are.</li>
+      </ul>
+      <p>A path is relative to the folder the build is run from. A file that holds no
+        vocabulary, or no table, is reported (<codeph>GOVK023W</codeph>,
+        <codeph>GOVK024W</codeph>) and the build goes on without it. The files are inputs to
+        your build like your stylesheet: a table can write any tag into every page's head, so
+        take one only from a source you trust.</p>
+      <p>What stays out is the ontology itself: the domain, range and multiplicity of a
+        relationship. Publish that as a file of its own, declare it as a distribution of the
+        catalogue record: the relationships the vocabulary files name are defined there.</p>
+    </section>
     <section>
       <title>Checking</title>
       <p>A page the metadata tables require a value for, and that has none, is reported once
@@ -420,7 +672,9 @@
         entry in the map, listing its pages with the titles and short descriptions the home
         page shows, each linked by its full address. The pages are the sitemap's: topics that
         are resource-only or <codeph>toc="no"</codeph>, the search page and the print document
-        are left out. The glossary, index and list pages come last, under
+        are left out. With <codeph>govuk.skos=yes</codeph> the vocabulary files come next,
+        under <codeph>Vocabularies</codeph>: the Turtle and the JSON-LD of each, by the
+        scheme's title. The glossary, index and list pages come last, under
         <codeph>Optional</codeph>, which a reader short of room may skip.</p>
       <codeblock outputclass="language-markdown"># GOV.UK DITA plugin manual
 

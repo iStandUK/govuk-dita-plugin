@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="guidance" xml:lang="en-GB">
+  <title>Using the model</title>
+  <shortdesc>How to read the pages of the model.</shortdesc>
+  <prolog>
+    <metadata><keywords><keyword>guide</keyword></keywords></metadata>
+  </prolog>
+  <conbody><p>A page under the scheme that does not say it is a concept, so it is not one.</p></conbody>
+</concept>

@@ -25,7 +25,14 @@ graph. The table format is described in design 14, section 7.
   <prefix name="vcard" uri="http://www.w3.org/2006/vcard/ns#"/>
   <prefix name="adms" uri="http://www.w3.org/ns/adms#"/>
   <prefix name="rdf" uri="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+
   <prefix name="xsd" uri="http://www.w3.org/2001/XMLSchema#"/>
+  <!-- the other vocabularies a declared type may come from (a code list is a
+       skos:ConceptScheme): declared in a record that names one, and in no other -->
+  <prefix name="skos" uri="http://www.w3.org/2004/02/skos/core#" optional="yes"/>
+  <prefix name="org" uri="http://www.w3.org/ns/org#" optional="yes"/>
+  <prefix name="schema" uri="https://schema.org/" optional="yes"/>
+  <prefix name="og" uri="https://ogp.me/ns#" optional="yes"/>
 
   <!-- several assets: the publication is their catalogue -->
   <kind record="publication" when="@assets = 'many'" type="dcat:Catalog">

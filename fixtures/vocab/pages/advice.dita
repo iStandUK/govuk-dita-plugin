@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="advice" xml:lang="en-GB">
+  <title>Advice services</title>
+  <shortdesc>Services that help a person understand a problem and decide what to do.</shortdesc>
+  <prolog>
+    <metadata>
+      <keywords>
+        <keyword>Guidance</keyword>
+        <keyword>where can I get advice</keyword>
+        <keyword>advice services</keyword>
+        <keyword>guidance</keyword>
+      </keywords>
+    </metadata>
+  </prolog>
+
+  <conbody><p>What belongs here, and what does not.</p></conbody>
+  <related-links>
+    <link href="housing.dita"/>
+    <link href="https://example.org/elsewhere" scope="external" format="html"><linktext>Elsewhere</linktext></link>
+  </related-links>
+</concept>

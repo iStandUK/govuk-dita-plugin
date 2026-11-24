@@ -160,11 +160,24 @@ Copyright 2026 iStandUK. Licensed under the Apache License, Version 2.0.
       <val>yes</val>
     </param>
     <param name="govuk.skos"
-           desc="Write the glossary, each glossgroup and each subjectScheme map as a SKOS vocabulary: vocab/NAME.ttl and vocab/NAME.jsonld, with the glossary page and each glossary entry's page linking the glossary's. 'no' (default) writes none. 'yes' needs govuk.site.url."
+           desc="Write the glossary, each glossgroup, each subjectScheme map and each scheme the map declares over topics that say they are concepts as a SKOS vocabulary: vocab/NAME.ttl and vocab/NAME.jsonld, with the glossary page and the page of each concept linking its vocabulary's. 'no' (default) writes none. 'yes' needs govuk.site.url."
            type="enum">
       <val default="true">no</val>
       <val>yes</val>
     </param>
+    <param name="govuk.skos.keywords"
+           desc="What a concept's keyword elements are in a SKOS vocabulary. 'alt' (default) writes each as an alternative label, for keywords that are other names of the concept: synonyms, former names, plurals. 'hidden' writes each as a hidden label, for keywords that are search phrases and not names. 'no' writes none. Used only with govuk.skos=yes."
+           type="enum">
+      <val default="true">alt</val>
+      <val>hidden</val>
+      <val>no</val>
+    </param>
+    <param name="govuk.metadata.vocabularies"
+           desc="A file of the publisher's own vocabularies, in the format of the plugin's resource/metadata/vocabularies.xml: a prefix, a namespace and, unless the vocabulary is open, its terms. A data element named with one of its terms is then metadata, and a misspelt one is still reported (GOVK011W). Empty (default) adds none. A file that holds no vocabulary gives a warning (GOVK023W)."
+           type="file"/>
+    <param name="govuk.metadata.tables"
+           desc="A file of the publisher's own mapping tables, in the format of the plugin's resource/metadata tables: one scheme, or a schemes element holding several. Each is added to the tables its levels attribute names (basic, full, dcat, skos), and its rows map terms, the publisher's own or the plugin's, to what is written. Empty (default) adds none. A file that holds no table gives a warning (GOVK024W)."
+           type="file"/>
     <param name="govuk.contact.email"
            desc="An organisational mailbox for the catalogue record's contact point (vcard:hasEmail). Never a person by default. Used only with govuk.dcat=yes."
            type="string"/>

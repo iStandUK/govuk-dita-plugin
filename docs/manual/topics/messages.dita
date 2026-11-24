@@ -220,12 +220,62 @@
           </row>
           <row>
             <entry><codeph>GOVK022W</codeph></entry>
-            <entry><codeph>govuk.skos=yes</codeph>, but the publication has no glossary entry
-              and no subject scheme, so no vocabulary is written.</entry>
+
+            <entry><codeph>govuk.skos=yes</codeph>, but the publication has no glossary entry,
+              no subject scheme and no scheme the map declares, so no vocabulary is
+              written.</entry>
             <entry>A vocabulary is a glossary (<codeph>glossentry</codeph> topics, alone or in a
-              <codeph>glossgroup</codeph>, referenced from the map) or a
+              <codeph>glossgroup</codeph>, referenced from the map), a
               <codeph>subjectScheme</codeph> map with <codeph>subjectdef</codeph> elements that
-              have keys. See <xref keyref="metadata"/>.</entry>
+              have keys, or the topics that say they are concepts under an entry that declares
+              a scheme. See <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK025W</codeph></entry>
+            <entry>Topics say they are concepts (a data element named
+              <codeph>rdf:type</codeph> with the value <codeph>skos:Concept</codeph>), but no
+              scheme is declared above them in the map, so they are in no vocabulary. Only
+              with <codeph>govuk.skos=yes</codeph>.</entry>
+            <entry>Declare the scheme: a data element named <codeph>rdf:type</codeph> with the
+              value <codeph>skos:ConceptScheme</codeph> in the <codeph>topicmeta</codeph> of
+              the entry that heads the concepts, or in the map's own
+              <codeph>topicmeta</codeph> or <codeph>bookmeta</codeph>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK026W</codeph></entry>
+            <entry>A topic states a <codeph>skos:broader</codeph> or
+              <codeph>skos:narrower</codeph> whose value is the address of no concept in the
+              same scheme, so it is left out. Only with <codeph>govuk.skos=yes</codeph>.</entry>
+            <entry>Give the other concept's address: the one it states, else the address of
+              its page. For a concept of another vocabulary use
+              <codeph>skos:broadMatch</codeph> or <codeph>skos:narrowMatch</codeph>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK027W</codeph></entry>
+            <entry>Two vocabularies would be written to one file,
+              <filepath>vocab/NAME</filepath>. The first is written and the second left out.
+              Only with <codeph>govuk.skos=yes</codeph>.</entry>
+            <entry>Give the scheme a name of its own: an <codeph>id</codeph> on its map, or
+              <codeph>keys</codeph> on the entry that declares it.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK023W</codeph></entry>
+            <entry><codeph>govuk.metadata.vocabularies</codeph> names a file that holds no
+              vocabulary: it is missing, is not well-formed XML, or its root is not a
+              <codeph>vocabularies</codeph> or <codeph>vocabulary</codeph> element. The build
+              goes on without it.</entry>
+            <entry>Check the path, which is relative to the folder the build is run from, and
+              the file against the example in <xref keyref="metadata"/>.</entry>
+          </row>
+          <row>
+            <entry><codeph>GOVK024W</codeph></entry>
+            <entry><codeph>govuk.metadata.tables</codeph> names a file that holds no mapping
+              table: it is missing, is not well-formed XML, or holds no <codeph>scheme</codeph>
+              whose <codeph>syntax</codeph> is <codeph>meta</codeph>, <codeph>link</codeph>,
+              <codeph>json-ld</codeph> or <codeph>rdf</codeph>. The build goes on without
+              it.</entry>
+            <entry>Check the path, which is relative to the folder the build is run from, and
+              the file against the example in <xref keyref="metadata"/>.</entry>
           </row>
           <row>
             <entry><codeph>GOVK015W</codeph></entry>

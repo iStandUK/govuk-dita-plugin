@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<!-- Topics that say they are concepts, in a map that declares no scheme (#263): the build says so
+     (GOVK025W) and invents none. -->
+<map xml:lang="en-GB">
+  <title>Concepts in no scheme</title>
+  <topicref href="concepts/review.dita"/>
+  <topicref href="concepts/care_plan.dita"/>
+</map>

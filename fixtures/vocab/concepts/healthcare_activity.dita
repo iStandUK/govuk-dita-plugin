@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="healthcare_activity" xml:lang="en-GB">
+  <title>Healthcare activity</title>
+  <shortdesc>An activity intended to improve or maintain a person's health.</shortdesc>
+  <prolog>
+    <data name="rdf:type" value="skos:Concept"/>
+    <data name="dct:identifier" value="https://example.org/care/healthcare_activity"/>
+    <data name="skos:narrower" value="https://example.org/care/assessment"/>
+  </prolog>
+  <conbody><p>States what is narrower; the narrower concept does not say it back.</p></conbody>
+</concept>

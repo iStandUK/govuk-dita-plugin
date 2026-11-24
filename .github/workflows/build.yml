@@ -1467,9 +1467,9 @@ jobs:
           rdf() { "$RUNNER_TEMP/rdf/bin/python" tools/check_rdf.py "$@"; }
           vocab --input fixtures/vocab/vocab.ditamap --output out/vocab 2>&1 | tee vocab.log
           absent -Eq 'GOVK02[12]W' vocab.log
-          # a vocabulary for the glossary, for the glossgroup and for the subject scheme, each in both forms
-          for v in glossary clinical colours; do test -f out/vocab/vocab/$v.ttl && test -f out/vocab/vocab/$v.jsonld; done
-          test "$(find out/vocab/vocab -type f | wc -l | tr -d ' ')" = 6
+          # a vocabulary for the glossary, for the glossgroup and for each subject scheme, each in both forms
+          for v in glossary clinical colours services; do test -f out/vocab/vocab/$v.ttl && test -f out/vocab/vocab/$v.jsonld; done
+          test "$(find out/vocab/vocab -type f | wc -l | tr -d ' ')" = 8
           python3 tools/check_metadata.py --site-url https://example.org/v/ out/vocab
           rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/vocab/vocab/*.ttl out/vocab/vocab/*.jsonld
           python3 - <<'PY'
@@ -1479,6 +1479,7 @@ jobs:
               g = json.load(open(f"out/vocab/vocab/{stem}.jsonld"))["@graph"]
               return {n["@id"]: n for n in g}
           label = lambda n: n["skos:prefLabel"]["@value"]
+          label_of = lambda n: n["dct:title"]["@value"]
           ref = lambda i: {"@id": i}
           # a subject scheme: its hierarchy from both ends, a notation from the key, an address the map states,
           # an address in the file otherwise, and a retired term in ADMS's own vocabulary
@@ -1492,6 +1493,48 @@ jobs:
           assert c["https://example.org/colours/orange"]["skos:broader"] == ref(f + "warm")
           assert c[f + "cool"]["adms:status"] == ref("http://purl.org/adms/status/Withdrawn")
           assert all("adms:status" not in n for k, n in c.items() if not k.endswith("#cool"))
+          # a vocabulary others cite (#300): the scheme and every concept are at the addresses the map
+          # states, from every end, and a key is a notation and never part of an address
+          s = load("services"); d = "https://example.org/def/service-type"
+          assert not any(i.startswith(base) for i in s), "an address built from the file or a key"
+          assert s[d]["@type"] == "skos:ConceptScheme" and label_of(s[d]) == "Service types"
+          assert s[d]["skos:hasTopConcept"] == [ref(d + "/advice"), ref(d + "/support")]
+          assert all(n["skos:inScheme"] == ref(d) for n in s.values() if n["@type"] == "skos:Concept")
+          assert s[d + "/advice"]["skos:topConceptOf"] == ref(d)
+          assert s[d + "/advice"]["skos:narrower"] == [ref(d + "/debt-advice"), ref(d + "/housing-advice")]
+          assert s[d + "/debt-advice"]["skos:broader"] == ref(d + "/advice")
+          assert s[d + "/debt-advice"]["skos:notation"] == "svc-debt" and "svc-" not in "".join(s)
+          # data elements are properties of the scheme and of a concept, written where the table maps
+          # them (#293); a scheme and a concept that state none are written as they were
+          assert s[d]["dct:description"] == {"@value": "The kinds of service a directory lists.", "@language": "en-GB"}
+          assert s[d]["dct:license"] == ref("https://creativecommons.org/licenses/by/4.0/")
+          assert s[d + "/debt-advice"]["skos:altLabel"] == [{"@value": v, "@language": "en-GB"} for v in ("Money advice", "Help with debt")]
+          # a concept's notes, each as often as it is given, in the concept's language (#296)
+          debt = s[d + "/debt-advice"]; text = lambda v: {"@value": v, "@language": "en-GB"}
+          assert debt["skos:scopeNote"] == [text("Advice on debts a person owes, from an adviser who is regulated to give it."),
+                                            text("Not help to claim a benefit: see Advice.")]
+          assert debt["skos:example"] == text("A session with a debt adviser at an advice centre.")
+          assert debt["skos:note"] == text("Often given with benefits advice.")
+          assert debt["skos:editorialNote"] == text("Check the boundary with housing advice.")
+          assert debt["skos:historyNote"] == text("Called money advice until 2024.")
+          assert debt["skos:changeNote"] == text("Definition narrowed in draft 0.3.")
+          # the status of a draft, a finished and a deprecated concept and of a draft scheme, in ADMS's
+          # own vocabulary; a scheme's version and dates, the dates typed (#297)
+          adms = "http://purl.org/adms/status/"
+          assert debt["adms:status"] == ref(adms + "UnderDevelopment") == s[d]["adms:status"]
+          assert s[d + "/housing-advice"]["adms:status"] == ref(adms + "Completed")
+          assert s[d + "/support"]["adms:status"] == ref(adms + "Deprecated")
+          assert "adms:status" not in s[d + "/advice"]
+          assert s[d]["dcat:version"] == "0.3"
+          assert s[d]["dct:issued"] == {"@value": "2026-11-02", "@type": "xsd:date"}
+          assert s[d]["dct:modified"] == {"@value": "2026-11-20", "@type": "xsd:date"}
+          # a vocabulary that names a version or a date declares their prefixes; one that does not is
+          # written with the four it always had
+          context = lambda stem: list(json.load(open(f"out/vocab/vocab/{stem}.jsonld"))["@context"])
+          assert context("services") == ["skos", "dct", "foaf", "adms", "dcat", "xsd"]
+          assert context("colours") == context("glossary") == ["skos", "dct", "foaf", "adms"]
+          assert set(c[f + "scheme"]) == {"@id", "@type", "dct:title", "skos:hasTopConcept"}
+          assert set(c[f + "red"]) == {"@id", "@type", "skos:prefLabel", "skos:definition", "skos:notation", "skos:inScheme", "skos:broader"}
           # the glossary: an address the source states (with the page it is described on), the page's own
           # address, otherwise an anchor on the glossary page; names, relations and status
           g = load("glossary")
@@ -1519,7 +1562,33 @@ jobs:
           # the glossary page and a glossary entry's page link the glossary's files
           has out/vocab/glossary.html '<link rel="alternate" type="text/turtle" href="vocab/glossary.ttl">'
           has out/vocab/glossary.html '<link rel="alternate" type="application/ld+json" href="vocab/glossary.jsonld">'
+
           has out/vocab/terms/standalone.html '<link rel="alternate" type="text/turtle" href="../vocab/glossary.ttl">'
+          # the home page links every vocabulary, in both forms and by its scheme's title, and llms.txt
+          # lists them the same, with a scheme's description; the sitemap lists pages, so not these (#298, D-32)
+          for v in glossary clinical colours services; do
+            grep -qE "<link rel=\"alternate\" type=\"text/turtle\" href=\"vocab/$v.ttl\" title=\"[^\"]+\">" out/vocab/index.html
+            grep -qE "<link rel=\"alternate\" type=\"application/ld\+json\" href=\"vocab/$v.jsonld\" title=\"[^\"]+\">" out/vocab/index.html
+          done
+          has out/vocab/index.html '<link rel="alternate" type="text/turtle" href="vocab/services.ttl" title="Service types">'
+          test "$(grep -c 'rel="alternate"' out/vocab/index.html)" = 8
+          grep -qx '## Vocabularies' out/vocab/llms.txt
+          grep -qxF -e '- [Service types (SKOS, Turtle)](https://example.org/v/vocab/services.ttl): The kinds of service a directory lists.' out/vocab/llms.txt
+          grep -qxF -e '- [Service types (SKOS, JSON-LD)](https://example.org/v/vocab/services.jsonld)' out/vocab/llms.txt
+          grep -qxF -e '- [Glossary (SKOS, Turtle)](https://example.org/v/vocab/glossary.ttl)' out/vocab/llms.txt
+          test "$(grep -c '/vocab/' out/vocab/llms.txt)" = 8
+          test "$(grep -n '^## ' out/vocab/llms.txt | tail -2 | cut -d: -f2- | tr '\n' '|')" = '## Vocabularies|## Optional|'
+          absent -q 'vocab/' out/vocab/sitemap.xml
+          # a misspelt data name in a subject scheme, on a subjectdef or on the scheme, is named once and
+          # left out, with or without the pages' metadata; a name with no prefix is not metadata (#293)
+          for level in basic no; do
+            vocab --input fixtures/vocab/misspelt.ditamap --output out/vocab-misspelt -Dgovuk.metadata=$level 2>&1 | tee vocab-misspelt.log
+            test "$(grep -c "GOVK011W.*'dct:alternativ'" vocab-misspelt.log)" = 1
+            test "$(grep -c "GOVK011W.*'dct:licence'" vocab-misspelt.log)" = 1
+            absent -q "GOVK011W.*'reviewer'" vocab-misspelt.log
+            has out/vocab-misspelt/vocab/misspelt.ttl 'skos:altLabel "Compact"@en-GB'
+            absent -Eq 'Little|creativecommons' out/vocab-misspelt/vocab/misspelt.ttl
+          done
           # two terms that state one address are named; nothing to publish is said; a bad switch is refused
           vocab --input fixtures/vocab/duplicate.ditamap --output out/vocab-dup 2>&1 | tee vocab-dup.log
           grep -q 'GOVK021W.*care_plan.*2 terms' vocab-dup.log
@@ -1532,6 +1601,8 @@ jobs:
           tools/ci/dita --input fixtures/vocab/vocab.ditamap --format govuk --output out/vocab-off -Dgovuk.search=no -Dgovuk.site.url=https://example.org/v > /dev/null
           test ! -e out/vocab-off/vocab
           absent -q 'rel="alternate"' out/vocab-off/glossary.html
+          absent -q 'rel="alternate"' out/vocab-off/index.html
+          absent -q 'Vocabularies' out/vocab-off/llms.txt
           vocab --input docs/manual/manual.ditamap --output out/manual-vocab > /dev/null
           vocab --input fixtures/source-system/dictionary.ditamap --output out/source-system-vocab > /dev/null
           for site in out/manual-vocab out/source-system-vocab; do
@@ -1541,6 +1612,282 @@ jobs:
           # the same site twice, byte for byte
           vocab --input fixtures/vocab/vocab.ditamap --output out/vocab-again > /dev/null
           diff -r out/vocab out/vocab-again && echo "the vocabularies are byte-identical"
+
+      # Concepts that have pages (#294, D-32): a subjectdef that points at a page is the concept the
+      # page describes, with one address, and what the page says of it is not written a second time
+      - name: Concepts that have pages (#294)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          if [ ! -x "$RUNNER_TEMP/rdf/bin/python" ]; then
+            python3 -m venv "$RUNNER_TEMP/rdf"
+            "$RUNNER_TEMP/rdf/bin/pip" install -q --require-hashes --only-binary :all: -r tools/ci/requirements-rdf.txt
+          fi
+          rdf() { "$RUNNER_TEMP/rdf/bin/python" tools/check_rdf.py "$@"; }
+          pages() { tools/ci/dita --format govuk -Dgovuk.search=no -Dgovuk.skos=yes -Dgovuk.site.url=https://example.org/v --input fixtures/vocab/pages.ditamap "$@"; }
+          pages --output out/vocab-pages 2>&1 | tee vocab-pages.log
+          absent -Eq 'GOVK0(11|21|22)W' vocab-pages.log
+          python3 tools/check_metadata.py --site-url https://example.org/v/ out/vocab-pages
+          rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/vocab-pages/vocab/needs.ttl out/vocab-pages/vocab/needs.jsonld
+          pages --output out/vocab-pages-hidden -Dgovuk.skos.keywords=hidden > /dev/null
+          pages --output out/vocab-pages-none -Dgovuk.skos.keywords=no > /dev/null
+          python3 - <<'PY'
+          import json, os
+          base = "https://example.org/v/"; f = base + "vocab/needs.ttl#"
+          def load(site):
+              return {n["@id"]: n for n in json.load(open(f"out/{site}/vocab/needs.jsonld"))["@graph"]}
+          ref = lambda i: {"@id": i}; text = lambda v: {"@value": v, "@language": "en-GB"}
+          as_list = lambda v: v if isinstance(v, list) else [v]
+          g = load("vocab-pages")
+          advice, housing, debt = base + "pages/advice.html", base + "pages/housing.html", "https://example.org/id/need/debt-advice"
+          # the address: the one the page states, else the page, else the key; never two for one concept
+          assert set(g) == {f + "scheme", advice, housing, debt, f + "need-benefits", f + "need-other"}
+          for page in ("advice", "housing", "debt"):
+              assert os.path.isfile(f"out/vocab-pages/pages/{page}.html")
+          # a page that is the concept's address is not linked from it as well; a stated address links its page
+          assert "foaf:isPrimaryTopicOf" not in g[advice] and "foaf:isPrimaryTopicOf" not in g[housing]
+          assert g[debt]["foaf:isPrimaryTopicOf"] == ref(base + "pages/debt.html")
+          # every reference uses the one address, from both ends
+          assert g[f + "scheme"]["skos:hasTopConcept"] == ref(advice) and g[advice]["skos:topConceptOf"] == ref(f + "scheme")
+          assert g[advice]["skos:narrower"] == [ref(debt), ref(housing), ref(f + "need-benefits"), ref(f + "need-other")]
+          assert all(g[c]["skos:broader"] == ref(advice) for c in (debt, housing, f + "need-benefits", f + "need-other"))
+          # related concepts (#295): a row of a relationship table that names two of them by key, and a
+          # link one topic's author made to another, each said by both; a row with a page that is no
+          # concept of the scheme relates nothing
+          assert g[debt]["skos:related"] == ref(housing) and g[advice]["skos:related"] == ref(housing)
+          assert g[housing]["skos:related"] == [ref(debt), ref(advice)]
+          assert not any("skos:related" in g[c] for c in (f + "need-benefits", f + "need-other", f + "scheme"))
+          assert not any("about" in json.dumps(n) for n in g.values())
+          # the label and the definition are the page's, unless the entry gives its own; the key is the notation
+          assert g[advice]["skos:prefLabel"] == text("Advice services") and g[advice]["skos:notation"] == "need-advice"
+          assert g[advice]["skos:definition"] == text("Services that help a person understand a problem and decide what to do.")
+          assert g[housing]["skos:prefLabel"] == text("Housing") and g[housing]["skos:definition"] == text("A home, and help to keep it.")
+          # a topic the navigation does not reach has no page to be an address, and still gives its words
+          assert g[f + "need-benefits"]["skos:prefLabel"] == text("Benefits advice")
+          # keywords are alternative labels by default: the entry's own, else the page's; never the label
+          # again, and never one twice
+          assert g[advice]["skos:altLabel"] == [text("Guidance"), text("where can I get advice")]
+          assert g[housing]["skos:altLabel"] == text("Homelessness") and g[debt]["skos:altLabel"] == text("Money advice")
+          assert not any("skos:hiddenLabel" in n for n in g.values())
+          # hidden: the same words as hidden labels, and nothing else moves; no: neither
+          h = load("vocab-pages-hidden")
+          assert h[advice]["skos:hiddenLabel"] == [text("Guidance"), text("where can I get advice")]
+          assert not any("skos:altLabel" in n for n in h.values())
+          strip = lambda n: {k: v for k, v in n.items() if k not in ("skos:altLabel", "skos:hiddenLabel")}
+          n = load("vocab-pages-none")
+          assert not any("skos:altLabel" in x or "skos:hiddenLabel" in x for x in n.values())
+          assert {k: strip(v) for k, v in g.items()} == {k: strip(v) for k, v in h.items()} == n
+          PY
+          # the parameter is checked
+          if pages --output out/x-keywords -Dgovuk.skos.keywords=maybe; then echo "govuk.skos.keywords=maybe should fail"; exit 1; fi
+
+
+      # A concept system (#263, D-32): concepts that are topics with pages of their own, in a scheme
+      # the map declares; the hierarchy and the alignments the topics state; each page linked to
+      # its vocabulary and, under govuk.metadata=full, about its concept
+      - name: Concept topics in a declared scheme (#263)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          has() { grep -qF "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
+          if [ ! -x "$RUNNER_TEMP/rdf/bin/python" ]; then
+            python3 -m venv "$RUNNER_TEMP/rdf"
+            "$RUNNER_TEMP/rdf/bin/pip" install -q --require-hashes --only-binary :all: -r tools/ci/requirements-rdf.txt
+          fi
+          rdf() { "$RUNNER_TEMP/rdf/bin/python" tools/check_rdf.py "$@"; }
+          concepts() { tools/ci/dita --format govuk -Dgovuk.search=no -Dgovuk.site.url=https://example.org/v "$@"; }
+          concepts --input fixtures/vocab/concepts.ditamap --output out/concepts -Dgovuk.skos=yes -Dgovuk.metadata=full 2>&1 | tee concepts.log
+          absent -Eq 'GOVK0(11|12|2[0-9])W' concepts.log
+          test "$(find out/concepts/vocab -type f | wc -l | tr -d ' ')" = 2
+          python3 tools/check_metadata.py --level full --site-url https://example.org/v/ out/concepts
+          rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/concepts/vocab/care.ttl out/concepts/vocab/care.jsonld
+          python3 - <<'PY'
+          import json, re
+          base = "https://example.org/v/"; care = "https://example.org/care/"
+          g = {n["@id"]: n for n in json.load(open("out/concepts/vocab/care.jsonld"))["@graph"]}
+          ref = lambda i: {"@id": i}; text = lambda v: {"@value": v, "@language": "en-GB"}
+          activity, assessment, plan = care + "healthcare_activity", care + "assessment", care + "care_plan"
+          review = base + "concepts/review.html"
+          # the scheme is the entry that declares it: its address, title, description and what its
+          # data elements state, with the page it is described on
+          s = g[care]
+          assert s["@type"] == "skos:ConceptScheme" and s["dct:title"] == text("Concepts of care")
+          assert s["dct:description"] == text("The concepts of an example model of care.")
+          assert s["dct:license"] == ref("https://creativecommons.org/licenses/by/4.0/") and s["dcat:version"] == "2.1"
+          assert s["adms:status"] == ref("http://purl.org/adms/status/Completed")
+          assert s["foaf:isPrimaryTopicOf"] == ref(base + "concepts/index.html")
+          # the concepts are the topics that say so, and no others: not the page that heads the
+          # scheme, and not a page under it that says nothing
+          concepts = {i for i, n in g.items() if n["@type"] == "skos:Concept"}
+          assert concepts == {activity, assessment, plan, review} and len(g) == 5
+          assert all(g[c]["skos:inScheme"] == ref(care) for c in concepts)
+          # an address the topic states (a data element, or resourceid) with its page linked;
+          # otherwise the page is the address, and is not linked from itself
+          assert g[plan]["foaf:isPrimaryTopicOf"] == ref(base + "concepts/care_plan.html")
+          assert "foaf:isPrimaryTopicOf" not in g[review]
+          # label, definition, keywords as alternative labels, a note and a status
+          assert g[assessment]["skos:prefLabel"] == text("Assessment")
+          assert g[assessment]["skos:definition"] == text("A healthcare activity that finds out what a person needs.")
+          assert g[assessment]["skos:altLabel"] == [text("Needs assessment"), text("Appraisal")]
+          assert g[assessment]["skos:scopeNote"] == text("Not the review of a plan that already exists.")
+          assert g[plan]["adms:status"] == ref("http://purl.org/adms/status/UnderDevelopment")
+          # the hierarchy is what the topics state, said from both ends whichever end states it:
+          # one concept names what is narrower, another names what is broader, and the map nests neither
+          assert g[activity]["skos:narrower"] == [ref(assessment), ref(plan)]
+          assert g[assessment]["skos:broader"] == ref(activity) == g[plan]["skos:broader"]
+          assert "skos:broader" not in g[review] and "skos:narrower" not in g[review]
+          # the top concepts are those with nothing broader
+          assert s["skos:hasTopConcept"] == [ref(activity), ref(review)]
+          assert g[activity]["skos:topConceptOf"] == ref(care) == g[review]["skos:topConceptOf"]
+          assert "skos:topConceptOf" not in g[plan]
+          # related is said by both concepts; a related concept outside the scheme is a reference only
+          assert g[assessment]["skos:related"] == [ref(plan), ref("https://example.org/other/triage")]
+
+          assert "https://example.org/other/triage" not in g
+          # related concepts from a row of a relationship table and from a topic's own link (#295), each
+          # said by both; a link to a page that is not a concept relates nothing
+          assert g[activity]["skos:related"] == ref(review)
+          assert g[review]["skos:related"] == [ref(activity), ref(plan)]
+          assert g[plan]["skos:related"] == [ref(assessment), ref(review)]
+          assert not any(base + "concepts/guidance.html" in json.dumps(n) for n in g.values())
+          # alignment to other vocabularies, as stated
+          assert g[plan]["skos:exactMatch"] == ref("https://contsys.example/concept/care_plan")
+          assert g[plan]["skos:broadMatch"] == ref("https://upper.example/Plan")
+          # each concept's page links the vocabulary, and is about the concept: with its own address
+          # when the source states one, and with none when its address is the page's, which the page
+          # itself already has
+          def page(path):
+              html = open(f"out/concepts/{path}", encoding="utf-8").read()
+              links = re.findall(r'<link rel="alternate" type="([^"]+)" href="([^"]+)">', html)
+              block = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
+              return links, next(o for o in block["@graph"] if o["@type"] == "TechArticle")
+          files = [("text/turtle", "../vocab/care.ttl"), ("application/ld+json", "../vocab/care.jsonld")]
+          links, article = page("concepts/care_plan.html")
+          assert links == files and article["@id"] == base + "concepts/care_plan.html"
+          assert article["mainEntity"] == {"@type": "DefinedTerm", "@id": plan, "name": "Care plan",
+              "description": "An agreed plan of care for one person.", "alternateName": ["Plan of care"],
+              "url": base + "concepts/care_plan.html", "inDefinedTermSet": care}
+          links, article = page("concepts/review.html")
+          assert links == files and "@id" not in article["mainEntity"]
+          assert article["mainEntity"]["name"] == "Review" and article["mainEntity"]["inDefinedTermSet"] == care
+          for other in ("concepts/guidance.html", "concepts/index.html"):
+              links, article = page(other)
+              assert links == [] and "mainEntity" not in article
+          PY
+          # a concept that has a page in a subject scheme is the same: its page links the scheme's
+          # files and is about the concept, in the scheme's own address
+          concepts --input fixtures/vocab/pages.ditamap --output out/concepts-pages -Dgovuk.skos=yes -Dgovuk.metadata=full > /dev/null
+          has out/concepts-pages/pages/debt.html '<link rel="alternate" type="text/turtle" href="../vocab/needs.ttl">'
+          has out/concepts-pages/pages/debt.html '"@id": "https://example.org/id/need/debt-advice"'
+          has out/concepts-pages/pages/debt.html '"inDefinedTermSet": "https://example.org/v/vocab/needs.ttl#scheme"'
+          # without govuk.skos the same pages have no link and are about nothing more than they were
+          concepts --input fixtures/vocab/concepts.ditamap --output out/concepts-off -Dgovuk.metadata=full > /dev/null
+          test ! -e out/concepts-off/vocab
+          absent -rq 'rel="alternate"' out/concepts-off/concepts
+          absent -rq 'DefinedTerm' out/concepts-off/concepts
+
+          # the same declaration is an asset of the catalogue record under govuk.dcat: the scheme is
+          # catalogued by its own address and typed with a prefix the record declares; the topics that
+          # say they are concepts are not assets
+          concepts --input fixtures/vocab/concepts.ditamap --output out/concepts-dcat -Dgovuk.skos=yes -Dgovuk.dcat=yes \
+            -Dgovuk.licence.url=https://creativecommons.org/licenses/by/4.0/ 2>&1 | tee concepts-dcat.log
+          absent -Eq 'GOVK01[7-9]W' concepts-dcat.log
+          python3 tools/check_metadata.py --site-url https://example.org/v/ out/concepts-dcat
+          rdf --expect-type skos:ConceptScheme out/concepts-dcat/dcat.ttl out/concepts-dcat/dcat.jsonld
+          has out/concepts-dcat/dcat.ttl '@prefix skos: <http://www.w3.org/2004/02/skos/core#> .'
+          has out/concepts-dcat/dcat.ttl 'a skos:ConceptScheme ;'
+          test "$(grep -c '^<' out/concepts-dcat/dcat.ttl)" = 1
+          # a book that is one scheme: its bookmeta declares it, and it has the book's title, description
+          # and edition and the home page; a broader concept that is not in the book is named and left
+          # out, so the scheme is flat and has no top concepts
+          concepts --input fixtures/vocab/concepts-book.ditamap --output out/concepts-book -Dgovuk.skos=yes 2>&1 | tee concepts-book.log
+          grep -q "GOVK026W.*1 statements.*healthcare_activity.*'Care plan'" concepts-book.log
+          python3 tools/check_metadata.py --site-url https://example.org/v/ out/concepts-book
+          rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/concepts-book/vocab/care-part.ttl out/concepts-book/vocab/care-part.jsonld
+          python3 - <<'PY'
+          import json
+          g = {n["@id"]: n for n in json.load(open("out/concepts-book/vocab/care-part.jsonld"))["@graph"]}
+          s = g["https://example.org/care-part/"]
+          assert s["dct:title"]["@value"] == "Two concepts of care" and s["dcat:version"] == "3"
+          assert s["dct:description"]["@value"] == "A part of the model, published on its own."
+          assert s["foaf:isPrimaryTopicOf"] == {"@id": "https://example.org/v/"}
+          assert "skos:hasTopConcept" not in s
+          assert not any(k in n for n in g.values() for k in ("skos:broader", "skos:narrower", "skos:topConceptOf"))
+          assert len(g) == 3
+          PY
+          # what the build says: topics that are concepts under no scheme; two topics that state one
+          # address; two vocabularies with one file name, of which the first is written
+          concepts --input fixtures/vocab/concepts-none.ditamap --output out/concepts-none -Dgovuk.skos=yes 2>&1 | tee concepts-none.log
+          grep -q "GOVK025W.*2 topics.*'Review', concepts/review.html" concepts-none.log
+          grep -q 'GOVK022W' concepts-none.log
+          test ! -e out/concepts-none/vocab
+          concepts --input fixtures/vocab/concepts-dup.ditamap --output out/concepts-dup -Dgovuk.skos=yes 2>&1 | tee concepts-dup.log
+          grep -q 'GOVK021W.*care/care_plan.*2 terms (Care plan, Plan of care)' concepts-dup.log
+          concepts --input fixtures/vocab/concepts-clash.ditamap --output out/concepts-clash -Dgovuk.skos=yes 2>&1 | tee concepts-clash.log
+          grep -q "GOVK027W.*vocab/needs: 'Needs' and 'A scheme named as another is'" concepts-clash.log
+          test "$(find out/concepts-clash/vocab -type f | wc -l | tr -d ' ')" = 2
+          has out/concepts-clash/vocab/needs.ttl 'dct:title "Needs"@en-GB'
+          # the same site twice, byte for byte
+          concepts --input fixtures/vocab/concepts.ditamap --output out/concepts-again -Dgovuk.skos=yes -Dgovuk.metadata=full > /dev/null
+          diff -r out/concepts out/concepts-again && echo "the concept system is byte-identical"
+
+      # The publisher's own vocabulary and tables (#191, design 14 section 7): a file of terms the
+      # plugin does not ship and a file of rows that map them, so that named relationships between
+      # concepts are written with no stylesheet change
+      - name: The publisher's vocabulary and tables (#191)
+        run: |
+          set -o pipefail
+          . "$GITHUB_WORKSPACE/tools/ci/assert.sh"
+          has() { grep -qF "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
+          if [ ! -x "$RUNNER_TEMP/rdf/bin/python" ]; then
+            python3 -m venv "$RUNNER_TEMP/rdf"
+            "$RUNNER_TEMP/rdf/bin/pip" install -q --require-hashes --only-binary :all: -r tools/ci/requirements-rdf.txt
+          fi
+          rdf() { "$RUNNER_TEMP/rdf/bin/python" tools/check_rdf.py "$@"; }
+          own() { tools/ci/dita --format govuk -Dgovuk.search=no -Dgovuk.skos=yes -Dgovuk.site.url=https://example.org/v --input fixtures/vocab/publisher.ditamap "$@"; }
+          files=fixtures/vocab/publisher
+          own --output out/own -Dgovuk.metadata.vocabularies=$files/vocabularies.xml -Dgovuk.metadata.tables=$files/tables.xml 2>&1 | tee own.log
+          # the publisher's vocabulary is closed, so its one misspelt term is named, with the publisher's
+          # prefix among those the message lists; nothing else is reported
+          test "$(grep -c 'GOVK011W' own.log)" = 1
+          grep -q "GOVK011W.*'ex:preceeds'.*The prefixes are .*, ex;" own.log
+          absent -Eq 'GOVK02[34]W' own.log
+          python3 tools/check_metadata.py --site-url https://example.org/v/ out/own
+          rdf --expect-type skos:Concept --expect-type skos:ConceptScheme out/own/vocab/*.ttl out/own/vocab/*.jsonld
+          python3 - <<'PY'
+          import json
+          base = "https://example.org/v/vocab/relations.ttl#"
+          doc = json.load(open("out/own/vocab/relations.jsonld"))
+          g = {n["@id"]: n for n in doc["@graph"]}
+          ref = lambda i: {"@id": i}
+          # named relationships, as references, once or as often as they are stated
+          a = g[base + "assessment"]
+          assert a["ex:precedes"] == ref(base + "plan")
+          assert a["ex:isProvidedWith"] == [ref("https://example.org/def/service-type/advice"),
+                                            ref("https://example.org/def/service-type/support")]
+          assert "ex:preceeds" not in a and not any(k.startswith("ex:") for k in g[base + "plan"])
+          # the publisher's prefix is declared after the plugin's own, and only where it is used
+          assert list(doc["@context"]) == ["skos", "dct", "foaf", "adms", "ex"]
+          assert doc["@context"]["ex"] == "https://example.org/def/relations#"
+          assert list(json.load(open("out/own/vocab/glossary.jsonld"))["@context"]) == ["skos", "dct", "foaf", "adms"]
+          PY
+          has out/own/vocab/relations.ttl '@prefix ex: <https://example.org/def/relations#> .'
+          has out/own/vocab/relations.ttl 'ex:precedes <https://example.org/v/vocab/relations.ttl#plan>'
+          # a term added to a vocabulary the plugin knows, written to a page's head by the publisher's own table
+          has out/own/terms/standalone.html '<meta name="example:series-member" content="https://example.org/data/2026">'
+          # without the files the same source builds as it did: the four names are unknown and none is written
+          own --output out/own-none 2>&1 | tee own-none.log
+          test "$(grep -c 'GOVK011W' own-none.log)" = 4
+          absent -q 'ex:' out/own-none/vocab/relations.ttl
+          absent -q 'example:series-member' out/own-none/terms/standalone.html
+          # a name that is no such file is said, each parameter by its own message, and the build goes on
+          own --output out/own-bad -Dgovuk.metadata.vocabularies=$files/missing.xml -Dgovuk.metadata.tables=$files/vocabularies.xml 2>&1 | tee own-bad.log
+          grep -q 'GOVK023W.*missing.xml' own-bad.log
+          grep -q 'GOVK024W.*vocabularies.xml' own-bad.log
+          test -f out/own-bad/vocab/relations.ttl
+          # an absolute path names the same files
+          own --output out/own-abs "-Dgovuk.metadata.vocabularies=$PWD/$files/vocabularies.xml" "-Dgovuk.metadata.tables=$PWD/$files/tables.xml" > /dev/null
+          diff -r out/own out/own-abs && echo "relative and absolute paths give the same site"
 
       # Languages (NFR-I1, R7): a publication in Welsh and one in Spanish. The
       # text the plugin writes, the toolkit's labels and the text govuk-frontend's

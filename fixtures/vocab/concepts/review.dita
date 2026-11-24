@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="review" xml:lang="en-GB">
+  <title>Review</title>
+  <shortdesc>A look back at a plan to see whether it still fits.</shortdesc>
+  <prolog>
+    <data name="rdf:type" value="skos:Concept"/>
+  </prolog>
+
+  <conbody><p>States no address: its page is its address. It has nothing broader, so it is a top concept.</p></conbody>
+  <related-links>
+    <link href="care_plan.dita"/>
+    <link href="guidance.dita"/>
+  </related-links>
+</concept>

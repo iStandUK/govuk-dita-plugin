@@ -38,9 +38,12 @@ unaffected.
   <param name="GOVUK-SITE-URL" expression="${govuk.site.url}" if:set="govuk.site.url.set"/>
   <param name="GOVUK-DCAT" expression="${govuk.dcat}" if:set="govuk.dcat"/>
   <param name="GOVUK-SKOS" expression="${govuk.skos}" if:set="govuk.skos"/>
+  <param name="GOVUK-SKOS-KEYWORDS" expression="${govuk.skos.keywords}" if:set="govuk.skos.keywords"/>
   <param name="GOVUK-CONTACT-EMAIL" expression="${govuk.contact.email}" if:set="govuk.contact.email"/>
   <param name="GOVUK-METADATA" expression="${govuk.metadata}" if:set="govuk.metadata"/>
   <param name="GOVUK-METADATA-PERSONS" expression="${govuk.metadata.persons}" if:set="govuk.metadata.persons"/>
+  <param name="GOVUK-METADATA-VOCABULARIES" expression="${govuk.metadata.vocabularies.url}" if:set="govuk.metadata.vocabularies.url"/>
+  <param name="GOVUK-METADATA-TABLES" expression="${govuk.metadata.tables.url}" if:set="govuk.metadata.tables.url"/>
   <param name="GOVUK-ORGANISATION" expression="${govuk.organisation}" if:set="govuk.organisation"/>
   <param name="GOVUK-ORGANISATION-URL" expression="${govuk.organisation.url}" if:set="govuk.organisation.url"/>
   <param name="GOVUK-OG-IMAGE" expression="${govuk.og.image}" if:set="govuk.og.image"/>

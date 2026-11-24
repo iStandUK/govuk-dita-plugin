@@ -709,3 +709,36 @@ maintainer joins, the `dev` ruleset can require a review without any other chang
 - The manual's build topic says where the root map goes. The fixture `fixtures/subfolder-root` keeps both layouts under test: the root map in a subfolder, which must warn, and `top.ditamap`, which must be silent with every link and print path resolving.
 - `args.input.dir` still widens the plugin's own inline scope (`govuk.inline.scope`), so a publisher who accepts the layout keeps inlined diagrams. It is a convenience and not support.
 - **Revisit** if a publication cannot move its root map, for a reason other than preference.
+
+## D-32 · Vocabularies in 1.5.0: one address for a concept, keywords as the publisher chooses, and what is left out
+
+**Date:** 2026-11-23. Sponsor's decisions on the issues raised by publishing a draft Open Referral UK service classification as DITA ([#293](https://github.com/iStandUK/govuk-dita-plugin/issues/293) to [#300](https://github.com/iStandUK/govuk-dita-plugin/issues/300)): three `subjectScheme` maps and 258 `concept` topics, each concept both a `subjectdef` and a page. Recorded in the 1.5.0 epic ([#285](https://github.com/iStandUK/govuk-dita-plugin/issues/285)). Shape in [14-metadata-model.md](14-metadata-model.md) §18 and §19.
+
+**Options:**
+
+- **The address of a concept that is both a `subjectdef` and a page:** (a) one address, the page's, when the source states none; (b) one address, the key in the vocabulary file, which a `concept` topic the `subjectdef` points at takes as well; (c) both, with a warning that tells the publisher to state one.
+- **Keywords on a concept:** (d) a parameter that says what they are; (e) always `skos:altLabel`, as the guide for source systems already says; (f) always `skos:hiddenLabel`.
+- **The vocabulary files in `sitemap.xml`:** (g) not listed; (h) listed.
+- **The vocabulary in the PDF** ([#299](https://github.com/iStandUK/govuk-dita-plugin/issues/299)): (i) attached as PDF/A-3 associated files; (j) its address in the XMP; (k) neither, and the manual says so.
+- **The concept in its page's JSON-LD:** (l) kept, built with the concept records in [#263](https://github.com/iStandUK/govuk-dita-plugin/issues/263) and written only under `govuk.skos=yes`; (m) dropped.
+- **Status:** (n) `draft`, `completed` and `deprecated` beside `retired`; (o) `retired` only, as built.
+
+**Decision:** (a), (d), (g), (k), (l) and (n).
+
+**Rationale:**
+
+- **(a) over (b) and (c).** A term's address is, in order, the one its source states, its page, its key. That is the order §18 already gives a glossary entry, and under it a `subjectdef` and the `concept` topic it points at are one concept with one address. With (b) the address would move on the day a publisher drops the scheme map and keeps the topics, which is what #263 makes possible; with (c) the default output describes one concept twice.
+- **(d) over (e) and (f).** The guide says a keyword is a synonym, a former name or a plural, which is an alternative label. The classification that raised the question has about five search phrases a topic, 1,292 in all, which are not names: SKOS has `hiddenLabel` for exactly those. Neither reading is wrong for every publisher, so the publisher says which.
+- **(g) over (h).** The sitemap stays a list of pages. A harvester finds a vocabulary through `rel="alternate"` and `llms.txt`, and search engines do not index Turtle.
+- **(k) over (i) and (j).** The sponsor ranks it low: a paragraph of documentation now. (i) needs a change to DesignSystemPDF and a release of its own.
+- **(l) over (m).** A glossary entry's page already names its `DefinedTerm` (§15). Without (l) the richer page says less. Tied to `govuk.skos` so that a publication that publishes no vocabulary keeps the JSON-LD it has.
+- **(n) over (o).** A vocabulary that is not final should say so, concept by concept and as a whole. `deprecated` was not asked for; it completes the ADMS status vocabulary, and leaving it out would repeat the gap.
+
+**Consequences:**
+
+- **The address of a `subjectdef` with an `@href` changes** from 1.4.1, from `vocab/NAME.ttl#KEY` to its page, unless it states one. The release notes say so, and the manual tells a publisher whose vocabulary is cited to state its addresses ([#294](https://github.com/iStandUK/govuk-dita-plugin/issues/294), [#300](https://github.com/iStandUK/govuk-dita-plugin/issues/300)).
+- `govuk.skos.keywords` = `alt` (default) | `hidden` | `no`, one rule for subject-scheme terms and for `concept` topics. The default was settled on the same day: `alt`, which is what the guide for source systems already tells a generator a keyword is.
+- [#298](https://github.com/iStandUK/govuk-dita-plugin/issues/298) links the vocabulary files from the cover, the term pages and `llms.txt`, and not from the sitemap.
+- #299 becomes a paragraph of the manual. **Revisit** if a publisher needs the PDF to carry its vocabulary.
+- Status is four words in the `skos` and `adms` tables. They are stated in `data`; only `retired` is also read from `outputclass` and `importance`, and only that demotes a page in search (D-18).
+- How a page's `@id` and its concept's `@id` relate, now that they can be the same address, is settled in #263 and recorded in design 14 §18.

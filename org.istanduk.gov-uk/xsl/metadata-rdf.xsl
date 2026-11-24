@@ -31,17 +31,11 @@ the graph. The tables never name the syntax they are written in.
   <!-- The tables of syntax rdf that are switched on: not by govuk.metadata, which
        is about page heads, but by their own parameter -->
   <xsl:variable name="govuk-md-rdf-schemes" as="element()*"
-                select="if ($GOVUK-DCAT ne 'yes') then ()
-                        else for $s in doc(resolve-uri('schemes.xml', $govuk-md-dir))/schemes/scheme
-                                       [tokenize(@levels) = 'dcat']
-                             return doc(resolve-uri($s/@href, $govuk-md-dir))/scheme[@syntax = 'rdf']"/>
+                select="if ($GOVUK-DCAT ne 'yes') then () else govuk:md-tables('dcat')[@syntax = 'rdf']"/>
 
   <!-- The tables of the vocabulary files (#103), switched on by govuk.skos -->
   <xsl:variable name="govuk-md-skos-schemes" as="element()*"
-                select="if ($GOVUK-SKOS ne 'yes') then ()
-                        else for $s in doc(resolve-uri('schemes.xml', $govuk-md-dir))/schemes/scheme
-                                       [tokenize(@levels) = 'skos']
-                             return doc(resolve-uri($s/@href, $govuk-md-dir))/scheme[@syntax = 'rdf']"/>
+                select="if ($GOVUK-SKOS ne 'yes') then () else govuk:md-tables('skos')[@syntax = 'rdf']"/>
 
   <!-- ===== Walk ===== -->
 
@@ -120,9 +114,23 @@ the graph. The tables never name the syntax they are written in.
   <!-- The prefixes of some tables, each once -->
   <xsl:function name="govuk:md-rdf-prefixes" as="element(prefix)*">
     <xsl:param name="schemes" as="element()*"/>
-    <xsl:for-each-group select="$schemes/prefix" group-by="@name">
+    <!-- in the order of the tables, which a path would not keep: they are different documents -->
+    <xsl:for-each-group select="for $s in $schemes return $s/prefix" group-by="@name">
       <xsl:sequence select="current-group()[1]"/>
     </xsl:for-each-group>
+  </xsl:function>
+
+  <!-- The prefixes a graph is written with: every prefix of the tables, less those a table
+       marks optional="yes" that nothing in the graph uses. So a table can gain a vocabulary
+       without adding a line to every file written before it did. -->
+  <xsl:function name="govuk:md-rdf-prefixes-used" as="element(prefix)*">
+    <xsl:param name="prefixes" as="element(prefix)*"/>
+    <xsl:param name="subjects" as="element(govuk:s)*"/>
+    <xsl:variable name="used" as="xs:string*"
+                  select="distinct-values(($subjects/govuk:v/@p, $subjects/govuk:v/@dt,
+                                           $subjects/govuk:v/@iri[govuk:md-rdf-prefixed($prefixes, string(.))])
+                                          ! substring-before(., ':'))"/>
+    <xsl:sequence select="$prefixes[not(@optional = 'yes') or @name = $used]"/>
   </xsl:function>
 
   <!-- The required rows a record leaves empty, by their output name -->
@@ -258,7 +266,7 @@ the graph. The tables never name the syntax they are written in.
   <xsl:output name="govuk-rdf" method="text" encoding="UTF-8"/>
 
   <xsl:variable name="govuk-md-rdf-prefixes" as="element(prefix)*"
-                select="govuk:md-rdf-prefixes($govuk-md-rdf-schemes)"/>
+                select="govuk:md-rdf-prefixes-used(govuk:md-rdf-prefixes($govuk-md-rdf-schemes), $govuk-md-rdf-graph)"/>
 
   <xsl:variable name="govuk-md-rdf-graph" as="element(govuk:s)*"
                 select="if (exists($govuk-md-roots)) then govuk:md-rdf-graph($govuk-md-rdf-schemes, $govuk-md-roots) else ()"/>
@@ -299,7 +307,7 @@ the graph. The tables never name the syntax they are written in.
     <xsl:for-each select="govuk:md-declaring-refs($govuk-md-map)[empty(govuk:md-asset-types(.))]">
       <xsl:call-template name="output-message">
         <xsl:with-param name="id" select="'GOVK017W'"/>
-        <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate(string-join(govuk:md-declared-types(.), ', '), ';', ',')"/>;%2=<xsl:value-of select="translate(govuk:md-ref-title(.), ';', ',')"/>;%3=<xsl:value-of select="string-join($govuk-md-vocabularies/@prefix, ', ')"/></xsl:with-param>
+        <xsl:with-param name="msgparams">%1=<xsl:value-of select="translate(string-join(govuk:md-declared-types(.), ', '), ';', ',')"/>;%2=<xsl:value-of select="translate(govuk:md-ref-title(.), ';', ',')"/>;%3=<xsl:value-of select="$govuk-md-prefix-list"/></xsl:with-param>
       </xsl:call-template>
     </xsl:for-each>
     <xsl:if test="empty($govuk-md-roots)">
@@ -328,6 +336,7 @@ the graph. The tables never name the syntax they are written in.
     </xsl:for-each>
   </xsl:template>
 
+
   <!-- On the glossary page and a glossary entry's page: the glossary vocabulary, as its two files (#103) -->
   <xsl:template name="govuk-md-skos-head">
     <xsl:param name="prefix" as="xs:string" select="''"/>
@@ -335,6 +344,17 @@ the graph. The tables never name the syntax they are written in.
       <link rel="alternate" type="text/turtle" href="{$prefix}vocab/glossary.ttl"/>
       <link rel="alternate" type="application/ld+json" href="{$prefix}vocab/glossary.jsonld"/>
     </xsl:if>
+  </xsl:template>
+
+  <!-- On the page of a concept: each vocabulary the concept is in, as its two files (#263) -->
+  <xsl:template name="govuk-md-skos-page-head">
+    <xsl:param name="prefix" as="xs:string" select="''"/>
+    <xsl:param name="topic" as="element()?"/>
+    <xsl:param name="ref" as="element()?"/>
+    <xsl:for-each select="govuk:md-page-schemes($topic, $ref)">
+      <link rel="alternate" type="text/turtle" href="{$prefix}vocab/{@stem}.ttl"/>
+      <link rel="alternate" type="application/ld+json" href="{$prefix}vocab/{@stem}.jsonld"/>
+    </xsl:for-each>
   </xsl:template>
 
 </xsl:stylesheet>

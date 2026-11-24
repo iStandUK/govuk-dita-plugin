@@ -45,6 +45,7 @@ given here too, under the toolkit's own ids.
   <variable id="govuk-dita.search-this-site">Chwilio’r wefan hon</variable>
   <variable id="govuk-dita.search-unavailable">Nid yw chwilio ar gael yn y fersiwn hon.</variable>
   <variable id="govuk-dita.glossary">Geirfa</variable>
+  <variable id="govuk-dita.vocabularies">Geirfaoedd</variable>
   <variable id="govuk-dita.index">Mynegai</variable>
   <variable id="govuk-dita.see">gweler</variable>
   <variable id="govuk-dita.see-also">gweler hefyd</variable>

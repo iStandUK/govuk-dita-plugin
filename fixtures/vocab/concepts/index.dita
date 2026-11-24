@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="care-concepts" xml:lang="en-GB">
+  <title>Concepts of care</title>
+  <shortdesc>The concepts this model defines, each on a page of its own.</shortdesc>
+  <prolog>
+    <metadata><keywords><keyword>concept system</keyword></keywords></metadata>
+  </prolog>
+  <conbody><p>An overview page. It heads the scheme and is not a concept.</p></conbody>
+</concept>

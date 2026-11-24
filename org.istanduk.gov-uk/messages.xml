@@ -76,7 +76,28 @@ DITA-OT convention: four letters, three digits, severity (I/W/E/F).
     <response>Give each term its own address in resourceid appid or a data element named dct:identifier, or leave it out to take the term's page or its place in the glossary.</response>
   </message>
   <message id="GOVK022W" type="WARN">
-    <reason>govuk.skos=yes, but the publication has no glossary entry and no subject scheme, so no vocabulary was written.</reason>
-    <response>A vocabulary is a glossary (glossentry topics, alone or in glossgroup topics, referenced from the map) or a subjectScheme map with subjectdef elements that have keys. See the manual's metadata topic.</response>
+
+    <reason>govuk.skos=yes, but the publication has no glossary entry, no subject scheme and no scheme the map declares, so no vocabulary was written.</reason>
+    <response>A vocabulary is a glossary (glossentry topics, alone or in glossgroup topics, referenced from the map), a subjectScheme map with subjectdef elements that have keys, or the topics that say they are concepts under an entry of the map that declares a scheme. See the manual's metadata topic.</response>
+  </message>
+  <message id="GOVK025W" type="WARN">
+    <reason>%1 topics say they are concepts (rdf:type skos:Concept), but no scheme is declared above them in the map, so they are in no vocabulary (first: '%2', %3).</reason>
+    <response>Declare the scheme: a data element named rdf:type whose value is skos:ConceptScheme, in the topicmeta of the map entry that heads the concepts, or in the map's own topicmeta or bookmeta when the whole publication is one scheme.</response>
+  </message>
+  <message id="GOVK026W" type="WARN">
+    <reason>%1 statements of skos:broader or skos:narrower name an address that is no concept of the same scheme, so they were left out (first: %2, on '%3').</reason>
+    <response>Within a scheme the value is the other concept's address: the one it states, else the address of its page. For a concept of another vocabulary use skos:broadMatch or skos:narrowMatch, which are written as they are stated.</response>
+  </message>
+  <message id="GOVK027W" type="WARN">
+    <reason>Two vocabularies would both be written as vocab/%1: '%2' and '%3'. The second was left out.</reason>
+    <response>Give the scheme a name of its own: an id on its map, or keys on the map entry that declares it.</response>
+  </message>
+  <message id="GOVK023W" type="WARN">
+    <reason>govuk.metadata.vocabularies names %1, which holds no vocabulary the plugin can read, so no vocabulary was added.</reason>
+    <response>Name an XML file whose root is a vocabularies element holding vocabulary elements, or one vocabulary element, each with a prefix and a namespace, as in the plugin's resource/metadata/vocabularies.xml. Check the path and that the file is well formed.</response>
+  </message>
+  <message id="GOVK024W" type="WARN">
+    <reason>govuk.metadata.tables names %1, which holds no mapping table the plugin can read, so no table was added.</reason>
+    <response>Name an XML file whose root is a scheme element, or a schemes element holding scheme elements, each with a syntax of meta, link, json-ld or rdf, as in the tables of the plugin's resource/metadata folder. Check the path and that the file is well formed.</response>
   </message>
 </messages>

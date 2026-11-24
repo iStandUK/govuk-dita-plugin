@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A publisher's own mapping tables (#191), named with govuk.metadata.tables: the named
+     relationships as properties of a concept in the vocabulary files, and one of the page's own
+     properties as a tag in its head. No stylesheet knows either. -->
+<schemes>
+  <scheme id="relations" syntax="rdf" levels="skos">
+    <prefix name="ex" uri="https://example.org/def/relations#"/>
+    <kind record="term">
+      <property term="ex:isProvidedWith" as="ex:isProvidedWith" format="uri" node="yes" repeat="yes"/>
+      <property term="ex:precedes" as="ex:precedes" format="uri" node="yes" repeat="yes"/>
+    </kind>
+  </scheme>
+  <scheme id="house" syntax="meta" levels="basic full">
+    <kind record="page">
+      <property term="dcat:seriesMember" as="example:series-member" format="uri"/>
+    </kind>
+  </scheme>
+</schemes>

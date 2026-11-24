@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="assessment" xml:lang="en-GB">
+  <title>Assessment</title>
+  <shortdesc>A healthcare activity that finds out what a person needs.</shortdesc>
+  <prolog>
+    <metadata><keywords><keyword>Needs assessment</keyword><keyword>Appraisal</keyword></keywords></metadata>
+    <data name="rdf:type" value="skos:Concept"/>
+    <data name="dct:identifier" value="https://example.org/care/assessment"/>
+    <data name="skos:related" value="https://example.org/care/care_plan"/>
+    <data name="skos:related" value="https://example.org/other/triage"/>
+    <data name="skos:scopeNote" value="Not the review of a plan that already exists."/>
+  </prolog>
+  <conbody><p>Related to a concept of the scheme, and to one that is not in it.</p></conbody>
+</concept>
